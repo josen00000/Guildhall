@@ -1,0 +1,15 @@
+<MapDefinitions>
+
+  <MapDefinition name="Island" width="20" height="30" fillTile="Grass" edgeTile="Water">
+    <MapGenerateSteps>
+      <Mutate chanceToRun="1" iterations="1" chancePerTile="0.1" ifType="Grass" setType="Water" setTags="mutate"/>
+      <Worm chanceToRun="1" iterations="1" chancePerTile ="1" ifType="Grass" setType="Water"  wormLength="8~10" numWorm ="5" setTags="worm"/>
+      
+     
+    </MapGenerateSteps>
+  </MapDefinition>
+
+
+</MapDefinitions>
+
+

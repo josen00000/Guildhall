@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Game">
+      <UniqueIdentifier>{017fab79-49ae-4dc0-b7ff-69ee311be744}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MapGen">
+      <UniqueIdentifier>{88f4a939-9545-4dc6-9441-74906cae1f2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="General">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="App.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Entity.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Main_Windows.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Map.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Tile.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="World.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="TileDefinition.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="MapDefinition.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGenStep.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="Mutator.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="Worm.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="FromImage.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="CellularAutomata.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="ActorDefinition.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="PerlinNoise.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="App.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCommon.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Map.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Tile.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="World.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="TileDefinition.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineBuildPreferences.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="MapDefinition.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGenStep.hpp">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="Mutator.hpp">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="Worm.hpp">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="FromImage.hpp">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="CellularAutomata.hpp">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="ActorDefinition.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinNoise.hpp">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

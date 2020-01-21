@@ -1,0 +1,25 @@
+<TileDefinitions spriteSheet="Data/Images/Terrain_32x32.png" spriteLayout="32,32">
+
+	<TileDefinition
+		name="Grass"
+		colorInMapImage="0,255,0"
+    fromImageColor="255,255,255"
+		spriteCoords="3,0"
+		allowsSight="true"
+		allowsWalk="true"
+		allowsSwim="false"
+		allowsFly="true"
+	/>
+
+	<TileDefinition
+		name="Water"
+		mapTexelColor="0,0,255"
+		spriteCoords="3,15"
+    fromImageColor="0,0,0"
+		allowsWalk="false"
+		allowsSwim="false"
+		allowsFly="true"
+	/>
+
+
+</TileDefinitions>
