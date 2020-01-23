@@ -5,17 +5,85 @@
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Math/AABB2.hpp"
+#include "Engine/Platform/Window.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
-#include "engine/Renderer/Texture.hpp"
+#include "Engine/Renderer/Texture.hpp"
+//#include "Game/EngineBuildPreferences.hpp"
 
-void RenderContext::StartUp()
+//third party library
+#if !defined(WIN32_LEAN_AND_MEAN) 
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#define INITGUID
+#include <d3d11.h>  // d3d11 specific objects
+#include <dxgi.h>   // shared library used across multiple dx graphical interfaces
+#include <dxgidebug.h>  // debug utility (mostly used for reporting and analytics)
+
+#pragma comment( lib, "d3d11.lib" )         // needed a01
+#pragma comment( lib, "dxgi.lib" )          // needed a01
+#pragma comment( lib, "d3dcompiler.lib" )   // needed when we get to shaders
+
+#define RENDER_DEBUG
+
+void RenderContext::StartUp( Window* window )
 {
 	
 	
+	// Instance - singleton
+	// Device create everything resources
+	// Context issue commands
+	// ~swapchain
+	// 
+
+	// ID3D11Device;
+	// ID3D11DeviceContext;
+	IDXGISwapChain* swapchain;
+
+	UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
+#if defined(RENDER_DEBUG)
+	flags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif	
+
+	// define swapchain
+	DXGI_SWAP_CHAIN_DESC swapchainDesc;
+	memset( &swapchainDesc, 0, sizeof( swapchainDesc ) );
+	swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_BACK_BUFFER;
+	swapchainDesc.BufferCount = 2;
+
+	// how many back buffers in our chain - we'll double buffer (one we show, one we draw to)
+	swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // on swap, the old buffer is discarded
+	swapchainDesc.Flags = 0; // additional flags - see docs.  Used in special cases like for video buffers
+	//swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_BACK_BUFFER;
 	
+	HWND hwnd = (HWND) window->m_hwnd;
+	swapchainDesc.OutputWindow = hwnd; // HWND for the window to be used
+	swapchainDesc.SampleDesc.Count = 1; // how many samples per pixel (1 so no MSAA)
+										 // note, if we're doing MSAA, we'll do it on a secondary target
+
+										 // describe the buffer
+	swapchainDesc.Windowed = TRUE;                                    // windowed/full-screen mode
+	swapchainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;     // use 32-bit color RGBA8 color
+	swapchainDesc.BufferDesc.Width = window->GetClientWidth();
+	swapchainDesc.BufferDesc.Height = window->GetClientHeight();
+
+	// create
+	D3D11CreateDeviceAndSwapChain( nullptr, 
+		D3D_DRIVER_TYPE_HARDWARE,
+		nullptr,
+		flags, // controls the type of device we make,
+		nullptr,
+		0,
+		D3D11_SDK_VERSION,
+		&swapchainDesc,
+		&swapchain,
+		&m_device,
+		nullptr,
+		&m_context );
 }
+
 void RenderContext::BeginView(){
 
 }
@@ -34,9 +102,14 @@ void RenderContext::EndFrame()
 
 void RenderContext::Shutdown()
 {
-	delete this;
+	if( nullptr != m_device){
+		m_device->Release();
+		m_device = nullptr;
+	}
 	
 }
+
+#define DX_SAFE_RELEASE(ptr) if(nullptr !=ptr) { ptr->Release(); ptr = nullptr; } 
 
 void RenderContext::ClearScreen( const Rgba8& clearColor )
 {

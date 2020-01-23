@@ -15,7 +15,7 @@ public:
 	void BeginFrame();
 	void RunFrame();
 	void EndFrame();
-	bool IsQuitting() const { return m_isQuitting; }
+	bool IsQuitting() const { return true; /* m_isQuitting; */ }
 	void CheckGameQuit();
 	void HandleQuitRequested();
 	void HandleKeyPressed( unsigned char inValue );

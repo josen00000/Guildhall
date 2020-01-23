@@ -3,10 +3,13 @@
 #include <string>
 #include "Engine/Core/Vertex_PCU.hpp"
 
+class BitmapFont;
 class Camera;
 class Texture;
-class BitmapFont;
+class Window;
 struct AABB2;
+struct ID3D11Device;
+struct ID3D11DeviceContext;
 
 enum BlendMode
 {
@@ -24,7 +27,7 @@ public :
 
 	
 public:
-	void StartUp();
+	void StartUp( Window* window );
 	void BeginView();
 	void BeginFrame();
 	void EndFrame();
@@ -49,7 +52,9 @@ private:
 	Texture*		CheckTextureExist(const char* imageFilePath) const;
 	BitmapFont*		CheckBitmapFontExist( const char* fontName ) const;
 
-
+public:
+	ID3D11DeviceContext*  m_context; // how we issue command
+	ID3D11Device* m_device; // reference to gpu
 
 private:
 	std::vector <Texture*> m_textureList;

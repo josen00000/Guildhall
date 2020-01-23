@@ -139,6 +139,7 @@ bool Window::Open( std::string const& title, float clientAspect, float maxClient
 
 	if( hwnd == nullptr ) { return false; }
 
+
 	ShowWindow( hwnd, SW_SHOW );
 	SetForegroundWindow( hwnd );
 	SetFocus( hwnd );
@@ -147,6 +148,10 @@ bool Window::Open( std::string const& title, float clientAspect, float maxClient
 
 	HCURSOR cursor = LoadCursor( NULL, IDC_ARROW );
 	SetCursor( cursor );
+	
+	m_hwnd = (void*)hwnd;
+	m_clientWidth = (int) clientWidth;
+	m_clientHeight = (int) clientHeight;
 	return true;
 }
 
@@ -173,4 +178,14 @@ void Window::BeginFrame()
 		TranslateMessage( &queuedMessage );
 		DispatchMessage( &queuedMessage ); // This tells Windows to call our "WindowsMessageHandlingProcedure" (a.k.a. "WinProc") function
 	}
+}
+
+int Window::GetClientWidth() const
+{
+	return m_clientWidth;
+}
+
+int Window::GetClientHeight() const
+{
+	return m_clientHeight;
 }

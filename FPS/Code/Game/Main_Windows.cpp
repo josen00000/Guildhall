@@ -308,7 +308,7 @@ int WINAPI WinMain( _In_ HINSTANCE applicationInstanceHandle, _In_opt_ HINSTANCE
 	//CreateOSWindow(applicationInstanceHandle,CLIENT_ASPECT);
 	//CreateRenderContext();
 
-	g_theApp=new App();
+	g_theApp = new App();
 	g_theWindow = new Window();
 	g_theWindow->Open( APP_NAME, CLIENT_ASPECT, 0.9f );
 	g_theApp->Startup();

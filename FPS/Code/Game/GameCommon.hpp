@@ -1,4 +1,7 @@
 #pragma once
+#include "Engine/Platform/Window.hpp"
+
+extern Window* g_theWindow;
 
 //basic setting
 constexpr float CLIENT_ASPECT		= 16.f / 9.f;
