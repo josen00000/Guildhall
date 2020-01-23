@@ -1,6 +1,4 @@
 ﻿#pragma once
-//#include <gl/gl.h>					// Include basic OpenGL constants and function declarations
-//#pragma comment( lib, "opengl32" )	// Link in the OpenGL32.lib static library
 #include <map>
 #include <string>
 #include "Engine/Core/Vertex_PCU.hpp"

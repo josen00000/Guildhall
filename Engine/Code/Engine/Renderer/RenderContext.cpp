@@ -1,7 +1,5 @@
 #pragma once
-#pragma comment( lib, "opengl32" )	// Link in the OpenGL32.lib static library
-#include <windows.h>
-#include <gl/gl.h>					// Include basic OpenGL constants and function declarations
+
 #include <vector>
 #include "Engine/stb_image.h"
 #include "Engine/Core/ErrorWarningAssert.hpp"
@@ -42,19 +40,23 @@ void RenderContext::Shutdown()
 
 void RenderContext::ClearScreen( const Rgba8& clearColor )
 {
-	glClearColor( (float)clearColor.r/255, (float)clearColor.g/255, (float)clearColor.b/255, (float)clearColor.a/255 ); // Note; glClearColor takes colors as floats in [0,1], not bytes in [0,255]
-	glClear( GL_COLOR_BUFFER_BIT ); // ALWAYS clear the screen at the top of each frame's Render()!
+	UNUSED( clearColor );
+// 	glClearColor( (float)clearColor.r/255, (float)clearColor.g/255, (float)clearColor.b/255, (float)clearColor.a/255 ); // Note; glClearColor takes colors as floats in [0,1], not bytes in [0,255]
+// 	glClear( GL_COLOR_BUFFER_BIT ); // ALWAYS clear the screen at the top of each frame's Render()!
 }
 
 void RenderContext::BeginCamera( const Camera& camera )
 {
-	glLoadIdentity();
-	glOrtho( camera.m_AABB2.mins.x, camera.m_AABB2.maxs.x, camera.m_AABB2.mins.y, camera.m_AABB2.maxs.y, 0.f, 1.f );
+	UNUSED( camera );
+// 	glLoadIdentity();
+// 	glOrtho( camera.m_AABB2.mins.x, camera.m_AABB2.maxs.x, camera.m_AABB2.mins.y, camera.m_AABB2.maxs.y, 0.f, 1.f );
 }
+
 void RenderContext::SetOrthoView( const AABB2& box )
 {
-	glLoadIdentity();
-	glOrtho( box.mins.x, box.maxs.x, box.mins.y, box.maxs.y, 0.f, 1.f );
+	UNUSED( box ); 
+// 	glLoadIdentity();
+// 	glOrtho( box.mins.x, box.maxs.x, box.mins.y, box.maxs.y, 0.f, 1.f );
 }
 void RenderContext::EndCamera( const Camera& camera )
 {
@@ -65,20 +67,22 @@ void RenderContext::EndCamera( const Camera& camera )
 
 void RenderContext::BindTexture( const Texture* texture )
 {
-
+	UNUSED( texture );
 	if( texture )
 	{
-		glEnable( GL_TEXTURE_2D );
-		glBindTexture( GL_TEXTURE_2D, (GLuint)texture->GetTextureID() );
+// 		glEnable( GL_TEXTURE_2D );
+// 		glBindTexture( GL_TEXTURE_2D, (GLuint)texture->GetTextureID() );
 	}
 	else
 	{
-		glDisable( GL_TEXTURE_2D );
+//		glDisable( GL_TEXTURE_2D );
 	}
 }
 
-Texture* RenderContext::CreateTextureFromFile(const char* imageFilePath)
+Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )
 {
+	UNUSED( imageFilePath );
+
 	//const char* imageFilePath = "Data/Images/Test_StbiFlippedAndOpenGL.png";
 	unsigned int textureID = 0;
 	int imageTexelSizeX = 0; // This will be filled in for us to indicate image width
@@ -96,44 +100,44 @@ Texture* RenderContext::CreateTextureFromFile(const char* imageFilePath)
 	GUARANTEE_OR_DIE( imageData, Stringf( "Failed to load image \"%s\"", imageFilePath ));
 	GUARANTEE_OR_DIE( numComponents >= 3 && numComponents <= 4 && imageTexelSizeX > 0 && imageTexelSizeY > 0, Stringf( "ERROR loading image \"%s\" (Bpp=%i, size=%i,%i)", imageFilePath, numComponents, imageTexelSizeX, imageTexelSizeY ) );
 	// Enable OpenGL texturing
-	glEnable( GL_TEXTURE_2D );
+	//glEnable( GL_TEXTURE_2D );
 
 	// Tell OpenGL that our pixel data is single-byte aligned
-	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-
-	// Ask OpenGL for an unused texName (ID number) to use for this texture
-	glGenTextures( 1, (GLuint*)&textureID );
-
-	// Tell OpenGL to bind (set) this as the currently active texture
-	glBindTexture( GL_TEXTURE_2D, textureID );
-
-	// Set texture clamp vs. wrap (repeat) default settings
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ); // GL_CLAMP or GL_REPEAT
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ); // GL_CLAMP or GL_REPEAT
-
-																	// Set magnification (texel > pixel) and minification (texel < pixel) filters
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); // one of: GL_NEAREST, GL_LINEAR
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ); // one of: GL_NEAREST, GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR
-
-																		// Pick the appropriate OpenGL format (RGB or RGBA) for this texel data
-	GLenum bufferFormat = GL_RGBA; // the format our source pixel data is in; any of: GL_RGB, GL_RGBA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, ...
-	if( numComponents == 3 )
-	{
-		bufferFormat = GL_RGB;
-	}
-	GLenum internalFormat = bufferFormat; // the format we want the texture to be on the card; technically allows us to translate into a different texture format as we upload to OpenGL
-
-										  // Upload the image texel data (raw pixels bytes) to OpenGL under this textureID
-	glTexImage2D(			// Upload this pixel data to our new OpenGL texture
-		GL_TEXTURE_2D,		// Creating this as a 2d texture
-		0,					// Which mipmap level to use as the "root" (0 = the highest-quality, full-res image), if mipmaps are enabled
-		internalFormat,		// Type of texel format we want OpenGL to use for this texture internally on the video card
-		imageTexelSizeX,	// Texel-width of image; for maximum compatibility, use 2^N + 2^B, where N is some integer in the range [3,11], and B is the border thickness [0,1]
-		imageTexelSizeY,	// Texel-height of image; for maximum compatibility, use 2^M + 2^B, where M is some integer in the range [3,11], and B is the border thickness [0,1]
-		0,					// Border size, in texels (must be 0 or 1, recommend 0)
-		bufferFormat,		// Pixel format describing the composition of the pixel data in buffer
-		GL_UNSIGNED_BYTE,	// Pixel color components are unsigned bytes (one byte per color channel/component)
-		imageData );		// Address of the actual pixel data bytes/buffer in system memory
+// 	glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+// 
+// 	// Ask OpenGL for an unused texName (ID number) to use for this texture
+// 	glGenTextures( 1, (GLuint*)&textureID );
+// 
+// 	// Tell OpenGL to bind (set) this as the currently active texture
+// 	glBindTexture( GL_TEXTURE_2D, textureID );
+// 
+// 	// Set texture clamp vs. wrap (repeat) default settings
+// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ); // GL_CLAMP or GL_REPEAT
+// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ); // GL_CLAMP or GL_REPEAT
+// 
+// 																	// Set magnification (texel > pixel) and minification (texel < pixel) filters
+// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); // one of: GL_NEAREST, GL_LINEAR
+// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ); // one of: GL_NEAREST, GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR
+// 
+// 																		// Pick the appropriate OpenGL format (RGB or RGBA) for this texel data
+// 	GLenum bufferFormat = GL_RGBA; // the format our source pixel data is in; any of: GL_RGB, GL_RGBA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, ...
+// 	if( numComponents == 3 )
+// 	{
+// 		bufferFormat = GL_RGB;
+// 	}
+// 	GLenum internalFormat = bufferFormat; // the format we want the texture to be on the card; technically allows us to translate into a different texture format as we upload to OpenGL
+// 
+// 										  // Upload the image texel data (raw pixels bytes) to OpenGL under this textureID
+// 	glTexImage2D(			// Upload this pixel data to our new OpenGL texture
+// 		GL_TEXTURE_2D,		// Creating this as a 2d texture
+// 		0,					// Which mipmap level to use as the "root" (0 = the highest-quality, full-res image), if mipmaps are enabled
+// 		internalFormat,		// Type of texel format we want OpenGL to use for this texture internally on the video card
+// 		imageTexelSizeX,	// Texel-width of image; for maximum compatibility, use 2^N + 2^B, where N is some integer in the range [3,11], and B is the border thickness [0,1]
+// 		imageTexelSizeY,	// Texel-height of image; for maximum compatibility, use 2^M + 2^B, where M is some integer in the range [3,11], and B is the border thickness [0,1]
+// 		0,					// Border size, in texels (must be 0 or 1, recommend 0)
+// 		bufferFormat,		// Pixel format describing the composition of the pixel data in buffer
+// 		GL_UNSIGNED_BYTE,	// Pixel color components are unsigned bytes (one byte per color channel/component)
+// 		imageData );		// Address of the actual pixel data bytes/buffer in system memory
 
 							// Free the raw image texel data now that we've sent a copy of it down to the GPU to be stored in video memory
 	Texture* temTexture = new Texture(textureID,imageFilePath,(float)imageTexelSizeX,(float)imageTexelSizeY);
@@ -199,28 +203,31 @@ Texture* RenderContext::CheckTextureExist(const char* imageFilePath) const
 
 void RenderContext::DrawVertexVector( const std::vector<Vertex_PCU>& vertexArray )
 {
-	glBegin( GL_TRIANGLES ); {
-		for( int vertexIndex =0; vertexIndex<vertexArray.size(); vertexIndex++ ) {
-			const Vertex_PCU& temp_v=vertexArray[vertexIndex];
-			glTexCoord2f(temp_v.m_uvTexCoords.x, temp_v.m_uvTexCoords.y);
-			glColor4ub( temp_v.m_color.r, temp_v.m_color.g, temp_v.m_color.b, temp_v.m_color.a );
-			glVertex3f( temp_v.m_pos.x, temp_v.m_pos.y, temp_v.m_pos.z );
-		}
-	}
-	glEnd();
+	UNUSED( vertexArray );
+// 	glBegin( GL_TRIANGLES ); {
+// 		for( int vertexIndex =0; vertexIndex<vertexArray.size(); vertexIndex++ ) {
+// 			const Vertex_PCU& temp_v=vertexArray[vertexIndex];
+// 			glTexCoord2f(temp_v.m_uvTexCoords.x, temp_v.m_uvTexCoords.y);
+// 			glColor4ub( temp_v.m_color.r, temp_v.m_color.g, temp_v.m_color.b, temp_v.m_color.a );
+// 			glVertex3f( temp_v.m_pos.x, temp_v.m_pos.y, temp_v.m_pos.z );
+// 		}
+// 	}
+// 	glEnd();
 }
 
 void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray )
 {
-	glBegin( GL_TRIANGLES ); {
-		for( int vertexIndex =0; vertexIndex<vertexNum; vertexIndex++ ) {
-			const Vertex_PCU& temp_v=vertexArray[vertexIndex];
-			glTexCoord2f(temp_v.m_uvTexCoords.x, temp_v.m_uvTexCoords.y);
-			glColor4ub( temp_v.m_color.r, temp_v.m_color.g, temp_v.m_color.b, temp_v.m_color.a );
-			glVertex3f( temp_v.m_pos.x, temp_v.m_pos.y, temp_v.m_pos.z );
-		}
-	}
-	glEnd();
+	UNUSED( vertexArray );
+	UNUSED( vertexNum );
+// 	glBegin( GL_TRIANGLES ); {
+// 		for( int vertexIndex =0; vertexIndex<vertexNum; vertexIndex++ ) {
+// 			const Vertex_PCU& temp_v=vertexArray[vertexIndex];
+// 			glTexCoord2f(temp_v.m_uvTexCoords.x, temp_v.m_uvTexCoords.y);
+// 			glColor4ub( temp_v.m_color.r, temp_v.m_color.g, temp_v.m_color.b, temp_v.m_color.a );
+// 			glVertex3f( temp_v.m_pos.x, temp_v.m_pos.y, temp_v.m_pos.z );
+// 		}
+// 	}
+// 	glEnd();
 }
 
 void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
@@ -292,15 +299,16 @@ void RenderContext::DrawCircle( Vec3 center,float radiu,float thick,Rgba8& circl
 
 void RenderContext::SetBlendMode( BlendMode blendMode )
 {
-	if(blendMode == BlendMode::ALPHA){
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	}
-	else if(blendMode == BlendMode::ADDITIVE){
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	}
-	else{
-		ERROR_AND_DIE(Stringf( "Unknown / unsupported blend mode #%i", blendMode ));
-	}
+	UNUSED( blendMode );
+// 	if(blendMode == BlendMode::ALPHA){
+// 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+// 
+// 	}
+// 	else if(blendMode == BlendMode::ADDITIVE){
+// 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+// 	}
+// 	else{
+// 		ERROR_AND_DIE(Stringf( "Unknown / unsupported blend mode #%i", blendMode ));
+// 	}
 }
 

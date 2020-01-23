@@ -5,7 +5,6 @@
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Renderer/Camera.hpp"
 
-extern HWND g_hWnd;
 
 void InputSystem::Startup()
 {
@@ -40,18 +39,19 @@ IntVec2 InputSystem::GetMouseRawDesktopPos() const
 
 Vec2 InputSystem::GetNormalizedMousePos() const
 {
-	POINT screenMousePos;
-	GetCursorPos( &screenMousePos );
-	ScreenToClient( g_hWnd, &screenMousePos );
-	Vec2 mouseClientPos( (float) screenMousePos.x, (float) screenMousePos.y );
-
-	RECT clientRect;
-	GetClientRect( g_hWnd, &clientRect );
-	AABB2 clientBounds( (float)clientRect.left, (float)clientRect.bottom, (float)clientRect.right, (float)clientRect.top ); //need to check the contrustor
-	Vec2 mouseNormalizedPos = clientBounds.GetUVForPoint( mouseClientPos );
-	mouseNormalizedPos.x = ClampZeroToOne( mouseNormalizedPos.x );
-	mouseNormalizedPos.y = ClampZeroToOne( mouseNormalizedPos.y );
-	return mouseNormalizedPos;	
+// 	POINT screenMousePos;
+// 	GetCursorPos( &screenMousePos );
+// 	ScreenToClient( g_hWnd, &screenMousePos );
+// 	Vec2 mouseClientPos( (float) screenMousePos.x, (float) screenMousePos.y );
+// 
+// 	RECT clientRect;
+// 	GetClientRect( g_hWnd, &clientRect );
+// 	AABB2 clientBounds( (float)clientRect.left, (float)clientRect.bottom, (float)clientRect.right, (float)clientRect.top ); //need to check the contrustor
+// 	Vec2 mouseNormalizedPos = clientBounds.GetUVForPoint( mouseClientPos );
+// 	mouseNormalizedPos.x = ClampZeroToOne( mouseNormalizedPos.x );
+// 	mouseNormalizedPos.y = ClampZeroToOne( mouseNormalizedPos.y );
+// 	return mouseNormalizedPos;	
+	return Vec2::ZERO;
 }
 
 
