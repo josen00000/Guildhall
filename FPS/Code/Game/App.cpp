@@ -117,7 +117,7 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
-	g_theRenderer->ClearScreen( Rgba8(0,0,0,255) );
+	g_theRenderer->ClearScreen( Rgba8(255,0,0,255) );
 	g_theRenderer->BeginView();
 	g_theGame->Render();
 	
@@ -129,6 +129,7 @@ const void App::Render() const
 void App::EndFrame()
 {
 	g_theInputSystem->EndFrame();
+	g_theRenderer->EndFrame();
 }
 
 

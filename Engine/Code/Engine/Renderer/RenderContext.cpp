@@ -8,19 +8,15 @@
 #include "Engine/Platform/Window.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
+#include "Engine/Renderer/D3D11Common.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/SwapChain.hpp"
 #include "Engine/Renderer/Texture.hpp"
-//#include "Game/EngineBuildPreferences.hpp"
+#include "Engine/Renderer/TextureView.hpp"
 
 //third party library
-#if !defined(WIN32_LEAN_AND_MEAN) 
-#define WIN32_LEAN_AND_MEAN
-#endif
 
-#define INITGUID
-#include <d3d11.h>  // d3d11 specific objects
-#include <dxgi.h>   // shared library used across multiple dx graphical interfaces
-#include <dxgidebug.h>  // debug utility (mostly used for reporting and analytics)
+
 
 #pragma comment( lib, "d3d11.lib" )         // needed a01
 #pragma comment( lib, "dxgi.lib" )          // needed a01
@@ -54,7 +50,7 @@ void RenderContext::StartUp( Window* window )
 	swapchainDesc.BufferCount = 2;
 
 	// how many back buffers in our chain - we'll double buffer (one we show, one we draw to)
-	swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // on swap, the old buffer is discarded
+	swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // on swap, the old buffer is discarded
 	swapchainDesc.Flags = 0; // additional flags - see docs.  Used in special cases like for video buffers
 	//swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_BACK_BUFFER;
 	
@@ -82,6 +78,8 @@ void RenderContext::StartUp( Window* window )
 		&m_device,
 		nullptr,
 		&m_context );
+
+	m_swapChain = new SwapChain( this, swapchain );
 }
 
 void RenderContext::BeginView(){
@@ -97,25 +95,35 @@ void RenderContext::BeginFrame()
 
 void RenderContext::EndFrame()
 {
-
+	m_swapChain->Present();
 }
 
 void RenderContext::Shutdown()
 {
-	if( nullptr != m_device){
-		m_device->Release();
-		m_device = nullptr;
-	}
-	
+	DX_SAFE_RELEASE(m_device);
+	DX_SAFE_RELEASE(m_context);
+	delete m_swapChain;
+	m_swapChain = nullptr;
 }
 
-#define DX_SAFE_RELEASE(ptr) if(nullptr !=ptr) { ptr->Release(); ptr = nullptr; } 
+
 
 void RenderContext::ClearScreen( const Rgba8& clearColor )
 {
-	UNUSED( clearColor );
-// 	glClearColor( (float)clearColor.r/255, (float)clearColor.g/255, (float)clearColor.b/255, (float)clearColor.a/255 ); // Note; glClearColor takes colors as floats in [0,1], not bytes in [0,255]
-// 	glClear( GL_COLOR_BUFFER_BIT ); // ALWAYS clear the screen at the top of each frame's Render()!
+	float clearFolats[4];
+	clearFolats[0] = (float)clearColor.r / 255.f;
+	clearFolats[1] = (float)clearColor.g / 255.f;
+	clearFolats[2] = (float)clearColor.b / 255.f;
+	clearFolats[3] = (float)clearColor.a / 255.f;
+
+	Texture* backBuffer = m_swapChain->GetBackBuffer();
+	TextureView* backBuffer_rtv = backBuffer->GetRenderTargetView();
+	ID3D11RenderTargetView* rtv = backBuffer_rtv->GetRTVHandle();
+	m_context->ClearRenderTargetView( rtv, clearFolats );
+
+//	delete backBuffer;
+// 	delete backBuffer_rtv;
+// 	DX_SAFE_RELEASE(rtv);
 }
 
 void RenderContext::BeginCamera( const Camera& camera )

@@ -3,13 +3,16 @@
 #include <string>
 #include "Engine/Core/Vertex_PCU.hpp"
 
+
 class BitmapFont;
 class Camera;
 class Texture;
+class SwapChain;
 class Window;
 struct AABB2;
 struct ID3D11Device;
 struct ID3D11DeviceContext;
+
 
 enum BlendMode
 {
@@ -55,6 +58,7 @@ private:
 public:
 	ID3D11DeviceContext*  m_context; // how we issue command
 	ID3D11Device* m_device; // reference to gpu
+	SwapChain* m_swapChain;
 
 private:
 	std::vector <Texture*> m_textureList;

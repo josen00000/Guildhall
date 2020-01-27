@@ -54,6 +54,7 @@ void Game::Reset()
 
 void Game::Update( float deltaSeconds )
 {
+	UNUSED(deltaSeconds);
  	CheckIfExit();
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 
