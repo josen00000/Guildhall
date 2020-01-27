@@ -28,6 +28,7 @@ void App::Startup()
 	g_theInputSystem	= new InputSystem();
 	g_theGame			= new Game( g_camera, g_UICamera );
 	
+	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );
 	g_theGame->Startup();
 }

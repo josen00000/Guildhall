@@ -1,6 +1,15 @@
 #pragma once
-#include<Engine//Math/vec2.hpp>
-#include<Engine/Math/AABB2.hpp>
+#include "Engine/Core/Rgba8.hpp"
+#include "Engine/Math/AABB2.hpp"
+#include "Engine/Math/vec2.hpp"
+
+enum eCameraClearBitFlag : unsigned int {
+	CLEAR_COLOR_BIT		= (1 << 0),
+	CLEAR_DEPTH_BIT		= (1 << 1),
+	CLEAR_STENCIL_BIT	= (1 << 2),
+
+};
+
 class Camera{
 
 public:
@@ -14,6 +23,7 @@ public:
 	Vec2 GetOrthoTopRight() const;
 	Vec2 GetPosition() const;
 	void SetPosition(const Vec2 inPosition);
+	void SetClearMode( unsigned int clearFlags, Rgba8 color, float depth = 0.0f , unsigned int stencil = 0 );
 	void UpdateCamera();
 public:
 
@@ -21,4 +31,7 @@ public:
 	Vec2 m_position=Vec2(0.f,0.f);
 	float m_width=0.f;
 	float m_height=0.f;
+
+	unsigned int m_clearMode = 0;
+	Rgba8 m_clearColor = Rgba8::BLACK;
 };

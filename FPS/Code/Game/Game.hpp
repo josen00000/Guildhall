@@ -69,5 +69,5 @@ public:
 	RandomNumberGenerator* m_rng = nullptr;
 	
 	std::vector<Vertex_PCU> m_UIVertices;
-
+	
 };

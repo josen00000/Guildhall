@@ -1,5 +1,7 @@
 ﻿#pragma once
-#include<Engine/Renderer/Camera.hpp>
+#include "Engine/Renderer/Camera.hpp"
+#include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/Rgba8.hpp"
 
 // the bot_left and top_right seems to be redundant
 //
@@ -51,6 +53,14 @@ void Camera::SetPosition( const Vec2 inPosition )
 	m_position=inPosition;
 	UpdateCamera();
 
+}
+
+void Camera::SetClearMode( unsigned int clearFlags, Rgba8 color, float depth /*= 0.0f */, unsigned int stencil /*= 0 */ )
+{
+	m_clearMode = clearFlags;
+	m_clearColor = color;
+	UNUSED(depth);
+	UNUSED(stencil);
 }
 
 void Camera::UpdateCamera()

@@ -1,8 +1,10 @@
 #include "Window.hpp"
 #define WIN32_LEAN_AND_MEAN		// Always #define this before #including <windows.h>
 #include <windows.h>
+#include "Engine/Input/InputSystem.hpp"
 
 static wchar_t const* WND_CLASS_NAME = TEXT("Simple Window Class");
+
 
 //-----------------------------------------------------------------------------------------------
 // Handles Windows (Win32) messages/events; i.e. the OS is trying to tell us something happened.
@@ -12,37 +14,36 @@ static wchar_t const* WND_CLASS_NAME = TEXT("Simple Window Class");
 //
 static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam )
 {
-// 	switch( wmMessageCode )
-// 	{
-// 
-// 		// App close requested via "X" button, or right-click "Close Window" on task bar, or "Close" from system menu, or Alt-F4
-// 	case WM_CLOSE:
-// 	{
-// 
-// 		g_theApp->HandleQuitRequested();
-// 		return 0; // "Consumes" this message (tells Windows "okay, we handled it")
-// 	}
-// 
-// 	// Raw physical keyboard "key-was-just-depressed" event (case-insensitive, not translated)
-// 	case WM_KEYDOWN:
-// 	{
-// 		unsigned char asKey = (unsigned char)wParam;
-// 		if( asKey==VK_ESCAPE ) {
-// 			g_theApp->HandleQuitRequested();
-// 		}
-// 		g_theInputSystem->UpdateKeyBoardButton( asKey, true );
-// 		break;
-// 	}
-// 
-// 	// Raw physical keyboard "key-was-just-released" event (case-insensitive, not translated)
-// 	case WM_KEYUP:
-// 	{
-// 		unsigned char asKey = (unsigned char)wParam;
-// 		g_theInputSystem->UpdateKeyBoardButton( asKey, false );
-// 		//			#SD1ToDo: Tell the App and InputSystem about this key-released event...
-// 		break;
-// 	}
-// 	}
+	Window* window = (Window*) ::GetWindowLongPtr( windowHandle, GWLP_USERDATA );
+	switch( wmMessageCode )
+	{
+
+		// App close requested via "X" button, or right-click "Close Window" on task bar, or "Close" from system menu, or Alt-F4
+		case WM_CLOSE:
+		{
+			// TODO SD2 quit the windows
+			//g_theApp->HandleQuitRequested();
+			return 0; // "Consumes" this message (tells Windows "okay, we handled it")
+		}
+
+		// Raw physical keyboard "key-was-just-depressed" event (case-insensitive, not translated)
+		case WM_KEYDOWN:
+		{
+			InputSystem* input = window->GetInputSystem();
+			unsigned char asKey = (unsigned char)wParam;
+			input->UpdateKeyBoardButton( asKey, true );
+			break;
+		}
+
+		// Raw physical keyboard "key-was-just-released" event (case-insensitive, not translated)
+		case WM_KEYUP:
+		{
+			unsigned char asKey = (unsigned char)wParam;
+			//m_inputSystem->UpdateKeyBoardButton( asKey, false );
+			//			#SD1ToDo: Tell the App and InputSystem about this key-released event...
+			break;
+		}
+	}
 
 	// Send back to Windows any unhandled/unconsumed messages we want other apps to see (e.g. play/pause in music apps, etc.)
 	return DefWindowProc( windowHandle, wmMessageCode, wParam, lParam );
@@ -152,6 +153,7 @@ bool Window::Open( std::string const& title, float clientAspect, float maxClient
 	m_hwnd = (void*)hwnd;
 	m_clientWidth = (int) clientWidth;
 	m_clientHeight = (int) clientHeight;
+	::SetWindowLongPtr( hwnd, GWLP_USERDATA, (LONG_PTR)this );
 	return true;
 }
 
@@ -188,4 +190,9 @@ int Window::GetClientWidth() const
 int Window::GetClientHeight() const
 {
 	return m_clientHeight;
+}
+
+void Window::SetInputSystem( InputSystem* input )
+{
+	m_inputSystem = input;
 }

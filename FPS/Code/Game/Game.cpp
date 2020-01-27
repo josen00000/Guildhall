@@ -5,6 +5,7 @@
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
+#include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 
 extern App*				g_theApp;
@@ -53,36 +54,39 @@ void Game::Reset()
 
 void Game::Update( float deltaSeconds )
 {
-	CheckIfExit();
-	switch ( m_gameState )
-	{
-		case GAME_STATE_LOADING:{
-			LoadAssets();
-			m_gameState = GAME_STATE_ATTRACT;
-			break;
-		}
-		case GAME_STATE_ATTRACT:{
-			static bool isResetFinished = false;
-			if( !isResetFinished ){
-				Reset();
-				isResetFinished = true;
-			}
-			if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_SPACE)){
-				m_gameState = GAME_STATE_PLAYING;
-			}
-			break;
-		}
-		case GAME_STATE_PLAYING:{
-			if( m_isPause ){ return; }
-			m_world->Update( deltaSeconds );
-			break;
-		}
-		case GAME_STATE_END:{
-			break;
-		}
+ 	CheckIfExit();
+	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 
 
-	}
+// 	switch ( m_gameState )
+// 	{
+// 		case GAME_STATE_LOADING:{
+// 			LoadAssets();
+// 			m_gameState = GAME_STATE_ATTRACT;
+// 			break;
+// 		}
+// 		case GAME_STATE_ATTRACT:{
+// 			static bool isResetFinished = false;
+// 			if( !isResetFinished ){
+// 				Reset();
+// 				isResetFinished = true;
+// 			}
+// 			if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_SPACE)){
+// 				m_gameState = GAME_STATE_PLAYING;
+// 			}
+// 			break;
+// 		}
+// 		case GAME_STATE_PLAYING:{
+// 			if( m_isPause ){ return; }
+// 			m_world->Update( deltaSeconds );
+// 			break;
+// 		}
+// 		case GAME_STATE_END:{
+// 			break;
+// 		}
+// 
+// 
+// 	}
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -132,7 +136,9 @@ void Game::CheckIfNoClip()
 
 void Game::Render() const
 {
-	m_world->Render();
+	//m_world->Render(); past code
+	g_theRenderer->BeginCamera( *m_gameCamera );
+	g_theRenderer->EndCamera( *m_gameCamera );
 }
 
 void Game::RenderUI() const
