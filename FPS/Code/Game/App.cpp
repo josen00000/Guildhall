@@ -11,6 +11,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 
+
 App*			g_theApp			= nullptr;
 Game*			g_theGame			= nullptr;
 Camera*			g_camera			= nullptr;
@@ -117,7 +118,31 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
-	g_theRenderer->ClearScreen( Rgba8(255,0,0,255) );
+	static int tempSelect = 0;
+	static Rgba8 tempColor;
+	switch ( tempSelect )
+	{
+		case 1: tempColor = Rgba8::BLACK; 
+			break;
+		case 2: tempColor = Rgba8::WHITE;
+			break;
+		case 3: tempColor = Rgba8::RED;
+			break;
+		case 4: tempColor = Rgba8::GREEN;
+			break;
+		case 5: tempColor = Rgba8::BLUE;
+			break;
+
+	}
+
+	if( tempSelect < 5 ){ 
+		tempSelect++;
+	}
+	else {
+		tempSelect = 0;
+	}
+
+	g_theRenderer->ClearScreen( tempColor );
 	g_theRenderer->BeginView();
 	g_theGame->Render();
 	
