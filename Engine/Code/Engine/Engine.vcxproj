@@ -200,7 +200,11 @@
     <ClCompile Include="Math\vec2.cpp" />
     <ClCompile Include="Math\Vec3.cpp" />
     <ClCompile Include="Math\Vec4.cpp" />
+    <ClCompile Include="Physics\Collider2D.cpp" />
+    <ClCompile Include="Physics\DiscCollider2D.cpp" />
+    <ClCompile Include="Physics\Physics2D.cpp" />
     <ClCompile Include="Physics\RaycastResult.cpp" />
+    <ClCompile Include="Physics\RigidBody2D.cpp" />
     <ClCompile Include="Renderer\BitmapFont.cpp" />
     <ClCompile Include="Renderer\Camera.cpp" />
     <ClCompile Include="Renderer\MeshUtils.cpp" />
@@ -252,7 +256,11 @@
     <ClInclude Include="Math\vec2.hpp" />
     <ClInclude Include="Math\Vec3.hpp" />
     <ClInclude Include="Math\Vec4.hpp" />
+    <ClInclude Include="Physics\Collider2D.hpp" />
+    <ClInclude Include="Physics\DiscCollider2D.hpp" />
+    <ClInclude Include="Physics\Physics2D.hpp" />
     <ClInclude Include="Physics\RaycastResult.hpp" />
+    <ClInclude Include="Physics\RigidBody2D.hpp" />
     <ClInclude Include="Renderer\BitmapFont.hpp" />
     <ClInclude Include="Renderer\Camera.hpp" />
     <ClInclude Include="Renderer\MeshUtils.hpp" />

@@ -4,7 +4,6 @@
 struct RaycastResult
 {
 public:
-	
 	RaycastResult(){}
 	~RaycastResult(){}
 	explicit RaycastResult(bool DidImpact, float ImpactDist, int ImpactTileType, Vec2 ImpactPos , Vec2 start);/*, Vec2 ImpactNormal*/

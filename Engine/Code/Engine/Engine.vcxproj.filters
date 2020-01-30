@@ -150,6 +150,18 @@
     <ClCompile Include="Math\SmoothNoise.cpp">
       <Filter>Math</Filter>
     </ClCompile>
+    <ClCompile Include="Physics\Physics2D.cpp">
+      <Filter>Physic</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\RigidBody2D.cpp">
+      <Filter>Physic</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\Collider2D.cpp">
+      <Filter>Physic</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\DiscCollider2D.cpp">
+      <Filter>Physic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Math\vec2.hpp">
@@ -301,6 +313,18 @@
     </ClInclude>
     <ClInclude Include="Math\SmoothNoise.hpp">
       <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\Physics2D.hpp">
+      <Filter>Physic</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\RigidBody2D.hpp">
+      <Filter>Physic</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\Collider2D.hpp">
+      <Filter>Physic</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\DiscCollider2D.hpp">
+      <Filter>Physic</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
