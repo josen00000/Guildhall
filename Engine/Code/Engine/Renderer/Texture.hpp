@@ -1,8 +1,10 @@
 #pragma once
+#include "Engine/Math/IntVec2.hpp"
 
 class RenderContext;
 class TextureView;
 struct ID3D11Texture2D;
+
 
 class Texture {
 public:
@@ -13,7 +15,8 @@ public:
 	
 
 	void SetTextureID(const int textureID);
-	const int GetTextureID() const {return m_textureID;} ;
+	const int GetTextureID() const {return m_textureID;}
+	IntVec2 GetTexelSize() const { return m_texelSizeCoords; }
 	TextureView* GetRenderTargetView();
 
 public:
@@ -24,5 +27,5 @@ public:
 	const char* m_imageFilePath	=nullptr;
 	float m_width				= 0;
 	float m_height				= 0;
-
+	IntVec2 m_texelSizeCoords;
 };

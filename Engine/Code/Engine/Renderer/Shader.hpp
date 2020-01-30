@@ -2,9 +2,11 @@
 #include "Engine/Core/StringUtils.hpp"
 
 class RenderContext;
+struct ID3D11RasterizerState;
 struct ID3D11VertexShader;
 struct ID3D11PixelShader;
 struct ID3D11Resource;
+struct ID3D10Bolb;
 
 enum ShaderType {
 	SHADER_TYPE_VERTEX,
@@ -12,34 +14,37 @@ enum ShaderType {
 };
 
 class ShaderStage {
-public:
-	ShaderType m_type;
 
 public:
+	~ShaderStage();
 	bool Compile( RenderContext* ctx,
 		std::string const& fileName, // for debug
 		void const* source, //shader code
 		size_t const sourceByteLen,
 		ShaderType stage
 		); //
-
+	bool IsValid() const { return ( nullptr != m_handle); }
 
 public:
+	ID3D10Blob* m_byteCode;
 	union {
 		ID3D11Resource* m_handle;
 		ID3D11VertexShader* m_vs;
 		ID3D11PixelShader* m_fs;
 	};
-
+	ShaderType m_type;
 };
 
 class Shader {
 public:
+	Shader( RenderContext* owner );
+	~Shader();
+	bool CreateFromFile( std::string const& fileName );
+	void CreateRasterState();
+public:
+	RenderContext*	m_owner	= nullptr;
 	ShaderStage m_vertexStage;
 	ShaderStage m_fragmentStage;
-
-public:
-	bool CreateFromFile( std::string const& fileName );
-
+	ID3D11RasterizerState* m_rasterState = nullptr;
 
 };

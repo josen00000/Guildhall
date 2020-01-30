@@ -118,36 +118,14 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
-	static int tempSelect = 0;
-	static Rgba8 tempColor;
-	switch ( tempSelect )
-	{
-		case 1: tempColor = Rgba8::BLACK; 
-			break;
-		case 2: tempColor = Rgba8::WHITE;
-			break;
-		case 3: tempColor = Rgba8::RED;
-			break;
-		case 4: tempColor = Rgba8::GREEN;
-			break;
-		case 5: tempColor = Rgba8::BLUE;
-			break;
+	
 
-	}
-
-	if( tempSelect < 5 ){ 
-		tempSelect++;
-	}
-	else {
-		tempSelect = 0;
-	}
-
-	g_theRenderer->ClearScreen( tempColor );
+	//g_theRenderer->ClearScreen( tempColor );
 	g_theRenderer->BeginView();
 	g_theGame->Render();
 	
-	g_theRenderer->BeginCamera(*g_UICamera);
-	g_theGame->RenderUI();
+	//g_theRenderer->BeginCamera(*g_UICamera);
+	//g_theGame->RenderUI();
 	
 }
 

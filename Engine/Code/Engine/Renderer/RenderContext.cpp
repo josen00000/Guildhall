@@ -71,7 +71,7 @@ void RenderContext::StartUp( Window* window )
 		&m_context );
 
 	m_swapChain = new SwapChain( this, swapchain );
-	m_currentShader = new Shader();
+	m_currentShader = new Shader( this );
 	m_currentShader->CreateFromFile( "data/Shader/Triangle.hlsl" );
 }
 
@@ -94,7 +94,9 @@ void RenderContext::Shutdown()
 	DX_SAFE_RELEASE(m_device);
 	DX_SAFE_RELEASE(m_context);
 	delete m_swapChain;
-	m_swapChain = nullptr;
+	delete m_currentShader;
+	m_swapChain		= nullptr;
+	m_currentShader = nullptr;
 }
 
 
@@ -116,7 +118,18 @@ void RenderContext::ClearScreen( const Rgba8& clearColor )
 void RenderContext::BeginCamera( const Camera& camera )
 {
 	//TODO Asg1 clear the default swapchain
-	UNUSED( camera );
+	//Texture* output = m_swapChain->GetBackBuffer(); //A01
+
+/*
+	//Texture* output = camera.getcolortarget();
+	if( output == nullptr ) {
+		//output = m_swapChain.getcolortarget();
+	}
+*/
+	if( camera.GetShouldClearColor() ) {
+		ClearScreen( camera.GetClearColor() );
+
+	}
 }
 
 void RenderContext::SetOrthoView( const AABB2& box )
@@ -136,6 +149,26 @@ void RenderContext::BindTexture( const Texture* texture )
 
 void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 {
+	Texture* texture = m_swapChain->GetBackBuffer();
+	TextureView* view = texture->GetRenderTargetView();
+	ID3D11RenderTargetView* rtv = view->GetRTVHandle();
+
+	IntVec2 outputSize = texture->GetTexelSize();
+	D3D11_VIEWPORT viewport;
+	viewport.TopLeftX	= 0;
+	viewport.TopLeftY	= 0;
+	viewport.Width		= 400; //texture->getWidth();
+	viewport.Height		= 400;//texture->GetHeight();
+	viewport.MinDepth	= 0.0f;
+	viewport.MaxDepth	= 1.0f;
+	// TEMPORARY
+	// Setup the GPU for a draw
+	m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	m_context->VSSetShader( m_currentShader->m_vertexStage.m_vs, nullptr, 0 );
+	m_context->RSSetState( nullptr ); // use defaults
+	m_context->RSSetViewports( 1, &viewport );
+	m_context->PSSetShader( m_currentShader->m_fragmentStage.m_fs, nullptr, 0 );
+	m_context->OMSetRenderTargets( 1, &rtv, nullptr );
 	m_context->Draw( numVertexes, vertexOffset );
 }
 

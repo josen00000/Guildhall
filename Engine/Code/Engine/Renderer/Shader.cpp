@@ -32,25 +32,151 @@ void* FileReadToNewBuffer( std::string const& fileName, size_t* out_size ) {
 	return buffer;
 }
 
+static char const* GetDefaultEntryPointForStage( ShaderType type ) {
+	switch( type )
+	{
+		case SHADER_TYPE_VERTEX:
+			return "VertexFunction"; // The function name in shader
+		case SHADER_TYPE_FRAGMENT:
+			return "FragmentFunction";
+		default: GUARANTEE_OR_DIE( false,  "Bad Stage" );
+	}
+}
+
+static char const* GetShaderModelForStage( ShaderType type ) {
+	switch (type)
+	{
+		case SHADER_TYPE_VERTEX: return "vs_5_0";
+		case SHADER_TYPE_FRAGMENT: return "ps_5_0";
+		default: GUARANTEE_OR_DIE( false, "Unknown shader stage" );
+	}
+}
+
+ShaderStage::~ShaderStage()
+{
+	DX_SAFE_RELEASE(m_byteCode);
+	DX_SAFE_RELEASE(m_handle);
+}
 
 bool ShaderStage::Compile( RenderContext* ctx, std::string const& fileName, /* for debug */ void const* source, /*shader code */ size_t const sourceByteLen, ShaderType stage )
 {
-	UNUSED(ctx);
-	UNUSED(fileName);
-	UNUSED(sourceByteLen);
-	UNUSED(source);
-	UNUSED(stage);
-	return false;
+	// HLSL - High level shading language
+	// Compile : HLSL -> Bytecode
+	// Link ByteCode to device assembly
+
+	char const* entryPoint = GetDefaultEntryPointForStage( stage );
+	char const* shaderModel = GetShaderModelForStage( stage );
+
+	DWORD compile_flags = 0U;
+#if defined(DEBUG_SHADERS)
+	compileFlags |= D3DCOMPILE_DEBUG;
+	compileFlags |= D3DCOMPILE_DEBUG;
+	compileFlags |= D3DCOMPILE_DEBUG;
+#else
+	compile_flags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
+#endif
+
+	// Binary large Physics
+	ID3DBlob* byteCode	= nullptr;
+	ID3DBlob* errors		= nullptr;
+
+	HRESULT hr = ::D3DCompile( source,
+		sourceByteLen,
+		fileName.c_str(),
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		entryPoint,			//first function get called in program
+		shaderModel,		//target( MSDN - specifying compiler targets)
+		compile_flags,
+		0,
+		&byteCode,
+		&errors );
+
+	if( FAILED( hr ) ) {
+		if( errors != nullptr ) {
+			char* errorString = (char*) errors->GetBufferPointer();
+			DebuggerPrintf( "Failed to compile [%s]. Compiler gave the following output; \n%s",
+				fileName.c_str(),
+				errorString );
+		}
+		DebugBreak();
+	}
+	else {
+		ID3D11Device* device = ctx->m_device;
+		void const* byteCodePtr = byteCode->GetBufferPointer();
+		size_t byteCodeSize = byteCode->GetBufferSize();
+		switch( stage )
+		{
+			default: GUARANTEE_OR_DIE( false, "Unimplemented stage." );
+			case SHADER_TYPE_VERTEX: {
+				hr = device->CreateVertexShader( byteCodePtr, byteCodeSize, nullptr, &m_vs );
+				GUARANTEE_OR_DIE( SUCCEEDED(hr), "Failed to link shader stage" );
+				break;
+			}
+			case SHADER_TYPE_FRAGMENT: {
+				hr = device->CreatePixelShader( byteCodePtr, byteCodeSize, nullptr, &m_fs );
+				GUARANTEE_OR_DIE( SUCCEEDED(hr), "Failed to link shader stage" );
+				break;
+			}
+		}
+	}
+
+	DX_SAFE_RELEASE(errors);
+
+	if( stage == SHADER_TYPE_VERTEX ) {
+		m_byteCode = byteCode;
+	}
+	else {
+		DX_SAFE_RELEASE(byteCode);
+		m_byteCode = nullptr;
+	}
+
+	m_type = stage;	
+	return IsValid();
+}
+
+Shader::Shader( RenderContext* owner )
+	:m_owner(owner)
+{
+	CreateRasterState();
+}
+
+Shader::~Shader()
+{
+	DX_SAFE_RELEASE(m_rasterState);
+	m_owner = nullptr;
 }
 
 bool Shader::CreateFromFile( std::string const& fileName )
 {
 	size_t file_size = 0;
-	void* src = FileReadToNewBuffer( fileName, &file_size );
-	if( src == nullptr ) {
+	void* source = FileReadToNewBuffer( fileName, &file_size );
+	if( source == nullptr ) {
 		return false;
 	}
 
-	delete[] src;
-	return false;
+	m_vertexStage.Compile( m_owner, fileName, source, file_size, SHADER_TYPE_VERTEX );
+	m_fragmentStage.Compile( m_owner, fileName, source, file_size, SHADER_TYPE_FRAGMENT );
+
+	delete[] source;
+	return m_vertexStage.IsValid() && m_fragmentStage.IsValid();
+}
+
+void Shader::CreateRasterState()
+{
+	D3D11_RASTERIZER_DESC desc;
+	desc.FillMode				= D3D11_FILL_SOLID;
+	desc.CullMode				= D3D11_CULL_NONE	;
+	desc.FrontCounterClockwise	= TRUE;
+	desc.DepthBias				= 0U;
+	desc.DepthBiasClamp			= 0.0f;
+	desc.SlopeScaledDepthBias	= 0.0f;
+	desc.DepthClipEnable		= TRUE;
+	desc.ScissorEnable			= FALSE;
+	desc.MultisampleEnable		= FALSE;
+	desc.AntialiasedLineEnable	= FALSE;
+
+	ID3D11Device* device = m_owner->m_device;
+	device->CreateRasterizerState( &desc, &m_rasterState );
+
 }
