@@ -1,0 +1,21 @@
+## Checklist
+- [ ] Insantiate a physic system into the game.
+- [ ] Be able to create discs/polygons
+    - [ ] `1` should create random radius disc centered at cursor
+    - [ ] `2` should create random polygon centered at cursor with between 3 and 8 points.
+- [ ] Can move around using `WASD` or equivalent (if different, make note in readme)
+- [ ] Can zoom in and out using mouse-wheel.
+- [ ] Be able to select to create a polygon or sphere
+- [ ] Render the polygon or sphere
+    - [ ] Render with a blue border
+    - [ ] Render with 50% alpha white interior
+- [ ] Be able to drag them around
+    - [ ] If mouse is inside the object, render the border yellow
+    - [ ] IF the mouse is dragging the object, rener the border green
+- [ ] If the object is touching another object, render the interior 50% alpha red.
+    - [ ] Disc-vs-Disc
+    - [ ] Disc-vs-Polygon
+    - **Polygon-vs-Polygon is not required... yet.**
+- [ ] If dragging, and `delete` is pressed, destroy object.
+- [ ] Press `Escape` to quit.
+- [ ] Add `mp2.a02.md` readme to root folder
