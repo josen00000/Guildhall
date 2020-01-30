@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "Shader.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Shader.hpp"
@@ -34,6 +35,11 @@ void* FileReadToNewBuffer( std::string const& fileName, size_t* out_size ) {
 
 bool ShaderStage::Compile( RenderContext* ctx, std::string const& fileName, /* for debug */ void const* source, /*shader code */ size_t const sourceByteLen, ShaderType stage )
 {
+	UNUSED(ctx);
+	UNUSED(fileName);
+	UNUSED(sourceByteLen);
+	UNUSED(source);
+	UNUSED(stage);
 	return false;
 }
 

@@ -102,7 +102,10 @@ void Game::UpdateCamera( float deltaSeconds )
 
 void Game::CheckIfExit()
 {
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) ){
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) || g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_X ) ){
+		g_theApp->HandleQuitRequested();
+	}
+	if( g_theWindow->m_isWindowClose ){
 		g_theApp->HandleQuitRequested();
 	}
 }

@@ -19,7 +19,8 @@ public:
 	InputSystem* GetInputSystem() const { return m_inputSystem; }
 
 public:
-	void* m_hwnd;
+	void* m_hwnd = nullptr;
+	bool m_isWindowClose = false;
 	int m_clientWidth;
 	int m_clientHeight;
 	InputSystem* m_inputSystem = nullptr;

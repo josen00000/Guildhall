@@ -23,6 +23,7 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 		{
 			// TODO SD2 quit the windows
 			//g_theApp->HandleQuitRequested();
+			window->m_isWindowClose = true;
 			return 0; // "Consumes" this message (tells Windows "okay, we handled it")
 		}
 
@@ -39,8 +40,8 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 		case WM_KEYUP:
 		{
 			unsigned char asKey = (unsigned char)wParam;
-			//m_inputSystem->UpdateKeyBoardButton( asKey, false );
-			//			#SD1ToDo: Tell the App and InputSystem about this key-released event...
+			InputSystem* input = window->GetInputSystem();
+			input->UpdateKeyBoardButton( asKey, false );
 			break;
 		}
 	}
