@@ -141,7 +141,40 @@ void Game::CheckIfNoClip()
 void Game::Render() const
 {
 	//m_world->Render(); past code
+	static int tempSelect = 0;
+	static Rgba8 tempColor;
+	switch( tempSelect )
+	{
+	case 1: tempColor = Rgba8::BLACK;
+		break;
+	case 2: tempColor = Rgba8::BLACK;
+		break;
+	case 3: tempColor = Rgba8::BLACK;
+		break;
+	case 4: tempColor = Rgba8::BLACK;
+		break;
+	case 5: tempColor = Rgba8::BLACK;
+		break;
+	case 6: tempColor = Rgba8::GRAY;
+		break;
+	case 7: tempColor = Rgba8::GRAY;
+		break;
+	case 8: tempColor = Rgba8::GRAY;
+		break;
+	case 9: tempColor = Rgba8::GRAY;
+		break;
+	case 10: tempColor = Rgba8::GRAY;
+		break;
+	}
+	if( tempSelect < 10 ) {
+		tempSelect++;
+	}
+	else {
+		tempSelect = 0;
+	}
+	m_gameCamera->m_clearColor = tempColor;
 	g_theRenderer->BeginCamera( *m_gameCamera );
+	g_theRenderer->Draw( 3, 0 );
 	g_theRenderer->EndCamera( *m_gameCamera );
 }
 

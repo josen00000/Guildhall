@@ -1,8 +1,8 @@
 #include"Texture.hpp"
+#include "Engine/Math/IntVec2.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/TextureView.hpp"
-
 
 Texture::Texture(const unsigned int textureID, const char* imageFilePath, const float width, const float height )
 	:m_textureID(textureID)
@@ -17,7 +17,9 @@ Texture::Texture( RenderContext* ctx, ID3D11Texture2D* handle )
 	:m_owner(ctx)
 	,m_handle(handle)
 {
-
+	D3D11_TEXTURE2D_DESC desc;
+	handle->GetDesc(&desc);
+	m_texelSizeCoords = IntVec2( desc.Width, desc.Height ); 
 }
 
 Texture::~Texture()

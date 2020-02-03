@@ -119,14 +119,12 @@ void App::Update( float deltaSeconds )
 const void App::Render() const
 {
 
-	
 
-	g_theRenderer->ClearScreen( Rgba8::BLACK );
 	g_theRenderer->BeginView();
 	g_theGame->Render();
 	
-	g_theRenderer->BeginCamera(*g_UICamera);
-	g_theGame->RenderUI();
+	//g_theRenderer->BeginCamera(*g_UICamera);
+	//g_theGame->RenderUI();
 	
 }
 

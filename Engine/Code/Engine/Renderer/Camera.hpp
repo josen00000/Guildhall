@@ -18,15 +18,18 @@ public:
 	Camera(const Camera& camera);
 	explicit Camera(const Vec2& bottomLeft, const Vec2& topRight);
 public:
-	 void SetOrthoView(const Vec2& bottomLeft, const Vec2& topRight);
+	void SetOrthoView(const Vec2& bottomLeft, const Vec2& topRight);
 	Vec2 GetOrthoBottomLeft() const;
 	Vec2 GetOrthoTopRight() const;
 	Vec2 GetPosition() const;
 	void SetPosition(const Vec2 inPosition);
 	void SetClearMode( unsigned int clearFlags, Rgba8 color, float depth = 0.0f , unsigned int stencil = 0 );
 	void UpdateCamera();
-public:
 
+	bool GetShouldClearColor() const { return m_shouldClearColor; }
+	Rgba8 GetClearColor() const { return m_clearColor; }
+	void SetShouldClearColor();
+public:
 	AABB2 m_AABB2=AABB2(Vec2(0,0),Vec2(0,0));
 	Vec2 m_position=Vec2(0.f,0.f);
 	float m_width=0.f;
@@ -34,4 +37,7 @@ public:
 
 	unsigned int m_clearMode = 0;
 	Rgba8 m_clearColor = Rgba8::BLACK;
+private:
+	bool m_shouldClearColor = true;
+	
 };
