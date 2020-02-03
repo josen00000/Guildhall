@@ -1,13 +1,13 @@
 #pragma once
 class KeyButtonState {
 public:
-	KeyButtonState();
-	~KeyButtonState();
+	KeyButtonState(){}
+	~KeyButtonState(){}
 public:
-	void UpdateStatus(bool isNowPressed);
-	void UpdateButtonCurrentFrame(bool isNowPressed);
+	void UpdateStatus( bool isNowPressed );
+	void UpdateButtonCurrentFrame( bool isNowPressed );
 	void UpdateButtonLastFrame();
-	bool IsPressed() const  {return m_isPressed;}
+	bool IsPressed() const  { return m_isPressed; }
 	bool WasJustPressed() const;
 	bool WasJustReleased() const;
 	void Reset();

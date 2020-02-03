@@ -8,8 +8,6 @@ const KeyButtonState& KeyBoardController::GetButtonState( KeyBoardButtonID butto
 	return m_buttonStates[buttonID];
 }
 
-
-
 void KeyBoardController::UpdateButtonCurrentFrame(  unsigned char inputButton, bool isPressed )
 {
 	m_buttonStates[inputButton].UpdateButtonCurrentFrame(isPressed);
@@ -18,15 +16,15 @@ void KeyBoardController::UpdateButtonCurrentFrame(  unsigned char inputButton, b
 
 void KeyBoardController::UpdateButtonsLastFrame()
 {
-	for(int buttonIndex=0;buttonIndex<NUM_KEYBOARD_BUTTONS;buttonIndex++){
+	for( int buttonIndex = 0; buttonIndex < NUM_KEYBOARD_BUTTONS; buttonIndex++ ){
 		m_buttonStates[buttonIndex].UpdateButtonLastFrame();
 	}
 }
 
 void KeyBoardController::InitialButtonStates()
 {
-	for(int buttonIndex=0;buttonIndex<NUM_KEYBOARD_BUTTONS;buttonIndex++){
-		m_buttonStates[buttonIndex]=KeyButtonState();
+	for( int buttonIndex = 0; buttonIndex < NUM_KEYBOARD_BUTTONS; buttonIndex++ ){
+		m_buttonStates[buttonIndex] = KeyButtonState();
 	}
 }
 

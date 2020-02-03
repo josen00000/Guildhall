@@ -184,6 +184,7 @@
     <ClCompile Include="Input\InputSystem.cpp" />
     <ClCompile Include="Input\KeyBoardController.cpp" />
     <ClCompile Include="Input\KeyButtonState.cpp" />
+    <ClCompile Include="Input\MouseController.cpp" />
     <ClCompile Include="Input\XboxController.cpp" />
     <ClCompile Include="Math\AABB2.cpp" />
     <ClCompile Include="Math\Capsule2.cpp" />
@@ -197,7 +198,7 @@
     <ClCompile Include="Math\RandomNumberGenerator.cpp" />
     <ClCompile Include="Math\RawNoise.cpp" />
     <ClCompile Include="Math\SmoothNoise.cpp" />
-    <ClCompile Include="Math\vec2.cpp" />
+    <ClCompile Include="Math\Vec2.cpp" />
     <ClCompile Include="Math\Vec3.cpp" />
     <ClCompile Include="Math\Vec4.cpp" />
     <ClCompile Include="Physics\Collider2D.cpp" />
@@ -240,6 +241,7 @@
     <ClInclude Include="Input\InputSystem.hpp" />
     <ClInclude Include="Input\KeyBoardController.hpp" />
     <ClInclude Include="Input\KeyButtonState.hpp" />
+    <ClInclude Include="Input\MouseController.hpp" />
     <ClInclude Include="Input\XboxController.hpp" />
     <ClInclude Include="Math\AABB2.hpp" />
     <ClInclude Include="Math\Capsule2.hpp" />

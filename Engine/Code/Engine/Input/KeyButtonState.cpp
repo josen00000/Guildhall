@@ -1,14 +1,4 @@
-#include<Engine/Input/KeyButtonState.hpp>
-
-KeyButtonState::KeyButtonState()
-{
-
-}
-
-KeyButtonState::~KeyButtonState()
-{
-
-}
+#include "KeyButtonState.hpp"
 
 void KeyButtonState::UpdateStatus( bool isNowPressed )
 {
@@ -21,18 +11,14 @@ void KeyButtonState::UpdateButtonCurrentFrame(bool isNowPressed)
 	m_isPressed = isNowPressed;
 }
 
-
-
-
 void KeyButtonState::UpdateButtonLastFrame()
 {
-	m_wasPressedLastFrame=m_isPressed;
+	m_wasPressedLastFrame = m_isPressed;
 }
-
 
 bool KeyButtonState::WasJustPressed() const
 {
-	if(!m_wasPressedLastFrame&&m_isPressed){
+	if( !m_wasPressedLastFrame && m_isPressed ){
 		return true;
 	}
 	else{
@@ -42,7 +28,7 @@ bool KeyButtonState::WasJustPressed() const
 
 bool KeyButtonState::WasJustReleased() const
 {
-	if( m_wasPressedLastFrame&&!m_isPressed ) {
+	if( m_wasPressedLastFrame && !m_isPressed ) {
 		return true;
 	}
 	else {
@@ -52,7 +38,7 @@ bool KeyButtonState::WasJustReleased() const
 
 void KeyButtonState::Reset()
 {
-	m_isPressed=false;
-	m_wasPressedLastFrame=false;
+	m_isPressed = false;
+	m_wasPressedLastFrame = false;
 }
 

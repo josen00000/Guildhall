@@ -9,16 +9,26 @@ class Rigidbody2D {
 	friend class Physics2D;
 
 public:
-	void Destroy();
-	void TakeCollider( Collider2D* collider ); 
-	void SetPosition( Vec2 position );
+	Rigidbody2D( Physics2D* owner, Collider2D* col = nullptr );
+
+private:
+	~Rigidbody2D();
 
 public:
+	void Destroy();
+	void TakeCollider( Collider2D* collider ); 
+	
+	// Accessor
+	Vec2 GetLocation() const { return m_worldPosition; }
+	bool IsDestroied() const {return m_isDestroied; }
+	
+	// Mutator
+	void SetPosition( Vec2 position );
+
+private:
 	Physics2D*	m_system	= nullptr;
 	Collider2D* m_collider	= nullptr;
 
 	Vec2 m_worldPosition;
-
-private:
-	~Rigidbody2D();
+	bool m_isDestroied = true;
 };

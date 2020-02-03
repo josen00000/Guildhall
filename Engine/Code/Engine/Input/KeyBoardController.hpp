@@ -1,14 +1,15 @@
 #pragma once
 #include "Engine/Input//KeyButtonState.hpp"
+
 enum KeyBoardButtonID {
-	KEYBOARD_BUTTON_ID_INVALID=-1,
-	KEYBOARD_BUTTON_ID_ESC = 27,
-	KEYBOARD_BUTTON_ID_SPACE = 32,
-	KEYBOARD_BUTTON_ID_LEFT_ARROW=37,
+	KEYBOARD_BUTTON_ID_INVALID		=-1,
+	KEYBOARD_BUTTON_ID_ESC			= 27,
+	KEYBOARD_BUTTON_ID_SPACE		= 32,
+	KEYBOARD_BUTTON_ID_LEFT_ARROW	= 37,
 	KEYBOARD_BUTTON_ID_UP_ARROW,
 	KEYBOARD_BUTTON_ID_RIGHT_ARROW,
 	KEYBOARD_BUTTON_ID_DOWN_ARROW,
-	KEYBOARD_BUTTON_ID_0=48,
+	KEYBOARD_BUTTON_ID_0			= 48,
 	KEYBOARD_BUTTON_ID_1,
 	KEYBOARD_BUTTON_ID_2,
 	KEYBOARD_BUTTON_ID_3,
@@ -18,7 +19,7 @@ enum KeyBoardButtonID {
 	KEYBOARD_BUTTON_ID_7,
 	KEYBOARD_BUTTON_ID_8,
 	KEYBOARD_BUTTON_ID_9,
-	KEYBOARD_BUTTON_ID_A=65,
+	KEYBOARD_BUTTON_ID_A			= 65,
 	KEYBOARD_BUTTON_ID_B,
 	KEYBOARD_BUTTON_ID_C,
 	KEYBOARD_BUTTON_ID_D,
@@ -44,7 +45,7 @@ enum KeyBoardButtonID {
 	KEYBOARD_BUTTON_ID_X,
 	KEYBOARD_BUTTON_ID_Y,
 	KEYBOARD_BUTTON_ID_Z,
-	KEYBOARD_BUTTON_ID_F1=112,
+	KEYBOARD_BUTTON_ID_F1			= 112,
 	KEYBOARD_BUTTON_ID_F2,
 	KEYBOARD_BUTTON_ID_F3,
 	KEYBOARD_BUTTON_ID_F4,
@@ -54,6 +55,7 @@ enum KeyBoardButtonID {
 	KEYBOARD_BUTTON_ID_F8,
 	NUM_KEYBOARD_BUTTONS
 };
+
 class KeyBoardController {
 	friend class InputSystem;
 
@@ -64,7 +66,7 @@ public:
 	const KeyButtonState& GetButtonState(KeyBoardButtonID buttonID) const;
 
 private:
-	void UpdateButtonCurrentFrame(unsigned char inputButton, bool isPressed );
+	void UpdateButtonCurrentFrame( unsigned char inputButton, bool isPressed );
 	void UpdateButtonsLastFrame();
 	void InitialButtonStates();
 

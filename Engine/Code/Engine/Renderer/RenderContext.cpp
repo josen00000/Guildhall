@@ -267,26 +267,43 @@ void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, cons
 
 
 	DrawVertexArray(6,line);
-
-
 }
 
 void RenderContext::DrawCircle( Vec3 center,float radiu,float thick,Rgba8& circleColor )
 {
-	float degree=0;
-	float nextDegree=0;
-	for(int i=0;i<64;i++){
-		nextDegree=(i+1)*(float)360/64;
-		Vec2 startPoint= Vec2();
-		startPoint.SetPolarDegrees(degree,radiu);
-		startPoint.operator+=(Vec2(center));
-		Vec2 endPoint= Vec2();
-		endPoint.SetPolarDegrees(nextDegree,radiu);
-		endPoint.operator+= ( Vec2(center));
-		degree=nextDegree;
-		DrawLine(startPoint,endPoint,thick,circleColor);
+	float degree = 0;
+	float nextDegree = 0;
+	for(int i = 0;i < 64;i++){
+		nextDegree = ( i + 1 ) * (float)( 360 / 64 );
+		Vec2 startPoint = Vec2();
+		startPoint.SetPolarDegrees( degree, radiu );
+		startPoint.operator += ( Vec2( center ) );
+		Vec2 endPoint = Vec2();
+		endPoint.SetPolarDegrees( nextDegree, radiu );
+		endPoint.operator += ( Vec2( center ) );
+		degree = nextDegree;
+		DrawLine( startPoint, endPoint, thick, circleColor );
 		
 	}
+
+}
+
+void RenderContext::DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor )
+{
+	float degree = 0;
+	float nextDegree = 0;
+	for( int i = 0; i < 64; i++ ) {
+		nextDegree = (i + 1) * (float)(360 / 64);
+		Vec2 startPoint = Vec2();
+		startPoint.SetPolarDegrees( degree, radiu );
+		startPoint += ( Vec2( center ) );
+		Vec2 endPoint = Vec2();
+		endPoint.SetPolarDegrees( nextDegree, radiu );
+		endPoint += ( Vec2( center ) );
+		degree = nextDegree;
+
+	}
+
 
 }
 

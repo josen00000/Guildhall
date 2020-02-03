@@ -31,17 +31,22 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	void Shutdown();
+	
 	void ClearScreen(const Rgba8& clearColo);
 	void BeginCamera(const Camera& camera);
 	void SetOrthoView(const AABB2& box);
 	void EndCamera(const Camera& camera);
+	
 	void BindTexture(const Texture* texture);
 	void DrawVertexVector(const std::vector<Vertex_PCU>& vertexArray);
 	void DrawVertexArray(int vertexNum, Vertex_PCU* vertexArray);
+	
 	void DrawAABB2D(const AABB2& bounds,const Rgba8& tint);
 	void DrawLine(const Vec2& startPoint,const Vec2&endPoint,const float thick,const Rgba8& lineColor);
 	void DrawCircle(Vec3 center,float radiu,float thick,Rgba8& circleColor);
+	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
 	void SetBlendMode(BlendMode blendMode);
+	
 	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
 	BitmapFont* CreateOrGetBitmapFontFromFile(const char* fontName, const char* fontFilePath);
 

@@ -48,12 +48,12 @@ private :
 	void UpdateButton(XboxButtonID buttonID, unsigned short buttonFlags, unsigned short buttonFlag);
 	void InitialButtonStates();
 public:
-	const int m_controllerID=-1;
-	bool m_isConnected=false;
+	bool m_isConnected			= false;
+	float m_leftTriggerValue	= 0.f;
+	float m_rightTriggerValue	= 0.f;
+	const int m_controllerID	= -1;
+	AnalogJoystick m_leftJoystick	= AnalogJoystick(INNER_DEADZONE_FRACTION,OUTER_DEADZONE_FRACTION);
+	AnalogJoystick m_rightJoystick	= AnalogJoystick(INNER_DEADZONE_FRACTION,OUTER_DEADZONE_FRACTION);
 	KeyButtonState m_buttonStates[NUM_XBOX_BUTTONS];
-	AnalogJoystick m_leftJoystick = AnalogJoystick(INNER_DEADZONE_FRACTION,OUTER_DEADZONE_FRACTION);
-	AnalogJoystick m_rightJoystick= AnalogJoystick(INNER_DEADZONE_FRACTION,OUTER_DEADZONE_FRACTION);
-	float m_leftTriggerValue=0.f;
-	float m_rightTriggerValue=0.f;
 	
 };
