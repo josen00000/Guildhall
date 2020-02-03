@@ -9,12 +9,12 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
+#include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/SwapChain.hpp"
 #include "Engine/Renderer/Shader.hpp"
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
-
 //third party library
 
 
@@ -71,8 +71,9 @@ void RenderContext::StartUp( Window* window )
 		&m_context );
 
 	m_swapChain = new SwapChain( this, swapchain );
-	m_currentShader = new Shader();
-	m_currentShader->CreateFromFile( "data/Shader/Triangle.hlsl" );
+	m_defaultShader = new Shader();
+	m_defaultShader->CreateFromFile( "data/Shader/Triangle.hlsl" );
+	m_immediateVBO = new VertexBuffer( this, MEMORY_HINT_DYNAMIC );
 }
 
 void RenderContext::BeginView(){
@@ -132,6 +133,24 @@ void RenderContext::EndCamera( const Camera& camera )
 void RenderContext::BindTexture( const Texture* texture )
 {
 	UNUSED( texture );
+}
+
+void RenderContext::BindShader( Shader* shader )
+{
+	m_defaultShader = shader;
+	if( m_defaultShader == nullptr ) {
+		m_defaultShader = m_defaultShader;
+	}
+}
+
+void RenderContext::BindVertexInput( VertexBuffer* vbo )
+{
+	ID3D11Buffer* vboHandle = vbo->m_handle;
+	UINT stride = sizeof(Vertex_PCU);
+	UINT offset = 0;
+
+	m_context->IASetVertexBuffers( 0, 1, &vboHandle, &stride, &offset );
+
 }
 
 void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
@@ -261,10 +280,18 @@ void RenderContext::DrawVertexVector( const std::vector<Vertex_PCU>& vertexArray
 	UNUSED( vertexArray );
 }
 
-void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray )
+void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 {
-	UNUSED( vertexArray );
-	UNUSED( vertexNum );
+	// Update a vertex buffer
+	size_t elementSize = sizeof(Vertex_PCU);
+	size_t bufferByteSize = vertexNum * sizeof(Vertex_PCU);
+	m_immediateVBO->Update( vertexes, bufferByteSize, elementSize );
+
+	// Bind
+	BindVertexInput( m_immediateVBO );
+	
+	// Draw
+	Draw( vertexNum, 0 );
 }
 
 void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )

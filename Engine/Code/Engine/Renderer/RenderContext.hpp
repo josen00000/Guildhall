@@ -8,8 +8,9 @@ class BitmapFont;
 class Camera;
 class Texture;
 class SwapChain;
-class Window;
 class Shader;
+class VertexBuffer;
+class Window;
 struct AABB2;
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -41,6 +42,8 @@ public:
 	void ClearScreen(const Rgba8& clearColo);
 	void SetOrthoView(const AABB2& box);
 	void BindTexture(const Texture* texture);
+	void BindShader( Shader* shader );
+	void BindVertexInput( VertexBuffer* vbo );
 
 	void Draw( int numVertexes, int vertexOffset = 0 );
 	void DrawVertexVector(const std::vector<Vertex_PCU>& vertexArray);
@@ -71,5 +74,7 @@ private:
 	std::map<std::string, Texture*>			m_loadedTextures;
 	std::map<std::string, BitmapFont*>		m_loadedFonts;
 
-	Shader* m_currentShader = nullptr;
+	Shader*			m_currentShader = nullptr;
+	Shader*			m_defaultShader	= nullptr;
+	VertexBuffer*	m_immediateVBO = nullptr;
 };

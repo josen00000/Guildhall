@@ -11,6 +11,8 @@
 
 #define UNUSED(x) (void)(x);
 
+typedef unsigned int uint;
+typedef unsigned char byte;
 
 extern DevConsole* g_theConsole;
 extern NamedStrings g_gameConfigBlackboard;
