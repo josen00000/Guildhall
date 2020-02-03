@@ -72,7 +72,7 @@ void RenderContext::StartUp( Window* window )
 
 	m_swapChain = new SwapChain( this, swapchain );
 
-	m_defaultShader = new Shader();
+	m_defaultShader = new Shader( this );
 	m_defaultShader->CreateFromFile( "data/Shader/Triangle.hlsl" );
 	m_immediateVBO = new VertexBuffer( this, MEMORY_HINT_DYNAMIC );
 
@@ -133,6 +133,7 @@ void RenderContext::BeginCamera( const Camera& camera )
 		ClearScreen( camera.GetClearColor() );
 
 	}
+	BindShader(nullptr);
 }
 
 void RenderContext::SetOrthoView( const AABB2& box )
@@ -152,9 +153,11 @@ void RenderContext::BindTexture( const Texture* texture )
 
 void RenderContext::BindShader( Shader* shader )
 {
-	m_defaultShader = shader;
-	if( m_defaultShader == nullptr ) {
-		m_defaultShader = m_defaultShader;
+	if( shader == nullptr ) {
+		m_currentShader = m_defaultShader;
+	}
+	else {
+		m_currentShader = shader;
 	}
 }
 
