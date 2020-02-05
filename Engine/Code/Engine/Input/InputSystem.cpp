@@ -38,8 +38,8 @@ void InputSystem::Shutdown()
 		delete m_controllers[cIndex];
 		m_controllers[cIndex] = nullptr;
 	}
-	m_keyBoardController = nullptr;
-	m_mouseController = nullptr;
+	m_keyBoardController	= nullptr;
+	m_mouseController		= nullptr;
 }
 
 IntVec2 InputSystem::GetMouseRawDesktopPos() const
@@ -74,9 +74,39 @@ Vec2 InputSystem::GetNormalizedMousePosInCamera( const Camera& camera ) const
 	return mousePosInCamera;
 }
 
+void InputSystem::UpdateMouseButtonState( bool leftDown, bool middleDown, bool rightDown )
+{
+	m_mouseController->UpdateButtonCurrentFrame( MOUSE_BUTTON_LEFT, leftDown );
+	m_mouseController->UpdateButtonCurrentFrame( MOUSE_BUTTON_MIDDLE, middleDown );
+	m_mouseController->UpdateButtonCurrentFrame( MOUSE_BUTTON_RIGHT, rightDown );
+}
+
+void InputSystem::UpdateMouseWheelAmount( float deltaAmount )
+{
+	m_mouseController->UpdateWheelThisFrame( deltaAmount );
+}
+
+bool InputSystem::IsMouseButtonDown( MouseButtonID buttonID ) const
+{
+	const KeyButtonState& tempMouseButtonState = m_mouseController->m_mouseButton[buttonID];
+	return tempMouseButtonState.IsPressed();
+}
+
 void InputSystem::UpdateKeyBoardButton(unsigned char inValue, bool isPressed)
 {
 	m_keyBoardController->UpdateButtonCurrentFrame(inValue,isPressed);
+}
+
+bool InputSystem::WasMouseButtonJustPressed( MouseButtonID buttonID ) const
+{
+	const KeyButtonState& tempMouseButtonState = m_mouseController->m_mouseButton[buttonID];
+	return tempMouseButtonState.WasJustPressed();
+}
+
+bool InputSystem::WasMouseButtonJustReleased( MouseButtonID buttonID ) const
+{
+	const KeyButtonState& tempMouseButtonState = m_mouseController->m_mouseButton[buttonID];
+	return tempMouseButtonState.WasJustReleased();
 }
 
 const XboxController* InputSystem::GetXboxController( int controllerID )

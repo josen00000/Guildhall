@@ -5,8 +5,9 @@
 
 class DiscCollider2D : public Collider2D {
 public:
-	DiscCollider2D();
+	DiscCollider2D(){}
 	explicit DiscCollider2D( const Vec2& localPos, const Vec2& worldPos, float radius );
+	explicit DiscCollider2D( const Vec2& worldPos, float radius );
 	~DiscCollider2D();
 
 public:

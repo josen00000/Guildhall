@@ -61,10 +61,10 @@ LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMess
 		case WM_KEYDOWN:
 		{
 			unsigned char asKey = (unsigned char)wParam;
-			if(asKey==VK_ESCAPE){
+			if( asKey == VK_ESCAPE ){
 				g_theApp->HandleQuitRequested();
 			}
-			g_theInputSystem->UpdateKeyBoardButton(asKey, true);
+			g_theInputSystem->UpdateKeyBoardButton( asKey, true );
 			break;
 		}
 
@@ -75,6 +75,62 @@ LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMess
 			g_theInputSystem->UpdateKeyBoardButton(asKey, false);
 //			#SD1ToDo: Tell the App and InputSystem about this key-released event...
 			break;
+		}
+
+		// Mouse Input
+		case WM_LBUTTONDOWN:
+		{
+			bool leftButtonDown		= wParam & MK_LBUTTON;
+			bool rightButtonDown	= wParam & MK_RBUTTON;
+			bool middleButtonDown	= wParam & MK_MBUTTON;
+			g_theInputSystem->UpdateMouseButtonState( leftButtonDown, middleButtonDown, rightButtonDown );
+			break;
+		}
+
+		case WM_RBUTTONDOWN:
+		{
+			bool leftButtonDown		= wParam & MK_LBUTTON;
+			bool rightButtonDown	= wParam & MK_RBUTTON;
+			bool middleButtonDown	= wParam & MK_MBUTTON;
+			g_theInputSystem->UpdateMouseButtonState( leftButtonDown, middleButtonDown, rightButtonDown );
+			break;
+		}
+
+		case WM_MBUTTONDOWN:
+		{
+			bool leftButtonDown		= wParam & MK_LBUTTON;
+			bool rightButtonDown	= wParam & MK_RBUTTON;
+			bool middleButtonDown	= wParam & MK_MBUTTON;
+			g_theInputSystem->UpdateMouseButtonState( leftButtonDown, middleButtonDown, rightButtonDown );
+			break;
+		}
+
+		case WM_RBUTTONUP: {
+			bool leftButtonUp		= wParam & MK_LBUTTON;
+			bool rightButtonUp		= wParam & MK_RBUTTON;
+			bool middleButtonUp		= wParam & MK_MBUTTON;
+			g_theInputSystem->UpdateMouseButtonState( !leftButtonUp, !middleButtonUp, !rightButtonUp );
+		}
+
+		case WM_LBUTTONUP: {
+			bool leftButtonUp		= wParam & MK_LBUTTON;
+			bool rightButtonUp		= wParam & MK_RBUTTON;
+			bool middleButtonUp		= wParam & MK_MBUTTON;
+			g_theInputSystem->UpdateMouseButtonState( !leftButtonUp, !middleButtonUp, !rightButtonUp );
+		}
+
+		case WM_MBUTTONUP: {
+			bool leftButtonUp		= wParam & MK_LBUTTON;
+			bool rightButtonUp		= wParam & MK_RBUTTON;
+			bool middleButtonUp		= wParam & MK_MBUTTON;
+			g_theInputSystem->UpdateMouseButtonState( !leftButtonUp, !middleButtonUp, !rightButtonUp );
+		}
+
+		case WM_MOUSEWHEEL: 
+		{
+			DWORD scrollFixedPoint = wParam >> 16;
+			float scrollAmount = (float)scrollFixedPoint / 120.f;
+			g_theInputSystem->UpdateMouseWheelAmount( scrollAmount );
 		}
 	}
 

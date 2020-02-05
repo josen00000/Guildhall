@@ -17,11 +17,12 @@ Rigidbody2D::~Rigidbody2D()
 
 void Rigidbody2D::Destroy()
 {
+	
 	m_isDestroied = true;
 	m_collider->Destroy();
 }
 
-void Rigidbody2D::TakeCollider( Collider2D* collider )
+void Rigidbody2D::SetCollider( Collider2D* collider )
 {
 	if( nullptr != m_collider ) {
 		m_collider->Destroy();
@@ -34,5 +35,10 @@ void Rigidbody2D::SetPosition( Vec2 position )
 {
 	m_worldPosition = position;
 	//m_collider TODO
+}
+
+void Rigidbody2D::DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor )
+{
+	m_collider->DebugRender( ctx, borderColor, filledColor );
 }
 

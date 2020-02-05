@@ -3,7 +3,8 @@
 
 class Collider2D;
 class Physics2D;
-
+class RenderContext;
+struct Rgba8;
 
 class Rigidbody2D {
 	friend class Physics2D;
@@ -16,19 +17,23 @@ private:
 
 public:
 	void Destroy();
-	void TakeCollider( Collider2D* collider ); 
 	
 	// Accessor
 	Vec2 GetLocation() const { return m_worldPosition; }
-	bool IsDestroied() const {return m_isDestroied; }
+	bool IsDestroied() const { return m_isDestroied; }
+	Collider2D* GetCollider() const { return m_collider; }
 	
 	// Mutator
 	void SetPosition( Vec2 position );
+	void SetCollider( Collider2D* collider ); 
+
+	// help
+	void DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
 
 private:
 	Physics2D*	m_system	= nullptr;
 	Collider2D* m_collider	= nullptr;
 
 	Vec2 m_worldPosition;
-	bool m_isDestroied = true;
+	bool m_isDestroied = false;
 };

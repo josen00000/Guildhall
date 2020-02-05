@@ -33,6 +33,7 @@ void App::Startup()
 	
 
 	g_theRenderer->StartUp();
+	g_theInputSystem->Startup();
 	m_theGame->Startup();
 }
 

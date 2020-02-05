@@ -43,9 +43,9 @@ void DevConsole::Render( RenderContext& renderer, const Camera& camera, float li
 {
 	if(!m_isOpen){ return;}
 	std::vector<Vertex_PCU> vertices;
-	int maxDisplayedLinesNum = (int)(camera.m_height / lineHeight);
+	int maxDisplayedLinesNum = (int)(camera.GetHeight() / lineHeight);
 	int index = (int)(m_lines.size() - 1);
-	Vec2 minsPos = camera.m_AABB2.mins;
+	Vec2 minsPos = camera.GetOrthoBottomLeft();
 	if(index == 0){ return;}
 	while(index >= m_lines.size() - 1 - maxDisplayedLinesNum){
 		ColoredLine tem = m_lines[index];

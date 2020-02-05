@@ -1,6 +1,8 @@
 #pragma once
-#include<Engine//Math/vec2.hpp>
-#include<Engine/Math/AABB2.hpp>
+#include "Engine/Math/Vec2.hpp"
+#include "Engine/Math/Vec3.hpp"
+#include "Engine/Math/AABB2.hpp"
+
 class Camera{
 
 public:
@@ -8,17 +10,30 @@ public:
 	~Camera(){}
 	Camera(const Camera& camera);
 	explicit Camera(const Vec2& bottomLeft, const Vec2& topRight);
+
 public:
-	 void SetOrthoView(const Vec2& bottomLeft, const Vec2& topRight);
+	// Accessor
 	Vec2 GetOrthoBottomLeft() const;
 	Vec2 GetOrthoTopRight() const;
 	Vec2 GetPosition() const;
-	void SetPosition(const Vec2 inPosition);
-	void UpdateCamera();
-public:
+	float GetHeight() const;
+	float GetWidth() const;
+	float GetAspectRatio() const;
 
-	AABB2 m_AABB2=AABB2(Vec2(0,0),Vec2(0,0));
-	Vec2 m_position=Vec2(0.f,0.f);
-	float m_width=0.f;
-	float m_height=0.f;
+	// Mutator
+	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight );
+	void SetOutputSize( Vec2 size );
+	void SetOutputSize( float aspectRatio, float height );
+	void SetPosition( const Vec3& position );
+	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f );
+	
+	Vec2 ClientToWorldPosition( Vec2 clientPos );
+
+private:
+	Vec2 GetOrthoMin() const;
+	Vec2 GetOrthoMax() const;
+
+public:
+	Vec2 m_outputSize;
+	Vec3 m_position = Vec3( 0.f, 0.f, 0.f );
 };

@@ -36,7 +36,6 @@ void RenderContext::EndFrame()
 
 void RenderContext::Shutdown()
 {
-	delete this;
 	
 }
 
@@ -49,7 +48,7 @@ void RenderContext::ClearScreen( const Rgba8& clearColor )
 void RenderContext::BeginCamera( const Camera& camera )
 {
 	glLoadIdentity();
-	glOrtho( camera.m_AABB2.mins.x, camera.m_AABB2.maxs.x, camera.m_AABB2.mins.y, camera.m_AABB2.maxs.y, 0.f, 1.f );
+	glOrtho( camera.GetOrthoBottomLeft().x, camera.GetOrthoTopRight().x, camera.GetOrthoBottomLeft().y, camera.GetOrthoTopRight().y, 0.f, 1.f );
 }
 void RenderContext::SetOrthoView( const AABB2& box )
 {
@@ -244,56 +243,56 @@ void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, const float thick, const Rgba8& lineColor )
 {
 	
-	float halfThick=thick/2;
-	Vec2 direction=endPoint.operator-( startPoint );
-	direction.SetLength(halfThick);
-	Vec2 tem_position=endPoint+direction;
-	Vec2 rightTop=tem_position.operator+( Vec2(-direction.y,direction.x));
+	float halfThick = thick / 2;
+	Vec2 direction = endPoint -  startPoint;
+	direction.SetLength( halfThick );
+	Vec2 tem_position = endPoint+direction;
+	Vec2 rightTop = tem_position +( Vec2(-direction.y,direction.x));
 	Vec2 rightdown=tem_position.operator+(Vec2(direction.y,-direction.x));
 	Vec2 tem_position1=startPoint-direction;
 	Vec2 leftTop=tem_position1.operator+( Vec2( -direction.y, direction.x ) );
 	Vec2 leftdown=tem_position1.operator+(  Vec2( direction.y, -direction.x ));
 	Vec2 tem_uv=Vec2(0.f,0.f);
 	Vertex_PCU line[6]={
-		Vertex_PCU(  Vec3( rightTop.x,rightTop.y,0 ),Rgba8(lineColor.r,lineColor.g,lineColor.b),Vec2( 0, 0 ) ),
-		Vertex_PCU( Vec3(rightdown.x,rightdown.y,0), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 )), 
-		Vertex_PCU( Vec3(leftTop.x,leftTop.y,0), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-		Vertex_PCU(Vec3( leftTop.x,leftTop.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-		Vertex_PCU(Vec3( leftdown.x,leftdown.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-		Vertex_PCU(Vec3( rightdown.x,rightdown.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ))
-	
-	
+		Vertex_PCU( Vec3( rightTop.x,rightTop.y,0 ),	Rgba8(lineColor.r,lineColor.g,lineColor.b),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3(rightdown.x,rightdown.y,0),	Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 )), 
+		Vertex_PCU( Vec3(leftTop.x,leftTop.y,0),		Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y, 0 ),		Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( leftdown.x,leftdown.y, 0 ),	Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ))
 	};
 
 
 	DrawVertexArray(6,line);
 }
 
-void RenderContext::DrawCircle( Vec3 center,float radiu,float thick,Rgba8& circleColor )
+void RenderContext::DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor )
 {
 	float degree = 0;
 	float nextDegree = 0;
-	for(int i = 0;i < 64;i++){
-		nextDegree = ( i + 1 ) * (float)( 360 / 64 );
+	const int vertexNum = 32;
+	for( int i = 0; i < vertexNum; i++){
+		nextDegree = ( i + 1 ) * ( 360.f / vertexNum );
 		Vec2 startPoint = Vec2();
 		startPoint.SetPolarDegrees( degree, radiu );
-		startPoint.operator += ( Vec2( center ) );
+		startPoint += Vec2( center );
 		Vec2 endPoint = Vec2();
 		endPoint.SetPolarDegrees( nextDegree, radiu );
-		endPoint.operator += ( Vec2( center ) );
+		endPoint += Vec2( center );
 		degree = nextDegree;
 		DrawLine( startPoint, endPoint, thick, circleColor );
-		
 	}
-
 }
 
 void RenderContext::DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor )
 {
 	float degree = 0;
 	float nextDegree = 0;
-	for( int i = 0; i < 64; i++ ) {
-		nextDegree = (i + 1) * (float)(360 / 64);
+	const int vertexNum = 32;
+	static std::vector<Vertex_PCU> circleVertices;
+	circleVertices.reserve( vertexNum * sizeof(Vertex_PCU) );
+	for( int i = 0; i < vertexNum; i++ ) {
+		nextDegree = (i + 1) * (360.f / vertexNum);
 		Vec2 startPoint = Vec2();
 		startPoint.SetPolarDegrees( degree, radiu );
 		startPoint += ( Vec2( center ) );
@@ -301,10 +300,11 @@ void RenderContext::DrawFilledCircle( Vec3 center, float radiu, const Rgba8& fil
 		endPoint.SetPolarDegrees( nextDegree, radiu );
 		endPoint += ( Vec2( center ) );
 		degree = nextDegree;
-
+		circleVertices.push_back( Vertex_PCU( center, filledColor, Vec2::ZERO ) );
+		circleVertices.push_back( Vertex_PCU( Vec3( startPoint ), filledColor, Vec2::ZERO ) );
+		circleVertices.push_back( Vertex_PCU( Vec3( endPoint ), filledColor, Vec2::ZERO ) );
 	}
-
-
+	DrawVertexVector( circleVertices );
 }
 
 void RenderContext::SetBlendMode( BlendMode blendMode )

@@ -7,6 +7,7 @@
 #include "Engine/Core/Time.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
+#include "Engine/Physics/Physics2D.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
@@ -18,7 +19,7 @@ Camera*			g_UICamera			= nullptr;
 BitmapFont*		g_squirrelFont		= nullptr;
 RenderContext*	g_theRenderer		= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
-
+Physics2D*		g_thePhysics		= nullptr;
 
 void App::Startup()
 {
@@ -26,10 +27,12 @@ void App::Startup()
 	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
-	g_theGame			= new Game( g_camera, g_UICamera );
+	g_theGame			= new Game( g_camera );
+	g_thePhysics		= new Physics2D();
 	
 	g_theRenderer->StartUp();
 	g_theGame->Startup();
+	g_theInputSystem->Startup();
 }
 
 void App::Shutdown()
@@ -39,10 +42,10 @@ void App::Shutdown()
 	g_theGame->Shutdown();
 	
 	delete g_camera;
-	delete g_UICamera;
+	delete g_UICamera; 
 	delete g_theInputSystem;
 	delete g_theGame;
-	//delete g_theRenderer; //TODO Debug
+	delete g_theRenderer; //TODO Debug
 	
 	g_theGame			= nullptr;
 	g_camera			= nullptr;
@@ -119,10 +122,6 @@ const void App::Render() const
 	g_theRenderer->ClearScreen( Rgba8(0,0,0,255) );
 	g_theRenderer->BeginView();
 	g_theGame->Render();
-	
-	g_theRenderer->BeginCamera(*g_UICamera);
-	g_theGame->RenderUI();
-	
 }
 
 void App::EndFrame()

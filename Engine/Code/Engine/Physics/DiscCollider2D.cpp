@@ -10,9 +10,10 @@ DiscCollider2D::DiscCollider2D( const Vec2& localPos, const Vec2& worldPos, floa
 	
 }
 
-DiscCollider2D::DiscCollider2D()
+DiscCollider2D::DiscCollider2D( const Vec2& worldPos, float radius )
+	:m_worldPosition(worldPos)
+	,m_radius(radius)
 {
-
 }
 
 DiscCollider2D::~DiscCollider2D()
@@ -49,6 +50,7 @@ bool DiscCollider2D::Intersects( const Collider2D* other ) const
 
 void DiscCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
 {
-	//ctx->DrawCircle( m_localPosition, m_radius, 0.1, borderColor );
-	//ctx->DrawCircle( m_localPosition,( m_radius - 0.1 ), m_radius )
+	// TODO test and debug
+	ctx->DrawCircle( m_localPosition, m_radius, 0.1, borderColor );
+	ctx->DrawFilledCircle( m_localPosition, ( m_radius - 0.1 ), fillColor );
 }

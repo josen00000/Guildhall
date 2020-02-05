@@ -76,12 +76,12 @@ void Physics2D::AddRigidbodyToList( Rigidbody2D* rb )
 
 void Physics2D::DestroyRigidbody( Rigidbody2D* rb )
 {
-	rb->Destroy( );
+	rb->Destroy();
 }
 
 DiscCollider2D* Physics2D::CreateDiscCollider( Vec2 localPosition, float radius )
 {
-	DiscCollider2D* tempDiscCol = new DiscCollider2D();
+	DiscCollider2D* tempDiscCol = new DiscCollider2D( localPosition, radius );
 	AddColliderToList( tempDiscCol );
 	return tempDiscCol;
 }

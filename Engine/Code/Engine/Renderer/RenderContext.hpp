@@ -43,7 +43,7 @@ public:
 	
 	void DrawAABB2D(const AABB2& bounds,const Rgba8& tint);
 	void DrawLine(const Vec2& startPoint,const Vec2&endPoint,const float thick,const Rgba8& lineColor);
-	void DrawCircle(Vec3 center,float radiu,float thick,Rgba8& circleColor);
+	void DrawCircle(Vec3 center,float radiu,float thick,const Rgba8& circleColor);
 	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
 	void SetBlendMode(BlendMode blendMode);
 	

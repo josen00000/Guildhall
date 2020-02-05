@@ -8,7 +8,7 @@ struct Rgba8;
 struct Vec2;
 	
 enum Collider2DType {
-	COLLIDER2D_DISC,
+	COLLIDER2D_DISC
 };
 
 class Collider2D {

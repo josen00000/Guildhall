@@ -113,10 +113,10 @@ void Game::Update(float deltaTime)
 		m_testConsole->SetIsOpen(true);
 	}*/
 	static bool ableDevConsole = false;
-	if( g_theInputSystem->GetKeyBoardController().GetButtonState( KEYBOARD_BUTTON_ID_P ).WasJustPressed() ) {
-		ableDevConsole = !ableDevConsole;
-		m_testConsole->SetIsOpen(ableDevConsole);
-	}
+// 	if( g_theInputSystem->GetKeyBoardController().GetButtonState( KEYBOARD_BUTTON_ID_P ).WasJustPressed() ) {
+// 		ableDevConsole = !ableDevConsole;
+// 		m_testConsole->SetIsOpen(ableDevConsole);
+// 	}
 }
 
 void Game::TestSprite()
