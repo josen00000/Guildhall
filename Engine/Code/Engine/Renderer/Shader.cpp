@@ -135,6 +135,16 @@ bool ShaderStage::Compile( RenderContext* ctx, std::string const& fileName, /* f
 	return IsValid();
 }
 
+void const* ShaderStage::GetByteCode() const
+{
+	return m_byteCode->GetBufferPointer();
+}
+
+size_t ShaderStage::GetByteCodeLength() const
+{
+	return m_byteCode->GetBufferSize();
+}
+
 Shader::Shader( RenderContext* owner )
 	:m_owner(owner)
 {
@@ -178,5 +188,48 @@ void Shader::CreateRasterState()
 
 	ID3D11Device* device = m_owner->m_device;
 	device->CreateRasterizerState( &desc, &m_rasterState );
+
+}
+
+ID3D11InputLayout* Shader::GetOrCreateInputLayout(/*buffer*/ )
+{
+	if( m_inputLayout != nullptr ){ return m_inputLayout; }
+
+	D3D11_INPUT_ELEMENT_DESC vertexDesc[3];
+	// pos
+	vertexDesc[0].SemanticName					= "POSITION";					// link to what in shader ( shader input name
+	vertexDesc[0].SemanticIndex					= 0;							//	Array for semantic name; 
+	vertexDesc[0].Format						= DXGI_FORMAT_R32G32B32_FLOAT;	// what in 
+	vertexDesc[0].InputSlot						= 0;							// 
+	vertexDesc[0].AlignedByteOffset				= offsetof(Vertex_PCU, m_pos);	// 
+	vertexDesc[0].InputSlotClass				= D3D11_INPUT_PER_VERTEX_DATA;	// vertex and instance 
+	vertexDesc[0].InstanceDataStepRate			= 0;							// 
+
+	// color
+	vertexDesc[1].SemanticName					= "COLOR";							// link to what in shader ( shader input name
+	vertexDesc[1].SemanticIndex					= 0;								//	Array for semantic name for color not for pos; 
+	vertexDesc[1].Format						= DXGI_FORMAT_R8G8B8A8_UNORM;		//  unorm unsigned normal value 
+	vertexDesc[1].InputSlot						= 0;								//  only one buffer bind
+	vertexDesc[1].AlignedByteOffset				= offsetof( Vertex_PCU, m_color );	// 
+	vertexDesc[1].InputSlotClass				= D3D11_INPUT_PER_VERTEX_DATA;		// vertex and instance 
+	vertexDesc[1].InstanceDataStepRate			= 0;								// 
+
+	// UV																			
+	vertexDesc[2].SemanticName					= "TEXCOORD";						
+	vertexDesc[2].SemanticIndex					= 0;								  
+	vertexDesc[2].Format						= DXGI_FORMAT_R32G32_FLOAT	;		
+	vertexDesc[2].InputSlot						= 0;								
+	vertexDesc[2].AlignedByteOffset				= offsetof( Vertex_PCU, m_uvTexCoords );
+	vertexDesc[2].InputSlotClass				= D3D11_INPUT_PER_VERTEX_DATA;		
+	vertexDesc[2].InstanceDataStepRate			= 0;								
+
+
+	ID3D11Device* device = m_owner->m_device;
+	device->CreateInputLayout( 
+		vertexDesc, 3, //describe the vertex
+		m_vertexStage.GetByteCode(), m_vertexStage.GetByteCodeLength(),
+		&m_inputLayout);
+
+	return m_inputLayout;
 
 }

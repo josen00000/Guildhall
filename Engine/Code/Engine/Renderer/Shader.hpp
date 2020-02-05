@@ -2,11 +2,12 @@
 #include "Engine/Core/StringUtils.hpp"
 
 class RenderContext;
-struct ID3D11RasterizerState;
-struct ID3D11VertexShader;
-struct ID3D11PixelShader;
-struct ID3D11Resource;
 struct ID3D10Bolb;
+struct ID3D11InputLayout;
+struct ID3D11PixelShader;
+struct ID3D11RasterizerState;
+struct ID3D11Resource;
+struct ID3D11VertexShader;
 
 enum ShaderType {
 	SHADER_TYPE_VERTEX,
@@ -25,6 +26,10 @@ public:
 		); //
 	bool IsValid() const { return ( nullptr != m_handle); }
 
+	void const* GetByteCode() const;
+	size_t GetByteCodeLength() const;
+
+
 public:
 	ID3D10Blob* m_byteCode;
 	union {
@@ -41,10 +46,12 @@ public:
 	~Shader();
 	bool CreateFromFile( std::string const& fileName );
 	void CreateRasterState();
+	ID3D11InputLayout* GetOrCreateInputLayout( /*buffer*/);
+
 public:
 	RenderContext*	m_owner	= nullptr;
 	ShaderStage m_vertexStage;
 	ShaderStage m_fragmentStage;
 	ID3D11RasterizerState* m_rasterState = nullptr;
-
+	ID3D11InputLayout* m_inputLayout;
 };

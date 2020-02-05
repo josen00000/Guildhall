@@ -3,7 +3,7 @@
 
 Rgba8 Rgba8::WHITE = Rgba8(255,255,255);
 Rgba8 Rgba8::BLACK = Rgba8(0,0,0);
-Rgba8 Rgba8::GRAY = Rgba8(10,10,10);
+Rgba8 Rgba8::GRAY = Rgba8( 50, 50, 50);
 Rgba8 Rgba8::RED = Rgba8(255,0,0);
 Rgba8 Rgba8::GREEN = Rgba8(0,255,0);
 Rgba8 Rgba8::BLUE = Rgba8(0,0,255);

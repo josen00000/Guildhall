@@ -73,7 +73,7 @@ void RenderContext::StartUp( Window* window )
 	m_swapChain = new SwapChain( this, swapchain );
 
 	m_defaultShader = new Shader( this );
-	m_defaultShader->CreateFromFile( "data/Shader/Triangle.hlsl" );
+	m_defaultShader->CreateFromFile( "data/Shader/default.hlsl" );
 	m_immediateVBO = new VertexBuffer( this, MEMORY_HINT_DYNAMIC );
 
 }
@@ -178,21 +178,24 @@ void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 	ID3D11RenderTargetView* rtv = view->GetRTVHandle();
 
 	IntVec2 outputSize = texture->GetTexelSize();
-	D3D11_VIEWPORT viewport;
-	viewport.TopLeftX	= 0;
-	viewport.TopLeftY	= 0;
-	viewport.Width		= 400; //texture->getWidth();
-	viewport.Height		= 400;//texture->GetHeight();
-	viewport.MinDepth	= 0.0f;
-	viewport.MaxDepth	= 1.0f;
+	D3D11_VIEWPORT viewport;								// TODO begin camera
+	viewport.TopLeftX	= 0;								// TODO begin camera
+	viewport.TopLeftY	= 0;								// TODO begin camera
+	viewport.Width		= 400; //texture->getWidth();		// TODO begin camera
+	viewport.Height		= 400; //texture->GetHeight();		// TODO begin camera
+	viewport.MinDepth	= 0.0f;								// TODO begin camera
+	viewport.MaxDepth	= 1.0f;								// TODO begin camera
 	// TEMPORARY
 	// Setup the GPU for a draw
 	m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 	m_context->VSSetShader( m_currentShader->m_vertexStage.m_vs, nullptr, 0 );
-	m_context->RSSetState( nullptr ); // use defaults
+	m_context->RSSetState( m_currentShader->m_rasterState ); // use defaults
 	m_context->RSSetViewports( 1, &viewport );
 	m_context->PSSetShader( m_currentShader->m_fragmentStage.m_fs, nullptr, 0 );
-	m_context->OMSetRenderTargets( 1, &rtv, nullptr );
+	m_context->OMSetRenderTargets( 1, &rtv, nullptr ); // TODO begin camera
+
+	ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout(/* Vertex_PCU::LAYOUT*/); // Vertex 
+	m_context->IASetInputLayout( inputLayout );
 	m_context->Draw( numVertexes, vertexOffset );
 }
 
@@ -355,26 +358,26 @@ void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, cons
 	UNUSED(endPoint);
 	UNUSED(thick);
 	UNUSED(lineColor);
-// 	float halfThick=thick/2;
-// 	Vec2 direction=endPoint.operator-( startPoint );
-// 	direction.SetLength(halfThick);
-// 	Vec2 tem_position=endPoint+direction;
-// 	Vec2 rightTop=tem_position.operator+( Vec2(-direction.y,direction.x));
-// 	Vec2 rightdown=tem_position.operator+(Vec2(direction.y,-direction.x));
-// 	Vec2 tem_position1=startPoint-direction;
-// 	Vec2 leftTop=tem_position1.operator+( Vec2( -direction.y, direction.x ) );
-// 	Vec2 leftdown=tem_position1.operator+(  Vec2( direction.y, -direction.x ));
-// 	Vec2 tem_uv=Vec2(0.f,0.f);
-// 	Vertex_PCU line[6]={
-// 		Vertex_PCU(  Vec3( rightTop.x,rightTop.y,0 ),Rgba8(lineColor.r,lineColor.g,lineColor.b),Vec2( 0, 0 ) ),
-// 		Vertex_PCU( Vec3(rightdown.x,rightdown.y,0), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 )), 
-// 		Vertex_PCU( Vec3(leftTop.x,leftTop.y,0), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-// 		Vertex_PCU(Vec3( leftTop.x,leftTop.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-// 		Vertex_PCU(Vec3( leftdown.x,leftdown.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-// 		Vertex_PCU(Vec3( rightdown.x,rightdown.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ))
-// 	};
-// 
-//	DrawVertexArray(6,line);
+ 	float halfThick=thick/2;
+ 	Vec2 direction=endPoint.operator-( startPoint );
+ 	direction.SetLength(halfThick);
+ 	Vec2 tem_position=endPoint+direction;
+ 	Vec2 rightTop=tem_position.operator+( Vec2(-direction.y,direction.x));
+ 	Vec2 rightdown=tem_position.operator+(Vec2(direction.y,-direction.x));
+ 	Vec2 tem_position1=startPoint-direction;
+ 	Vec2 leftTop=tem_position1.operator+( Vec2( -direction.y, direction.x ) );
+ 	Vec2 leftdown=tem_position1.operator+(  Vec2( direction.y, -direction.x ));
+ 	Vec2 tem_uv=Vec2(0.f,0.f);
+ 	Vertex_PCU line[6]={
+ 		Vertex_PCU(  Vec3( rightTop.x,rightTop.y,0 ),Rgba8(lineColor.r,lineColor.g,lineColor.b),Vec2( 1, 1 ) ),
+ 		Vertex_PCU( Vec3(rightdown.x,rightdown.y,0), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 1, 0 )), 
+ 		Vertex_PCU( Vec3(leftTop.x,leftTop.y,0), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 1 ) ),
+ 		Vertex_PCU(Vec3( leftTop.x,leftTop.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 1 ) ),
+ 		Vertex_PCU(Vec3( leftdown.x,leftdown.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
+ 		Vertex_PCU(Vec3( rightdown.x,rightdown.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 1, 0 ))
+ 	};
+ 
+	DrawVertexArray(6,line);
 }
 
 void RenderContext::DrawCircle( Vec3 center,float radiu,float thick,Rgba8& circleColor )
@@ -392,6 +395,7 @@ void RenderContext::DrawCircle( Vec3 center,float radiu,float thick,Rgba8& circl
 		degree=nextDegree;
 		DrawLine(startPoint,endPoint,thick,circleColor);
 	}
+	
 
 }
 
