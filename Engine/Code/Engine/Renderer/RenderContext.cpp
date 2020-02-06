@@ -15,6 +15,7 @@
 #include "Engine/Renderer/Shader.hpp"
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
+#include "Engine/Renderer/VertexBuffer.hpp"
 //third party library
 
 
@@ -75,7 +76,7 @@ void RenderContext::StartUp( Window* window )
 	m_defaultShader = new Shader( this );
 	m_defaultShader->CreateFromFile( "data/Shader/default.hlsl" );
 	m_immediateVBO = new VertexBuffer( this, MEMORY_HINT_DYNAMIC );
-
+	m_immediateVBO->m_stride = sizeof(Vertex_PCU);
 }
 
 void RenderContext::BeginView(){
@@ -98,13 +99,20 @@ void RenderContext::Shutdown()
 	DX_SAFE_RELEASE(m_context);
 	delete m_swapChain;
 	delete m_currentShader;
+	delete m_immediateVBO;
 	m_swapChain		= nullptr;
 	m_currentShader = nullptr;
+	m_immediateVBO	= nullptr;
+
+	for( ShaderMapIterator it = m_shaders.begin(); it != m_shaders.end(); ++it ) {
+		delete it->second;
+		m_shaders.erase(it);
+		
+	}
 }
 
 
-
-void RenderContext::ClearScreen( const Rgba8& clearColor )
+void RenderContext::ClearScreen( Texture* output, const Rgba8& clearColor )
 {
 	float clearFolats[4];
 	clearFolats[0] = (float)clearColor.r / 255.f;
@@ -112,28 +120,46 @@ void RenderContext::ClearScreen( const Rgba8& clearColor )
 	clearFolats[2] = (float)clearColor.b / 255.f;
 	clearFolats[3] = (float)clearColor.a / 255.f;
 
-	Texture* backBuffer = m_swapChain->GetBackBuffer();
-	TextureView* backBuffer_rtv = backBuffer->GetRenderTargetView();
+	
+	TextureView* backBuffer_rtv = output->GetRenderTargetView();
 	ID3D11RenderTargetView* rtv = backBuffer_rtv->GetRTVHandle();
 	m_context->ClearRenderTargetView( rtv, clearFolats );
+
 }
 
 void RenderContext::BeginCamera( const Camera& camera )
 {
-	//TODO Asg1 clear the default swapchain
-	//Texture* output = m_swapChain->GetBackBuffer(); //A01
+#if defined(RENDER_DEBUG)
+	m_context->ClearState();
+#endif
+	Texture* output = camera.GetColorTarget();
 
-/*
-	//Texture* output = camera.getcolortarget();
 	if( output == nullptr ) {
-		//output = m_swapChain.getcolortarget();
+		output = m_swapChain->GetBackBuffer();
 	}
-*/
-	if( camera.GetShouldClearColor() ) {
-		ClearScreen( camera.GetClearColor() );
 
+	TextureView* view = output->GetRenderTargetView();
+	ID3D11RenderTargetView* rtv = view->GetRTVHandle();
+
+	IntVec2 outputSize = output->GetTexelSize();
+	D3D11_VIEWPORT viewport;
+	viewport.TopLeftX	= 0;
+	viewport.TopLeftY	= 0;
+	viewport.Width		= 400; //texture->getWidth();		
+	viewport.Height		= 400; //texture->GetHeight();		
+	viewport.MinDepth	= 0.0f;
+	viewport.MaxDepth	= 1.0f;
+
+															// Setup the GPU for a draw
+	m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	m_context->RSSetViewports( 1, &viewport );
+	m_context->OMSetRenderTargets( 1, &rtv, nullptr ); // TODO begin camera
+	
+	if( camera.GetShouldClearColor() ) {
+		ClearScreen( output, camera.GetClearColor() );
 	}
-	BindShader(nullptr);
+	BindShader( static_cast<Shader*>( nullptr ) );
+	m_lastBoundVBO = nullptr;
 }
 
 void RenderContext::SetOrthoView( const AABB2& box )
@@ -153,50 +179,50 @@ void RenderContext::BindTexture( const Texture* texture )
 
 void RenderContext::BindShader( Shader* shader )
 {
+		// Assert_OR_DIE( isdrawing)  DO I have a camera;
 	if( shader == nullptr ) {
 		m_currentShader = m_defaultShader;
 	}
 	else {
 		m_currentShader = shader;
 	}
+
+	m_context->VSSetShader( m_currentShader->m_vertexStage.m_vs, nullptr, 0 );
+	m_context->RSSetState( m_currentShader->m_rasterState ); // use defaults
+	m_context->PSSetShader( m_currentShader->m_fragmentStage.m_fs, nullptr, 0 );
+}
+
+void RenderContext::BindShader( const char* fileName )
+{
+	Shader* shader = GetOrCreateShader( fileName );
+	m_currentShader	 = shader;
 }
 
 void RenderContext::BindVertexInput( VertexBuffer* vbo )
 {
 	ID3D11Buffer* vboHandle = vbo->m_handle;
-	UINT stride = sizeof(Vertex_PCU);
+	UINT stride = (UINT)vbo->m_stride;
 	UINT offset = 0;
 
-	m_context->IASetVertexBuffers( 0, 1, &vboHandle, &stride, &offset );
 
+	if( m_lastBoundVBO != vboHandle ) {
+		m_context->IASetVertexBuffers( 0, 1, &vboHandle, &stride, &offset );
+		m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+		m_lastBoundVBO = vboHandle;
+	}
+	
 }
 
 void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 {
-	Texture* texture = m_swapChain->GetBackBuffer();
-	TextureView* view = texture->GetRenderTargetView();
-	ID3D11RenderTargetView* rtv = view->GetRTVHandle();
-
-	IntVec2 outputSize = texture->GetTexelSize();
-	D3D11_VIEWPORT viewport;								// TODO begin camera
-	viewport.TopLeftX	= 0;								// TODO begin camera
-	viewport.TopLeftY	= 0;								// TODO begin camera
-	viewport.Width		= 400; //texture->getWidth();		// TODO begin camera
-	viewport.Height		= 400; //texture->GetHeight();		// TODO begin camera
-	viewport.MinDepth	= 0.0f;								// TODO begin camera
-	viewport.MaxDepth	= 1.0f;								// TODO begin camera
-	// TEMPORARY
-	// Setup the GPU for a draw
-	m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-	m_context->VSSetShader( m_currentShader->m_vertexStage.m_vs, nullptr, 0 );
-	m_context->RSSetState( m_currentShader->m_rasterState ); // use defaults
-	m_context->RSSetViewports( 1, &viewport );
-	m_context->PSSetShader( m_currentShader->m_fragmentStage.m_fs, nullptr, 0 );
-	m_context->OMSetRenderTargets( 1, &rtv, nullptr ); // TODO begin camera
+	// should be in begin camera
+	
+	// shader
+	// should be in bind shader
 
 	ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout(/* Vertex_PCU::LAYOUT*/); // Vertex 
 	m_context->IASetInputLayout( inputLayout );
-	m_context->Draw( numVertexes, vertexOffset );
+	m_context->Draw( numVertexes, vertexOffset ); // what is vertexOffset
 }
 
 Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )
@@ -285,6 +311,18 @@ BitmapFont* RenderContext::CreateOrGetBitmapFontFromFile( const char* fontName, 
 
 	temFont = CreateBitmapFontFromFile(fontName, fontFilePath);
 	return temFont;
+}
+
+Shader* RenderContext::GetOrCreateShader( char const* fileName )
+{
+	std::string tempName = std::string( fileName );
+	ShaderMapIterator it = m_shaders.find( tempName );
+	if( it == m_shaders.end() ) {
+		return it->second;
+	}
+	Shader* shader = new Shader( this );
+	m_shaders.insert( std::pair<std::string, Shader*>( tempName, shader ));
+	return shader;
 }
 
 BitmapFont* RenderContext::CreateBitmapFontFromFile( const char* fontName, const char* fontFilePath )

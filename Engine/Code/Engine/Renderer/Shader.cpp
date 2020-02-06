@@ -3,7 +3,9 @@
 
 #include "Shader.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
+#include "Engine/Renderer/RenderCommon.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Shader.hpp"
 
@@ -154,6 +156,7 @@ Shader::Shader( RenderContext* owner )
 Shader::~Shader()
 {
 	DX_SAFE_RELEASE(m_rasterState);
+	DX_SAFE_RELEASE(m_inputLayout);
 	m_owner = nullptr;
 }
 
@@ -194,9 +197,19 @@ void Shader::CreateRasterState()
 ID3D11InputLayout* Shader::GetOrCreateInputLayout(/*buffer*/ )
 {
 	if( m_inputLayout != nullptr ){ return m_inputLayout; }
+	buffer_attribute_t test = Vertex_PCU::s_layout[0];
 
 	D3D11_INPUT_ELEMENT_DESC vertexDesc[3];
-	// pos
+	for( int i = 0; i < 3; i++ ) {
+		vertexDesc[i].SemanticName			= Vertex_PCU::s_layout[i].name.c_str();
+		vertexDesc[i].SemanticIndex			= 0;							//	Array for semantic name; 
+		vertexDesc[i].Format				= TransformToD3DDataFormat( Vertex_PCU::s_layout[i].type );	// what in 
+		vertexDesc[i].InputSlot				= 0;							// 
+		vertexDesc[i].AlignedByteOffset		= Vertex_PCU::s_layout[i].offset;	// 
+		vertexDesc[i].InputSlotClass		= D3D11_INPUT_PER_VERTEX_DATA;	// vertex and instance 
+		vertexDesc[i].InstanceDataStepRate	= 0;
+	}
+	/*// pos
 	vertexDesc[0].SemanticName					= "POSITION";					// link to what in shader ( shader input name
 	vertexDesc[0].SemanticIndex					= 0;							//	Array for semantic name; 
 	vertexDesc[0].Format						= DXGI_FORMAT_R32G32B32_FLOAT;	// what in 
@@ -223,6 +236,7 @@ ID3D11InputLayout* Shader::GetOrCreateInputLayout(/*buffer*/ )
 	vertexDesc[2].InputSlotClass				= D3D11_INPUT_PER_VERTEX_DATA;		
 	vertexDesc[2].InstanceDataStepRate			= 0;								
 
+*/
 
 	ID3D11Device* device = m_owner->m_device;
 	device->CreateInputLayout( 
@@ -232,4 +246,16 @@ ID3D11InputLayout* Shader::GetOrCreateInputLayout(/*buffer*/ )
 
 	return m_inputLayout;
 
+}
+
+DXGI_FORMAT Shader::TransformToD3DDataFormat( BufferFormatType type )
+{
+	switch( type )
+	{
+	case BUFFER_FORMAT_VEC2: return DXGI_FORMAT_R32G32_FLOAT;
+	case BUFFER_FORMAT_VEC3: return DXGI_FORMAT_R32G32B32_FLOAT;
+	case BUFFER_FORMAT_R8G8B8A8_UNORM: return DXGI_FORMAT_R8G8B8A8_UNORM;
+	default:
+		return DXGI_FORMAT_R32G32_FLOAT;
+	}
 }

@@ -63,6 +63,11 @@ void Camera::SetClearMode( unsigned int clearFlags, Rgba8 color, float depth /*=
 	UNUSED(stencil);
 }
 
+void Camera::SetColorTarget( Texture* colorTarget )
+{
+	m_colorTarget = colorTarget;
+}
+
 void Camera::UpdateCamera()
 {
 	m_AABB2.mins.x=m_position.x-m_width/2;
@@ -72,4 +77,8 @@ void Camera::UpdateCamera()
 	m_AABB2.maxs.y=m_position.y+m_height/2;
 }
 
+void Camera::SetShouldClearColor( bool shouldClearColor )
+{
+	m_shouldClearColor = shouldClearColor;
+}
 

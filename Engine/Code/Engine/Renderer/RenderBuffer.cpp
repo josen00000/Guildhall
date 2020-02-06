@@ -97,7 +97,7 @@ D3D11_USAGE ToDXMemoryUsage( RenderMemoryHint hint )
 	case MEMORY_HINT_DYNAMIC:	return D3D11_USAGE_DYNAMIC;
 	case MEMORY_HINT_STAGING:	return D3D11_USAGE_STAGING;
 	default:					ERROR_AND_DIE( "Unknown hint! " );
-	return D3D11_USAGE_DYNAMIC;
+	//return D3D11_USAGE_DYNAMIC;
 	}
 }
 

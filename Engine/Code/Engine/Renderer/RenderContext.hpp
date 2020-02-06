@@ -11,10 +11,12 @@ class SwapChain;
 class Shader;
 class VertexBuffer;
 class Window;
+struct ID3D11Buffer;
 struct AABB2;
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 
+typedef std::map<std::string, Shader*>::iterator ShaderMapIterator;
 
 enum BlendMode
 {
@@ -39,10 +41,11 @@ public:
 	
 	void BeginFrame();
 	void EndFrame();
-	void ClearScreen(const Rgba8& clearColo);
+	void ClearScreen( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 	void SetOrthoView(const AABB2& box);
 	void BindTexture(const Texture* texture);
 	void BindShader( Shader* shader );
+	void BindShader( const char* fileName );
 	void BindVertexInput( VertexBuffer* vbo );
 
 	void Draw( int numVertexes, int vertexOffset = 0 );
@@ -55,6 +58,7 @@ public:
 
 	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
 	BitmapFont* CreateOrGetBitmapFontFromFile(const char* fontName, const char* fontFilePath);
+	Shader* GetOrCreateShader( char const* fileName );
 	
 	void SetBlendMode(BlendMode blendMode);
 
@@ -76,5 +80,7 @@ private:
 
 	Shader*			m_currentShader = nullptr;
 	Shader*			m_defaultShader	= nullptr;
-	VertexBuffer*	m_immediateVBO = nullptr;
+	VertexBuffer*	m_immediateVBO	= nullptr;
+	ID3D11Buffer*	m_lastBoundVBO	= nullptr;
+	std::map<std::string, Shader*> m_shaders;
 };

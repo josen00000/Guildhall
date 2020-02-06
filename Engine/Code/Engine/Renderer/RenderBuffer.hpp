@@ -45,12 +45,3 @@ public:
 };
 
 
-class VertexBuffer : public RenderBuffer {
-public:
-	VertexBuffer( RenderContext* ctx, RenderMemoryHint hint ) 
-		:RenderBuffer( ctx, VERTEX_BUFFER_BIT, hint )
-	{
-
-	}
-
-};

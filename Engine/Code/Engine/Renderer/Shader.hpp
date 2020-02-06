@@ -1,5 +1,7 @@
 #pragma once
 #include "Engine/Core/StringUtils.hpp"
+#include "Engine/Renderer/D3D11Common.hpp"
+#include "Engine/Renderer/RenderCommon.hpp"
 
 class RenderContext;
 struct ID3D10Bolb;
@@ -47,11 +49,11 @@ public:
 	bool CreateFromFile( std::string const& fileName );
 	void CreateRasterState();
 	ID3D11InputLayout* GetOrCreateInputLayout( /*buffer*/);
-
+	DXGI_FORMAT TransformToD3DDataFormat( BufferFormatType type );
 public:
 	RenderContext*	m_owner	= nullptr;
 	ShaderStage m_vertexStage;
 	ShaderStage m_fragmentStage;
 	ID3D11RasterizerState* m_rasterState = nullptr;
-	ID3D11InputLayout* m_inputLayout;
+	ID3D11InputLayout* m_inputLayout = nullptr;
 };
