@@ -16,15 +16,15 @@
 - [X] *05pts*: Implement `RenderContext::Draw( int vertexCount, int startIndex = 0 )` to RenderContext
 - [x] *10pts*: Implement `RenderBuffer` class for allocating GPU memory
 - [x] *10pts*: Implement `VertexBuffer` specialization of `RenderBuffer` for handling vertex data
-    - [ ] Add `buffer_attribute_t` description of your `VertexPCT`
-- [ ] *05pts*: Implement `RenderContext::BindVertexBuffer( VertexBuffer* vbo )`
-    - [ ] Keep track of currently bound vertex buffer and don't rebind if no change is made.
-- [ ] *15pts*: Implement `RenderContext::DrawVertexArray`
-    - [ ] `RenderContext` should own a vertex buffer (`RenderBuffer* m_immediateVBO`) to use for `DrawVertexArray`
-    - [ ] Copy vertices to immediate vbo.
-    - [ ] Bind the vertex buffer to input slot 0 (i)
-    - [ ] `GetOrCreate` an input layout from current shader/vertex buffer.  Bind if different.
-    - [ ] Call `Draw`
+    - [x] Add `buffer_attribute_t` description of your `VertexPCT`
+- [x] *05pts*: Implement `RenderContext::BindVertexBuffer( VertexBuffer* vbo )`
+    - [x] Keep track of currently bound vertex buffer and don't rebind if no change is made.
+- [x] *15pts*: Implement `RenderContext::DrawVertexArray`
+    - [x] `RenderContext` should own a vertex buffer (`RenderBuffer* m_immediateVBO`) to use for `DrawVertexArray`
+    - [x] Copy vertices to immediate vbo.
+    - [x] Bind the vertex buffer to input slot 0 (i)
+    - [x] `GetOrCreate` an input layout from current shader/vertex buffer.  Bind if different.
+    - [x] Call `Draw`
 
 
 ------
