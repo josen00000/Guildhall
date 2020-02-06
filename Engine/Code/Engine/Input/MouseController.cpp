@@ -24,3 +24,8 @@ void MouseController::UpdateWheelThisFrame( float deltaAmount )
 {
 	m_scrollAmount += deltaAmount;
 }
+
+void MouseController::ResetMouseWheel()
+{
+	m_scrollAmount = 0;
+}

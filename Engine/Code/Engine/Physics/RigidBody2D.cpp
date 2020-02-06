@@ -34,7 +34,7 @@ void Rigidbody2D::SetCollider( Collider2D* collider )
 void Rigidbody2D::SetPosition( Vec2 position )
 {
 	m_worldPosition = position;
-	//m_collider TODO
+	m_collider->SetPosition( position );
 }
 
 void Rigidbody2D::DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor )

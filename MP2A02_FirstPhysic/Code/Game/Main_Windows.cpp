@@ -3,9 +3,9 @@
 #include <math.h>
 #include <cassert>
 #include <crtdbg.h>
-#include<Game/App.hpp>
-#include<engine/Input/InputSystem.hpp>
-
+#include "Game/App.hpp"
+#include "engine/Input/InputSystem.hpp"
+#include "Engine/core/DevConsole.hpp"
 //-----------------------------------------------------------------------------------------------
 // #SD1ToDo: Remove all OpenGL references out of Main_Win32.cpp once you have a RenderContext
 // Both of the following lines should be relocated to the top of Engine/Renderer/RenderContext.cpp
@@ -31,6 +31,7 @@
 //
 extern App* g_theApp;
 extern InputSystem* g_theInputSystem;
+extern DevConsole* g_theConsole;
 bool g_isQuitting = false;							// ...becomes App::m_isQuitting
 HWND g_hWnd = nullptr;								// ...becomes WindowContext::m_windowHandle
 HDC g_displayDeviceContext = nullptr;				// ...becomes WindowContext::m_displayContext
@@ -61,9 +62,7 @@ LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMess
 		case WM_KEYDOWN:
 		{
 			unsigned char asKey = (unsigned char)wParam;
-			if( asKey == VK_ESCAPE ){
-				g_theApp->HandleQuitRequested();
-			}
+			
 			g_theInputSystem->UpdateKeyBoardButton( asKey, true );
 			break;
 		}
@@ -80,57 +79,41 @@ LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMess
 		// Mouse Input
 		case WM_LBUTTONDOWN:
 		{
-			bool leftButtonDown		= wParam & MK_LBUTTON;
-			bool rightButtonDown	= wParam & MK_RBUTTON;
-			bool middleButtonDown	= wParam & MK_MBUTTON;
-			g_theInputSystem->UpdateMouseButtonState( leftButtonDown, middleButtonDown, rightButtonDown );
+			g_theInputSystem->UpdateMouseButtonState( MOUSE_BUTTON_LEFT, true );
 			break;
 		}
 
 		case WM_RBUTTONDOWN:
 		{
-			bool leftButtonDown		= wParam & MK_LBUTTON;
-			bool rightButtonDown	= wParam & MK_RBUTTON;
-			bool middleButtonDown	= wParam & MK_MBUTTON;
-			g_theInputSystem->UpdateMouseButtonState( leftButtonDown, middleButtonDown, rightButtonDown );
+			g_theInputSystem->UpdateMouseButtonState( MOUSE_BUTTON_RIGHT, true );
 			break;
 		}
 
 		case WM_MBUTTONDOWN:
 		{
-			bool leftButtonDown		= wParam & MK_LBUTTON;
-			bool rightButtonDown	= wParam & MK_RBUTTON;
-			bool middleButtonDown	= wParam & MK_MBUTTON;
-			g_theInputSystem->UpdateMouseButtonState( leftButtonDown, middleButtonDown, rightButtonDown );
+			g_theInputSystem->UpdateMouseButtonState( MOUSE_BUTTON_MIDDLE, true );
 			break;
 		}
 
 		case WM_RBUTTONUP: {
-			bool leftButtonUp		= wParam & MK_LBUTTON;
-			bool rightButtonUp		= wParam & MK_RBUTTON;
-			bool middleButtonUp		= wParam & MK_MBUTTON;
-			g_theInputSystem->UpdateMouseButtonState( !leftButtonUp, !middleButtonUp, !rightButtonUp );
+			g_theInputSystem->UpdateMouseButtonState( MOUSE_BUTTON_RIGHT, false );
 		}
 
 		case WM_LBUTTONUP: {
-			bool leftButtonUp		= wParam & MK_LBUTTON;
-			bool rightButtonUp		= wParam & MK_RBUTTON;
-			bool middleButtonUp		= wParam & MK_MBUTTON;
-			g_theInputSystem->UpdateMouseButtonState( !leftButtonUp, !middleButtonUp, !rightButtonUp );
+			g_theInputSystem->UpdateMouseButtonState( MOUSE_BUTTON_LEFT, false );
 		}
 
 		case WM_MBUTTONUP: {
-			bool leftButtonUp		= wParam & MK_LBUTTON;
-			bool rightButtonUp		= wParam & MK_RBUTTON;
-			bool middleButtonUp		= wParam & MK_MBUTTON;
-			g_theInputSystem->UpdateMouseButtonState( !leftButtonUp, !middleButtonUp, !rightButtonUp );
+			g_theInputSystem->UpdateMouseButtonState( MOUSE_BUTTON_MIDDLE, false );
 		}
 
 		case WM_MOUSEWHEEL: 
 		{
-			DWORD scrollFixedPoint = wParam >> 16;
-			float scrollAmount = (float)scrollFixedPoint / 120.f;
-			g_theInputSystem->UpdateMouseWheelAmount( scrollAmount );
+			float zDelta = (float)GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA; // shift away low word part, leaving only the highword
+			//g_theConsole->PrintString( Rgba8::GREEN, std::to_string(zDelta) );
+			//float scrollAmount = (float)scrollFixedPoint / 120.0f; // convert to a numeric value
+			g_theInputSystem->UpdateMouseWheelAmount( zDelta );
+			
 		}
 	}
 

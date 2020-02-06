@@ -25,8 +25,10 @@ public:
 	IntVec2 GetMouseRawDesktopPos() const; // interface to know
 	Vec2 GetNormalizedMousePos() const; // within opengl windows
 	Vec2 GetNormalizedMousePosInCamera( const Camera& camera ) const;
-	void UpdateMouseButtonState( bool leftDown, bool middleDown, bool rightDown );
+	void UpdateMouseButtonState( MouseButtonID mouseID, bool isPressed );
 	void UpdateMouseWheelAmount( float deltaAmount );
+	void ResetMouseWheel();
+	float GetMouseWheelAmount() const;
 	bool IsMouseButtonDown( MouseButtonID buttonID ) const;
 	bool WasMouseButtonJustPressed( MouseButtonID buttonID ) const;
 	bool WasMouseButtonJustReleased( MouseButtonID buttonID ) const;

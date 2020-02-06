@@ -20,6 +20,8 @@ BitmapFont*		g_squirrelFont		= nullptr;
 RenderContext*	g_theRenderer		= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
 Physics2D*		g_thePhysics		= nullptr;
+DevConsole*		g_theConsole		= nullptr;
+
 
 void App::Startup()
 {
@@ -33,6 +35,7 @@ void App::Startup()
 	g_theRenderer->StartUp();
 	g_theGame->Startup();
 	g_theInputSystem->Startup();
+
 }
 
 void App::Shutdown()
@@ -119,8 +122,8 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
-	g_theRenderer->ClearScreen( Rgba8(0,0,0,255) );
-	g_theRenderer->BeginView();
+	g_theRenderer->ClearScreen( Rgba8::BLACK );
+	g_theRenderer->BeginCamera( *g_camera );
 	g_theGame->Render();
 }
 

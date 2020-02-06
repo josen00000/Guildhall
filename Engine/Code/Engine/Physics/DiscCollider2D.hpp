@@ -18,10 +18,13 @@ public:
 	virtual bool Contains( const Vec2& pos ) const override;
 	virtual bool Intersects( const Collider2D* other) const override;
 
+	// Mutator
+	virtual void SetPosition( Vec2 pos ) override;
+
 	// debug helpers
 	virtual void DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) override;
 
-private:
+public:
 	Vec2 m_localPosition	= Vec2::ZERO;
 	Vec2 m_worldPosition	= Vec2::ZERO;
 	float m_radius			= 0;

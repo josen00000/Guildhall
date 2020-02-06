@@ -41,17 +41,19 @@ void DevConsole::PrintString( const Rgba8& textColor, const std::string& devCons
 
 void DevConsole::Render( RenderContext& renderer, const Camera& camera, float lineHeight ) const
 {
-	if(!m_isOpen){ return;}
+	if( !m_isOpen || m_lines.size() == 0 ){ return; }
 	std::vector<Vertex_PCU> vertices;
 	int maxDisplayedLinesNum = (int)(camera.GetHeight() / lineHeight);
 	int index = (int)(m_lines.size() - 1);
 	Vec2 minsPos = camera.GetOrthoBottomLeft();
 	if(index == 0){ return;}
-	while(index >= m_lines.size() - 1 - maxDisplayedLinesNum){
+	int test = (int)m_lines.size() - 1 - maxDisplayedLinesNum;
+	while(index > test ){
 		ColoredLine tem = m_lines[index];
 		m_font->AddVertsForText2D(vertices, minsPos, lineHeight, tem.text, tem.color);
 		minsPos.y += lineHeight;
 		index--;
+		if( index == 0 ) { break; }
 		
 	}
 	renderer.DrawVertexVector(vertices);

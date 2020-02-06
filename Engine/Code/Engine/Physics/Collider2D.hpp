@@ -30,14 +30,16 @@ public:
 	virtual bool IsDestroied() const { return m_isDestroied; }
 
 	// Mutator
+	virtual void SetPosition( Vec2 pos );
 
 	// debug helpers
 	virtual void DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) = 0;
 
+public:
+	Collider2DType	m_type;
 
 private:
 	bool			m_isDestroied = false;
-	Collider2DType	m_type;
 	Physics2D*		m_system	= nullptr;
 	Rigidbody2D*	m_rigidbody	= nullptr;
 };

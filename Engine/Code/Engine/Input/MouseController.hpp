@@ -15,11 +15,13 @@ public:
 	MouseController(){}
 	~MouseController(){}
 
+
 private:
 	void UpdateButtonCurrentFrame( unsigned char inputButton, bool isPressed );
 	void UpdateButtonsLastFrame();
 	void InitialButtonStates();
 	void UpdateWheelThisFrame( float deltaAmount );
+	void ResetMouseWheel();
 
 private:
 	KeyButtonState m_mouseButton[NUM_MOUSE_BUTTONS];

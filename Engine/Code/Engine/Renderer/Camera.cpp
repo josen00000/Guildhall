@@ -71,7 +71,7 @@ void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, f
 	UNUSED(nearZ);
 	UNUSED(farZ);
 	float aspectRatio = GetAspectRatio();
-	SetOutputSize( height, aspectRatio );
+	SetOutputSize( aspectRatio, height );
 }
 
 Vec2 Camera::ClientToWorldPosition( Vec2 clientPos )

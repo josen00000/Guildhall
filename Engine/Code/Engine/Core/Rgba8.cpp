@@ -1,11 +1,12 @@
 #include "Rgba8.hpp"
 #include "Engine/Core/StringUtils.hpp"
 
-Rgba8 Rgba8::WHITE = Rgba8(255,255,255);
-Rgba8 Rgba8::BLACK = Rgba8(0,0,0);
-Rgba8 Rgba8::RED = Rgba8(255,0,0);
-Rgba8 Rgba8::GREEN = Rgba8(0,255,0);
-Rgba8 Rgba8::BLUE = Rgba8(0,0,255);
+Rgba8 Rgba8::WHITE	= Rgba8( 255, 255, 255 );
+Rgba8 Rgba8::BLACK	= Rgba8( 0, 0, 0 );
+Rgba8 Rgba8::RED	= Rgba8( 255, 0, 0 );
+Rgba8 Rgba8::GREEN	= Rgba8( 0, 255, 0 );
+Rgba8 Rgba8::BLUE	= Rgba8( 0, 0, 255 );
+Rgba8 Rgba8::YELLOW	= Rgba8( 255, 255, 0 );
 
 Rgba8::Rgba8(unsigned char ini_r, unsigned char ini_g, unsigned char ini_b, unsigned char ini_a)
 	:r(ini_r)

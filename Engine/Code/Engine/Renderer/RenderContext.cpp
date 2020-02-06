@@ -289,7 +289,7 @@ void RenderContext::DrawFilledCircle( Vec3 center, float radiu, const Rgba8& fil
 	float degree = 0;
 	float nextDegree = 0;
 	const int vertexNum = 32;
-	static std::vector<Vertex_PCU> circleVertices;
+	std::vector<Vertex_PCU> circleVertices;
 	circleVertices.reserve( vertexNum * sizeof(Vertex_PCU) );
 	for( int i = 0; i < vertexNum; i++ ) {
 		nextDegree = (i + 1) * (360.f / vertexNum);

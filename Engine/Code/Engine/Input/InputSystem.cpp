@@ -28,6 +28,7 @@ void InputSystem::BeginFrame()
 void InputSystem::EndFrame()
 {
 	m_keyBoardController->UpdateButtonsLastFrame();
+	m_mouseController->UpdateButtonsLastFrame();
 }
 
 void InputSystem::Shutdown()
@@ -74,16 +75,24 @@ Vec2 InputSystem::GetNormalizedMousePosInCamera( const Camera& camera ) const
 	return mousePosInCamera;
 }
 
-void InputSystem::UpdateMouseButtonState( bool leftDown, bool middleDown, bool rightDown )
+void InputSystem::UpdateMouseButtonState( MouseButtonID mouseID, bool isPressed )
 {
-	m_mouseController->UpdateButtonCurrentFrame( MOUSE_BUTTON_LEFT, leftDown );
-	m_mouseController->UpdateButtonCurrentFrame( MOUSE_BUTTON_MIDDLE, middleDown );
-	m_mouseController->UpdateButtonCurrentFrame( MOUSE_BUTTON_RIGHT, rightDown );
+	m_mouseController->UpdateButtonCurrentFrame( (unsigned char)mouseID, isPressed );
 }
 
 void InputSystem::UpdateMouseWheelAmount( float deltaAmount )
 {
 	m_mouseController->UpdateWheelThisFrame( deltaAmount );
+}
+
+void InputSystem::ResetMouseWheel()
+{
+	m_mouseController->ResetMouseWheel();
+}
+
+float InputSystem::GetMouseWheelAmount() const
+{
+	return m_mouseController->m_scrollAmount;
 }
 
 bool InputSystem::IsMouseButtonDown( MouseButtonID buttonID ) const
