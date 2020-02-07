@@ -75,12 +75,15 @@ void Game::Update( float deltaSeconds )
 	if( g_theInputSystem->WasMouseButtonJustReleased( MOUSE_BUTTON_LEFT ) ) {
 		// finish drag and unselect
 		m_isDragging = false;
-		m_selectedObj = nullptr;
+		if( m_selectedObj != nullptr ) {
+			m_selectedObj->SetIsSelected( false );
+			m_selectedObj = nullptr;
+		}
 	}
 // 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_T ) ) {
 // 		CreateGameObject();
 // 	}
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_D ) ) {
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F ) ) {
 		g_theConsole->SetIsOpen( true );
 		g_theConsole->PrintString( Rgba8::RED, std::string("isopen"));
 	}
@@ -204,7 +207,7 @@ void Game::UpdateMousePos()
 
 	if( m_isDragging ) {
 		if( m_selectedObj != nullptr ) {
-			m_selectedObj->SetPosition( m_mousePos + m_selectOffset );
+			m_selectedObj->SetPosition( m_mousePos - m_selectOffset );
 		}
 		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) || g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_DELETE ) ) {
 			m_selectedObj->SetIsSelected( false );
@@ -275,23 +278,21 @@ void Game::DeleteGameObject( GameObject* obj )
 void Game::UpdateGameObjectsTouching()
 {
 	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
+		if( m_gameObjects[objIndex] == nullptr ){ continue; }
 		GameObject* tempObj = m_gameObjects[objIndex];
+		tempObj->SetIsTouching( false );
 		if( tempObj == nullptr ) { continue; }
 
 		for( int objIndex1 = 0; objIndex1 < m_gameObjects.size(); objIndex1++ ) {
+			if( m_gameObjects[objIndex1] == nullptr ){ continue; }
 			GameObject* tempObj1 = m_gameObjects[objIndex1];
 			if( tempObj1 == nullptr || objIndex1 == objIndex ){ continue; }
-			
 			// Check if touching
+			
 			if( tempObj1->IsIntersectWith( tempObj ) ) {
 				tempObj->SetIsTouching( true );
 				tempObj1->SetIsTouching( true );
 			}
-			else {
-				tempObj->SetIsTouching( false );
-				tempObj1->SetIsTouching( false );
-			}
-
 		}
 	}
 }
