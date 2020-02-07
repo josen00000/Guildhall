@@ -45,6 +45,7 @@ bool DiscCollider2D::Contains( const Vec2& pos ) const
 bool DiscCollider2D::Intersects( const Collider2D* other ) const
 {
 	//TODO
+	//DiscCollider2D* temp = dynamic_cast<DiscCollider2D*>( other);
 	switch( other->m_type )
 	{
 		case COLLIDER2D_DISC:{

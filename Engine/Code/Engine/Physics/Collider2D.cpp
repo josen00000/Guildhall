@@ -3,7 +3,7 @@
 
 void Collider2D::Destroy()
 {
-	m_isDestroied = true;
+	m_isDestroyed = true;
 }
 
 void Collider2D::SetPosition( Vec2 pos )

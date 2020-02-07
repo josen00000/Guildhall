@@ -27,7 +27,7 @@ public:
 	virtual bool Intersects( const Collider2D* other )	const = 0;
 
 	// Accessor
-	virtual bool IsDestroied() const { return m_isDestroied; }
+	virtual bool IsDestroied() const { return m_isDestroyed; }
 
 	// Mutator
 	virtual void SetPosition( Vec2 pos );
@@ -39,7 +39,7 @@ public:
 	Collider2DType	m_type;
 
 private:
-	bool			m_isDestroied = false;
+	bool			m_isDestroyed = false;
 	Physics2D*		m_system	= nullptr;
 	Rigidbody2D*	m_rigidbody	= nullptr;
 };

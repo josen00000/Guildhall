@@ -20,7 +20,7 @@ public:
 	
 	// Accessor
 	Vec2 GetLocation() const { return m_worldPosition; }
-	bool IsDestroied() const { return m_isDestroied; }
+	bool IsDestroied() const { return m_isDestroyed; }
 	Collider2D* GetCollider() const { return m_collider; }
 	
 	// Mutator
@@ -35,5 +35,5 @@ private:
 	Collider2D* m_collider	= nullptr;
 
 	Vec2 m_worldPosition;
-	bool m_isDestroied = false;
+	bool m_isDestroyed = false;
 };

@@ -17,8 +17,8 @@ Rigidbody2D::~Rigidbody2D()
 
 void Rigidbody2D::Destroy()
 {
-	
-	m_isDestroied = true;
+	//Physics2D::De
+	m_isDestroyed = true;
 	m_collider->Destroy();
 }
 
