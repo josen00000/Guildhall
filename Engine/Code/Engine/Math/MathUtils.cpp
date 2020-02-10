@@ -142,6 +142,18 @@ float DotProduct2D( const Vec2 a, const Vec2 b )
 	return a.x * b.x + a.y * b.y;
 }
 
+float CrossProduct2D( const Vec2& a, const Vec2& b )
+{
+	return a.x * b.y - b.x * a.y;
+}
+
+float CrossProduct2D( const Vec2& commonPoint, const Vec2& point1, const Vec2& point2 )
+{
+	Vec2 a = point1 - commonPoint;
+	Vec2 b = point2 - commonPoint;
+	return CrossProduct2D( a, b );
+}
+
 //
 //basic 2D & 3D utilities
 //

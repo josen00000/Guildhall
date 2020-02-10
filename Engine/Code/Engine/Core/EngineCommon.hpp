@@ -9,8 +9,9 @@
 #include "Engine/Core/NamedStrings.hpp"
 
 #define UNUSED(x) (void)(x);
-
 extern DevConsole* g_theConsole;
+typedef unsigned int unint;
+
 extern NamedStrings g_gameConfigBlackboard;
 
 const Vec2 ALIGN_BOTTOM_LEFT	= Vec2( 0.f, 0.f);

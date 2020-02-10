@@ -100,8 +100,8 @@ float GetFloatFromText(const char* text);
 //
 // 
 float DotProduct2D(const Vec2 a, const Vec2 b);
-
-
+float CrossProduct2D( const Vec2& a, const Vec2& b );
+float CrossProduct2D( const Vec2& commonPoint, const Vec2& point1, const Vec2& point2 );
 
 //
 //Geometric query utilities

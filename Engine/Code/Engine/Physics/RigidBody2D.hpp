@@ -6,6 +6,12 @@ class Physics2D;
 class RenderContext;
 struct Rgba8;
 
+enum RigidBodyType {
+	RIGIDBODY_STATIC,		// Don't move, apply effector
+	RIGIDBODY_DYNAMIC,		// Move, apply effector
+	RIGIDBODY_KINEMATIC		// Move
+};
+
 class Rigidbody2D {
 	friend class Physics2D;
 
@@ -19,21 +25,33 @@ public:
 	void Destroy();
 	
 	// Accessor
-	Vec2 GetLocation() const { return m_worldPosition; }
+	float GetMass() const { return m_mass; }
 	bool IsDestroied() const { return m_isDestroyed; }
+	Vec2 GetLocation() const { return m_worldPosition; }
+	Vec2 GetVelocity() const { return m_velocity; }
 	Collider2D* GetCollider() const { return m_collider; }
 	
 	// Mutator
 	void SetPosition( Vec2 position );
 	void SetCollider( Collider2D* collider ); 
+	void SetColliderPosition();
+	void SetMass( float mass );
+	void UpdateVelocityPerFrame( const Vec2& deltaVel );
+	void UpdatePositionPerFrame( const Vec2& deltaPos );
+
 
 	// help
 	void DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
 
 private:
+	bool m_isDestroyed	= false;
+	bool m_isEnable		= true;
+	float m_mass		= 0.f;
+	Vec2 m_velocity		= Vec2::ZERO;
+
+
 	Physics2D*	m_system	= nullptr;
 	Collider2D* m_collider	= nullptr;
 
 	Vec2 m_worldPosition;
-	bool m_isDestroyed = false;
 };

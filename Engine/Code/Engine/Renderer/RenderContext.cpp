@@ -7,10 +7,11 @@
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Math/AABB2.hpp"
+#include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
-#include "engine/Renderer/Texture.hpp"
+#include "Engine/Renderer/Texture.hpp"
 
 void RenderContext::StartUp()
 {
@@ -264,6 +265,31 @@ void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, cons
 
 
 	DrawVertexArray(6,line);
+}
+
+void RenderContext::DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor )
+{
+	float halfThick = thick / 2;
+	Vec2 direction = lineSeg.GetDirection();
+	direction.SetLength( halfThick );
+	Vec2 tem_position = lineSeg.GetEndPos() + direction;
+	Vec2 rightTop = tem_position + (Vec2( -direction.y, direction.x ));
+	Vec2 rightdown = tem_position + ( Vec2( direction.y, -direction.x ) );
+	Vec2 tem_position1 = lineSeg.GetStartPos() - direction;
+	Vec2 leftTop = tem_position1 + ( Vec2( -direction.y, direction.x ) );
+	Vec2 leftdown = tem_position1 + ( Vec2( direction.y, -direction.x ) );
+	Vec2 tem_uv = Vec2( 0.f, 0.f );
+	Vertex_PCU line[6]={
+		Vertex_PCU( Vec3( rightTop.x,rightTop.y,0 ),	Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y,0 ),	Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y,0 ),		Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y, 0 ),		Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( leftdown.x,leftdown.y, 0 ),	Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y, 0 ), Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) )
+	};
+
+
+	DrawVertexArray( 6, line );
 }
 
 void RenderContext::DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor )

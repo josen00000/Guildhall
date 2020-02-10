@@ -87,30 +87,6 @@ Vec2 Camera::ClientToWorldPosition( Vec2 clientPos )
 	
 	AABB2 orthoBounds( GetOrthoBottomLeft(), GetOrthoTopRight() );
 	worldPos = orthoBounds.GetPointAtUV( normalizedPos );
-	// for now, you have an orthoMin and orthoMax.
-	// so...
-	// 1. Convert clientPos to pixel coordinates to normalized coordinates (0, 1) 
-	//    by range mapping them from your client size to (0,1) in both dimensions.
-	// 2. Convert to your ortho position by rangemapping the normalized coordinate 
-	//    from (0,1) to (min, max).
-
-	// note: you could skip and just RangeMap from (clientSpace to orthoSpace), but the additional
-	// step is good practice for something coming up in SD2
-
-	// note 2: client space is y-down, but your world space is y-up, be sure to 
-	// take this into account
-
-	// These TODOs are notes on things that will change in this function
-	// as MP2 & SD2 advance;
-	// TODO - take into account render target
-	//        clientPos being the pixel location on the texture
-
-	// TODO - use projection matrix to compute this
-
-	// TODO - Support ndc-depth paramater for 3D-coordinates, needed for ray casts.
-
-	// TODO - take into account viewport
-
 	return worldPos;
 }
 

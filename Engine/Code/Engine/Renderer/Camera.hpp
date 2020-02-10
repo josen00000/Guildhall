@@ -8,8 +8,8 @@ class Camera{
 public:
 	Camera(){}
 	~Camera(){}
-	Camera(const Camera& camera);
-	explicit Camera(const Vec2& bottomLeft, const Vec2& topRight);
+	Camera( const Camera& camera );
+	explicit Camera( const Vec2& bottomLeft, const Vec2& topRight );
 
 public:
 	// Accessor

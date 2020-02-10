@@ -22,6 +22,12 @@
     <Filter Include="ThirdParty">
       <UniqueIdentifier>{d734db42-a75a-4a80-b918-d396b291454b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Math\shape">
+      <UniqueIdentifier>{332bf928-b622-4b13-8232-f668158f8219}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math\basic">
+      <UniqueIdentifier>{3fc03a6a-ecaf-42bf-a0d9-0247a75a0318}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Camera.cpp">
@@ -35,15 +41,6 @@
     </ClCompile>
     <ClCompile Include="Core\Vertex_PCU.cpp">
       <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\Vec3.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\MathUtils.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\RandomNumberGenerator.cpp">
-      <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="Core\ErrorWarningAssert.cpp">
       <Filter>Core</Filter>
@@ -65,12 +62,6 @@
     </ClCompile>
     <ClCompile Include="Core\Time.cpp">
       <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\AABB2.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\IntVec2.cpp">
-      <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="Input\KeyBoardController.cpp">
       <Filter>Input</Filter>
@@ -99,17 +90,8 @@
     <ClCompile Include="Renderer\SpriteDefinition.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Math\Mat44.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\Vec4.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
     <ClCompile Include="Core\DevConsole.cpp">
       <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\OBB2.cpp">
-      <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="Core\XmlUtils.cpp">
       <Filter>Core</Filter>
@@ -123,29 +105,11 @@
     <ClCompile Include="Core\EngineCommon.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Math\IntRange.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\FloatRange.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
     <ClCompile Include="Core\EventSystem.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Math\RawNoise.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\Capsule2.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\LineSegment2.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer\MeshUtils.cpp">
       <Filter>Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Math\SmoothNoise.cpp">
-      <Filter>Math</Filter>
     </ClCompile>
     <ClCompile Include="Physics\Physics2D.cpp">
       <Filter>Physic</Filter>
@@ -159,11 +123,65 @@
     <ClCompile Include="Physics\DiscCollider2D.cpp">
       <Filter>Physic</Filter>
     </ClCompile>
-    <ClCompile Include="Math\Vec2.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
     <ClCompile Include="Input\MouseController.cpp">
       <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\AABB2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Capsule2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\LineSegment2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\OBB2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\FloatRange.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\IntRange.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\IntVec2.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Mat44.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\MathUtils.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\RandomNumberGenerator.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\RawNoise.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\SmoothNoise.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Vec2.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Vec3.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Vec4.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Disc2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Polygon2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Plane2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\PolygonCollider2D.cpp">
+      <Filter>Physic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -179,17 +197,8 @@
     <ClInclude Include="Core\Vertex_PCU.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Math\Vec3.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="Core\EngineCommon.hpp">
       <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\MathUtils.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\RandomNumberGenerator.hpp">
-      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Core\ErrorWarningAssert.hpp">
       <Filter>Core</Filter>
@@ -211,12 +220,6 @@
     </ClInclude>
     <ClInclude Include="Core\Time.hpp">
       <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\AABB2.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\IntVec2.hpp">
-      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Input\KeyBoardController.hpp">
       <Filter>Input</Filter>
@@ -266,17 +269,8 @@
     <ClInclude Include="Renderer\SpriteDefinition.hpp">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Math\Mat44.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\Vec4.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="Core\DevConsole.hpp">
       <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\OBB2.hpp">
-      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Core\Image.hpp">
       <Filter>Core</Filter>
@@ -290,29 +284,11 @@
     <ClInclude Include="Core\NamedStrings.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Math\IntRange.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\FloatRange.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="Core\EventSystem.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Math\RawNoise.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\Capsule2.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\LineSegment2.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\MeshUtils.hpp">
       <Filter>Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Math\SmoothNoise.hpp">
-      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Physics\Physics2D.hpp">
       <Filter>Physic</Filter>
@@ -326,11 +302,65 @@
     <ClInclude Include="Physics\DiscCollider2D.hpp">
       <Filter>Physic</Filter>
     </ClInclude>
-    <ClInclude Include="Math\vec2.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="Input\MouseController.hpp">
       <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\AABB2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Capsule2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\LineSegment2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\OBB2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\FloatRange.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\IntRange.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\IntVec2.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Mat44.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\MathUtils.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\RandomNumberGenerator.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\RawNoise.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\SmoothNoise.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\vec2.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Vec3.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Vec4.hpp">
+      <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Disc2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Polygon2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Plane2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\PolygonCollider2D.hpp">
+      <Filter>Physic</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

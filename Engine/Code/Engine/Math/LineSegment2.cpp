@@ -24,6 +24,11 @@ Vec2 LineSegment2::GetNormalizedDirection() const
 	return direction;
 }
 
+Vec2 LineSegment2::GetDirection() const
+{
+	return ( m_end - m_start );
+}
+
 float LineSegment2::GetLengthOfPointToLineSegment( const Vec2& refPos ) const
 {
 	Vec2 nearestPoint = GetNearestPoint( refPos );

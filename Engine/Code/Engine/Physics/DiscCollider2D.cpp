@@ -1,19 +1,21 @@
 #include "DiscCollider2D.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Physics/PolygonCollider2D.hpp"
 
 DiscCollider2D::DiscCollider2D( const Vec2& localPos, const Vec2& worldPos, float radius )
 	:m_localPosition(localPos)
 	,m_worldPosition(worldPos)
 	,m_radius(radius)
 {
-	
+	m_type = COLLIDER2D_DISC;
 }
 
 DiscCollider2D::DiscCollider2D( const Vec2& worldPos, float radius )
 	:m_worldPosition(worldPos)
 	,m_radius(radius)
 {
+	m_type = COLLIDER2D_DISC;
 }
 
 DiscCollider2D::~DiscCollider2D()
@@ -53,6 +55,17 @@ bool DiscCollider2D::Intersects( const Collider2D* other ) const
 			Vec2 disp = discOther->m_worldPosition - m_worldPosition;
 			float distSq = disp.GetLengthSquared();
 			if( distSq > (discOther->m_radius + m_radius) * (discOther->m_radius + m_radius) ) {
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+		case COLLIDER2D_POLYGON:{
+			PolygonCollider2D* polyOther = (PolygonCollider2D*)other;
+			Vec2 closestPoint = polyOther->GetClosestPoint( m_worldPosition );
+			float distSqr = GetDistanceSquared2D( closestPoint, m_worldPosition );
+			if( distSqr > ( m_radius * m_radius ) ){
 				return false;
 			}
 			else {
