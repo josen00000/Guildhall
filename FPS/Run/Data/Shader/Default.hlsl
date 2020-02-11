@@ -21,7 +21,17 @@ struct vs_input_t
 	float2 uv            : TEXCOORD; 
 }; 
 
+static float SHIFT = 0.75f;
 
+cbuffer time_constants : register(b0){
+	float SYSTEM_TIME_SECONDS;
+	float SYSTEM_TIME_DELTA_SECONDS;
+};
+
+cbuffer camera_constants : register(b1) {
+	float2 orthoMin;
+	float2 orthoMax;
+}
 //--------------------------------------------------------------------------------------
 // Programmable Shader Stages
 //--------------------------------------------------------------------------------------
@@ -35,6 +45,12 @@ struct v2f_t
 	float2 uv : UV; 
 }; 
 
+float RangeMap( float val, float inMin, float inMax, float outMin, float outMax ){
+	float domain = inMax - inMin;
+	float range = outMax - outMin;
+	return( (val - inMin) / domain ) * range + outMin;
+}
+
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 v2f_t VertexFunction( vs_input_t input )
@@ -46,9 +62,29 @@ v2f_t VertexFunction( vs_input_t input )
 	v2f.color = input.color; 
 	v2f.uv = input.uv; 
 
+	float4 worldPos = float4( input.position, 1 );
+	worldPos.x += 8;
+	worldPos.y += 4.5;
+	worldPos.y += sin(SYSTEM_TIME_SECONDS);
+	worldPos.x += cos(SYSTEM_TIME_SECONDS);
+
+	float4 clipPos;// = worldPos; // might have a w
+
+	clipPos.x = RangeMap( worldPos.x, orthoMin.x, orthoMax.x, -1.0f, 1.0f );
+	clipPos.y = RangeMap( worldPos.y, orthoMin.y, orthoMax.y, -1.0f, 1.0f );
+	clipPos.z = 0.0f;
+	clipPos.w = 1.0f;
+
+
+	v2f.position = clipPos;
 	return v2f;
 }
 
+// raster step
+/*
+float3 ndcPos = clipPos.xyz / clipPos.w;
+
+*/
 //--------------------------------------------------------------------------------------
 // Fragment Shader
 // 

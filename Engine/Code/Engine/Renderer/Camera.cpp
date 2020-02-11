@@ -2,6 +2,9 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/Rgba8.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderBuffer.hpp"
+
 
 // the bot_left and top_right seems to be redundant
 //
@@ -25,6 +28,14 @@ Camera::Camera( const Vec2& bottomLeft, const Vec2& topRight )
 	m_width=topRight.x-bottomLeft.x;
 	m_AABB2.mins=bottomLeft;
 	m_AABB2.maxs=topRight;
+}
+
+Camera::~Camera()
+{
+	if( m_cameraUBO != nullptr ) {
+		delete m_cameraUBO;
+		m_cameraUBO = nullptr;
+	}
 }
 
 void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight )
@@ -66,6 +77,15 @@ void Camera::SetClearMode( unsigned int clearFlags, Rgba8 color, float depth /*=
 void Camera::SetColorTarget( Texture* colorTarget )
 {
 	m_colorTarget = colorTarget;
+}
+
+RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx )
+{
+	if( m_cameraUBO == nullptr ) {
+		m_cameraUBO = new RenderBuffer( ctx, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	}
+	return m_cameraUBO;
+	
 }
 
 void Camera::UpdateCamera()

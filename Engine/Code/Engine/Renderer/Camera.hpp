@@ -4,6 +4,8 @@
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Renderer/Texture.hpp"
 
+class RenderBuffer;
+
 enum eCameraClearBitFlag : unsigned int {
 	CLEAR_COLOR_BIT		= (1 << 0),
 	CLEAR_DEPTH_BIT		= (1 << 1),
@@ -12,10 +14,10 @@ enum eCameraClearBitFlag : unsigned int {
 };
 
 class Camera{
-
+	friend class RenderContext;
 public:
 	Camera(){}
-	~Camera(){}
+	~Camera();
 	Camera(const Camera& camera);
 	explicit Camera(const Vec2& bottomLeft, const Vec2& topRight);
 
@@ -34,7 +36,7 @@ public:
 	void SetShouldClearColor( bool shouldClearColor );
 	void SetClearMode( unsigned int clearFlags, Rgba8 color, float depth = 0.0f , unsigned int stencil = 0 );
 	void SetColorTarget( Texture* colorTarget );
-	
+	RenderBuffer* GetOrCreateCameraBuffer( RenderContext* ctx );
 	void UpdateCamera();
 
 
@@ -50,5 +52,6 @@ public:
 	Texture* m_colorTarget;
 private:
 	bool m_shouldClearColor = true;
+	RenderBuffer* m_cameraUBO = nullptr;
 	
 };

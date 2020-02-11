@@ -16,6 +16,7 @@
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
+#include "Engine\Core\Time.hpp"
 //third party library
 
 
@@ -77,15 +78,31 @@ void RenderContext::StartUp( Window* window )
 	m_defaultShader->CreateFromFile( "data/Shader/default.hlsl" );
 	m_immediateVBO = new VertexBuffer( this, MEMORY_HINT_DYNAMIC );
 	m_immediateVBO->m_stride = sizeof(Vertex_PCU);
+
+	m_frameUBO = new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+
 }
 
 void RenderContext::BeginView(){
 
 }
 
-void RenderContext::BeginFrame()
+void RenderContext::UpdateFrameTime( float deltaSeconds )
 {
-	
+	time_data_t frameData;
+	frameData.system_time = GetCurrentTimeSeconds();
+	frameData.system_delta_time = deltaSeconds;
+
+	m_frameUBO->Update( &frameData, sizeof( frameData ), sizeof( frameData ) );
+}
+
+void RenderContext::BeginFrame(  )
+{
+// 	time_data_t frameData;
+// 	frameData.system_time = GetCurrentTimeSeconds();
+// 	frameData.system_delta_time = deltaSeconds;
+// 
+// 	m_frameUBO->Update( &frameData, sizeof(frameData), sizeof(frameData) );
 }
 
 void RenderContext::EndFrame()
@@ -95,20 +112,22 @@ void RenderContext::EndFrame()
 
 void RenderContext::Shutdown()
 {
-	DX_SAFE_RELEASE(m_device);
-	DX_SAFE_RELEASE(m_context);
 	delete m_swapChain;
 	delete m_currentShader;
 	delete m_immediateVBO;
+	delete m_frameUBO;
 	m_swapChain		= nullptr;
 	m_currentShader = nullptr;
 	m_immediateVBO	= nullptr;
+	m_frameUBO		= nullptr;
 
 	for( ShaderMapIterator it = m_shaders.begin(); it != m_shaders.end(); ++it ) {
 		delete it->second;
 		m_shaders.erase(it);
-		
 	}
+
+	DX_SAFE_RELEASE(m_device);
+	DX_SAFE_RELEASE(m_context);
 }
 
 
@@ -127,7 +146,7 @@ void RenderContext::ClearScreen( Texture* output, const Rgba8& clearColor )
 
 }
 
-void RenderContext::BeginCamera( const Camera& camera )
+void RenderContext::BeginCamera( Camera& camera )
 {
 #if defined(RENDER_DEBUG)
 	m_context->ClearState();
@@ -145,8 +164,8 @@ void RenderContext::BeginCamera( const Camera& camera )
 	D3D11_VIEWPORT viewport;
 	viewport.TopLeftX	= 0;
 	viewport.TopLeftY	= 0;
-	viewport.Width		= 400; //texture->getWidth();		
-	viewport.Height		= 400; //texture->GetHeight();		
+	viewport.Width		= output->m_texelSizeCoords.x; //texture->getWidth();		
+	viewport.Height		= output->m_texelSizeCoords.y; //texture->GetHeight();		
 	viewport.MinDepth	= 0.0f;
 	viewport.MaxDepth	= 1.0f;
 
@@ -160,6 +179,16 @@ void RenderContext::BeginCamera( const Camera& camera )
 	}
 	BindShader( static_cast<Shader*>( nullptr ) );
 	m_lastBoundVBO = nullptr;
+
+	RenderBuffer* cameraUBO = camera.GetOrCreateCameraBuffer( this );
+
+	BindUniformBuffer( 0, m_frameUBO );
+	camera_ortho_t cameraData;
+	cameraData.orthoMax = camera.GetOrthoTopRight();
+	cameraData.orthoMin = camera.GetOrthoBottomLeft();
+	cameraUBO->Update( &cameraData, sizeof( cameraData ), sizeof( cameraData ) );
+	BindUniformBuffer( UBO_CAMERA_SLOT, cameraUBO );
+
 }
 
 void RenderContext::SetOrthoView( const AABB2& box )
@@ -324,6 +353,15 @@ Shader* RenderContext::GetOrCreateShader( char const* fileName )
 	m_shaders.insert( std::pair<std::string, Shader*>( tempName, shader ));
 	return shader;
 }
+
+void RenderContext::BindUniformBuffer( uint slot, RenderBuffer* ubo )
+{
+	ID3D11Buffer* uboHandle = ubo->m_handle;
+
+	m_context->VSSetConstantBuffers( slot, 1, &uboHandle ); // bind to vertex shader
+	m_context->PSSetConstantBuffers( slot, 1, &uboHandle ); // bind to pixel shader
+}
+
 
 BitmapFont* RenderContext::CreateBitmapFontFromFile( const char* fontName, const char* fontFilePath )
 {

@@ -2,7 +2,7 @@
 #include <map>
 #include <string>
 #include "Engine/Core/Vertex_PCU.hpp"
-
+#include "Engine/Core/EngineCommon.hpp"
 
 class BitmapFont;
 class Camera;
@@ -11,6 +11,7 @@ class SwapChain;
 class Shader;
 class VertexBuffer;
 class Window;
+class RenderBuffer;
 struct ID3D11Buffer;
 struct AABB2;
 struct ID3D11Device;
@@ -25,6 +26,23 @@ enum BlendMode
 	NUM_BLENDMODE
 };
 
+enum BufferSlot {
+	UBO_FRAME_SLOT	= 0,
+	UBO_CAMERA_SLOT, 
+};
+
+// data used in shader
+struct time_data_t {
+	float system_time;
+	float system_delta_time;
+
+	float padding[2];
+};
+
+struct camera_ortho_t {
+	Vec2 orthoMin;
+	Vec2 orthoMax;
+};
 
 class RenderContext{
 public :
@@ -36,7 +54,8 @@ public:
 	void Shutdown();
 	void BeginView();
 	
-	void BeginCamera(const Camera& camera);
+	void UpdateFrameTime( float deltaSeconds );
+	void BeginCamera( Camera& camera);
 	void EndCamera(const Camera& camera);
 	
 	void BeginFrame();
@@ -59,6 +78,8 @@ public:
 	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
 	BitmapFont* CreateOrGetBitmapFontFromFile(const char* fontName, const char* fontFilePath);
 	Shader* GetOrCreateShader( char const* fileName );
+
+	void BindUniformBuffer( uint slot, RenderBuffer* ubo ); // ubo - uniform buffer object
 	
 	void SetBlendMode(BlendMode blendMode);
 
@@ -83,4 +104,6 @@ private:
 	VertexBuffer*	m_immediateVBO	= nullptr;
 	ID3D11Buffer*	m_lastBoundVBO	= nullptr;
 	std::map<std::string, Shader*> m_shaders;
+
+	RenderBuffer*		m_frameUBO;
 };

@@ -112,6 +112,7 @@ void App::BeginFrame()
 
 void App::Update( float deltaSeconds )
 {
+	g_theRenderer->UpdateFrameTime( deltaSeconds );
 	g_theGame->RunFrame( deltaSeconds );
 	CheckGameQuit();
 }
