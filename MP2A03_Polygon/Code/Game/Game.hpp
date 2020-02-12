@@ -46,6 +46,7 @@ private:
 
 	// GetInput
 	void UpdateMouse();
+	void UpdateMouseVelocity();
 	void UpdateMouseWheel();
 	void UpdateMousePos();
 	void HandleMouseInput();
@@ -62,6 +63,9 @@ private:
 
 	// Gameobject
 	bool SelectGameObject();
+	void CreateDiscGameObject();
+	void UpdateGameObjects( float deltaSeconds );
+	void UpdateGameObjectsIntersect();
 
 	//Load
 	void LoadAssets();
@@ -70,6 +74,7 @@ private:
 public:
 	bool m_isAppQuit		= false;
 	bool m_isDrawMode		= false;
+	bool m_isCreateMode		= false;
 	bool m_isDragging		= false;
 
 	Camera* m_gameCamera	= nullptr;
@@ -91,5 +96,7 @@ public:
 	std::vector<Vec2> m_tempPoints;	// Can be delete later
 	std::vector<Vec2> m_drawPoints;
 	
+	std::queue<Vec2> m_mouseVelocities; // two frames
+	std::queue<Vec2> m_mousePositions;	// three frames
 
 };

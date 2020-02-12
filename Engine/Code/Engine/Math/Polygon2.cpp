@@ -160,6 +160,8 @@ void Polygon2::SetEdgesFromPoints( const Vec2* point, int pointCount )
 		m_edges.push_back( LineSegment2( firstPoint, secondPoint ) );
 	}
 	m_edges.push_back( LineSegment2( point[0], point[pointCount-1] ) );
+
+	InitialBadCenter();
 }
 
 void Polygon2::SetCenter( Vec2 center )

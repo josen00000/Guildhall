@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
+#include "Game/GameObject.hpp"
 #include "Engine/Math/Vec2.hpp"
 #include "Engine/Physics/Collider2D.hpp"
-#include "Game/GameObject.hpp"
 
 class DiscCollider2D;
 class PolygonCollider2D;
@@ -29,7 +29,7 @@ public:
 	
 
 	// Rigidbody
-	Rigidbody2D* CreateRigidbody();
+	Rigidbody2D* CreateRigidbody( Vec2 worldPos = Vec2::ZERO );
 	void AddRigidbodyToList( Rigidbody2D* rb );
 	void DestroyRigidbody( Rigidbody2D* rb );
 
@@ -44,7 +44,7 @@ public:
 	PolygonCollider2D* CreatePolyCollider( const Vec2* points, int pointCount );
 	PolygonCollider2D* CreatePolyCollider( Polygon2 polygon );
 public:
-	Vec2 m_gravityAccel = Vec2( 0.f, -0.01f );
+	Vec2 m_gravityAccel = Vec2( 0.f, -2.f );
 
 private:
 	std::vector<Collider2D*> m_colliders;

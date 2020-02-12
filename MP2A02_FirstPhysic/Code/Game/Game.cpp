@@ -281,7 +281,6 @@ void Game::UpdateGameObjectsTouching()
 		if( m_gameObjects[objIndex] == nullptr ){ continue; }
 		GameObject* tempObj = m_gameObjects[objIndex];
 		tempObj->SetIsTouching( false );
-		if( tempObj == nullptr ) { continue; }
 
 		for( int objIndex1 = 0; objIndex1 < m_gameObjects.size(); objIndex1++ ) {
 			if( m_gameObjects[objIndex1] == nullptr ){ continue; }

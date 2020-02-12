@@ -42,6 +42,7 @@ void Physics2D::ApplyEffectors( float deltaSeconds )
 {
 	for( int rbIndex = 0; rbIndex < m_rigidbodies.size(); rbIndex++ ) {
 		Rigidbody2D* rb = m_rigidbodies[rbIndex];
+		if( rb == nullptr ){ continue; }
 		ApplyAccelerationToRigidbody( rb, deltaSeconds );		
 	}
 }
@@ -62,6 +63,7 @@ void Physics2D::MoveRigidbodies( float deltaSeconds )
 {
 	for( int rbIndex = 0; rbIndex < m_rigidbodies.size(); rbIndex++ ) {
 		Rigidbody2D* rb = m_rigidbodies[rbIndex];
+		if( rb == nullptr ){ continue; }
 		Vec2 deltaPos = rb->GetVelocity() * deltaSeconds;
 		if( rb->m_isEnable ) {
 			rb->UpdatePositionPerFrame( deltaPos );
@@ -100,16 +102,15 @@ void Physics2D::CleanupDestroyedObjects()
 			tempCollider = nullptr;
 		}
 	}
-
 }
 
 void Physics2D::EndFrame()
 {
 }
 
-Rigidbody2D* Physics2D::CreateRigidbody()
+Rigidbody2D* Physics2D::CreateRigidbody( Vec2 worldPos /*= Vec2::ZERO */ )
 {
-	Rigidbody2D* tempRb = new Rigidbody2D( this );
+	Rigidbody2D* tempRb = new Rigidbody2D( this, worldPos );
 	AddRigidbodyToList( tempRb );
 	return tempRb;
 }
@@ -143,6 +144,7 @@ PolygonCollider2D* Physics2D::CreatePolyCollider( const Vec2* points, int pointC
 {
 	PolygonCollider2D* tempPolyCol = dynamic_cast<PolygonCollider2D*> ( CreateCollider( Collider2DType::COLLIDER2D_POLYGON ) );
 	tempPolyCol->m_polygon.SetEdgesFromPoints( points, pointCount );
+	
 	return tempPolyCol;
 }
 
@@ -157,7 +159,6 @@ void Physics2D::DestroyCollider( Collider2D* collider )
 {
 	collider->Destroy();
 }
-
 
 Collider2D* Physics2D::CreateCollider( Collider2DType type )
 {

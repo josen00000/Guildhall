@@ -25,13 +25,13 @@ I may mark tasks as **CHALLENGE** if I believe them to be more difficult relativ
             - **CHALLENGE**: Center of mass, assuming uniform density
     - [x] *If you did the giftwrapping algorithm, you can just add points and construct a polygon that would work for them*
 - [x] *05pts*: `Rigidbody2D` can `Enable` or `Disable` itself, taking it out of the simulation, but still rendering
-    - [ ] Objects being dragged should set themselves to disabled, and re-enable when unselected.
-- [ ] *05pts*: When drawing, draw the location of the `Rigidbody` as an `X`, red if disabled, blue if enabled.
-- [ ] *10pts*: `Physics2D::Update` loop implemented
-    - [ ] Apply all global forces
-    - [ ] Simulate all rigidbodies
-    - [ ] Cleanup destroyed objects (should be happening from A01)
-- [ ] *10pts*: Add `Rigidbody2D::SetVelocity` to change the velocity of the object
+    - [x] Objects being dragged should set themselves to disabled, and re-enable when unselected.
+- [x] *05pts*: When drawing, draw the location of the `Rigidbody` as an `X`, red if disabled, blue if enabled.
+- [x] *10pts*: `Physics2D::Update` loop implemented
+    - [x] Apply all global forces
+    - [x] Simulate all rigidbodies
+    - [x] Cleanup destroyed objects (should be happening from A01)
+- [] *10pts*: Add `Rigidbody2D::SetVelocity` to change the velocity of the object
     - [ ] When releasing an object, set its velocity based on mouse movement (ie, be able to throw an object)
 - [ ] *05pts*: `Rigidbody2D` can `SetSimulationMode` to either `STATIC`, `KINEMATIC`, or `DYNAMIC`
     - [ ] `STATIC` objects do not apply forces or simulate.

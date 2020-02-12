@@ -16,7 +16,7 @@ class Rigidbody2D {
 	friend class Physics2D;
 
 public:
-	Rigidbody2D( Physics2D* owner, Collider2D* col = nullptr );
+	Rigidbody2D( Physics2D* owner, Vec2 worldPos, Collider2D* col = nullptr  );
 
 private:
 	~Rigidbody2D();
@@ -27,7 +27,7 @@ public:
 	// Accessor
 	float GetMass() const { return m_mass; }
 	bool IsDestroied() const { return m_isDestroyed; }
-	Vec2 GetLocation() const { return m_worldPosition; }
+	Vec2 GetPosition() const { return m_worldPosition; }
 	Vec2 GetVelocity() const { return m_velocity; }
 	Collider2D* GetCollider() const { return m_collider; }
 	
@@ -39,14 +39,16 @@ public:
 	void UpdateVelocityPerFrame( const Vec2& deltaVel );
 	void UpdatePositionPerFrame( const Vec2& deltaPos );
 
-
+	void DisablePhysics();
+	void EnablePhysics();
 	// help
 	void DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
+	void DebugRender( RenderContext* ctx );
 
 private:
 	bool m_isDestroyed	= false;
 	bool m_isEnable		= true;
-	float m_mass		= 0.f;
+	float m_mass		= 1.f;
 	Vec2 m_velocity		= Vec2::ZERO;
 
 

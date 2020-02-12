@@ -60,8 +60,8 @@ void Game::Update( float deltaSeconds )
 	CheckIfExit();
 	UpdateMouse();
 	UpdatePhysics( deltaSeconds );
-
-
+	UpdateGameObjects( deltaSeconds );
+	UpdateGameObjectsIntersect();
 }
 
 void Game::UpdatePhysics( float deltaSeconds )
@@ -78,8 +78,14 @@ void Game::UpdateMouse()
 {
 	UpdateMouseWheel();
 	UpdateMousePos();
+	UpdateMouseVelocity();
 	HandleMouseInput();
 	HandleKeyboardInput();
+}
+
+void Game::UpdateMouseVelocity()
+{
+	for( )
 }
 
 void Game::UpdateMouseWheel()
@@ -100,10 +106,12 @@ void Game::UpdateMousePos()
 	// handle drag object
 	if( m_isDragging ) {
 		if( m_selectedObj != nullptr ) {
-			m_selectedObj->m_position = ( m_mousePos - m_selectOffset );
+			m_selectedObj->SetPosition( m_mousePos + m_selectOffset );
 		}
-
 	}
+
+	// Record mouse positions
+	if( m_ )
 }
 
 void Game::CheckIfExit()
@@ -147,22 +155,25 @@ void Game::SetCameraToOrigin()
 
 void Game::HandleMouseInput()
 {
+	// button down
 	if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_LEFT ) ){
 		if( m_isDrawMode ){
 			AddPointToDrawPolygon( m_mousePos );
 		}
 		else if( SelectGameObject() ) {
 			m_isDragging = true;
-			m_selectOffset = m_mousePos - m_selectedObj->m_position;
+			m_selectOffset = m_mousePos - m_selectedObj->GetPosition();
 		}
 	}
 	if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_RIGHT ) ) {
 		EndDrawPolygon();
 	}
 
+	// button up
 	if( g_theInputSystem->WasMouseButtonJustReleased( MOUSE_BUTTON_LEFT ) ) {
 		m_isDragging = false;
 		if( m_selectedObj != nullptr ) {
+			m_selectedObj->EnablePhysics();
 			m_selectedObj->m_isSelected = false;
 			m_selectedObj = nullptr;
 		}
@@ -183,6 +194,9 @@ void Game::HandleMouseInput()
 
 void Game::HandleKeyboardInput()
 {
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1) ){
+		CreateDiscGameObject();
+	}
 	// draw input
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
 		if( !m_isDrawMode ){
@@ -244,7 +258,6 @@ bool Game::IsPointEnoughForDrawPolygon() const
 
 bool Game::IsDrawedPolygonConvex() const
 {
-	
 	std::vector<Vec2> tempPoints;
 	tempPoints = m_drawPoints;
 	tempPoints.push_back( m_mousePos );
@@ -356,10 +369,49 @@ bool Game::SelectGameObject()
 		if( m_gameObjects[objIndex]->m_isMouseIn ) {
 			m_selectedObj = m_gameObjects[objIndex];
 			m_selectedObj->m_isSelected = true;
+			m_selectedObj->DisablePhysics();
 			return true;
 		}
 	}
 	return false;
+}
+
+void Game::CreateDiscGameObject()
+{
+	float tempRadius = m_rng->RollRandomFloatInRange( 5, 15 );
+	GameObject* tempGameObj = new GameObject( m_mousePos, tempRadius );
+	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
+		if( m_gameObjects[objIndex] == nullptr ) {
+			m_gameObjects[objIndex] = tempGameObj;
+			return;
+		}
+	}
+	m_gameObjects.push_back( tempGameObj );
+}
+
+void Game::UpdateGameObjects( float deltaSeconds )
+{
+	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
+		GameObject* obj = m_gameObjects[objIndex];
+		if( obj == nullptr ){ continue; }
+
+		obj->Update( deltaSeconds );
+	}
+}
+
+void Game::UpdateGameObjectsIntersect()
+{
+	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
+		GameObject* obj = m_gameObjects[objIndex];
+		if( obj == nullptr ) { continue; }
+
+		for( int objIndex1 = 0; objIndex1 < m_gameObjects.size(); objIndex1++ ) {
+			GameObject* obj1 = m_gameObjects[objIndex1];
+			if( obj1 == nullptr || objIndex1 == objIndex ){ continue; }
+			
+			obj1->CheckIntersectWith( obj );
+		}
+	}
 }
 
 void Game::LoadAssets()

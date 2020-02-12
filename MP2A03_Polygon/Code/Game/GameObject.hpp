@@ -22,20 +22,32 @@ public:
 
 private:
 	void SetAverageCenterByPoints();
+	void CheckIfMouseIn( Vec2 mousePos );
 
 public:
 	virtual void Update(float deltaSeconds);
 	virtual void Render() const;
 
-	//accessor
+	// Accessor
+	Vec2 GetPosition()	const ;
+	bool IsMouseIn()	const { return m_isMouseIn; }
+	bool IsDestroyed()	const { return m_isDestroyed; }
+	bool IsSelected()	const { return m_isSelected; }
+	bool IsIntersect()	const { return m_isIntersect; }
 	
-	
+	// Mutator
+	void SetPosition( Vec2 pos );
+	void SetIntersect( bool isIntersect );
+
+	void CheckIntersectWith( GameObject* other ); 
+	void DisablePhysics();
+	void EnablePhysics();
+
 public:
 	bool m_isDestroyed	= false;
 	bool m_isMouseIn	= false;
 	bool m_isSelected	= false;
 	bool m_isIntersect	= false;
-	Vec2 m_position = Vec2(0.f,0.f);
 	Rigidbody2D* m_rb;
 };
 
