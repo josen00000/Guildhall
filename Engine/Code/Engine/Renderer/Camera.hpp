@@ -3,6 +3,8 @@
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Renderer/Texture.hpp"
+#include "Engine/Math/Mat44.hpp"
+#include "Engine/Math/Vec3.hpp"
 
 class RenderBuffer;
 
@@ -21,11 +23,15 @@ public:
 	Camera(const Camera& camera);
 	explicit Camera(const Vec2& bottomLeft, const Vec2& topRight);
 
+	void Translate( const Vec3& translation );
+	void SetPosition( const Vec3& position );
+
 public:
 	// Accessor
 	Vec2 GetOrthoBottomLeft() const;
 	Vec2 GetOrthoTopRight() const;
-	Vec2 GetPosition() const;
+	Vec3 GetPosition() const;
+
 	bool GetShouldClearColor() const { return m_shouldClearColor; }
 	Rgba8 GetClearColor() const { return m_clearColor; }
 	Texture* GetColorTarget() const { return m_colorTarget; }
@@ -38,11 +44,11 @@ public:
 	void SetColorTarget( Texture* colorTarget );
 	RenderBuffer* GetOrCreateCameraBuffer( RenderContext* ctx );
 	void UpdateCamera();
-
+	void UpdateCameraUBO();
 
 public:
 	AABB2 m_AABB2 = AABB2(Vec2(0,0),Vec2(0,0));
-	Vec2 m_position = Vec2(0.f,0.f);
+
 	float m_width = 0.f;
 	float m_height = 0.f;
 
@@ -53,5 +59,7 @@ public:
 private:
 	bool m_shouldClearColor = true;
 	RenderBuffer* m_cameraUBO = nullptr;
-	
+	Mat44 m_projection;
+	Mat44 m_view;
+	Vec3 m_position;
 };

@@ -20,10 +20,10 @@ constexpr float MAX_TURNING_DIFFERENCE = 3.f;
 
 
 //Camera
-constexpr float GAME_CAMERA_MIN_X	= 0;
-constexpr float GAME_CAMERA_MIN_Y	= 0;
-constexpr float GAME_CAMERA_MAX_X	= 16;
-constexpr float GAME_CAMERA_MAX_Y	= 9;
+constexpr float GAME_CAMERA_MIN_X	= -8;
+constexpr float GAME_CAMERA_MIN_Y	= -4.5;
+constexpr float GAME_CAMERA_MAX_X	= 8;
+constexpr float GAME_CAMERA_MAX_Y	= 4.5;
 
 constexpr float UI_CAMERA_MIN_X		= 0;
 constexpr float UI_CAMERA_MIN_Y		= 0;

@@ -1,8 +1,9 @@
 ﻿#pragma once
 #include <map>
 #include <string>
-#include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/Vertex_PCU.hpp"
+#include "Engine/Math/Mat44.hpp"
 
 class BitmapFont;
 class Camera;
@@ -40,8 +41,8 @@ struct time_data_t {
 };
 
 struct camera_ortho_t {
-	Vec2 orthoMin;
-	Vec2 orthoMax;
+	Mat44 projection;
+	Mat44 view;
 };
 
 class RenderContext{

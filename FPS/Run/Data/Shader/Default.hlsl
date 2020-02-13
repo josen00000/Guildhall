@@ -28,9 +28,10 @@ cbuffer time_constants : register(b0){
 	float SYSTEM_TIME_DELTA_SECONDS;
 };
 
+// MVP - Model - View - Projections
 cbuffer camera_constants : register(b1) {
-	float2 orthoMin;
-	float2 orthoMax;
+	float4x4 PROJECTION; // CAMERA_TO_CLIP_TRANSFORM
+	float4x4 VIEW;
 }
 //--------------------------------------------------------------------------------------
 // Programmable Shader Stages
@@ -63,18 +64,15 @@ v2f_t VertexFunction( vs_input_t input )
 	v2f.uv = input.uv; 
 
 	float4 worldPos = float4( input.position, 1 );
-	worldPos.x += 8;
-	worldPos.y += 4.5;
-	worldPos.y += sin(SYSTEM_TIME_SECONDS);
-	worldPos.x += cos(SYSTEM_TIME_SECONDS);
+	float4 cameraPos = mul(VIEW, worldPos );
+	//worldPos.x += 8;
+	//worldPos.y += 4.5;
+	//worldPos.y += sin(SYSTEM_TIME_SECONDS);
+	//worldPos.x += cos(SYSTEM_TIME_SECONDS);
 
-	float4 clipPos;// = worldPos; // might have a w
+	float4 clipPos = mul( PROJECTION, cameraPos );// = worldPos; // might have a w
 
-	clipPos.x = RangeMap( worldPos.x, orthoMin.x, orthoMax.x, -1.0f, 1.0f );
-	clipPos.y = RangeMap( worldPos.y, orthoMin.y, orthoMax.y, -1.0f, 1.0f );
-	clipPos.z = 0.0f;
-	clipPos.w = 1.0f;
-
+	
 
 	v2f.position = clipPos;
 	return v2f;

@@ -58,6 +58,22 @@ void Game::Update( float deltaSeconds )
  	CheckIfExit();
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 
+	Vec2 movement = Vec2::ZERO;
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_LEFT_ARROW ) ) {
+		movement.x -= 1.0f;
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_ARROW ) ) {
+		movement.x += 1.0f;
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_UP_ARROW ) ) {
+		movement.y += 1.0f;
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_DOWN_ARROW ) ) {
+		movement.y -= 1.0f;
+	}
+	Vec3 cameraPos = m_gameCamera->GetPosition();
+	cameraPos += movement;
+	m_gameCamera->SetPosition( cameraPos );
 
 // 	switch ( m_gameState )
 // 	{

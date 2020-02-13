@@ -14,7 +14,7 @@ public:
 	~Vec3(){}
 	Vec3(const Vec3&copyFrom);
 	explicit Vec3(float initialX,float initialY,float initialZ);
-	Vec3(const Vec2& copyFromVec2,float initialZ=0);
+	Vec3(const Vec2& copyFromVec2,float initialZ=0 );
 	// Accessors(const methods)
 	float GetLength() const;
 	float GetLengthXY() const;

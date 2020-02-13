@@ -183,10 +183,7 @@ void RenderContext::BeginCamera( Camera& camera )
 	RenderBuffer* cameraUBO = camera.GetOrCreateCameraBuffer( this );
 
 	BindUniformBuffer( 0, m_frameUBO );
-	camera_ortho_t cameraData;
-	cameraData.orthoMax = camera.GetOrthoTopRight();
-	cameraData.orthoMin = camera.GetOrthoBottomLeft();
-	cameraUBO->Update( &cameraData, sizeof( cameraData ), sizeof( cameraData ) );
+	
 	BindUniformBuffer( UBO_CAMERA_SLOT, cameraUBO );
 
 }
