@@ -171,6 +171,9 @@
     <ClCompile Include="Renderer\VertexBuffer.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\Sampler.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Math\vec2.hpp">
@@ -345,6 +348,9 @@
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\RenderCommon.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Sampler.hpp">
       <Filter>Renderer</Filter>
     </ClInclude>
   </ItemGroup>

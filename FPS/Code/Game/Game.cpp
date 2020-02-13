@@ -192,7 +192,8 @@ void Game::Render() const
 	m_gameCamera->m_clearColor = tempColor;
 	g_theRenderer->BeginCamera( *m_gameCamera );
 	//g_theRenderer->Draw( 3, 0 );
-	g_theRenderer->DrawLine( Vec2::ZERO, Vec2( 0 , 1), 0.5f, Rgba8::RED );
+	//g_theRenderer->DrawLine( Vec2::ZERO, Vec2( 0 , 5), 0.5f, Rgba8::RED );
+	g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
 	g_theRenderer->EndCamera( *m_gameCamera );
 }
 

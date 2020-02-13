@@ -32,7 +32,10 @@ cbuffer time_constants : register(b0){
 cbuffer camera_constants : register(b1) {
 	float4x4 PROJECTION; // CAMERA_TO_CLIP_TRANSFORM
 	float4x4 VIEW;
-}
+};
+
+Texture2D <float4> tDiffuse	: register(t0);
+SamplerState sSampler: register(s0);
 //--------------------------------------------------------------------------------------
 // Programmable Shader Stages
 //--------------------------------------------------------------------------------------
@@ -90,6 +93,8 @@ float3 ndcPos = clipPos.xyz / clipPos.w;
 // is being drawn to the first bound color target.
 float4 FragmentFunction( v2f_t input ) : SV_Target0
 {
+	float4 color = tDiffuse.Sample( sSampler, input.uv );
+	return color * input.color;
 	// we'll outoupt our UV coordinates as color here
 	// to make sure they're being passed correctly.
 	// Very common rendering debugging method is to 

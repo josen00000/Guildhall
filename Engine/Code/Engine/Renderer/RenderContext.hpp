@@ -7,6 +7,7 @@
 
 class BitmapFont;
 class Camera;
+class Sampler;
 class Texture;
 class SwapChain;
 class Shader;
@@ -17,6 +18,7 @@ struct ID3D11Buffer;
 struct AABB2;
 struct ID3D11Device;
 struct ID3D11DeviceContext;
+struct ID3D11BlendState;
 
 typedef std::map<std::string, Shader*>::iterator ShaderMapIterator;
 
@@ -63,7 +65,8 @@ public:
 	void EndFrame();
 	void ClearScreen( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 	void SetOrthoView(const AABB2& box);
-	void BindTexture(const Texture* texture);
+	void BindTexture( Texture* texture);
+	void BindSampler( const Sampler* sampler );
 	void BindShader( Shader* shader );
 	void BindShader( const char* fileName );
 	void BindVertexInput( VertexBuffer* vbo );
@@ -77,6 +80,7 @@ public:
 
 
 	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
+	Texture* CreateTextureFromColor( Rgba8 color );
 	BitmapFont* CreateOrGetBitmapFontFromFile(const char* fontName, const char* fontFilePath);
 	Shader* GetOrCreateShader( char const* fileName );
 
@@ -87,8 +91,10 @@ public:
 private:
 	Texture*		CreateTextureFromFile(const char* imageFilePath);
 	BitmapFont*		CreateBitmapFontFromFile(const char* fontName, const char* fontFilePath);
+	void			CreateBlendState();
 	Texture*		CheckTextureExist(const char* imageFilePath) const;
 	BitmapFont*		CheckBitmapFontExist( const char* fontName ) const;
+	void			CleanTextures();
 
 public:
 	ID3D11DeviceContext*	m_context	= nullptr; // how we issue command
@@ -107,4 +113,11 @@ private:
 	std::map<std::string, Shader*> m_shaders;
 
 	RenderBuffer*		m_frameUBO;
+
+	Sampler* m_defaultSampler = nullptr;
+	Texture* m_texDefaultColor = nullptr;
+
+	ID3D11BlendState* m_alphaBlendState;
+	ID3D11BlendState* m_additiveBlendState;
+
 };

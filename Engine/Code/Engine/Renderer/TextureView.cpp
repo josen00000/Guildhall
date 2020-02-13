@@ -3,10 +3,15 @@
 
 TextureView::~TextureView()
 {
-	DX_SAFE_RELEASE(m_rtv);
+	DX_SAFE_RELEASE(m_handle);
 }
 
 void TextureView::SetRTVHandle( ID3D11RenderTargetView* rtv )
 {
 	m_rtv = rtv;
+}
+
+void TextureView::SetSRVHandle( ID3D11ShaderResourceView* srv )
+{
+	m_srv = srv;
 }
