@@ -26,6 +26,7 @@ public:
 	void RunFrame( float deltaSeclnds );
 	void Render() const;
 	void RenderUI() const;
+	void RenderGravity() const;
 	void GenerateTempPoints();
 	void GenerateTestPoints();
 
@@ -45,8 +46,8 @@ private:
 	void SetCameraToOrigin();
 
 	// GetInput
-	void UpdateMouse();
-	void UpdateMouseVelocity();
+	void UpdateMouse( float deltaSeconds );
+	void UpdateMouseVelocity( float deltaSeconds );
 	void UpdateMouseWheel();
 	void UpdateMousePos();
 	void HandleMouseInput();
@@ -96,7 +97,7 @@ public:
 	std::vector<Vec2> m_tempPoints;	// Can be delete later
 	std::vector<Vec2> m_drawPoints;
 	
-	std::queue<Vec2> m_mouseVelocities; // two frames
+	Vec2 m_mouseVelocity; // two frames
 	std::queue<Vec2> m_mousePositions;	// three frames
 
 };

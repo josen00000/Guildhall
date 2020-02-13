@@ -19,6 +19,7 @@ public:
 	float GetHeight() const;
 	float GetWidth() const;
 	float GetAspectRatio() const;
+	AABB2 GetCameraBox() const;
 
 	// Mutator
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight );

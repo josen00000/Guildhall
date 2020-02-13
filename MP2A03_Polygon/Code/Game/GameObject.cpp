@@ -7,11 +7,14 @@
 #include "Engine/Physics/PolygonCollider2D.hpp"
 #include "Engine/Physics/Physics2D.hpp"
 #include "Engine/Physics/RigidBody2D.hpp"
+#include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Math/Polygon2.hpp"
 
 extern Game*			g_theGame;
 extern Physics2D*		g_thePhysics;
 extern RenderContext*	g_theRenderer;
+extern Camera*			g_camera;
 
 GameObject::GameObject( Vec2 pos, float radius )
 {
@@ -24,7 +27,7 @@ GameObject::GameObject(  Polygon2 poly )
 	m_rb = g_thePhysics->CreateRigidbody();
 	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( poly );
 	m_rb->SetCollider( polyCol );
-	SetAverageCenterByPoints();
+	m_rb->SetPosition( polyCol->m_polygon.GetMassCenter() );
 }
 
 GameObject::GameObject( std::vector<Vec2> points )
@@ -35,7 +38,7 @@ GameObject::GameObject( std::vector<Vec2> points )
 		GUARANTEE_OR_DIE( false, "Try to create a concave polygon!" );
 	}
 	m_rb->SetCollider( polyCol );
-	SetAverageCenterByPoints();
+	m_rb->SetPosition( polyCol->m_polygon.GetMassCenter() );
 }
 
 GameObject::~GameObject()
@@ -44,32 +47,84 @@ GameObject::~GameObject()
 	m_rb = nullptr;
 }
 
-void GameObject::SetAverageCenterByPoints()
-{
-	PolygonCollider2D* tempPolyCol = (PolygonCollider2D*)m_rb->GetCollider();
-	Polygon2 tempPoly = tempPolyCol->m_polygon; 
-	Vec2 centerPos = Vec2::ZERO;
-	for( int edgeIndex = 0; edgeIndex < tempPoly.GetEdgeCount(); edgeIndex++ ) {
-		centerPos += tempPoly.GetEdge( edgeIndex ).GetStartPos();
-	}
-	centerPos /= (float)tempPoly.GetEdgeCount();
-}
 
 void GameObject::CheckIfMouseIn( Vec2 mousePos )
 {
-	DiscCollider2D* DiscCol = dynamic_cast<DiscCollider2D*>( m_rb->GetCollider() );
-	if( DiscCol->Contains( mousePos ) ) {
-		m_isMouseIn = true;
+	Collider2D* col = m_rb->GetCollider();
+	switch( col->m_type )
+	{
+		case COLLIDER2D_DISC: {
+			DiscCollider2D* discCol = dynamic_cast<DiscCollider2D*>(col);
+			if( discCol->Contains( mousePos ) ) {
+				m_isMouseIn = true;
+			}
+			else {
+				m_isMouseIn = false;
+			}
+			break;
+		}
+		case COLLIDER2D_POLYGON: {
+			PolygonCollider2D* polyCol = dynamic_cast<PolygonCollider2D*>(col);
+			if( polyCol->Contains( mousePos ) ) {
+				m_isMouseIn = true;
+			}
+			else {
+				m_isMouseIn = false;
+			}
+			break;
+		}
+		default:
+			break;
 	}
-	else {
-		m_isMouseIn = false;
+	
+}
+
+void GameObject::CheckIfOutCameraVertical( Camera* camera )
+{
+	Vec2 pos = GetPosition();
+	if( pos.y < camera->GetOrthoBottomLeft().y ) {
+		Vec2 vel = m_rb->GetVelocity();
+		vel.y = - vel.y;
+		m_rb->SetVelocity( vel );
 	}
+
+}
+
+void GameObject::CheckIfOutCameraHorizontal( Camera* camera )
+{
+	Vec2 pos = GetPosition();
+	Collider2D* col = m_rb->GetCollider();
+	float dist;
+	switch( col->m_type )
+	{
+		case COLLIDER2D_DISC: {
+			DiscCollider2D* discCol = (DiscCollider2D*)col;
+			dist = discCol->m_radius;
+			break;
+		}
+		case COLLIDER2D_POLYGON: {
+			PolygonCollider2D* polyCol = (PolygonCollider2D*)col;
+			dist = polyCol->m_polygon.GetLongestDistance();
+			break;
+		}
+		default:
+			break;
+	}
+	if( pos.x < camera->GetOrthoBottomLeft().x - dist ) {
+		pos.x = camera->GetOrthoTopRight().x + dist;
+	}
+	else if( pos.x > camera->GetOrthoTopRight().x + dist ) {
+		pos.x = camera->GetOrthoBottomLeft().x - dist;
+	}
+	SetPosition( pos );
 }
 
 void GameObject::Update( float deltaSeconds )
 {
 	UNUSED( deltaSeconds );
 	CheckIfMouseIn( g_theGame->m_mousePos );
+	CheckIfOutCameraVertical( g_camera );
+	CheckIfOutCameraHorizontal( g_camera );
 }
 
 void GameObject::Render() const
@@ -103,10 +158,6 @@ void GameObject::CheckIntersectWith( GameObject* other )
 		m_isIntersect = true;
 		other->SetIntersect( true );
 	}
-	else {
-		m_isIntersect = false;
-		other->SetIntersect( false );
-	}
 }
 
 void GameObject::DisablePhysics() {
@@ -116,6 +167,18 @@ void GameObject::DisablePhysics() {
 void GameObject::EnablePhysics()
 {
 	m_rb->EnablePhysics();
+}
+
+
+
+void GameObject::SetVelocity( Vec2 vel )
+{
+	m_rb->SetVelocity( vel );
+}
+
+void GameObject::SetSimulateMode( SimulationMode mode )
+{
+	m_rb->SetSimulationMode( mode );
 }
 
 void GameObject::SetPosition( Vec2 pos )

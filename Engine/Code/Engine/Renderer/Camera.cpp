@@ -61,6 +61,12 @@ float Camera::GetAspectRatio() const
 	return ( m_outputSize.x / m_outputSize.y );
 }
 
+AABB2 Camera::GetCameraBox() const
+{
+	AABB2 result = AABB2( GetOrthoBottomLeft(), GetOrthoTopRight() );
+	return result;
+}
+
 void Camera::SetPosition( const Vec3& position )
 {
 	m_position = position;

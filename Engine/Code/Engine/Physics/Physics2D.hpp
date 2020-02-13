@@ -26,7 +26,7 @@ public:
 	void DetectCollisions();	// A04
 	void CollisionResponse();	// A04
 	void CleanupDestroyedObjects();
-	
+	void ModifyGravity( float deltaGravity );
 
 	// Rigidbody
 	Rigidbody2D* CreateRigidbody( Vec2 worldPos = Vec2::ZERO );
@@ -41,7 +41,7 @@ public:
 	// DiscCollider2D
 	DiscCollider2D* CreateDiscCollider( Vec2 worldPosition, float radius );
 	// PolygonCollider2D
-	PolygonCollider2D* CreatePolyCollider( const Vec2* points, int pointCount );
+	PolygonCollider2D* CreatePolyCollider( std::vector<Vec2> points );
 	PolygonCollider2D* CreatePolyCollider( Polygon2 polygon );
 public:
 	Vec2 m_gravityAccel = Vec2( 0.f, -2.f );

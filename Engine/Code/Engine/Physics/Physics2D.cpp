@@ -42,7 +42,7 @@ void Physics2D::ApplyEffectors( float deltaSeconds )
 {
 	for( int rbIndex = 0; rbIndex < m_rigidbodies.size(); rbIndex++ ) {
 		Rigidbody2D* rb = m_rigidbodies[rbIndex];
-		if( rb == nullptr ){ continue; }
+		if( rb == nullptr || rb->m_mode == RIGIDBODY_STATIC || rb->m_mode == RIGIDBODY_KINEMATIC ){ continue; }
 		ApplyAccelerationToRigidbody( rb, deltaSeconds );		
 	}
 }
@@ -54,7 +54,7 @@ void Physics2D::ApplyAccelerationToRigidbody( Rigidbody2D* rb, float deltaSecond
 
 	// Calculate velocity
 	Vec2 deltaVel = accel * deltaSeconds;
-	if( rb->m_isEnable ) {
+	if( rb->m_isEnable && rb->m_mode != RIGIDBODY_STATIC ) {
 		rb->UpdateVelocityPerFrame( deltaVel );
 	}
 }
@@ -104,6 +104,11 @@ void Physics2D::CleanupDestroyedObjects()
 	}
 }
 
+void Physics2D::ModifyGravity( float deltaGravity )
+{
+	m_gravityAccel.y += deltaGravity;
+}
+
 void Physics2D::EndFrame()
 {
 }
@@ -140,19 +145,19 @@ DiscCollider2D* Physics2D::CreateDiscCollider( Vec2 worldPosition, float radius 
 	return tempDiscCol;
 }
 
-PolygonCollider2D* Physics2D::CreatePolyCollider( const Vec2* points, int pointCount )
-{
-	PolygonCollider2D* tempPolyCol = dynamic_cast<PolygonCollider2D*> ( CreateCollider( Collider2DType::COLLIDER2D_POLYGON ) );
-	tempPolyCol->m_polygon.SetEdgesFromPoints( points, pointCount );
-	
-	return tempPolyCol;
-}
-
 PolygonCollider2D* Physics2D::CreatePolyCollider( Polygon2 polygon )
 {
-	PolygonCollider2D* polyCol = dynamic_cast<PolygonCollider2D*> ( CreateCollider( COLLIDER2D_POLYGON) );
+	PolygonCollider2D* polyCol = dynamic_cast<PolygonCollider2D*> ( CreateCollider( COLLIDER2D_POLYGON ) );
 	polyCol->m_polygon = polygon;
 	return polyCol;
+}
+
+PolygonCollider2D* Physics2D::CreatePolyCollider( std::vector<Vec2> points )
+{
+	PolygonCollider2D* tempPolyCol = dynamic_cast<PolygonCollider2D*> (CreateCollider( Collider2DType::COLLIDER2D_POLYGON ));
+	tempPolyCol->m_polygon.SetEdgesFromPoints( points );
+	//tempPolyCol->m_ TODO
+	return tempPolyCol;
 }
 
 void Physics2D::DestroyCollider( Collider2D* collider )

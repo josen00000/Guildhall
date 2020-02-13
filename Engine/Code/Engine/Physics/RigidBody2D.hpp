@@ -6,7 +6,7 @@ class Physics2D;
 class RenderContext;
 struct Rgba8;
 
-enum RigidBodyType {
+enum SimulationMode {
 	RIGIDBODY_STATIC,		// Don't move, apply effector
 	RIGIDBODY_DYNAMIC,		// Move, apply effector
 	RIGIDBODY_KINEMATIC		// Move
@@ -33,9 +33,11 @@ public:
 	
 	// Mutator
 	void SetPosition( Vec2 position );
+	void SetVelocity( Vec2 velocity );
 	void SetCollider( Collider2D* collider ); 
 	void SetColliderPosition();
 	void SetMass( float mass );
+	void SetSimulationMode( SimulationMode mode );
 	void UpdateVelocityPerFrame( const Vec2& deltaVel );
 	void UpdatePositionPerFrame( const Vec2& deltaPos );
 
@@ -51,7 +53,7 @@ private:
 	float m_mass		= 1.f;
 	Vec2 m_velocity		= Vec2::ZERO;
 
-
+	SimulationMode m_mode = RIGIDBODY_DYNAMIC;
 	Physics2D*	m_system	= nullptr;
 	Collider2D* m_collider	= nullptr;
 

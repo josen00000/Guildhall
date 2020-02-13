@@ -8,12 +8,10 @@ struct Polygon2
 {
 private:
 	std::vector<LineSegment2> m_edges;
-	std::vector<Vec2> m_disps;
 	Vec2 m_center;
-
 public:
-	Polygon2(){}
-	~Polygon2(){}
+	Polygon2() = default;
+	~Polygon2() = default;	
 	Polygon2( std::vector<Vec2> points );
 	static Polygon2 MakeConvexFromPointCloud( std::vector<Vec2> points );
 public:
@@ -25,18 +23,19 @@ public:
 
 	// Accessor
 	float	GetDistance( Vec2 point ) const;
+	float	GetLongestDistance() const;
 	int		GetVertexCount() const;
 	int		GetEdgeCount() const;
 	Vec2	GetClosestPoint( Vec2 point ) const;
-	Vec2	GetBadCenter() const { return m_center; }
+	Vec2	GetBadCenter( std::vector<Vec2> rawPoints ) const;
+	Vec2	GetMassCenter() const { return m_center; }
 	LineSegment2 GetEdge( int index );
 
 	// Mutator
-	void	SetEdgesFromPoints( const Vec2* point, int pointCount );
+	void	SetEdgesFromPoints( std::vector<Vec2> points );
 	void	SetCenter( Vec2 center );
 
-private:
-	void	InitialBadCenter();
-	void	RecordDispOfCenterAndPoints();
-	void	UpdatePoints();
+	void Normalize();
+
+
 };

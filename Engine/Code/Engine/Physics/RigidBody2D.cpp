@@ -59,6 +59,11 @@ void Rigidbody2D::SetMass( float mass )
 	m_mass = mass;
 }
 
+void Rigidbody2D::SetSimulationMode( SimulationMode mode )
+{
+	m_mode = mode;
+}
+
 void Rigidbody2D::UpdateVelocityPerFrame( const Vec2& deltaVel )
 {
 	m_velocity += deltaVel;
@@ -84,6 +89,11 @@ void Rigidbody2D::SetPosition( Vec2 position )
 {
 	m_worldPosition = position;
 	m_collider->SetPosition( position );
+}
+
+void Rigidbody2D::SetVelocity( Vec2 velocity )
+{
+	m_velocity = velocity;
 }
 
 void Rigidbody2D::DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor )

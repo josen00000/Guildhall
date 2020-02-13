@@ -4,19 +4,17 @@
 
 Polygon2::Polygon2( std::vector<Vec2> points )
 {
+	m_center = GetBadCenter( points );
 	for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
-		Vec2 firstPoint = points[pointIndex - 1];
-		Vec2 secondPoint = points[pointIndex];
+		Vec2 firstPoint = points[pointIndex - 1] - m_center;
+		Vec2 secondPoint = points[pointIndex] - m_center;
 		m_edges.push_back( LineSegment2( firstPoint, secondPoint ) );
 	}
 	m_edges.push_back( LineSegment2( points.back(), points[0] ) );
-	InitialBadCenter();
-	RecordDispOfCenterAndPoints();
 }
 
 Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 {
-	
 	Vec2 start = points[0];
 	for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
 		if( points[pointIndex].x < start.x ) {
@@ -62,7 +60,7 @@ Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 		result.push_back( next );
 		current = next;
 	}
-	Polygon2 tempPoly = Polygon2( result );
+	Polygon2 tempPoly = Polygon2( result ); // doesn't work after delete empty constructor
 	return tempPoly;
 }
 
@@ -84,6 +82,7 @@ bool Polygon2::IsConvex() const
 		Vec2 nVecOfEdge = m_edges[edgeIndex-1].GetDirection();
 		nVecOfEdge.Rotate90Degrees();
 		Vec2 drctnOfEdge = m_edges[edgeIndex].GetDirection();
+		float temp = DotProduct2D( nVecOfEdge, drctnOfEdge );
 		if( DotProduct2D( nVecOfEdge, drctnOfEdge ) < 0 ) { return false; }
 	}
 	
@@ -98,6 +97,7 @@ bool Polygon2::IsConvex() const
 
 bool Polygon2::Contains( Vec2 point ) const
 {
+	point = point - m_center;
 	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
 		const LineSegment2& edge = m_edges[edgeIndex];
 		Vec2 PS = point - edge.GetStartPos();
@@ -113,7 +113,18 @@ float Polygon2::GetDistance( Vec2 point ) const
 	Vec2 badCenter = m_center;
 	Vec2 disp = point - badCenter;
 	return disp.GetLength();
-	
+}
+
+float Polygon2::GetLongestDistance() const
+{
+	float result = 0;
+	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
+		float distSqr = GetDistanceSquared2D( Vec2::ZERO, m_edges[edgeIndex].GetStartPos() );
+		if( result < distSqr ) {
+			result = distSqr;
+		}
+	}
+	return sqrt( result );
 }
 
 int Polygon2::GetVertexCount() const
@@ -130,6 +141,8 @@ Vec2 Polygon2::GetClosestPoint( Vec2 point ) const
 {
 	if( Contains( point ) ){ return point; }
 
+	point = point - m_center;
+
 	LineSegment2 closestEdge;
 	float shortestDist = 0;
 	Vec2 closestPoint;
@@ -142,57 +155,39 @@ Vec2 Polygon2::GetClosestPoint( Vec2 point ) const
 		}
 	}
 	closestPoint = closestEdge.GetNearestPoint( point );
-	return closestPoint; 
+	return closestPoint + m_center; 
 }
 
+Vec2 Polygon2::GetBadCenter( std::vector<Vec2> rawPoints ) const
+{
+	Vec2 result = Vec2::ZERO;
+	for( int pointIndex = 0; pointIndex < rawPoints.size(); pointIndex++ ) {
+		result += rawPoints[pointIndex];
+	}
+	result /= (float)m_edges.size();
+	return result;
+}
 
 LineSegment2 Polygon2::GetEdge( int index )
 {
 	return m_edges[index];
 }
 
-void Polygon2::SetEdgesFromPoints( const Vec2* point, int pointCount )
+void Polygon2::SetEdgesFromPoints( std::vector<Vec2> points )
 {
+	m_center = GetBadCenter( points );
 	m_edges.clear();
-	for( int pointIndex = 1; pointIndex < pointCount; pointIndex++ ) {
-		Vec2 firstPoint = point[pointIndex - 1];
-		Vec2 secondPoint = point[pointIndex];
+	for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
+		Vec2 firstPoint = points[pointIndex - 1];
+		Vec2 secondPoint = points[pointIndex];
 		m_edges.push_back( LineSegment2( firstPoint, secondPoint ) );
 	}
-	m_edges.push_back( LineSegment2( point[0], point[pointCount-1] ) );
-
-	InitialBadCenter();
+	m_edges.push_back( LineSegment2( points[points.size()-1], points[0] ) );
 }
 
 void Polygon2::SetCenter( Vec2 center )
 {
 	m_center = center;
-	UpdatePoints();
 }
 
-void Polygon2::InitialBadCenter()
-{
-	Vec2 result = Vec2::ZERO;
-	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
-		result += m_edges[edgeIndex].GetStartPos();
-	}
-	result /= (float)m_edges.size();
-	m_center = result;
-}
-
-void Polygon2::RecordDispOfCenterAndPoints()
-{
-	m_disps.clear();
-	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
-		Vec2 tempDisp = m_center - m_edges[edgeIndex].GetStartPos();
-		m_disps.push_back( tempDisp );
-	}
-}
-
-void Polygon2::UpdatePoints()
-{
-	for( int pointIndex = 0; pointIndex < m_disps.size(); pointIndex++ ) {
-		m_edges[pointIndex].SetStartPos( m_center - m_disps[pointIndex] );
-	}
-}
 

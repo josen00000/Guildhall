@@ -16,6 +16,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 
 extern App*				g_theApp;
+extern BitmapFont*		g_squirrelFont;	
 extern RenderContext*	g_theRenderer;
 extern InputSystem*		g_theInputSystem;
 extern HWND				g_hWnd;
@@ -32,7 +33,8 @@ Game::Game( Camera* gameCamera, Camera* UICamera )
 void Game::Startup()
 {
 	m_isAppQuit		= false;
-	//BitmapFont* testFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+	LoadAssets();
+	//BitmapFont* 
 	//g_theConsole = new DevConsole( testFont );
 	//
 	//Vec2 polyPoints[5] ={ Vec2( 10, 10 ), Vec2( 20, 10 ), Vec2( 20, 20 ), Vec2( 15, 15 ), Vec2( 10, 20 )};
@@ -58,7 +60,7 @@ void Game::RunFrame( float deltaSeconds )
 void Game::Update( float deltaSeconds )
 {
 	CheckIfExit();
-	UpdateMouse();
+	UpdateMouse( deltaSeconds );
 	UpdatePhysics( deltaSeconds );
 	UpdateGameObjects( deltaSeconds );
 	UpdateGameObjectsIntersect();
@@ -74,18 +76,26 @@ void Game::UpdateUI( float deltaSeconds )
 	UNUSED( deltaSeconds );
 }
 
-void Game::UpdateMouse()
+void Game::UpdateMouse( float deltaSeconds)
 {
 	UpdateMouseWheel();
 	UpdateMousePos();
-	UpdateMouseVelocity();
+	UpdateMouseVelocity( deltaSeconds );
 	HandleMouseInput();
 	HandleKeyboardInput();
 }
 
-void Game::UpdateMouseVelocity()
+void Game::UpdateMouseVelocity( float deltaSeconds )
 {
-	for( )
+	// calculate the mouse velocity with positions
+	// if positions < 3 
+	if( m_mousePositions.size() == 1 ) {
+		return;
+	}
+	else {
+		m_mouseVelocity = ( m_mousePositions.back() - m_mousePositions.front() ) / deltaSeconds;
+		m_mousePositions.pop();
+	}
 }
 
 void Game::UpdateMouseWheel()
@@ -106,12 +116,12 @@ void Game::UpdateMousePos()
 	// handle drag object
 	if( m_isDragging ) {
 		if( m_selectedObj != nullptr ) {
-			m_selectedObj->SetPosition( m_mousePos + m_selectOffset );
+			m_selectedObj->SetPosition( m_mousePos - m_selectOffset );
 		}
 	}
 
 	// Record mouse positions
-	if( m_ )
+	m_mousePositions.push( m_mousePos );
 }
 
 void Game::CheckIfExit()
@@ -174,6 +184,7 @@ void Game::HandleMouseInput()
 		m_isDragging = false;
 		if( m_selectedObj != nullptr ) {
 			m_selectedObj->EnablePhysics();
+			m_selectedObj->SetVelocity( m_mouseVelocity );
 			m_selectedObj->m_isSelected = false;
 			m_selectedObj = nullptr;
 		}
@@ -194,13 +205,32 @@ void Game::HandleMouseInput()
 
 void Game::HandleKeyboardInput()
 {
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1) ){
-		CreateDiscGameObject();
+	if( m_isDragging ) {
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
+			m_selectedObj->SetSimulateMode( RIGIDBODY_STATIC );
+		}
+		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
+			m_selectedObj->SetSimulateMode( RIGIDBODY_KINEMATIC );
+		}
+		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_3 ) ) {
+			m_selectedObj->SetSimulateMode( RIGIDBODY_DYNAMIC );
+		}
 	}
-	// draw input
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
-		if( !m_isDrawMode ){
-			BeginDrawPolygon();
+	else {
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1) ){
+			CreateDiscGameObject();
+		}
+		// draw input
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
+			if( !m_isDrawMode ){
+				BeginDrawPolygon();
+			}
+		}
+		if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_PLUS ) ) {
+			g_thePhysics->ModifyGravity( -1 );
+		}
+		if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_MINUS ) ) {
+			g_thePhysics->ModifyGravity( 1 );
 		}
 	}
 
@@ -272,6 +302,7 @@ bool Game::IsDrawedPolygonConvex() const
 
 void Game::Render() const
 {
+	g_theRenderer->BindTexture( nullptr );
 	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
 		m_gameObjects[objIndex]->Render();
 	}
@@ -294,7 +325,6 @@ void Game::Render() const
 // 		g_theRenderer->DrawLine( closestPoint, point, 0.2f, Rgba8::WHITE );
 // 		g_theRenderer->DrawCircle( Vec3( closestPoint ), 0.5f, 0.5f, Rgba8::WHITE );
 // 	}
-	g_theRenderer->BindTexture( nullptr );
 	if( m_isDrawMode ) {
 		RenderDrawingPolygon();
 	}
@@ -303,6 +333,16 @@ void Game::Render() const
 
 void Game::RenderUI() const
 {
+	RenderGravity();
+}
+
+void Game::RenderGravity() const
+{
+	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+	std::vector<Vertex_PCU> gravityVertices;
+	std::string gravity = "The Gravity is: " + std::to_string( g_thePhysics->m_gravityAccel.y );
+	g_squirrelFont->AddVertsForTextInBox2D( gravityVertices, m_UICamera->GetCameraBox(), 3.f, gravity, Rgba8::RED, 1.f, Vec2::ZERO );
+	g_theRenderer->DrawVertexVector( gravityVertices );
 }
 
 void Game::GenerateTempPoints()
@@ -405,6 +445,8 @@ void Game::UpdateGameObjectsIntersect()
 		GameObject* obj = m_gameObjects[objIndex];
 		if( obj == nullptr ) { continue; }
 
+		obj->SetIntersect( false );
+
 		for( int objIndex1 = 0; objIndex1 < m_gameObjects.size(); objIndex1++ ) {
 			GameObject* obj1 = m_gameObjects[objIndex1];
 			if( obj1 == nullptr || objIndex1 == objIndex ){ continue; }
@@ -416,6 +458,6 @@ void Game::UpdateGameObjectsIntersect()
 
 void Game::LoadAssets()
 {
-	
+	g_squirrelFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 }
 

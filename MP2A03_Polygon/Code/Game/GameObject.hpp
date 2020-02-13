@@ -1,9 +1,9 @@
 #pragma once
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Physics/Collider2D.hpp"
+#include "Engine/Physics/RigidBody2D.hpp"
 
 class Game;
-class Rigidbody2D;
 class RandomNumberGenerator;
 class Physics2D;
 struct Rgba8;
@@ -21,8 +21,9 @@ public:
 	~GameObject();
 
 private:
-	void SetAverageCenterByPoints();
 	void CheckIfMouseIn( Vec2 mousePos );
+	void CheckIfOutCameraVertical( Camera* camera );
+	void CheckIfOutCameraHorizontal( Camera* camera );
 
 public:
 	virtual void Update(float deltaSeconds);
@@ -42,6 +43,8 @@ public:
 	void CheckIntersectWith( GameObject* other ); 
 	void DisablePhysics();
 	void EnablePhysics();
+	void SetVelocity( Vec2 vel );
+	void SetSimulateMode( SimulationMode mode );
 
 public:
 	bool m_isDestroyed	= false;
