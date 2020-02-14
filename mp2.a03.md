@@ -9,11 +9,11 @@ I may mark tasks as **CHALLENGE** if I believe them to be more difficult relativ
     - [x] *05pts*: Implement `GetClosestPoint`
     - [X] *05pts*: Implement `Intersects`, but only vs disc, return `false` if intersecting with another polygon for now.
         - [x] Be sure disc now checks against both discs and polygons useing `GetType`
-    - [ ] *05pts*: Can render it - should work as before.
-- [ ] *25pts*: Can construct `GameObject` with a `PolygonCollider`
+    - [x] *05pts*: Can render it - should work as before.
+- [x] *25pts*: Can construct `GameObject` with a `PolygonCollider`
     - [x] Press `2` to enter a polygon draw mode, place first point where cursor is when `2` was pressed
     - [x] Draw a line from last point added to cursor
-        - [x] Line drawn `RED` if not a valid point to add (ie, would maintain convexity) 
+        - [x] Line drawn `RED` if not a valid point to add (ie, would maintain convexity)
         - [x] Line drawn `BLUE` if it is a valid point.
     - [x] When pressing `Left Mouse Button`, add a point if it is a legal (will maintain convex polygon)
     - [x] When pressing `Right Mouse Button`, end, closing off the loop.
@@ -33,7 +33,7 @@ I may mark tasks as **CHALLENGE** if I believe them to be more difficult relativ
     - [x] Cleanup destroyed objects (should be happening from A01)
 - [x] *10pts*: Add `Rigidbody2D::SetVelocity` to change the velocity of the object // named UpdateVeloictyPerFrame
     - [x] When releasing an object, set its velocity based on mouse movement (ie, be able to throw an object)
-- [ ] *05pts*: `Rigidbody2D` can `SetSimulationMode` to either `STATIC`, `KINEMATIC`, or `DYNAMIC`
+- x ] *05pts*: `Rigidbody2D` can `SetSimulationMode` to either `STATIC`, `KINEMATIC`, or `DYNAMIC`
     - [x] `STATIC` objects do not apply forces or simulate.
     - [x] `KINEMATIC` objects do not apply forces, but will simulate.
     - [x] `DYNAMIC` objects apply forces and simulate
