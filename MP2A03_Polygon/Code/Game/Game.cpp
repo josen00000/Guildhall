@@ -41,8 +41,8 @@ void Game::Startup()
 	GenerateTempPoints();
 	GenerateTestPoints();
 	Polygon2 tempPoly = Polygon2::MakeConvexFromPointCloud( m_tempPoints );
-	//GameObject* polyTest = new GameObject( Vec2( 10, 10 ), tempPoly );
-	//m_gameObjects.push_back( polyTest );
+	GameObject* polyTest = new GameObject( tempPoly );
+	m_gameObjects.push_back( polyTest );
 }
 
 void Game::Shutdown()
@@ -61,6 +61,7 @@ void Game::Update( float deltaSeconds )
 {
 	CheckIfExit();
 	UpdateMouse( deltaSeconds );
+	UpdateCamera( deltaSeconds );
 	UpdatePhysics( deltaSeconds );
 	UpdateGameObjects( deltaSeconds );
 	UpdateGameObjectsIntersect();
@@ -118,6 +119,11 @@ void Game::UpdateMousePos()
 		if( m_selectedObj != nullptr ) {
 			m_selectedObj->SetPosition( m_mousePos - m_selectOffset );
 		}
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) || g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_DELETE ) ) {
+			m_selectedObj->m_isSelected =  false;
+			DeleteGameObject( m_selectedObj );
+			m_selectedObj = nullptr;
+		}
 	}
 
 	// Record mouse positions
@@ -145,13 +151,31 @@ void Game::UpdateCamera( float deltaSeconds )
 
 void Game::UpdateCameraHeight( float deltaSeconds )
 {
+	UNUSED(deltaSeconds);
+	float clampedScroll = ClampFloat( 0.f, 100.f, m_mouseScroll );
+	float height = RangeMapFloat( 0.f, 100.f, 100.f, 50.f, clampedScroll );
 
+	m_gameCamera->SetProjectionOrthographic( height );
 }
 
 void Game::UpdateCameraPos( float deltaSeconds )
 {
 	m_cameraMoveDirct = Vec2::ZERO;
 	
+	// camera move
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_W ) ) {
+		m_cameraMoveDirct = Vec2( 0, 1 );
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_A ) ) {
+		m_cameraMoveDirct = Vec2( -1, 0 );
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
+		m_cameraMoveDirct = Vec2( 1, 0 );
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
+		m_cameraMoveDirct = Vec2( 0, -1 );
+	}
+
 	Vec2 cameraVelocity = m_cameraMoveDirct * m_cameraMoveSpeed;
 	Vec2 cameraDisp = cameraVelocity * deltaSeconds;
 	Vec2 currentCameraPos = m_gameCamera->GetPosition();
@@ -160,7 +184,8 @@ void Game::UpdateCameraPos( float deltaSeconds )
 
 void Game::SetCameraToOrigin()
 {
-
+	m_gameCamera->SetOrthoView( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_theInputSystem->ResetMouseWheel();
 }
 
 void Game::HandleMouseInput()
@@ -232,21 +257,12 @@ void Game::HandleKeyboardInput()
 		if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_MINUS ) ) {
 			g_thePhysics->ModifyGravity( 1 );
 		}
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ) {
+			SetCameraToOrigin();
+		}
 	}
 
-	// camera move
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_W ) ) {
-		m_cameraMoveDirct = Vec2( 0, 1 );
-	}
-	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_A ) ) {
-		m_cameraMoveDirct = Vec2( -1, 0 );
-	}
-	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
-		m_cameraMoveDirct = Vec2( 1, 0 );
-	}
-	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
-		m_cameraMoveDirct = Vec2( 0, -1 );
-	}
+	
 
 
 }
@@ -264,6 +280,7 @@ void Game::EndDrawPolygon()
 	m_isDrawMode = false;
 	if( IsPointEnoughForDrawPolygon() ){
 		// Create polygon with point
+		//AddPointToDrawPolygon( m_drawPoints[0] );
 		GameObject* obj = new GameObject( m_drawPoints );
 		m_gameObjects.push_back( obj );
 		m_drawPoints.clear();
@@ -304,27 +321,28 @@ void Game::Render() const
 {
 	g_theRenderer->BindTexture( nullptr );
 	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
+		if( m_gameObjects[objIndex] == nullptr ){ continue; }
 		m_gameObjects[objIndex]->Render();
 	}
-// 	// test render
-// 	for( int pointIndex = 0; pointIndex < m_tempPoints.size(); pointIndex++ ) {
-// 		g_theRenderer->DrawCircle( Vec3( m_tempPoints[pointIndex] ), 0.5f, 0.5f, Rgba8::RED );
-// 	}
-// 
-// 	PolygonCollider2D* testPolyCol =  (PolygonCollider2D*)m_gameObjects[0]->m_rb->GetCollider();
-// 	
-// 	for( int pointIndex = 0; pointIndex < m_testPoints.size(); pointIndex++ ) {
-// 		const Vec2& point = m_testPoints[pointIndex];
-// 		if( testPolyCol->Contains( point ) ){
-// 			g_theRenderer->DrawCircle( Vec3( point ), 0.5f, 0.5f, Rgba8::GREEN );
-// 		}
-// 		else {
-// 			g_theRenderer->DrawCircle( Vec3( point ), 0.5f, 0.5f, Rgba8::YELLOW );
-// 		}
-// 		Vec2 closestPoint = testPolyCol->GetClosestPoint( point );
-// 		g_theRenderer->DrawLine( closestPoint, point, 0.2f, Rgba8::WHITE );
-// 		g_theRenderer->DrawCircle( Vec3( closestPoint ), 0.5f, 0.5f, Rgba8::WHITE );
-// 	}
+ 	// test render
+ 	for( int pointIndex = 0; pointIndex < m_tempPoints.size(); pointIndex++ ) {
+ 		g_theRenderer->DrawCircle( Vec3( m_tempPoints[pointIndex] ), 0.5f, 0.5f, Rgba8::RED );
+ 	}
+ 
+ 	PolygonCollider2D* testPolyCol =  (PolygonCollider2D*)m_gameObjects[0]->m_rb->GetCollider();
+ 	
+ 	for( int pointIndex = 0; pointIndex < m_testPoints.size(); pointIndex++ ) {
+ 		const Vec2& point = m_testPoints[pointIndex];
+ 		if( testPolyCol->Contains( point ) ){
+ 			g_theRenderer->DrawCircle( Vec3( point ), 0.5f, 0.5f, Rgba8::GREEN );
+ 		}
+ 		else {
+ 			g_theRenderer->DrawCircle( Vec3( point ), 0.5f, 0.5f, Rgba8::YELLOW );
+ 		}
+ 		Vec2 closestPoint = testPolyCol->GetClosestPoint( point );
+ 		g_theRenderer->DrawLine( closestPoint, point, 0.2f, Rgba8::WHITE );
+ 		g_theRenderer->DrawCircle( Vec3( closestPoint ), 0.5f, 0.5f, Rgba8::WHITE );
+ 	}
 	if( m_isDrawMode ) {
 		RenderDrawingPolygon();
 	}
@@ -452,6 +470,18 @@ void Game::UpdateGameObjectsIntersect()
 			if( obj1 == nullptr || objIndex1 == objIndex ){ continue; }
 			
 			obj1->CheckIntersectWith( obj );
+		}
+	}
+}
+
+void Game::DeleteGameObject( GameObject* obj )
+{
+	if( obj == nullptr ) { return; }
+
+	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
+		if( m_gameObjects[objIndex] == obj ) {
+			delete m_gameObjects[objIndex];
+			m_gameObjects[objIndex] = nullptr;
 		}
 	}
 }

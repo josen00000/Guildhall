@@ -95,11 +95,11 @@ void PolygonCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColo
 		if( edgeIndex == 0 ){ continue; }
 		else {
 			tempVertices.push_back( Vertex_PCU( Vec3( startPos ), fillColor, Vec2::ZERO ) ); 
-			tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetStartPos() + m_worldPos ), fillColor, Vec2::ZERO ) );
-			tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetEndPos() + m_worldPos ), fillColor, Vec2::ZERO ) );
+			tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetStartPos() ), fillColor, Vec2::ZERO ) );
+			tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetEndPos() ), fillColor, Vec2::ZERO ) );
 		}
 	}
-	//ctx->DrawVertexVector( tempVertices );
+	ctx->DrawVertexVector( tempVertices );
 	
 }
 

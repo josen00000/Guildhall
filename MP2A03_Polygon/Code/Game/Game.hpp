@@ -67,6 +67,7 @@ private:
 	void CreateDiscGameObject();
 	void UpdateGameObjects( float deltaSeconds );
 	void UpdateGameObjectsIntersect();
+	void DeleteGameObject( GameObject* obj );
 
 	//Load
 	void LoadAssets();

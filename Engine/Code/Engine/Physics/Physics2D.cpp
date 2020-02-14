@@ -54,7 +54,7 @@ void Physics2D::ApplyAccelerationToRigidbody( Rigidbody2D* rb, float deltaSecond
 
 	// Calculate velocity
 	Vec2 deltaVel = accel * deltaSeconds;
-	if( rb->m_isEnable && rb->m_mode != RIGIDBODY_STATIC ) {
+	if( rb->m_isEnable ) {
 		rb->UpdateVelocityPerFrame( deltaVel );
 	}
 }
@@ -66,7 +66,9 @@ void Physics2D::MoveRigidbodies( float deltaSeconds )
 		if( rb == nullptr ){ continue; }
 		Vec2 deltaPos = rb->GetVelocity() * deltaSeconds;
 		if( rb->m_isEnable ) {
-			rb->UpdatePositionPerFrame( deltaPos );
+			if( rb->m_mode != RIGIDBODY_STATIC ) {
+				rb->UpdatePositionPerFrame( deltaPos );
+			}
 		}
 	}
 }
@@ -89,7 +91,7 @@ void Physics2D::CleanupDestroyedObjects()
 
 		if( tempRb->IsDestroied() ) {
 			delete tempRb;
-			tempRb = nullptr;
+			m_rigidbodies[rIndex] = nullptr;
 		}
 	}
 
@@ -99,7 +101,8 @@ void Physics2D::CleanupDestroyedObjects()
 
 		if( tempCollider->IsDestroied() ) {
 			delete tempCollider;
-			tempCollider = nullptr;
+			m_colliders[cIndex] = nullptr;
+			// TODO tempCollider = nullptr; assign pointer doesn't work
 		}
 	}
 }
@@ -149,6 +152,7 @@ PolygonCollider2D* Physics2D::CreatePolyCollider( Polygon2 polygon )
 {
 	PolygonCollider2D* polyCol = dynamic_cast<PolygonCollider2D*> ( CreateCollider( COLLIDER2D_POLYGON ) );
 	polyCol->m_polygon = polygon;
+	polyCol->m_worldPos = polygon.m_center;
 	return polyCol;
 }
 

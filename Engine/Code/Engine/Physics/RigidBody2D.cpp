@@ -72,7 +72,9 @@ void Rigidbody2D::UpdateVelocityPerFrame( const Vec2& deltaVel )
 void Rigidbody2D::UpdatePositionPerFrame( const Vec2& deltaPos )
 {
 	m_worldPosition += deltaPos;
-	SetColliderPosition();
+	if( !m_isDestroyed ){
+		SetColliderPosition();
+	}
 }
 
 void Rigidbody2D::DisablePhysics()

@@ -29,7 +29,7 @@ public:
 
 	// Accessor
 	virtual bool IsDestroied() const { return m_isDestroyed; }
-
+	Collider2DType GetType() const { return m_type; }
 	// Mutator
 	virtual void SetPosition( Vec2 pos );
 

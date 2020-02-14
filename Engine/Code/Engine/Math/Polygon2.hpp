@@ -6,7 +6,7 @@
 
 struct Polygon2
 {
-private:
+public:
 	std::vector<LineSegment2> m_edges;
 	Vec2 m_center;
 public:
@@ -24,6 +24,7 @@ public:
 	// Accessor
 	float	GetDistance( Vec2 point ) const;
 	float	GetLongestDistance() const;
+	Vec2	GetLowestPoint() const;
 	int		GetVertexCount() const;
 	int		GetEdgeCount() const;
 	Vec2	GetClosestPoint( Vec2 point ) const;

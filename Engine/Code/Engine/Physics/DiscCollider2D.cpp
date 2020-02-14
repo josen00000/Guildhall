@@ -48,7 +48,7 @@ bool DiscCollider2D::Intersects( const Collider2D* other ) const
 {
 	//TODO
 	//DiscCollider2D* temp = dynamic_cast<DiscCollider2D*>( other);
-	switch( other->m_type )
+	switch( other->GetType() )
 	{
 		case COLLIDER2D_DISC:{
 			DiscCollider2D* discOther =(DiscCollider2D*)other;

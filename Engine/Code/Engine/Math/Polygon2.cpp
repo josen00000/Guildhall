@@ -10,7 +10,7 @@ Polygon2::Polygon2( std::vector<Vec2> points )
 		Vec2 secondPoint = points[pointIndex] - m_center;
 		m_edges.push_back( LineSegment2( firstPoint, secondPoint ) );
 	}
-	m_edges.push_back( LineSegment2( points.back(), points[0] ) );
+	m_edges.push_back( LineSegment2( points.back() - m_center, points[0] - m_center ) );
 }
 
 Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
@@ -82,7 +82,6 @@ bool Polygon2::IsConvex() const
 		Vec2 nVecOfEdge = m_edges[edgeIndex-1].GetDirection();
 		nVecOfEdge.Rotate90Degrees();
 		Vec2 drctnOfEdge = m_edges[edgeIndex].GetDirection();
-		float temp = DotProduct2D( nVecOfEdge, drctnOfEdge );
 		if( DotProduct2D( nVecOfEdge, drctnOfEdge ) < 0 ) { return false; }
 	}
 	
@@ -124,7 +123,21 @@ float Polygon2::GetLongestDistance() const
 			result = distSqr;
 		}
 	}
-	return sqrt( result );
+	return (float)sqrt( result );
+}
+
+
+
+Vec2 Polygon2::GetLowestPoint() const
+{
+	Vec2 point = m_edges[0].GetStartPos();
+	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
+		Vec2 temPoint = m_edges[edgeIndex].GetStartPos();
+		if( temPoint.y < point.y ) {
+			point = temPoint;
+		}
+	}
+	return point;
 }
 
 int Polygon2::GetVertexCount() const
@@ -164,7 +177,9 @@ Vec2 Polygon2::GetBadCenter( std::vector<Vec2> rawPoints ) const
 	for( int pointIndex = 0; pointIndex < rawPoints.size(); pointIndex++ ) {
 		result += rawPoints[pointIndex];
 	}
-	result /= (float)m_edges.size();
+
+	result.x /= (int)rawPoints.size();
+	result.y /= (int)rawPoints.size();
 	return result;
 }
 

@@ -24,21 +24,20 @@ GameObject::GameObject( Vec2 pos, float radius )
 
 GameObject::GameObject(  Polygon2 poly )
 {
-	m_rb = g_thePhysics->CreateRigidbody();
+	m_rb = g_thePhysics->CreateRigidbody( poly.m_center );
 	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( poly );
 	m_rb->SetCollider( polyCol );
-	m_rb->SetPosition( polyCol->m_polygon.GetMassCenter() );
 }
 
 GameObject::GameObject( std::vector<Vec2> points )
 {
-	m_rb = g_thePhysics->CreateRigidbody();
-	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( points );
+	Polygon2 tempPoly = Polygon2( points );
+	m_rb = g_thePhysics->CreateRigidbody( tempPoly.m_center );
+	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( tempPoly );
 	if( !polyCol->m_polygon.IsConvex() ) {
 		GUARANTEE_OR_DIE( false, "Try to create a concave polygon!" );
 	}
 	m_rb->SetCollider( polyCol );
-	m_rb->SetPosition( polyCol->m_polygon.GetMassCenter() );
 }
 
 GameObject::~GameObject()
@@ -82,6 +81,22 @@ void GameObject::CheckIfMouseIn( Vec2 mousePos )
 void GameObject::CheckIfOutCameraVertical( Camera* camera )
 {
 	Vec2 pos = GetPosition();
+	Collider2D* col = m_rb->GetCollider();
+	switch( col->m_type )
+	{
+		case COLLIDER2D_DISC: {
+			DiscCollider2D* discCol = dynamic_cast<DiscCollider2D*>(col);
+			pos.y -= discCol->m_radius;
+			break;
+		}
+		case COLLIDER2D_POLYGON:{
+			PolygonCollider2D* polyCol = dynamic_cast<PolygonCollider2D*>(col);
+			pos += polyCol->m_polygon.GetLowestPoint();
+			break;
+		}
+		default:
+			break;
+	}
 	if( pos.y < camera->GetOrthoBottomLeft().y ) {
 		Vec2 vel = m_rb->GetVelocity();
 		vel.y = - vel.y;
@@ -94,7 +109,7 @@ void GameObject::CheckIfOutCameraHorizontal( Camera* camera )
 {
 	Vec2 pos = GetPosition();
 	Collider2D* col = m_rb->GetCollider();
-	float dist;
+	float dist = 0;
 	switch( col->m_type )
 	{
 		case COLLIDER2D_DISC: {
@@ -153,7 +168,6 @@ Vec2 GameObject::GetPosition() const
 void GameObject::CheckIntersectWith( GameObject* other ) 
 {
 	Collider2D* col = m_rb->GetCollider();
-	Collider2D* otherCol = other->m_rb->GetCollider();
 	if( col->Intersects( other->m_rb->GetCollider() ) ) {
 		m_isIntersect = true;
 		other->SetIntersect( true );
