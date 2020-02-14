@@ -147,6 +147,15 @@ void GameObject::Render() const
 	Collider2D* col = m_rb->GetCollider();
 	Rgba8 borderColor = Rgba8::BLUE;
 	Rgba8 FilledColor = Rgba8( 255, 255, 255, 128 );
+	if( m_rb->GetMode() == RIGIDBODY_STATIC ) {
+		borderColor = Rgba8( 128, 128, 128 );
+	}
+	if( m_rb->GetMode() == RIGIDBODY_KINEMATIC ) {
+		borderColor = Rgba8( 255, 0, 255 );
+	}
+	if( m_rb->GetMode() == RIGIDBODY_DYNAMIC ) {
+		borderColor = Rgba8::BLUE;
+	}
 	if( m_isMouseIn ) {
 		borderColor = Rgba8::YELLOW;
 	}

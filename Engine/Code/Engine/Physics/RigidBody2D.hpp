@@ -30,6 +30,7 @@ public:
 	Vec2 GetPosition() const { return m_worldPosition; }
 	Vec2 GetVelocity() const { return m_velocity; }
 	Collider2D* GetCollider() const { return m_collider; }
+	SimulationMode GetMode() const { return m_mode; }
 	
 	// Mutator
 	void SetPosition( Vec2 position );
