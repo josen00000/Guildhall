@@ -26,6 +26,7 @@ enum BlendMode
 {
 	ALPHA,
 	ADDITIVE,
+	OPAQUE1,
 	NUM_BLENDMODE
 };
 
@@ -72,11 +73,11 @@ public:
 	void BindVertexInput( VertexBuffer* vbo );
 
 	void Draw( int numVertexes, int vertexOffset = 0 );
-	void DrawVertexVector(const std::vector<Vertex_PCU>& vertexArray);
-	void DrawVertexArray(int vertexNum, Vertex_PCU* vertexArray);
-	void DrawAABB2D(const AABB2& bounds,const Rgba8& tint);
-	void DrawLine(const Vec2& startPoint,const Vec2&endPoint,const float thick,const Rgba8& lineColor);
-	void DrawCircle(Vec3 center,float radiu,float thick,Rgba8& circleColor);
+	void DrawVertexVector( std::vector<Vertex_PCU>& vertices );
+	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
+	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
+	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );
+	void DrawCircle( Vec3 center, float radiu, float thick, Rgba8& circleColor );
 
 
 	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
@@ -117,7 +118,8 @@ private:
 	Sampler* m_defaultSampler = nullptr;
 	Texture* m_texDefaultColor = nullptr;
 
-	ID3D11BlendState* m_alphaBlendState;
-	ID3D11BlendState* m_additiveBlendState;
+	ID3D11BlendState* m_additiveBlendState	= nullptr;
+	ID3D11BlendState* m_alphaBlendState		= nullptr;
+	ID3D11BlendState* m_opaqueBlendState	= nullptr;
 
 };

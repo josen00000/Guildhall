@@ -16,7 +16,7 @@ BitmapFont::BitmapFont( const char* fontName, const Texture* fontTexture )
 
 const Texture* BitmapFont::GetTexture() const
 {
-	 const Texture& tem = m_glyphSpriteSheet.GetTexture();
+	const Texture& tem = m_glyphSpriteSheet.GetTexture();
 	return &tem;
 }
 
@@ -59,8 +59,8 @@ void BitmapFont::AddVertsForTextInBox2D( std::vector<Vertex_PCU>& vertexArray, c
 	float textLength = cellWidth * text.length();
 	float maxX = box.maxs.x - textLength;
 	float maxY = box.maxs.y - cellHeight;
-	float minPosX = RangeMapFloat(0, 1, 0, maxX, alignment.x);
-	float minPosY = RangeMapFloat(0, 1, 0, maxY, alignment.y);
+	float minPosX = RangeMapFloat(0, 1, box.mins.x, maxX, alignment.x);
+	float minPosY = RangeMapFloat(0, 1, box.mins.y, maxY, alignment.y);
 
 	Vec2 minPos = Vec2(minPosX, minPosY);
 	float cellRightPosX = cellWidth;
@@ -95,6 +95,13 @@ Vec2 BitmapFont::GetDimensionsForText2D( float cellHeight, const std::string& te
 	float textWidth = cellWidth * text.size();
 	Vec2 result = Vec2( cellHeight, textWidth );
 	return result;
+}
+
+float BitmapFont::GetCellWidth( float cellHeight, float cellAspect )
+{
+	float glyphAspect = GetGlyphAspect( 1 );
+	float cellWidth = cellHeight * glyphAspect * cellAspect;
+	return cellWidth;
 }
 
 float BitmapFont::GetGlyphAspect( int glyphUnicode ) const

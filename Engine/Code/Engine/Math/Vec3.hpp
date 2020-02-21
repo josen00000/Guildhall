@@ -49,5 +49,9 @@ public:
 
 																// Standalone "friend" functions that are conceptually, but not actually, part of Vec3::
 	friend const Vec3 operator*( float uniformScale, const Vec3& vecToScale );	// float * Vec3
-
+	
+	// static variable
+	static Vec3 ZERO;
+	static Vec3 ONE;
+	static Vec3 CENTER;
 };

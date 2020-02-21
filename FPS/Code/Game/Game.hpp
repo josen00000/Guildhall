@@ -8,8 +8,6 @@ class RenderContext;
 class InputSystem;
 class RandomNumberGenerator;
 class Camera;
-class Entity;
-class World;
 
 struct Vertex_PCU;
 
@@ -43,6 +41,9 @@ private:
 	void UpdateUI( float deltaSeconds );
 	void UpdateCamera(float deltaSeconds );
 
+	void HandleKeyboardInput();
+	void HandleCameraMovement();
+		 
 	//Game State Check
 	void CheckIfExit();
 	void CheckGameStates();
@@ -63,7 +64,6 @@ public:
 	bool m_isAttractMode	= false;
 
 	GameState m_gameState	= GAME_STATE_NULL;
-	World*	m_world			= nullptr;
 	Camera* m_gameCamera	= nullptr;
 	Camera* m_UICamera		= nullptr;
 	RandomNumberGenerator* m_rng = nullptr;

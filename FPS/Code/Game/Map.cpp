@@ -178,8 +178,8 @@ void Map::UpdateCamera(  )
 		return;
 	}
 	Vec2 playerPos = m_entities[ENTITY_TYPE_PLAYER][0]->m_position;
-	AABB2& cameraAABB2 = g_camera->m_AABB2;
-	g_camera->SetPosition(playerPos);
+	AABB2 cameraAABB2 = g_camera->GetCameraAsBox();
+	g_camera->SetPosition( Vec3(playerPos ) );
 	cameraAABB2.filledWithinAABB2(AABB2(Vec2(0,0),Vec2(MAP_SIZE_X,MAP_SIZE_Y)));
 }
 

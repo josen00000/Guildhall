@@ -112,6 +112,19 @@ float Round( float value )
 	return value+1;
 }
 
+int ClampInt( int inMin, int inMax, int inValue )
+{
+	if( inValue <= inMin ) {
+		return inMin;
+	}
+	else if( inValue >= inMax ) {
+		return inMax;
+	}
+	else {
+		return inValue;
+	}
+}
+
 int RoundDownToInt( float value )
 {
 	int result = (int)floor(value);

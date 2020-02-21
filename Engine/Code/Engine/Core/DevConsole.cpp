@@ -1,37 +1,72 @@
+﻿#include <iostream>
+#include <fstream>
+#include <windows.h>
 #include "DevConsole.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
-#include "Engine/Renderer/Camera.hpp"
 #include "Engine/Core/Rgba8.hpp"
+#include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Renderer/Camera.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 
-extern RenderContext* g_theRenderer;
+extern InputSystem*		g_theInputSystem;
+extern RenderContext*	g_theRenderer;
 
-DevConsole::DevConsole( BitmapFont* font )
+std::vector<Command> DevConsole::s_commands;
+
+DevConsole::DevConsole( BitmapFont* font, Camera* camera )
 	:m_font(font)
+	,m_camera(camera)
 {
 
 }
 
 void DevConsole::Startup()
 {
-
+	LoadHistory();
 }
 
 void DevConsole::BeginFrame()
 {
-
 }
 
 void DevConsole::EndFrame()
 {
-
+	m_vertices.clear();
 }
 
 void DevConsole::Shutdown()
 {
-
+	SaveHistory();
 }
 
+void DevConsole::Update( float deltaSeconds )
+{
+	static float timer = 0;
+	timer += deltaSeconds;
+	int tem = (int)(timer / 0.5f );
+	int odd = tem % 2;
+	if( odd != 0 ){
+		m_ableRenderCaret = true;
+	}
+	else {
+		m_ableRenderCaret = false;
+	}
+	if( m_historyMode ) {
+		m_inputs = m_commandsHistory[m_historyCommandIndex];
+	}
+	ProcessInput();
+}
+
+void DevConsole::ProcessInput()
+{
+	char c;
+	while( g_theInputSystem->PopCharacter( &c ) ) {
+		if( m_historyMode ) {
+			m_historyMode = false;
+		}
+		AddCharToInput( c );
+	}
+}
 
 void DevConsole::PrintString( const Rgba8& textColor, const std::string& devConsolePrintString )
 {
@@ -39,25 +74,417 @@ void DevConsole::PrintString( const Rgba8& textColor, const std::string& devCons
 	m_lines.push_back(tem);
 }
 
-void DevConsole::Render( RenderContext& renderer, const Camera& camera, float lineHeight ) const
+void DevConsole::StartDevConcole()
 {
-	if(!m_isOpen){ return;}
-	std::vector<Vertex_PCU> vertices;
-	int maxDisplayedLinesNum = (int)(camera.m_height / lineHeight);
-	int index = (int)(m_lines.size() - 1);
-	Vec2 minsPos = camera.m_AABB2.mins;
-	if(index == 0){ return;}
-	while(index >= m_lines.size() - 1 - maxDisplayedLinesNum){
-		ColoredLine tem = m_lines[index];
-		m_font->AddVertsForText2D(vertices, minsPos, lineHeight, tem.text, tem.color);
-		minsPos.y += lineHeight;
-		index--;
-		
-	}
-	renderer.DrawVertexVector(vertices);
+	m_isOpen = true;
+	g_theInputSystem->ClearCharacters();
+	m_inputs.clear();
 }
 
+void DevConsole::EndDevConcole()
+{
+	m_isOpen = false;
+	EndSelect();
+	ClearInput();
+	g_theInputSystem->ClearCharacters();
+}
 
+void DevConsole::Render( RenderContext& renderer ) const
+{
+	if( !m_isOpen ) { return; }
+	g_theRenderer->BeginCamera( *m_camera );
+
+	// render input
+	// render content
+	// render caret
+	// render select area ( if possible )
+
+	AddVertForInput();
+	AddVertForContent();
+	//const Texture* temTexture = m_font->GetTexture();
+	//g_theRenderer->BindTexture( temTexture );
+	renderer.DrawVertexVector( m_vertices );
+
+
+	g_theRenderer->BindTexture( nullptr );
+
+	if( m_ableRenderCaret ) {
+		RenderCaret();
+	}
+	
+	if( m_selectMode ) {
+		RenderSelectArea();
+	}
+
+
+}
+
+void DevConsole::RenderCaret() const
+{
+	float cellWidth = m_font->GetCellWidth( m_lineHeight, 1.f );
+	AABB2 cameraBox = m_camera->GetCameraAsBox();
+	
+	Vec2 start = cameraBox.mins + Vec2( cellWidth * m_caretIndex, 0.f );
+	Vec2 end = cameraBox.mins + Vec2( cellWidth * m_caretIndex, m_lineHeight );
+	g_theRenderer->DrawLine( start, end, 0.2f, Rgba8::WHITE );
+}
+
+void DevConsole::StartSelect()
+{
+	m_selectMode = true;
+	m_startSelectIndex = m_caretIndex;
+}
+
+void DevConsole::EndSelect()
+{
+	m_selectMode = false;
+}
+
+void DevConsole::RenderSelectArea() const
+{
+	AABB2 cameraBox = m_camera->GetCameraAsBox();
+	float cellWidth = m_font->GetCellWidth( m_lineHeight , 1.f );
+	Rgba8 selectColor = Rgba8( 176, 224, 230, 50 );
+
+	Vec2 boxMin = Vec2( cameraBox.mins + Vec2( cellWidth * m_caretIndex, 0.f ) );
+	Vec2 boxMax = Vec2( cameraBox.mins + Vec2( cellWidth * m_startSelectIndex, m_lineHeight ) );
+	AABB2 selectBox = AABB2( boxMin, boxMax );
+	g_theRenderer->DrawAABB2D( selectBox, selectColor );
+}
+
+void DevConsole::StartDisplayHistory()
+{
+	m_historyMode = true;
+	m_historyCommandIndex = (int)m_commandsHistory.size() - 1;
+	if( m_historyCommandIndex < 0 ){
+		EndDisplayHistory();
+	}
+}
+
+void DevConsole::EndDisplayHistory()
+{
+	m_historyMode = false;
+}
+
+void DevConsole::AddVertForInput() const
+{
+	// Render input line
+	Vec2 alignment = Vec2::ZERO;
+	m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraAsBox(), m_lineHeight, m_inputs, m_defaultColor, 1, alignment );
+	// Render marker
+	
+}
+
+void DevConsole::AddVertForContent() const
+{
+	int maxDisplayedLinesNum = GetMaxLinesNum();
+	
+	float deltaY = (float)1 / maxDisplayedLinesNum ;
+	Vec2 alignment = Vec2( 0.f, deltaY );
+	for( int lineIndex = (int)(m_lines.size() - 1); lineIndex > (int)m_lines.size() - maxDisplayedLinesNum; lineIndex-- ) {
+		if( lineIndex < 0 ) { break; }
+		ColoredLine tem = m_lines[lineIndex];
+		m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraAsBox(), m_lineHeight, tem.text, tem.color, 1.f, alignment );
+		alignment.y += deltaY;
+	}
+}
+
+void DevConsole::AddCharToInput( char c )
+{
+	if( m_selectMode ){
+		DeleteCharFromInput( true );
+	}
+	m_inputs.insert( ( m_inputs.begin() + m_caretIndex ) , c );
+	UpdateCaretIndex( 1 );
+}
+
+void DevConsole::DeleteCharFromInput( bool isBefore )
+{
+	if( m_selectMode ) {
+		if( m_caretIndex < m_startSelectIndex ) {
+			m_inputs.erase( m_caretIndex, m_startSelectIndex - m_caretIndex );
+			SetCaretIndex( m_caretIndex );
+		}
+		else {
+			m_inputs.erase( m_startSelectIndex, m_caretIndex - m_startSelectIndex );
+			SetCaretIndex( m_startSelectIndex );
+		}
+		EndSelect();
+		return;
+	}
+	if( isBefore ) {
+		if( m_caretIndex == 0 ){ return; }
+		m_inputs.erase( m_inputs.begin() + m_caretIndex - 1 );
+		UpdateCaretIndex( -1 );
+	}
+	else {
+		if( m_caretIndex == m_inputs.size() ){ return; }
+		m_inputs.erase( m_inputs.begin() + m_caretIndex );
+	}
+}
+
+void DevConsole::ClearInput()
+{
+	m_inputs.clear();
+	ResetCaretIndex();
+}
+
+bool DevConsole::HasInput()
+{
+	if( m_inputs.size() > 0 ){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+void DevConsole::SubmitCommand()
+{
+	Command command = Command( m_inputs, "" );
+	ClearInput();
+	int index;
+	if ( CheckIfCommandExist( command, index ) ){
+		RecordCommandInHistory( command );
+	}
+	ExecuteCommand( command	);
+}
+
+void DevConsole::ExecuteCommand( Command comd )
+{
+	EventArgs tempEventArgs;
+// 	if( command == "help" ){
+// 		ExecuteHelpFunction();
+// 	}
+// 	else if( command == "quit" ) {
+// 		ExecuteQuitFunction();
+// 	}
+// 	else if( command == "test" ) {
+// 		PrintString( Rgba8::WHITE, "test.");
+// 	}
+// 	else {
+// 		PrintString( Rgba8::RED, "Wrong Command!" );
+// 	}
+// 	
+// 	
+	if( comd.body == "test" || comd.body == "test1" || comd.body == "test2" ){
+		PrintString( m_defaultColor, comd.body + "test for history" );
+		return;
+	}
+	if( CheckIfCommandExist( comd ) ){
+		g_theEventSystem->FireTheEvent( comd.body, tempEventArgs );	
+	}
+	else{
+		LogErrorMessage();
+	}
+}
+
+void DevConsole::AddCommandToCommandList( Command comd, EventCallbackFunctionPtr funcPtr )
+{
+	int index;
+	if( !CheckIfCommandExist( comd, index ) ) {
+		s_commands.push_back( comd );
+	}
+	if( comd.body == "test" || comd.body == "test1" || comd.body == "test2" ){ return;}
+	g_theEventSystem->SubscribeTheEvent( comd.body, funcPtr );
+}
+
+void DevConsole::ExecuteQuitFunction()
+{
+	m_ableQuit = true;
+}
+
+void DevConsole::LogErrorMessage()
+{
+	PrintString( m_defaultColor, "Command Invalid! -help to read all commands " );
+}
+
+DevConsole* DevConsole::InitialDevConsole( BitmapFont* font, Camera* camera )
+{
+	DevConsole* devConcole = new DevConsole( font, camera );
+	return devConcole;
+}
+
+void DevConsole::ResetCaretIndex()
+{
+	m_caretIndex = 0;
+}
+
+void DevConsole::UpdateCaretIndex( int deltaIndex )
+{
+	m_caretIndex += deltaIndex;
+	m_caretIndex = ClampInt( 0, (int)m_inputs.size(), m_caretIndex );
+}
+
+void DevConsole::SetCaretIndex( int index )
+{
+	m_caretIndex = index;
+}
+
+void DevConsole::UpdateHistoryIndex( int deltaIndex )
+{
+	m_historyCommandIndex += deltaIndex;
+	m_historyCommandIndex = ClampInt( 0, ( (int)m_commandsHistory.size() - 1 ), m_historyCommandIndex );
+}
+
+void DevConsole::RecordCommandInHistory( Command comd )
+{
+	int index;
+	if( CheckIfCommandExistInHistory( comd, index ) ){
+		DeleteCommandInHistory(  index );
+	}
+		m_commandsHistory.push_back( comd.body );
+	
+}
+
+bool DevConsole::CheckIfCommandExistInHistory( Command comd, int& index )
+{
+	for( index = 0; index < m_commandsHistory.size(); index++ ) {
+		if( m_commandsHistory[index] == comd.body ){
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool DevConsole::CheckIfCommandExist( Command comd, int& index )
+{
+	for( index = 0; index < s_commands.size(); index++ ) {
+		Command& tempComd = s_commands[index];
+		if( CheckIfCommandEqual( tempComd, comd ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool DevConsole::CheckIfCommandExist( Command comd )
+{
+	for( int index = 0; index < s_commands.size(); index++ ) {
+		Command& tempComd = s_commands[index];
+		if( CheckIfCommandEqual( tempComd, comd ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool DevConsole::CheckIfCommandEqual( Command a, Command b )
+{
+	if( a.body == b.body ){
+		return true;
+	} 
+
+	return false;
+}
+
+void DevConsole::DeleteCommandInHistory( int index )
+{
+	m_commandsHistory.erase( m_commandsHistory.begin() + index );
+}
+
+void DevConsole::LoadHistory()
+{
+	std::ifstream myFile;
+	myFile.open( "./Data/DevConsole/History.txt" );
+	if( myFile.is_open() ){
+		std::string line;
+		while ( getline( myFile, line ) )
+		{
+			Command comd = Command( line, "" );
+			if( CheckIfCommandExist( comd ) ){
+				RecordCommandInHistory( comd );
+			}
+		}
+		myFile.close();
+	}
+
+}
+
+void DevConsole::SaveHistory()
+{
+	std::ofstream myFile;
+	myFile.open( "./Data/DevConsole/History.txt" );
+	if( !myFile.fail() ){
+		for( int comIndex = 0; comIndex < m_commandsHistory.size(); comIndex++ ){
+			myFile << m_commandsHistory[comIndex] << std::endl;
+		}
+		myFile.close();
+	}
+	else {
+		ERROR_AND_DIE(" can not open file. ");
+	}
+}
+
+bool DevConsole::SendSelectedStringToClipBoard()
+{
+	// get selected string
+	//send string to clip board
+	std::string selectedString;
+	if( m_selectMode ){
+		if( m_startSelectIndex < m_caretIndex ){
+			selectedString = m_inputs.substr( m_startSelectIndex, m_caretIndex - m_startSelectIndex );
+		}
+		else if( m_startSelectIndex > m_caretIndex ) {
+			selectedString = m_inputs.substr( m_caretIndex, m_startSelectIndex - m_caretIndex );
+		}
+		else{
+			return false;
+		}
+
+		OpenClipboard( NULL );
+		EmptyClipboard();
+		HGLOBAL hGlob = GlobalAlloc( GMEM_MOVEABLE, selectedString.size() );
+		if( !hGlob ){ 
+			CloseClipboard();
+			return false;
+		}
+		memcpy( GlobalLock( hGlob ), selectedString.c_str(), selectedString.size() );
+		GlobalUnlock( hGlob );
+		SetClipboardData( CF_TEXT, hGlob );
+		CloseClipboard();
+		GlobalFree( hGlob );
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool DevConsole::ReceiveStringFromClipBoard()
+{
+	// get string form clipboard
+	// input string to input
+
+	OpenClipboard( NULL );
+	HGLOBAL hGlob =  GetClipboardData( CF_TEXT );
+	if( hGlob == NULL ){ return false; }
+	size_t dataSize = GlobalSize( hGlob );
+	char* stringPtr = (char*)malloc( dataSize );
+	memcpy( stringPtr, GlobalLock( hGlob ), dataSize  );
+	std::string copyedString = std::string( stringPtr, dataSize );
+
+	InputCopyedString( copyedString );
+	return true;
+}
+
+void DevConsole::InputCopyedString( std::string copyed )
+{
+	for( int charIndex = 0; charIndex < copyed.size(); charIndex++ ) {
+		AddCharToInput( copyed[charIndex ] );
+	} 
+}
+
+int DevConsole::GetMaxLinesNum() const
+{
+	return (int)( m_camera->GetCameraHeight() / m_lineHeight );
+}
+
+float DevConsole::GetLineAlignmentY() const
+{
+	return 0;
+}
 
 void DevConsole::SetIsOpen( bool isOpen )
 {

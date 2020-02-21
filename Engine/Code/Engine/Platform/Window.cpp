@@ -2,9 +2,10 @@
 #define WIN32_LEAN_AND_MEAN		// Always #define this before #including <windows.h>
 #include <windows.h>
 #include "Engine/Input/InputSystem.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 static wchar_t const* WND_CLASS_NAME = TEXT("Simple Window Class");
-
+extern DevConsole* g_theConsole;
 
 //-----------------------------------------------------------------------------------------------
 // Handles Windows (Win32) messages/events; i.e. the OS is trying to tell us something happened.
@@ -15,6 +16,12 @@ static wchar_t const* WND_CLASS_NAME = TEXT("Simple Window Class");
 static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam )
 {
 	Window* window = (Window*) ::GetWindowLongPtr( windowHandle, GWLP_USERDATA );
+// 	if( wmMessageCode == WM_KEYDOWN ){
+// 		int a = 0;
+// 	}
+// 	if( wmMessageCode == WM_KEYUP ) {
+// 		int b = 0;
+// 	}
 	switch( wmMessageCode )
 	{
 
@@ -43,6 +50,21 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			InputSystem* input = window->GetInputSystem();
 			input->UpdateKeyBoardButton( asKey, false );
 			break;
+		}
+		case WM_CHAR: {
+			wchar_t character = (wchar_t)wParam;
+			if( 32 <= character && character <= 126 ) {
+				InputSystem* input = window->GetInputSystem();
+				input->PushCharacter( (char)character );
+			}
+			if( character == 0x03 ){
+				g_theConsole->SendSelectedStringToClipBoard();
+			}
+			if( character == 0x16 ) {
+				g_theConsole->ReceiveStringFromClipBoard();
+			}
+			break;
+
 		}
 	}
 

@@ -114,25 +114,30 @@ void RenderContext::EndFrame()
 void RenderContext::Shutdown()
 {
 	delete m_swapChain;
-	delete m_currentShader;
+	delete m_defaultShader;
 	delete m_immediateVBO;
 	delete m_frameUBO;
 	delete m_defaultSampler;
+
 	m_swapChain			= nullptr;
 	m_currentShader		= nullptr;
 	m_immediateVBO		= nullptr;
 	m_frameUBO			= nullptr;
 	m_defaultSampler	= nullptr;
+	m_defaultShader		= nullptr;
 
 	CleanTextures();
 
 	for( ShaderMapIterator it = m_shaders.begin(); it != m_shaders.end(); ++it ) {
 		delete it->second;
-		m_shaders.erase(it);
 	}
+	m_shaders.clear();
 
 	DX_SAFE_RELEASE(m_device);
 	DX_SAFE_RELEASE(m_context);
+	DX_SAFE_RELEASE(m_alphaBlendState);
+	DX_SAFE_RELEASE(m_additiveBlendState);
+	DX_SAFE_RELEASE(m_opaqueBlendState);
 }
 
 
@@ -156,13 +161,13 @@ void RenderContext::BeginCamera( Camera& camera )
 #if defined(RENDER_DEBUG)
 	m_context->ClearState();
 #endif
-	Texture* output = camera.GetColorTarget();
+	Texture* output = camera.GetColorTarget(); // get texture output
 
 	if( output == nullptr ) {
 		output = m_swapChain->GetBackBuffer();
 	}
 
-	TextureView* view = output->GetRenderTargetView();
+	TextureView* view = output->GetRenderTargetView(); // texture view: handler of the data in texture
 	ID3D11RenderTargetView* rtv = view->GetRTVHandle();
 
 	IntVec2 outputSize = output->GetTexelSize();
@@ -187,7 +192,7 @@ void RenderContext::BeginCamera( Camera& camera )
 
 	RenderBuffer* cameraUBO = camera.GetOrCreateCameraBuffer( this );
 
-	BindUniformBuffer( 0, m_frameUBO );
+	BindUniformBuffer( UBO_FRAME_SLOT, m_frameUBO );
 	
 	BindUniformBuffer( UBO_CAMERA_SLOT, cameraUBO );
 
@@ -195,7 +200,7 @@ void RenderContext::BeginCamera( Camera& camera )
 	BindTexture( temp );
 	BindSampler( nullptr );
 
-	SetBlendMode( BlendMode::ADDITIVE );
+	SetBlendMode( BlendMode::ALPHA );
 }
 
 void RenderContext::SetOrthoView( const AABB2& box )
@@ -247,7 +252,7 @@ void RenderContext::BindShader( Shader* shader )
 void RenderContext::BindShader( const char* fileName )
 {
 	Shader* shader = GetOrCreateShader( fileName );
-	m_currentShader	 = shader;
+	BindShader( shader );
 }
 
 void RenderContext::BindVertexInput( VertexBuffer* vbo )
@@ -381,10 +386,11 @@ Shader* RenderContext::GetOrCreateShader( char const* fileName )
 {
 	std::string tempName = std::string( fileName );
 	ShaderMapIterator it = m_shaders.find( tempName );
-	if( it == m_shaders.end() ) {
+	if( it != m_shaders.end() ) {
 		return it->second;
 	}
 	Shader* shader = new Shader( this );
+	shader->CreateFromFile( fileName );
 	m_shaders.insert( std::pair<std::string, Shader*>( tempName, shader ));
 	return shader;
 }
@@ -443,6 +449,24 @@ void RenderContext::CreateBlendState()
 	additiveDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
 	m_device->CreateBlendState( &additiveDesc, &m_additiveBlendState );
+
+	//
+	D3D11_BLEND_DESC opaqueDesc;
+	opaqueDesc.AlphaToCoverageEnable = false;
+	opaqueDesc.IndependentBlendEnable = false;
+	opaqueDesc.RenderTarget[0].BlendEnable = true;
+	opaqueDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	opaqueDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	opaqueDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+
+
+	opaqueDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	opaqueDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	opaqueDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+
+	opaqueDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	m_device->CreateBlendState( &opaqueDesc, &m_opaqueBlendState );
+
 }
 
 BitmapFont* RenderContext::CheckBitmapFontExist( const char* imageFilePath ) const
@@ -459,7 +483,7 @@ void RenderContext::CleanTextures()
 	for( int texIndex = 0; texIndex < m_textureList.size(); texIndex++ ) {
 		if( m_textureList[texIndex] != nullptr ) {
 			delete m_textureList[texIndex];
-			m_textureList[texIndex] == nullptr;
+			m_textureList[texIndex] = nullptr;
 		}
 	}
 }
@@ -474,9 +498,17 @@ Texture* RenderContext::CheckTextureExist(const char* imageFilePath) const
 	return nullptr;
 }
 
-void RenderContext::DrawVertexVector( const std::vector<Vertex_PCU>& vertexArray )
+void RenderContext::DrawVertexVector(  std::vector<Vertex_PCU>& vertices )
 {
-	UNUSED( vertexArray );
+	size_t elementSize = sizeof(Vertex_PCU);
+	size_t bufferByteSize = vertices.size() * elementSize;
+	m_immediateVBO->Update( &vertices[0], bufferByteSize, elementSize );
+
+	// bind
+	BindVertexInput( m_immediateVBO );
+
+	// draw
+	Draw( (int)vertices.size(), 0 );
 }
 
 void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
@@ -568,6 +600,9 @@ void RenderContext::SetBlendMode( BlendMode blendMode )
 		break;
 	case ADDITIVE:
 		blendStateHandle = m_additiveBlendState;
+		break;
+	case OPAQUE:
+		blendStateHandle = m_opaqueBlendState;
 		break;
 	default:
 		break;

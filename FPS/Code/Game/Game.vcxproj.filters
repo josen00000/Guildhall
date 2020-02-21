@@ -19,26 +19,8 @@
     <ClCompile Include="Game.cpp">
       <Filter>Game</Filter>
     </ClCompile>
-    <ClCompile Include="Entity.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Main_Windows.cpp">
       <Filter>General</Filter>
-    </ClCompile>
-    <ClCompile Include="Map.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Tile.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="World.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="TileDefinition.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -51,26 +33,8 @@
     <ClInclude Include="Game.hpp">
       <Filter>Game</Filter>
     </ClInclude>
-    <ClInclude Include="Entity.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Map.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Tile.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="World.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="TileDefinition.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="EngineBuildPreferences.hpp">
       <Filter>General</Filter>
-    </ClInclude>
-    <ClInclude Include="Player.hpp">
-      <Filter>Game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

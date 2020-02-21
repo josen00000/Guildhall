@@ -4,8 +4,13 @@
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Math/Vec3.hpp"
 
-
 struct Vec2;
+
+// Static objects
+Vec3 Vec3::ZERO		= Vec3( 0.f, 0.f, 0.f );
+Vec3 Vec3::ONE		= Vec3( 1.f, 1.f, 1.f );
+Vec3 Vec3::CENTER	= Vec3( 0.5f, 0.5f, 0.5f );
+
 Vec3::Vec3(const Vec3& copy)
 	:x(copy.x),y(copy.y),z(copy.z)
 {

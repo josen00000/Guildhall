@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "InputSystem.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/MathUtils.hpp"
@@ -20,13 +21,11 @@ void InputSystem::BeginFrame()
 
 void InputSystem::EndFrame()
 {
-	
 	m_keyBoardController.UpdateButtonsLastFrame();
 }
 
 void InputSystem::Shutdown()
 {
-
 }
 
 IntVec2 InputSystem::GetMouseRawDesktopPos() const
@@ -34,7 +33,6 @@ IntVec2 InputSystem::GetMouseRawDesktopPos() const
 	POINT rawmouseDesktopPos;
 	GetCursorPos( &rawmouseDesktopPos );
 	return IntVec2( rawmouseDesktopPos.x, rawmouseDesktopPos.y);
-
 }
 
 Vec2 InputSystem::GetNormalizedMousePos() const
@@ -63,9 +61,9 @@ Vec2 InputSystem::GetNormalizedMousePosInCamera( const Camera& camera ) const
 	return mousePosInCamera;
 }
 
-void InputSystem::UpdateKeyBoardButton(unsigned char inValue, bool isPressed)
+void InputSystem::UpdateKeyBoardButton( unsigned char inValue, bool isPressed )
 {
-	m_keyBoardController.UpdateButtonCurrentFrame(inValue,isPressed);
+	m_keyBoardController.UpdateButtonCurrentFrame( inValue,isPressed );
 }
 
 const XboxController& InputSystem::GetXboxController( int controllerID )
@@ -89,5 +87,29 @@ bool InputSystem::WasKeyJustReleased( unsigned char keyCode ) const
 {
 	KeyButtonState temButtonState=m_keyBoardController.m_buttonStates[keyCode];
 	return temButtonState.WasJustReleased();
+}
+
+void InputSystem::PushCharacter( char character )
+{
+	m_characters.push( character );	
+}
+
+bool InputSystem::PopCharacter( char* out )
+{
+	if( m_characters.empty() ){
+		return false;
+	}
+	else {
+		*out = m_characters.front();
+		m_characters.pop();
+		return true;
+	}
+}
+
+void InputSystem::ClearCharacters()
+{
+	while( !m_characters.empty() ) {
+		m_characters.pop();
+	}
 }
 

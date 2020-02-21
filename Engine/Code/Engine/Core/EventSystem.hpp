@@ -5,7 +5,7 @@
 #include "Engine/Core/NamedStrings.hpp"
 
 typedef NamedStrings EventArgs; 
-typedef bool (*EventCallbackFunctionPtr)( EventArgs& args );
+typedef bool ( *EventCallbackFunctionPtr )( EventArgs& args );
 typedef std::multimap<std::string, std::vector<EventCallbackFunctionPtr>>::iterator registeredEventIterator;
 typedef std::vector<EventCallbackFunctionPtr> eventFunctionVector;
 typedef eventFunctionVector::iterator eventFunctionVectorIterator;
