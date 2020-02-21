@@ -41,7 +41,7 @@ C29.SD2.A03 : Dev Console
 ------
 ## Extras
 - [ ] *X03.01 : 03pts*: Built-in error shader to use when a shader fails to compile.   
-- [!] *X03.02 : 04pts*: AutoComplete
+- [ ] *X03.02 : 04pts*: AutoComplete
 - [ ] *X03.03 : 04pts*: Context Sensitive Auto Complete (Requies X03.02)
 - [x] *X03.04 : 04pts*: Command History
 - [x] *X03.05 : 03pts*: Persistant Command History (requires X03.02) // half finished. Write and load command to file. Not persistant. Each time rewrite the last commands.
