@@ -608,6 +608,6 @@ void RenderContext::SetBlendMode( BlendMode blendMode )
 		break;
 	}
 
-	m_context->OMSetBlendState( blendStateHandle, zeroes, ~0 );
+	m_context->OMSetBlendState( blendStateHandle, zeroes, (uint)~0 );
 }
 
