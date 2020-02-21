@@ -44,8 +44,8 @@ C29.SD2.A03 : Dev Console
 - [ ] *X03.02 : 04pts*: AutoComplete
 - [ ] *X03.03 : 04pts*: Context Sensitive Auto Complete (Requies X03.02)
 - [x] *X03.04 : 04pts*: Command History
-- [x] *X03.05 : 03pts*: Persistant Command History (requires X03.02) // half finished. Write and load command to file. Not persistant. Each time rewrite the last commands.
-- [x] *X03.06 : 05pts*: Text Selection // half finished.
+- [x] *X03.05 : 03pts*: Persistant Command History (requires X03.02)
+- [x] *X03.06 : 05pts*: Text Selection
 - [x] *X03.10 : 04pts*: Cut, Copy & Paste from Window's Clipboard (Requires X03.04)
 - [ ] *X03.11 : 02pts*: Text Scrolling
 - [ ] *X03.12 : 02pts*: Vertical Scroll Bar (Requires X03.11)

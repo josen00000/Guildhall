@@ -11,6 +11,12 @@ class Camera;
 class BitmapFont;
 struct Vertex_PCU;
 
+enum SelectMode {
+	START_SELECT,
+	PAUSE_SELECT,
+	END_SELECT
+};
+
 struct Command {
 	Command( std::string c, std::string d )
 		:body(c)
@@ -75,6 +81,7 @@ public:
 	void SetCaretIndex( int index );
 	void RenderCaret() const;
 	void StartSelect();
+	void PauseSelect();
 	void EndSelect();
 	void RenderSelectArea() const;
 
@@ -86,7 +93,7 @@ public:
 	bool CheckIfCommandExistInHistory( Command comd, int& index );
 	void DeleteCommandInHistory( int index );
 	void LoadHistory();
-	void SaveHistory();
+	void SaveHistoryToFile();
 
 	// ClipBoard
 	bool SendSelectedStringToClipBoard();
@@ -102,7 +109,7 @@ private:
 public:
 	bool m_ableRenderCaret = true;
 	bool m_historyMode	= false;
-	bool m_selectMode	= false;
+	SelectMode m_selectMode	= END_SELECT;
 	bool m_ableQuit = false;
 	int m_caretIndex;
 	int m_historyCommandIndex;
