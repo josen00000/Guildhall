@@ -36,7 +36,7 @@ void DevConsole::EndFrame()
 
 void DevConsole::Shutdown()
 {
-	SaveHistory();
+	SaveHistoryToFile();
 }
 
 void DevConsole::Update( float deltaSeconds )
@@ -112,7 +112,7 @@ void DevConsole::Render( RenderContext& renderer ) const
 		RenderCaret();
 	}
 	
-	if( m_selectMode ) {
+	if( m_selectMode != END_SELECT ) {
 		RenderSelectArea();
 	}
 
@@ -131,13 +131,18 @@ void DevConsole::RenderCaret() const
 
 void DevConsole::StartSelect()
 {
-	m_selectMode = true;
+	m_selectMode = START_SELECT;
 	m_startSelectIndex = m_caretIndex;
+}
+
+void DevConsole::PauseSelect()
+{
+	m_selectMode = PAUSE_SELECT;
 }
 
 void DevConsole::EndSelect()
 {
-	m_selectMode = false;
+	m_selectMode = END_SELECT;
 }
 
 void DevConsole::RenderSelectArea() const
@@ -191,7 +196,7 @@ void DevConsole::AddVertForContent() const
 
 void DevConsole::AddCharToInput( char c )
 {
-	if( m_selectMode ){
+	if( m_selectMode != END_SELECT ){
 		DeleteCharFromInput( true );
 	}
 	m_inputs.insert( ( m_inputs.begin() + m_caretIndex ) , c );
@@ -200,7 +205,7 @@ void DevConsole::AddCharToInput( char c )
 
 void DevConsole::DeleteCharFromInput( bool isBefore )
 {
-	if( m_selectMode ) {
+	if( m_selectMode != END_SELECT ) {
 		if( m_caretIndex < m_startSelectIndex ) {
 			m_inputs.erase( m_caretIndex, m_startSelectIndex - m_caretIndex );
 			SetCaretIndex( m_caretIndex );
@@ -243,6 +248,7 @@ void DevConsole::SubmitCommand()
 {
 	Command command = Command( m_inputs, "" );
 	ClearInput();
+	EndSelect();
 	int index;
 	if ( CheckIfCommandExist( command, index ) ){
 		RecordCommandInHistory( command );
@@ -393,19 +399,17 @@ void DevConsole::LoadHistory()
 		while ( getline( myFile, line ) )
 		{
 			Command comd = Command( line, "" );
-			if( CheckIfCommandExist( comd ) ){
-				RecordCommandInHistory( comd );
-			}
+			RecordCommandInHistory( comd );
 		}
 		myFile.close();
 	}
 
 }
 
-void DevConsole::SaveHistory()
+void DevConsole::SaveHistoryToFile()
 {
 	std::ofstream myFile;
-	myFile.open( "./Data/DevConsole/History.txt" );
+	myFile.open( "./Data/DevConsole/History.txt", std::ofstream::app );
 	if( !myFile.fail() ){
 		for( int comIndex = 0; comIndex < m_commandsHistory.size(); comIndex++ ){
 			myFile << m_commandsHistory[comIndex] << std::endl;
@@ -422,7 +426,7 @@ bool DevConsole::SendSelectedStringToClipBoard()
 	// get selected string
 	//send string to clip board
 	std::string selectedString;
-	if( m_selectMode ){
+	if( m_selectMode != END_SELECT ){
 		if( m_startSelectIndex < m_caretIndex ){
 			selectedString = m_inputs.substr( m_startSelectIndex, m_caretIndex - m_startSelectIndex );
 		}
@@ -435,12 +439,12 @@ bool DevConsole::SendSelectedStringToClipBoard()
 
 		OpenClipboard( NULL );
 		EmptyClipboard();
-		HGLOBAL hGlob = GlobalAlloc( GMEM_MOVEABLE, selectedString.size() );
+		HGLOBAL hGlob = GlobalAlloc( GMEM_MOVEABLE, selectedString.size() + 1 );
 		if( !hGlob ){ 
 			CloseClipboard();
 			return false;
 		}
-		memcpy( GlobalLock( hGlob ), selectedString.c_str(), selectedString.size() );
+		memcpy( GlobalLock( hGlob ), selectedString.c_str(), selectedString.size() + 1 );
 		GlobalUnlock( hGlob );
 		SetClipboardData( CF_TEXT, hGlob );
 		CloseClipboard();
@@ -460,11 +464,9 @@ bool DevConsole::ReceiveStringFromClipBoard()
 	OpenClipboard( NULL );
 	HGLOBAL hGlob =  GetClipboardData( CF_TEXT );
 	if( hGlob == NULL ){ return false; }
-	size_t dataSize = GlobalSize( hGlob );
-	char* stringPtr = (char*)malloc( dataSize );
-	memcpy( stringPtr, GlobalLock( hGlob ), dataSize  );
-	std::string copyedString = std::string( stringPtr, dataSize );
+	char* stringPtr = static_cast<char*>( GlobalLock( hGlob ) );
 
+	std::string copyedString = std::string( stringPtr );
 	InputCopyedString( copyedString );
 	return true;
 }

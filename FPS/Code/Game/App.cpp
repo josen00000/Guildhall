@@ -156,17 +156,23 @@ void App::HandleDevConsoleInput()
 		}
 		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_LEFT_ARROW ) ) {
 			if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ){
-				if( g_theConsole->m_selectMode == false ){
+				if( g_theConsole->m_selectMode == END_SELECT ){
 					g_theConsole->StartSelect();
 				}
+			}
+			else if( g_theConsole->m_selectMode == PAUSE_SELECT  ){
+				g_theConsole->EndSelect();
 			}
 			g_theConsole->UpdateCaretIndex( -1 );
 		}
 		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_RIGHT_ARROW ) ) {
 			if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ) {
-				if( g_theConsole->m_selectMode == false ) {
+				if( g_theConsole->m_selectMode == END_SELECT ) {
 					g_theConsole->StartSelect();
 				}
+			}
+			else if( g_theConsole->m_selectMode == PAUSE_SELECT ) {
+				g_theConsole->EndSelect();
 			}
 			g_theConsole->UpdateCaretIndex( 1 );
 		}
@@ -182,6 +188,13 @@ void App::HandleDevConsoleInput()
 			else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ENTER ) ) {
 				g_theConsole->EndDisplayHistory();
 				g_theConsole->SubmitCommand();
+			}
+		}
+
+		// Release event
+		if( g_theInputSystem->WasKeyJustReleased( KEYBOARD_BUTTON_ID_SHIFT ) ){
+			if( g_theConsole->m_selectMode == START_SELECT ) {
+				g_theConsole->PauseSelect();
 			}
 		}
 	}

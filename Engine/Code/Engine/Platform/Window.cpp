@@ -30,6 +30,7 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 		{
 			// TODO SD2 quit the windows
 			//g_theApp->HandleQuitRequested();
+			g_theConsole->ExecuteCommand( Command( "quit", "") );
 			window->m_isWindowClose = true;
 			return 0; // "Consumes" this message (tells Windows "okay, we handled it")
 		}
