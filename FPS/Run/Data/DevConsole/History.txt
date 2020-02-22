@@ -11,3 +11,8 @@ quit
 test
 help
 test1
+test2
+help
+test1
+test
+quit

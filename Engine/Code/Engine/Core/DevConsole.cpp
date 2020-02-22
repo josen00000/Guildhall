@@ -41,23 +41,25 @@ void DevConsole::Shutdown()
 
 void DevConsole::Update( float deltaSeconds )
 {
-	static float timer = 0;
-	timer += deltaSeconds;
-	int tem = (int)(timer / 0.5f );
-	int odd = tem % 2;
-	if( odd != 0 ){
-		m_ableRenderCaret = true;
-	}
-	else {
-		m_ableRenderCaret = false;
-	}
+	CheckIfConsoleOpen();
+	if( !m_isOpen ){ return; }
+
+	ProcessInput();
+	
+	UpdateAbleRenderCaret( deltaSeconds );
 	if( m_historyMode ) {
 		m_inputs = m_commandsHistory[m_historyCommandIndex];
 	}
-	ProcessInput();
 }
 
 void DevConsole::ProcessInput()
+{
+	
+	ProcessControlInput();
+	ProcessCharacterInput();
+}
+
+void DevConsole::ProcessCharacterInput()
 {
 	char c;
 	while( g_theInputSystem->PopCharacter( &c ) ) {
@@ -157,6 +159,20 @@ void DevConsole::RenderSelectArea() const
 	g_theRenderer->DrawAABB2D( selectBox, selectColor );
 }
 
+void DevConsole::UpdateAbleRenderCaret( float deltaSeconds )
+{
+	static float timer = 0;
+	timer += deltaSeconds;
+	int tem = (int)(timer / 0.5f);
+	int odd = tem % 2;
+	if( odd != 0 ) {
+		m_ableRenderCaret = true;
+	}
+	else {
+		m_ableRenderCaret = false;
+	}
+}
+
 void DevConsole::StartDisplayHistory()
 {
 	m_historyMode = true;
@@ -191,6 +207,92 @@ void DevConsole::AddVertForContent() const
 		ColoredLine tem = m_lines[lineIndex];
 		m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraAsBox(), m_lineHeight, tem.text, tem.color, 1.f, alignment );
 		alignment.y += deltaY;
+	}
+}
+
+void DevConsole::CheckIfConsoleOpen()
+{
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_TILDE ) ) {
+		if( !g_theConsole->IsOpen() ) {
+			g_theConsole->StartDevConcole();
+		}
+		else {
+			g_theConsole->EndDevConcole();
+		}
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) ) {
+		if( g_theConsole->IsOpen() ) {
+			if( g_theConsole->m_historyMode ) {
+				g_theConsole->EndDisplayHistory();
+			}
+			if( g_theConsole->HasInput() ) {
+				g_theConsole->ClearInput();
+			}
+			else {
+				g_theConsole->EndDevConcole();
+			}
+		}
+	}
+}
+
+void DevConsole::ProcessControlInput()
+{
+	
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_UP_ARROW ) ) {
+		if( !g_theConsole->m_historyMode ) {
+			g_theConsole->StartDisplayHistory();
+		}
+		else {
+			g_theConsole->UpdateHistoryIndex( -1 );
+		}
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_DOWN_ARROW ) ) {
+		if( g_theConsole->m_historyMode ) {
+			g_theConsole->UpdateHistoryIndex( 1 );
+		}
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_LEFT_ARROW ) ) {
+		if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ) {
+			if( g_theConsole->m_selectMode == END_SELECT ) {
+				g_theConsole->StartSelect();
+			}
+		}
+		else if( g_theConsole->m_selectMode == PAUSE_SELECT ) {
+			g_theConsole->EndSelect();
+		}
+		g_theConsole->UpdateCaretIndex( -1 );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_RIGHT_ARROW ) ) {
+		if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ) {
+			if( g_theConsole->m_selectMode == END_SELECT ) {
+				g_theConsole->StartSelect();
+			}
+		}
+		else if( g_theConsole->m_selectMode == PAUSE_SELECT ) {
+			g_theConsole->EndSelect();
+		}
+		g_theConsole->UpdateCaretIndex( 1 );
+	}
+	else {
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_DELETE ) ) {
+			g_theConsole->EndDisplayHistory();
+			g_theConsole->DeleteCharFromInput( false );
+		}
+		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_BACK ) ) {
+			g_theConsole->EndDisplayHistory();
+			g_theConsole->DeleteCharFromInput( true );
+		}
+		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ENTER ) ) {
+			g_theConsole->EndDisplayHistory();
+			g_theConsole->SubmitCommand();
+		}
+	}
+
+	// Release event
+	if( g_theInputSystem->WasKeyJustReleased( KEYBOARD_BUTTON_ID_SHIFT ) ) {
+		if( g_theConsole->m_selectMode == START_SELECT ) {
+			g_theConsole->PauseSelect();
+		}
 	}
 }
 

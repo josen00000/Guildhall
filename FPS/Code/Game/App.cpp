@@ -118,86 +118,7 @@ void App::HandleQuitRequested()
 
 void App::HandleDevConsoleInput()
 {
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_TILDE )  ) {
-		if( !g_theConsole->IsOpen() ){
-			g_theConsole->StartDevConcole();
-		}
-		else{
-			g_theConsole->EndDevConcole();
-		}
-	}
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) ) {
-		if( g_theConsole->IsOpen() ) {
-			if( g_theConsole->m_historyMode ){
-				g_theConsole->EndDisplayHistory();
-			}
-			if( g_theConsole->HasInput() ){
-				g_theConsole->ClearInput();
-			}
-			else{
-				g_theConsole->EndDevConcole();
-			}
-		}
-	}
-
-	if( g_theConsole->IsOpen() ) {
-		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_UP_ARROW ) ){
-			if( !g_theConsole->m_historyMode ) {
-				g_theConsole->StartDisplayHistory();
-			}
-			else {
-				g_theConsole->UpdateHistoryIndex( -1 );
-			}
-		}
-		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_DOWN_ARROW ) ) {
-			if( g_theConsole->m_historyMode ) {
-				g_theConsole->UpdateHistoryIndex( 1 );
-			}
-		}
-		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_LEFT_ARROW ) ) {
-			if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ){
-				if( g_theConsole->m_selectMode == END_SELECT ){
-					g_theConsole->StartSelect();
-				}
-			}
-			else if( g_theConsole->m_selectMode == PAUSE_SELECT  ){
-				g_theConsole->EndSelect();
-			}
-			g_theConsole->UpdateCaretIndex( -1 );
-		}
-		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_RIGHT_ARROW ) ) {
-			if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ) {
-				if( g_theConsole->m_selectMode == END_SELECT ) {
-					g_theConsole->StartSelect();
-				}
-			}
-			else if( g_theConsole->m_selectMode == PAUSE_SELECT ) {
-				g_theConsole->EndSelect();
-			}
-			g_theConsole->UpdateCaretIndex( 1 );
-		}
-		else {
-			if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_DELETE ) ){
-				g_theConsole->EndDisplayHistory();
-				g_theConsole->DeleteCharFromInput( false );
-			}
-			else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_BACK ) ) {
-				g_theConsole->EndDisplayHistory();
-				g_theConsole->DeleteCharFromInput( true );
-			}
-			else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ENTER ) ) {
-				g_theConsole->EndDisplayHistory();
-				g_theConsole->SubmitCommand();
-			}
-		}
-
-		// Release event
-		if( g_theInputSystem->WasKeyJustReleased( KEYBOARD_BUTTON_ID_SHIFT ) ){
-			if( g_theConsole->m_selectMode == START_SELECT ) {
-				g_theConsole->PauseSelect();
-			}
-		}
-	}
+	
 
 }
 
@@ -237,9 +158,7 @@ void App::Update( float deltaSeconds )
 
 void App::UpdateDevConsole( float deltaSeconds )
 {
-	if( g_theConsole->IsOpen() ) {
-		g_theConsole->Update( deltaSeconds );
-	}
+	g_theConsole->Update( deltaSeconds );
 }
 
 const void App::Render() const

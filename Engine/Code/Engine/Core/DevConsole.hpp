@@ -17,16 +17,6 @@ enum SelectMode {
 	END_SELECT
 };
 
-struct Command {
-	Command( std::string c, std::string d )
-		:body(c)
-		,desc(d)
-	{
-	}
-	std::string body;
-	std::string desc;
-};
-
 struct ColoredLine {
 	ColoredLine( Rgba8 c, std::string t)
 		:color(c)
@@ -46,7 +36,6 @@ public:
 	void EndFrame();
 	void Shutdown();
 	void Update( float deltaSeconds );
-	void ProcessInput();
 
 	void PrintString( const Rgba8& textColor, const std::string& devConsolePrintString);
 	void StartDevConcole();
@@ -59,7 +48,11 @@ public:
 	void AddVertForInput() const;
 	void AddVertForContent() const;
 	
-	// Input
+	// Input & control
+	void CheckIfConsoleOpen();
+	void ProcessInput();
+	void ProcessCharacterInput();
+	void ProcessControlInput();
 	void AddCharToInput( char c );
 	void DeleteCharFromInput( bool isBefore );
 	void ClearInput();
@@ -67,11 +60,11 @@ public:
 
 	// Command
 	void SubmitCommand();
-	void ExecuteCommand( Command comd );
-	static bool CheckIfCommandExist( Command comd, int& index );
-	static bool CheckIfCommandExist( Command comd );
-	static void AddCommandToCommandList( Command comd, EventCallbackFunctionPtr funcPtr );
-	static bool CheckIfCommandEqual( Command a, Command b );
+	void ExecuteCommand( std::string comd );
+	static bool CheckIfCommandExist( std::string comd, int& index );
+	static bool CheckIfCommandExist( std::string comd );
+	static void AddCommandToCommandList( std::string comd, EventCallbackFunctionPtr funcPtr );
+	static bool CheckIfCommandEqual( std::string a, std::string b );
 	void ExecuteQuitFunction();
 	void LogErrorMessage();
 
@@ -84,13 +77,14 @@ public:
 	void PauseSelect();
 	void EndSelect();
 	void RenderSelectArea() const;
+	void UpdateAbleRenderCaret( float deltaSeconds );
 
 	// History
 	void StartDisplayHistory();
 	void EndDisplayHistory();
 	void UpdateHistoryIndex( int deltaIndex );
-	void RecordCommandInHistory( Command comd );
-	bool CheckIfCommandExistInHistory( Command comd, int& index );
+	void RecordCommandInHistory( std::string comd );
+	bool CheckIfCommandExistInHistory( std::string comd, int& index );
 	void DeleteCommandInHistory( int index );
 	void LoadHistory();
 	void SaveHistoryToFile();
@@ -122,7 +116,7 @@ public:
 	std::vector<ColoredLine> m_lines;
 	mutable std::vector<Vertex_PCU> m_vertices;
 	std::vector<std::string> m_commandsHistory;
-	static std::vector<Command> s_commands;
+	static std::map<std::string, std::string> s_commands;
 
 private:
 	bool m_isOpen = false; 
