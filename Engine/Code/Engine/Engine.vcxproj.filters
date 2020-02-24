@@ -183,6 +183,12 @@
     <ClCompile Include="Physics\PolygonCollider2D.cpp">
       <Filter>Physic</Filter>
     </ClCompile>
+    <ClCompile Include="Physics\Collision2D.cpp">
+      <Filter>Physic</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\PhysicsMaterial.cpp">
+      <Filter>Physic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
@@ -360,6 +366,12 @@
       <Filter>Math\shape</Filter>
     </ClInclude>
     <ClInclude Include="Physics\PolygonCollider2D.hpp">
+      <Filter>Physic</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\Collision2D.hpp">
+      <Filter>Physic</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\PhysicsMaterial.hpp">
       <Filter>Physic</Filter>
     </ClInclude>
   </ItemGroup>

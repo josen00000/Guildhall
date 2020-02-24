@@ -1,6 +1,9 @@
 #include "PolygonCollider2D.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Physics/DiscCollider2D.hpp"
+#include "Engine/Physics/RigidBody2D.hpp"
+#include "Engine/Math/Disc2.hpp"
+
 
 PolygonCollider2D::PolygonCollider2D( Polygon2 polygon )
 	:m_polygon(polygon)
@@ -15,7 +18,6 @@ PolygonCollider2D::PolygonCollider2D( std::vector <Vec2> points )
 	m_polygon = Polygon2( points );
 	m_worldPos = m_polygon.GetMassCenter();
 	m_type = COLLIDER2D_POLYGON;
-
 }
 
 PolygonCollider2D::PolygonCollider2D()
@@ -49,31 +51,39 @@ bool PolygonCollider2D::Contains( const Vec2& pos ) const
 	}
 }
 
-bool PolygonCollider2D::Intersects( const Collider2D* other ) const
+Disc2 PolygonCollider2D::GetWorldBounds() const
 {
-	switch( other->m_type )
-	{
-	case COLLIDER2D_DISC: {
-		DiscCollider2D* discCol = (DiscCollider2D*)other;
-		Vec2 closestPoint = GetClosestPoint( discCol->m_worldPosition );
-		float distSqr = GetDistanceSquared2D( closestPoint, discCol->m_worldPosition );
-		if( distSqr > (discCol->m_radius * discCol->m_radius) ) {
-			return false;
-		}
-		else {
-			return true;
-		}
-	}
-	case COLLIDER2D_POLYGON: {
-		return false;
-	}
-
-	default:
-		return false;
-	}
-	
-
+	Disc2 result;
+	result.m_center = m_worldPos;
+	result.m_radius = m_polygon.GetLongestDistance();
+	return result;
 }
+
+// bool PolygonCollider2D::Intersects( const Collider2D* other ) const
+// {
+// 	switch( other->m_type )
+// 	{
+// 	case COLLIDER2D_DISC: {
+// 		DiscCollider2D* discCol = (DiscCollider2D*)other;
+// 		Vec2 closestPoint = GetClosestPoint( discCol->m_worldPosition );
+// 		float distSqr = GetDistanceSquared2D( closestPoint, discCol->m_worldPosition );
+// 		if( distSqr > (discCol->m_radius * discCol->m_radius) ) {
+// 			return false;
+// 		}
+// 		else {
+// 			return true;
+// 		}
+// 	}
+// 	case COLLIDER2D_POLYGON: {
+// 		return false;
+// 	}
+// 
+// 	default:
+// 		return false;
+// 	}
+// 	
+// 
+//}
 
 void PolygonCollider2D::SetPosition( Vec2 pos )
 {

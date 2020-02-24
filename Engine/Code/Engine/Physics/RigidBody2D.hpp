@@ -24,13 +24,16 @@ private:
 public:
 	void Destroy();
 	
+	void Move( Vec2 displacement );
+
+
 	// Accessor
 	float GetMass() const { return m_mass; }
 	bool IsDestroied() const { return m_isDestroyed; }
 	Vec2 GetPosition() const { return m_worldPosition; }
 	Vec2 GetVelocity() const { return m_velocity; }
 	Collider2D* GetCollider() const { return m_collider; }
-	SimulationMode GetMode() const { return m_mode; }
+	SimulationMode GetSimulationMode() const { return m_mode; }
 	
 	// Mutator
 	void SetPosition( Vec2 position );
@@ -44,6 +47,8 @@ public:
 
 	void DisablePhysics();
 	void EnablePhysics();
+
+	void ApplyImpulse( Vec2 impulse, Vec2 point );
 	// help
 	void DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
 	void DebugRender( RenderContext* ctx );

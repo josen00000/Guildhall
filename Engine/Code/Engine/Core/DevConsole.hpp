@@ -28,7 +28,7 @@ class DevConsole
 
 
 public:
-	explicit DevConsole( BitmapFont* font);
+	explicit DevConsole( BitmapFont* font );
 	void Startup();
 	void BeginFrame();
 	void EndFrame();

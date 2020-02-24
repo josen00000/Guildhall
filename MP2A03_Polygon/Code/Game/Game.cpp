@@ -35,7 +35,7 @@ void Game::Startup()
 	m_isAppQuit		= false;
 	LoadAssets();
 	//BitmapFont* 
-	//g_theConsole = new DevConsole( testFont );
+	
 	//
 	//Vec2 polyPoints[5] ={ Vec2( 10, 10 ), Vec2( 20, 10 ), Vec2( 20, 20 ), Vec2( 15, 15 ), Vec2( 10, 20 )};
 	GenerateTempPoints();
@@ -64,7 +64,6 @@ void Game::Update( float deltaSeconds )
 	UpdateCamera( deltaSeconds );
 	UpdatePhysics( deltaSeconds );
 	UpdateGameObjects( deltaSeconds );
-	UpdateGameObjectsIntersect();
 }
 
 void Game::UpdatePhysics( float deltaSeconds )
@@ -216,11 +215,11 @@ void Game::HandleMouseInput()
 	}
 
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F ) ) {
-		//g_theConsole->SetIsOpen( true );
-		//g_theConsole->PrintString( Rgba8::RED, std::string( "isopen" ) );
+		g_theConsole->SetIsOpen( true );
+		g_theConsole->PrintString( Rgba8::RED, std::string( "isopen" ) );
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_C ) ) {
-		//g_theConsole->SetIsOpen( false );
+		g_theConsole->SetIsOpen( false );
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ) {
 		SetCameraToOrigin();
@@ -455,22 +454,15 @@ void Game::UpdateGameObjects( float deltaSeconds )
 
 		obj->Update( deltaSeconds );
 	}
-}
 
-void Game::UpdateGameObjectsIntersect()
-{
-	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
-		GameObject* obj = m_gameObjects[objIndex];
-		if( obj == nullptr ) { continue; }
-
-		obj->SetIntersect( false );
-
-		for( int objIndex1 = 0; objIndex1 < m_gameObjects.size(); objIndex1++ ) {
-			GameObject* obj1 = m_gameObjects[objIndex1];
-			if( obj1 == nullptr || objIndex1 == objIndex ){ continue; }
-			
-			obj1->CheckIntersectWith( obj );
+	if( m_gameObjects.size() > 2 ) {
+		GameObject* obj = m_gameObjects[2];
+		Vec2 vel = obj->m_rb->GetVelocity();
+		std::string debug = std::string( " Velocity is + " + std::to_string( vel.x ) + "  " + std::to_string( vel.y ) );
+		for( int i = 0; i < 10; i++ ){
+			g_theConsole->PrintString( Rgba8::RED, debug );
 		}
+
 	}
 }
 

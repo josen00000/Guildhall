@@ -27,6 +27,11 @@ void Rigidbody2D::Destroy()
 	m_collider->Destroy();
 }
 
+void Rigidbody2D::Move( Vec2 displacement )
+{
+	SetPosition( m_worldPosition + displacement );
+}
+
 void Rigidbody2D::SetCollider( Collider2D* collider )
 {
 	if( nullptr != m_collider ) {
@@ -85,6 +90,12 @@ void Rigidbody2D::DisablePhysics()
 void Rigidbody2D::EnablePhysics()
 {
 	m_isEnable = true;
+}
+
+void Rigidbody2D::ApplyImpulse( Vec2 impulse, Vec2 point )
+{
+	UNUSED(point);
+	m_velocity += impulse / m_mass;
 }
 
 void Rigidbody2D::SetPosition( Vec2 position )

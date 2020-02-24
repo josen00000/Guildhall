@@ -19,13 +19,13 @@ extern Camera*			g_camera;
 GameObject::GameObject( Vec2 pos, float radius )
 {
 	m_rb = g_thePhysics->CreateRigidbody( pos );
-	m_rb->SetCollider( g_thePhysics->CreateDiscCollider( pos, radius ) );
+	m_rb->SetCollider( g_thePhysics->CreateDiscCollider( pos, radius, m_rb ) );
 }
 
 GameObject::GameObject(  Polygon2 poly )
 {
 	m_rb = g_thePhysics->CreateRigidbody( poly.m_center );
-	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( poly );
+	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( poly, m_rb );
 	m_rb->SetCollider( polyCol );
 }
 
@@ -33,7 +33,7 @@ GameObject::GameObject( std::vector<Vec2> points )
 {
 	Polygon2 tempPoly = Polygon2( points );
 	m_rb = g_thePhysics->CreateRigidbody( tempPoly.m_center );
-	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( tempPoly );
+	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( tempPoly, m_rb );
 	if( !polyCol->m_polygon.IsConvex() ) {
 		GUARANTEE_OR_DIE( false, "Try to create a concave polygon!" );
 	}
@@ -45,7 +45,6 @@ GameObject::~GameObject()
 	m_rb->Destroy();
 	m_rb = nullptr;
 }
-
 
 void GameObject::CheckIfMouseIn( Vec2 mousePos )
 {
@@ -75,7 +74,6 @@ void GameObject::CheckIfMouseIn( Vec2 mousePos )
 		default:
 			break;
 	}
-	
 }
 
 void GameObject::CheckIfOutCameraVertical( Camera* camera )
@@ -147,13 +145,13 @@ void GameObject::Render() const
 	Collider2D* col = m_rb->GetCollider();
 	Rgba8 borderColor = Rgba8::BLUE;
 	Rgba8 FilledColor = Rgba8( 255, 255, 255, 128 );
-	if( m_rb->GetMode() == RIGIDBODY_STATIC ) {
+	if( m_rb->GetSimulationMode() == RIGIDBODY_STATIC ) {
 		borderColor = Rgba8( 128, 128, 128 );
 	}
-	if( m_rb->GetMode() == RIGIDBODY_KINEMATIC ) {
+	if( m_rb->GetSimulationMode() == RIGIDBODY_KINEMATIC ) {
 		borderColor = Rgba8( 255, 0, 255 );
 	}
-	if( m_rb->GetMode() == RIGIDBODY_DYNAMIC ) {
+	if( m_rb->GetSimulationMode() == RIGIDBODY_DYNAMIC ) {
 		borderColor = Rgba8::BLUE;
 	}
 	if( m_isMouseIn ) {
@@ -174,14 +172,14 @@ Vec2 GameObject::GetPosition() const
 	return m_rb->GetPosition();
 }
 
-void GameObject::CheckIntersectWith( GameObject* other ) 
-{
-	Collider2D* col = m_rb->GetCollider();
-	if( col->Intersects( other->m_rb->GetCollider() ) ) {
-		m_isIntersect = true;
-		other->SetIntersect( true );
-	}
-}
+// void GameObject::CheckIntersectWith( GameObject* other ) 
+// {
+// 	Collider2D* col = m_rb->GetCollider();
+// 	if( col->Intersects( other->m_rb->GetCollider() ) ) {
+// 		m_isIntersect = true;
+// 		other->SetIntersect( true );
+// 	}
+// }
 
 void GameObject::DisablePhysics() {
 	m_rb->DisablePhysics();

@@ -14,6 +14,8 @@ public:
 	// Accessor
 	Vec2 GetCenter() const { return m_center; }
 	float GetRadius() const { return m_radius; }
+	bool IsIntersectWith( Vec2 pos, float radius );
+	bool IsIntersectWith( Disc2 other );
 
 	//Mutator
 	void SetCenter( const Vec2& center );

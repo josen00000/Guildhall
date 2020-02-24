@@ -40,7 +40,6 @@ public:
 	void SetPosition( Vec2 pos );
 	void SetIntersect( bool isIntersect );
 
-	void CheckIntersectWith( GameObject* other ); 
 	void DisablePhysics();
 	void EnablePhysics();
 	void SetVelocity( Vec2 vel );

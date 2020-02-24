@@ -3,6 +3,7 @@
 #include "Engine/Physics/Collider2D.hpp"
 #include "Engine/Math/Polygon2.hpp"
 
+struct Disc2;
 
 class PolygonCollider2D : public Collider2D {
 public:
@@ -17,8 +18,9 @@ public:
 	// queries
 	virtual Vec2 GetClosestPoint( const Vec2& pos ) const override;
 	virtual bool Contains( const Vec2& pos ) const override;
-	virtual bool Intersects( const Collider2D* other) const override;
 
+	// Accessor
+	virtual Disc2 GetWorldBounds() const override; 
 
 	virtual void SetPosition( Vec2 pos ) override;
 
