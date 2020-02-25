@@ -11,7 +11,7 @@
 extern InputSystem*		g_theInputSystem;
 extern RenderContext*	g_theRenderer;
 
-std::vector<Command> DevConsole::s_commands;
+std::map<std::string, std::string> DevConsole::s_commands;
 
 DevConsole::DevConsole( BitmapFont* font, Camera* camera )
 	:m_font(font)
@@ -348,17 +348,17 @@ bool DevConsole::HasInput()
 
 void DevConsole::SubmitCommand()
 {
-	Command command = Command( m_inputs, "" );
+	std::string command = m_inputs;
 	ClearInput();
 	EndSelect();
 	int index;
-	if ( CheckIfCommandExist( command, index ) ){
+	if ( CheckIfCommandExist( command ) ){
 		RecordCommandInHistory( command );
 	}
 	ExecuteCommand( command	);
 }
 
-void DevConsole::ExecuteCommand( Command comd )
+void DevConsole::ExecuteCommand( std::string comd )
 {
 	EventArgs tempEventArgs;
 // 	if( command == "help" ){
@@ -375,26 +375,25 @@ void DevConsole::ExecuteCommand( Command comd )
 // 	}
 // 	
 // 	
-	if( comd.body == "test" || comd.body == "test1" || comd.body == "test2" ){
-		PrintString( m_defaultColor, comd.body + "test for history" );
+	if( comd == "test" || comd == "test1" || comd == "test2" ){
+		PrintString( m_defaultColor, comd + "test for history" );
 		return;
 	}
 	if( CheckIfCommandExist( comd ) ){
-		g_theEventSystem->FireTheEvent( comd.body, tempEventArgs );	
+		g_theEventSystem->FireTheEvent( comd, tempEventArgs );	
 	}
 	else{
 		LogErrorMessage();
 	}
 }
 
-void DevConsole::AddCommandToCommandList( Command comd, EventCallbackFunctionPtr funcPtr )
+void DevConsole::AddCommandToCommandList( std::string comd, std::string desc, EventCallbackFunctionPtr funcPtr )
 {
-	int index;
-	if( !CheckIfCommandExist( comd, index ) ) {
-		s_commands.push_back( comd );
+	if( !CheckIfCommandExist( comd ) ) {
+		s_commands[comd] = desc;
 	}
-	if( comd.body == "test" || comd.body == "test1" || comd.body == "test2" ){ return;}
-	g_theEventSystem->SubscribeTheEvent( comd.body, funcPtr );
+	if( comd == "test" || comd == "test1" || comd == "test2" ){ return;}
+	g_theEventSystem->SubscribeTheEvent( comd, funcPtr );
 }
 
 void DevConsole::ExecuteQuitFunction()
@@ -435,20 +434,20 @@ void DevConsole::UpdateHistoryIndex( int deltaIndex )
 	m_historyCommandIndex = ClampInt( 0, ( (int)m_commandsHistory.size() - 1 ), m_historyCommandIndex );
 }
 
-void DevConsole::RecordCommandInHistory( Command comd )
+void DevConsole::RecordCommandInHistory( std::string comd )
 {
 	int index;
 	if( CheckIfCommandExistInHistory( comd, index ) ){
 		DeleteCommandInHistory(  index );
 	}
-		m_commandsHistory.push_back( comd.body );
+		m_commandsHistory.push_back( comd );
 	
 }
 
-bool DevConsole::CheckIfCommandExistInHistory( Command comd, int& index )
+bool DevConsole::CheckIfCommandExistInHistory( std::string comd, int& index )
 {
 	for( index = 0; index < m_commandsHistory.size(); index++ ) {
-		if( m_commandsHistory[index] == comd.body ){
+		if( m_commandsHistory[index] == comd ){
 			return true;
 		}
 	}
@@ -456,36 +455,17 @@ bool DevConsole::CheckIfCommandExistInHistory( Command comd, int& index )
 	return false;
 }
 
-bool DevConsole::CheckIfCommandExist( Command comd, int& index )
+bool DevConsole::CheckIfCommandExist( std::string comd )
 {
-	for( index = 0; index < s_commands.size(); index++ ) {
-		Command& tempComd = s_commands[index];
-		if( CheckIfCommandEqual( tempComd, comd ) ) {
-			return true;
-		}
-	}
-	return false;
-}
-
-bool DevConsole::CheckIfCommandExist( Command comd )
-{
-	for( int index = 0; index < s_commands.size(); index++ ) {
-		Command& tempComd = s_commands[index];
-		if( CheckIfCommandEqual( tempComd, comd ) ) {
-			return true;
-		}
-	}
-	return false;
-}
-
-bool DevConsole::CheckIfCommandEqual( Command a, Command b )
-{
-	if( a.body == b.body ){
+	auto it = s_commands.find( comd );
+	if( it != s_commands.end() ) {
 		return true;
-	} 
-
-	return false;
+	}
+	else {
+		return false;
+	}
 }
+
 
 void DevConsole::DeleteCommandInHistory( int index )
 {
@@ -500,8 +480,7 @@ void DevConsole::LoadHistory()
 		std::string line;
 		while ( getline( myFile, line ) )
 		{
-			Command comd = Command( line, "" );
-			RecordCommandInHistory( comd );
+			RecordCommandInHistory( line );
 		}
 		myFile.close();
 	}
@@ -511,7 +490,7 @@ void DevConsole::LoadHistory()
 void DevConsole::SaveHistoryToFile()
 {
 	std::ofstream myFile;
-	myFile.open( "./Data/DevConsole/History.txt", std::ofstream::app );
+	myFile.open( "./Data/DevConsole/History.txt" );
 	if( !myFile.fail() ){
 		for( int comIndex = 0; comIndex < m_commandsHistory.size(); comIndex++ ){
 			myFile << m_commandsHistory[comIndex] << std::endl;

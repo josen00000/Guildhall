@@ -61,10 +61,8 @@ public:
 	// Command
 	void SubmitCommand();
 	void ExecuteCommand( std::string comd );
-	static bool CheckIfCommandExist( std::string comd, int& index );
 	static bool CheckIfCommandExist( std::string comd );
-	static void AddCommandToCommandList( std::string comd, EventCallbackFunctionPtr funcPtr );
-	static bool CheckIfCommandEqual( std::string a, std::string b );
+	static void AddCommandToCommandList( std::string comd, std::string desc, EventCallbackFunctionPtr funcPtr );
 	void ExecuteQuitFunction();
 	void LogErrorMessage();
 

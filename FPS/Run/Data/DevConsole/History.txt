@@ -16,3 +16,8 @@ help
 test1
 test
 quit
+test
+help
+test1
+test2
+quit

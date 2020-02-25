@@ -47,21 +47,25 @@ void App::Startup()
 	g_theConsole->PrintString( Rgba8::RED, std::string( "test ") );
 	g_theConsole->Startup();
 
-	Command helpComd = Command( "help", "List all commands in devConsole." );
-	Command quitComd = Command( "quit", "Quit the app." );
-	Command testComd = Command( "test", "test for command history1." );
-	Command testComd1 = Command( "test1", "test for command history1." );
-	Command testComd2 = Command( "test2", "test for command history1." );
-
-
+	std::string helpComd = std::string( "help" ); 
+	std::string quitComd = std::string( "quit" );
+	std::string testComd = std::string( "test" );
+	std::string testComd1 = std::string( "test1" );
+	std::string testComd2 = std::string( "test2" );
+	
+	std::string helpComdDesc = std::string( "List all commands in devConsole." );
+	std::string quitComdDesc = std::string( "Quit the app." );
+	std::string testComdDesc = std::string( "test for command history1." );
+	std::string testComd1Desc = std::string( "test for command history1." );
+	std::string testComd2Desc = std::string( "test for command history1." );
 
 	EventCallbackFunctionPtr helpFuncPtr = HelpCommandEvent;
 	EventCallbackFunctionPtr quitFuncPtr = QuitCommandEvent;
-	g_theConsole->AddCommandToCommandList( helpComd, helpFuncPtr );
-	g_theConsole->AddCommandToCommandList( quitComd, quitFuncPtr );
-	g_theConsole->AddCommandToCommandList( testComd, nullptr );
-	g_theConsole->AddCommandToCommandList( testComd1, nullptr );
-	g_theConsole->AddCommandToCommandList( testComd2, nullptr );
+	g_theConsole->AddCommandToCommandList( helpComd, helpComdDesc, helpFuncPtr );
+	g_theConsole->AddCommandToCommandList( quitComd, quitComdDesc, quitFuncPtr );
+	g_theConsole->AddCommandToCommandList( testComd, testComdDesc, nullptr );
+	g_theConsole->AddCommandToCommandList( testComd1, testComd1Desc, nullptr );
+	g_theConsole->AddCommandToCommandList( testComd2, testComd2Desc, nullptr );
 }
 
 void App::Shutdown()
@@ -194,9 +198,9 @@ bool QuitCommandEvent( EventArgs& args )
 bool HelpCommandEvent( EventArgs& args )
 {
 	UNUSED(args);
-	for( int comdIndex = 0; comdIndex < DevConsole::s_commands.size(); comdIndex++ ) {
-		Command comd = DevConsole::s_commands[comdIndex];
-		std::string displayString = comd.body + ":  " + comd.desc;
+	for( auto it = DevConsole::s_commands.begin(); it != DevConsole::s_commands.end(); ++it ){
+		std::string comd = it->first;
+		std::string displayString = comd + ": " + it->second;
 		g_theConsole->PrintString( g_theConsole->m_defaultColor, displayString );
 	}
 	return true;
