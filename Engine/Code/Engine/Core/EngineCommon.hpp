@@ -1,17 +1,21 @@
 #pragma once
-//Engine code that almost every need to see.
-#include "Rgba8.hpp"
-#include "Vertex_PCU.hpp"
-#include "ErrorWarningAssert.hpp"
-#include "StringUtils.hpp"
 #include "Engine/Core/DevConsole.hpp"
+#include "Engine/Core/ErrorWarningAssert.hpp"
+#include "Engine/Core/EventSystem.hpp"
+#include "Engine/Core/Rgba8.hpp"
+#include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Core/NamedStrings.hpp"
 
 #define UNUSED(x) (void)(x);
-extern DevConsole* g_theConsole;
-typedef unsigned int unint;
 
+typedef unsigned int uint;
+typedef unsigned char byte;
+
+extern DevConsole* g_theConsole;
+extern EventSystem* g_theEventSystem;
+extern BitmapFont* g_defaultFont;
 extern NamedStrings g_gameConfigBlackboard;
 
 const Vec2 ALIGN_BOTTOM_LEFT	= Vec2( 0.f, 0.f);

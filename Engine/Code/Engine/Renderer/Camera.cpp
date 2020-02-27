@@ -1,64 +1,63 @@
 ﻿#pragma once
 #include <windows.h>
+#include "Camera.hpp"
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Renderer/Camera.hpp"
+#include "Engine/Core/Rgba8.hpp"
+#include "Engine/Renderer/RenderBuffer.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 
-// the bot_left and top_right seems to be redundant
-//
-// 
 
-extern HWND g_hWnd;
-
-Camera::Camera(const Camera& camera)
-	:m_position(camera.m_position)
-	,m_outputSize(camera.m_outputSize)
-{
-}
-
+//extern HWND g_hWnd;
 
 Camera::Camera( const Vec2& bottomLeft, const Vec2& topRight )
 {
 	SetOrthoView( bottomLeft, topRight );
 }
 
-void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight )
+Camera::~Camera()
 {
-	m_position.x = ( topRight.x - bottomLeft.x ) / 2;
-	m_position.y = ( topRight.y - bottomLeft.y ) / 2;
-	m_position.z = 0.f;
-	m_outputSize = Vec2( ( topRight.x - bottomLeft.x ), ( topRight.y - bottomLeft.y ) );
+	if( m_cameraUBO != nullptr ) {
+		delete m_cameraUBO;
+		m_cameraUBO = nullptr;
+	}
 }
 
-Vec2 Camera::GetOrthoBottomLeft() const
-{
-	Vec2 pos = Vec2( m_position );
-	return pos - ( m_outputSize / 2 );
-}
 
-Vec2 Camera::GetOrthoTopRight() const
-{
-	Vec2 pos = Vec2( m_position);
-	return pos + ( m_outputSize / 2 );
-}
-
-Vec2 Camera::GetPosition() const
-{
-	return m_position;
-}
-
-float Camera::GetHeight() const
+// Accessor
+float Camera::GetCameraHeight() const
 {
 	return m_outputSize.y;
 }
 
-float Camera::GetWidth() const
+float Camera::GetCameraWidth() const
 {
 	return m_outputSize.x;
 }
 
 float Camera::GetAspectRatio() const
 {
-	return ( m_outputSize.x / m_outputSize.y );
+	return (m_outputSize.x / m_outputSize.y);
+}
+
+Vec2 Camera::GetOrthoBottomLeft() const
+{
+	Vec2 bottomLeft;
+	bottomLeft.x = m_position.x - ( m_outputSize.x / 2 );
+	bottomLeft.y = m_position.y - ( m_outputSize.y / 2 );
+	return bottomLeft;
+}
+
+Vec2 Camera::GetOrthoTopRight() const
+{
+	Vec2 topRight;
+	topRight.x = m_position.x + (m_outputSize.x / 2 );
+	topRight.y = m_position.y + (m_outputSize.y / 2 );
+	return topRight;
+}
+
+Vec3 Camera::GetPosition() const
+{
+	return m_position;
 }
 
 AABB2 Camera::GetCameraBox() const
@@ -67,33 +66,24 @@ AABB2 Camera::GetCameraBox() const
 	return result;
 }
 
-void Camera::SetPosition( const Vec3& position )
+RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx )
 {
-	m_position = position;
+	if( m_cameraUBO == nullptr ) {
+		m_cameraUBO = new RenderBuffer( ctx, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	}
+	UpdateCameraUBO();
+	return m_cameraUBO;
 }
 
-void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f */ )
-{
-	UNUSED(nearZ);
-	UNUSED(farZ);
-	float aspectRatio = GetAspectRatio();
-	SetOutputSize( aspectRatio, height );
-}
 
-Vec2 Camera::ClientToWorldPosition( Vec2 clientPos )
+// Mutator
+void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight )
 {
-	Vec2 worldPos;
-	Vec2 outputDimensions = m_outputSize;
-	RECT clientRect;
-	GetClientRect( g_hWnd, &clientRect );
-	AABB2 clientBounds( (float)clientRect.left, (float)clientRect.bottom, (float)clientRect.right, (float)clientRect.top );
-	Vec2 normalizedPos = clientBounds.GetUVForPoint( clientPos );
-	normalizedPos.x = ClampZeroToOne( normalizedPos.x );
-	normalizedPos.y = ClampZeroToOne( normalizedPos.y );
-	
-	AABB2 orthoBounds( GetOrthoBottomLeft(), GetOrthoTopRight() );
-	worldPos = orthoBounds.GetPointAtUV( normalizedPos );
-	return worldPos;
+	m_position.x = ( topRight.x + bottomLeft.x ) / 2;
+	m_position.y = ( topRight.y + bottomLeft.y ) / 2;
+	m_outputSize.x = topRight.x - bottomLeft.x;
+	m_outputSize.y = topRight.y - bottomLeft.y;
+	m_projection = Mat44::CreateOrthographicProjection( Vec3( bottomLeft, 0.0f ), Vec3( topRight, 1.0f ) );
 }
 
 void Camera::SetOutputSize( Vec2 size )
@@ -107,6 +97,64 @@ void Camera::SetOutputSize( float aspectRatio, float height )
 	m_outputSize.y = height;
 }
 
+void Camera::SetPosition( const Vec3& position )
+{
+	m_position = position;
+	SetOrthoView( GetOrthoBottomLeft(), GetOrthoTopRight() );
+}
+
+void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f */ )
+{
+	UNUSED(nearZ);
+	UNUSED(farZ);
+	float aspectRatio = GetAspectRatio();
+	SetOutputSize( aspectRatio, height );
+}
+
+void Camera::SetShouldClearColor( bool shouldClearColor )
+{
+	m_shouldClearColor = shouldClearColor;
+}
+
+void Camera::SetClearMode( unsigned int clearFlags, Rgba8 color, float depth /*= 0.0f */, unsigned int stencil /*= 0 */ )
+{
+	m_clearMode = clearFlags;
+	m_clearColor = color;
+	UNUSED( depth );
+	UNUSED( stencil );
+}
+
+void Camera::SetColorTarget( Texture* colorTarget )
+{
+	m_colorTarget = colorTarget;
+}
+
+void Camera::UpdateCameraUBO()
+{
+	camera_ortho_t cameraData;
+	cameraData.projection = m_projection;
+	Mat44 tempTest = Mat44::CreateTranslation3D( m_position );
+	cameraData.view = Mat44::CreateTranslation3D( -m_position );
+	m_cameraUBO->Update( &cameraData, sizeof( cameraData ), sizeof( cameraData ) );
+}
+
+Vec2 Camera::ClientToWorldPosition( Vec2 clientPos )
+{
+ 	Vec2 worldPos;
+// 	Vec2 outputDimensions = m_outputSize;
+// 	RECT clientRect;
+// 	GetClientRect( g_hWnd, &clientRect );
+// 	AABB2 clientBounds( (float)clientRect.left, (float)clientRect.bottom, (float)clientRect.right, (float)clientRect.top );
+	clientPos.x = ClampZeroToOne( clientPos.x );
+	clientPos.y = ClampZeroToOne( clientPos.y );
+
+	AABB2 orthoBounds( GetOrthoBottomLeft(), GetOrthoTopRight() );
+	worldPos = orthoBounds.GetPointAtUV( clientPos );
+	return worldPos;
+}
+
+
+// Private
 Vec2 Camera::GetOrthoMin() const
 {
 	return ( Vec2( m_position ) - ( m_outputSize / 2 ) );

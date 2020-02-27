@@ -24,6 +24,9 @@
     </Filter>
     <Filter Include="Math\shape">
       <UniqueIdentifier>{332bf928-b622-4b13-8232-f668158f8219}</UniqueIdentifier>
+	</Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{d20bfacb-6c29-4f9d-97ce-444d001c6111}</UniqueIdentifier>
     </Filter>
     <Filter Include="Math\basic">
       <UniqueIdentifier>{3fc03a6a-ecaf-42bf-a0d9-0247a75a0318}</UniqueIdentifier>
@@ -188,6 +191,27 @@
     </ClCompile>
     <ClCompile Include="Physics\PhysicsMaterial.cpp">
       <Filter>Physic</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\Window.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\SwapChain.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\TextureView.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Shader.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\RenderBuffer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\VertexBuffer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Sampler.cpp">
+      <Filter>Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -373,6 +397,33 @@
     </ClInclude>
     <ClInclude Include="Physics\PhysicsMaterial.hpp">
       <Filter>Physic</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform\Window.hpp">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\SwapChain.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\D3D11Common.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\TextureView.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Shader.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\RenderBuffer.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\VertexBuffer.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\RenderCommon.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Sampler.hpp">
+      <Filter>Renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

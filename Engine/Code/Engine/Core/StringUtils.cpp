@@ -133,3 +133,15 @@ bool GetBoolFromText( const char* text )
 	ERROR_AND_DIE(" bool format error");
 }
 
+std::string GetStringFromBool( bool input )
+{
+	std::string result;
+	if( input ) {
+		result = "true";
+	}
+	else {
+		result = "false";
+	}
+	return result;
+}
+

@@ -14,7 +14,7 @@ public:
 	~Vec3(){}
 	Vec3(const Vec3&copyFrom);
 	explicit Vec3(float initialX,float initialY,float initialZ);
-	Vec3(const Vec2& copyFromVec2,float initialZ=0);
+	Vec3(const Vec2& copyFromVec2,float initialZ=0 );
 	// Accessors(const methods)
 	float GetLength() const;
 	float GetLengthXY() const;
@@ -49,5 +49,9 @@ public:
 
 																// Standalone "friend" functions that are conceptually, but not actually, part of Vec3::
 	friend const Vec3 operator*( float uniformScale, const Vec3& vecToScale );	// float * Vec3
-
+	
+	// static variable
+	static Vec3 ZERO;
+	static Vec3 ONE;
+	static Vec3 CENTER;
 };

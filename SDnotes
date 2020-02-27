@@ -1,0 +1,28 @@
+SD D3D node
+GetFrameColorTarget(); // get swapchains backbuffer
+target: things to drawing on. where
+have camera then draw: begin camera call bindshader.
+vertex buffer data of what we draw
+
+bufferformattype mapping to d3d data
+
+static_cast vs dynamic_cast vs reinterpret
+float a = 2.0f;
+int i = static_cast<int>(a); // know able to cast at compile time. need to be support
+
+int i = reinterpret<int>(a); // preserve the bit of the old value i = 1073741824
+
+int i = dynamic_cast<C>(a); // for polymorphisam safe only works for RTTI
+                            // RTTI:runtime type information
+
+pipeline
+swapchain Vectex buffer drawing to
+IA: Create buffer and copy data into it
+    Copy memory to GPU
+VS:
+    take in data, modify, forward
+
+Shader stage:
+acturally the shader step used
+pixel shader = fragment shader
+present: to window

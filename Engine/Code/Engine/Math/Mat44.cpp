@@ -606,3 +606,23 @@ const Mat44 Mat44::CreateNonUniformScale3D( const Vec3& scaleFactorsXYZ )
 	temResult.m_values[Kz] = scaleFactorsXYZ.z;
 	return temResult;
 }
+
+const Mat44 Mat44::CreateOrthographicProjection( const Vec3& min, const Vec3& max )
+{
+	//TODO
+	//ndc.x =  ( x - min.x ) / ( max.x - min.x ) * ( 1.0f - (-1.0f)) + (-1)
+	//ndc.x = x / ( max.x - min.x ) - ( min.x / (max.x - min.x )) * 2.0f + (-1.0f);
+	// a = 1.0f /(max.x - min.x )
+	// b = ( -2.0f * min.x - max.x + min.x) / (max.x - min.x)
+	// 
+	Vec3 diff = max - min;
+	Vec3 sum = max + min;
+
+	float mat[] = {
+		2.0f / diff.x,		0.0f,				0.0f,				0.0f,
+		0.0f,				2.0f / diff.y,		0.0f,				0.0f,
+		0.0f,				0.0f,				1.0f / diff.z,		0.0f,
+		-sum.x / diff.x,	-sum.y / diff.y,	-min.z / diff.z,	1.0f
+	};
+	return Mat44( mat );
+}

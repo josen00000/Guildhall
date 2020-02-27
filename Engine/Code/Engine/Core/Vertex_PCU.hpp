@@ -1,14 +1,18 @@
 #pragma once
-#include<Engine/Math/Vec3.hpp>
-#include<Engine/Math/vec2.hpp>
-#include<Engine/Core/Rgba8.hpp>
 #include<vector>
+#include "Engine/Core/Rgba8.hpp"
+#include "Engine/Math/Vec3.hpp"
+#include "Engine/Math/vec2.hpp"
+
+struct buffer_attribute_t;
+
 struct Vertex_PCU {
 public:
 	Vec3 m_pos=Vec3();
 	Vec2 m_uvTexCoords = Vec2();
 	Rgba8 m_color= Rgba8();
 
+	static buffer_attribute_t s_layout[]; 
 public:
 	Vertex_PCU(){}
 	~Vertex_PCU(){}

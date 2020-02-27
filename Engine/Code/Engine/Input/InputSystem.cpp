@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "InputSystem.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/MathUtils.hpp"
@@ -7,7 +8,6 @@
 #include "Engine/Input/KeyBoardController.hpp"
 #include "Engine/input/MouseController.hpp"
 
-extern HWND g_hWnd;
 
 void InputSystem::Startup()
 {
@@ -52,18 +52,19 @@ IntVec2 InputSystem::GetMouseRawDesktopPos() const
 
 Vec2 InputSystem::GetNormalizedMousePos() const
 {
-	POINT screenMousePos;
-	GetCursorPos( &screenMousePos );
-	ScreenToClient( g_hWnd, &screenMousePos );
-	Vec2 mouseClientPos( (float) screenMousePos.x, (float) screenMousePos.y );
-
-	RECT clientRect;
-	GetClientRect( g_hWnd, &clientRect );
-	AABB2 clientBounds( (float)clientRect.left, (float)clientRect.bottom, (float)clientRect.right, (float)clientRect.top ); //need to check the contrustor
-	Vec2 mouseNormalizedPos = clientBounds.GetUVForPoint( mouseClientPos );
-	mouseNormalizedPos.x = ClampZeroToOne( mouseNormalizedPos.x );
-	mouseNormalizedPos.y = ClampZeroToOne( mouseNormalizedPos.y );
-	return mouseNormalizedPos;	
+// 	POINT screenMousePos;
+// 	GetCursorPos( &screenMousePos );
+// 	ScreenToClient( g_hWnd, &screenMousePos );
+// 	Vec2 mouseClientPos( (float) screenMousePos.x, (float) screenMousePos.y );
+// 
+// 	RECT clientRect;
+// 	GetClientRect( g_hWnd, &clientRect );
+// 	AABB2 clientBounds( (float)clientRect.left, (float)clientRect.bottom, (float)clientRect.right, (float)clientRect.top ); //need to check the contrustor
+// 	Vec2 mouseNormalizedPos = clientBounds.GetUVForPoint( mouseClientPos );
+// 	mouseNormalizedPos.x = ClampZeroToOne( mouseNormalizedPos.x );
+// 	mouseNormalizedPos.y = ClampZeroToOne( mouseNormalizedPos.y );
+// 	return mouseNormalizedPos;	
+	return Vec2::ZERO;
 }
 
 
@@ -139,5 +140,29 @@ bool InputSystem::WasKeyJustReleased( unsigned char keyCode ) const
 {
 	const KeyButtonState& temButtonState = m_keyBoardController->m_buttonStates[keyCode];
 	return temButtonState.WasJustReleased();
+}
+
+void InputSystem::PushCharacter( char character )
+{
+	m_characters.push( character );	
+}
+
+bool InputSystem::PopCharacter( char* out )
+{
+	if( m_characters.empty() ){
+		return false;
+	}
+	else {
+		*out = m_characters.front();
+		m_characters.pop();
+		return true;
+	}
+}
+
+void InputSystem::ClearCharacters()
+{
+	while( !m_characters.empty() ) {
+		m_characters.pop();
+	}
 }
 

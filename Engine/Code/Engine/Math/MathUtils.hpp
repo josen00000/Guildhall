@@ -91,6 +91,7 @@ float ClampFloat(float inMin,float inMax,float inValue);
 float temClampFloat(float inValue, float inMin, float inMax);
 float ClampZeroToOne(float value);
 float Round(float value);
+int ClampInt( int inMin, int inMax, int inValue );
 int RoundDownToInt(float value);
 int RountToNearestInt(float value); 
 int GetIntFromText(const char* text);
