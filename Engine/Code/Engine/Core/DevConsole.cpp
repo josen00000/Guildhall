@@ -351,7 +351,6 @@ void DevConsole::SubmitCommand()
 	std::string command = m_inputs;
 	ClearInput();
 	EndSelect();
-	int index;
 	if ( CheckIfCommandExist( command ) ){
 		RecordCommandInHistory( command );
 	}

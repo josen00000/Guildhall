@@ -27,10 +27,10 @@ public:
 public:
 	//Construction
 	Mat44();
-	explicit Mat44(float* sixteenValuesBasisMajor);
-	explicit Mat44(const Vec2& iBasis2D, const Vec2& jBasis2D, const Vec2& translation2D);
-	explicit Mat44(const Vec3& iBasis3D, const Vec3& jBasis3D, const Vec3& kBasis3D, const Vec3& translation3D);
-	explicit Mat44(const Vec4& iBasisHomogeneous, const Vec4& jBasisHomogeneous, const Vec4& kBasisHomogeneous, const Vec4& translationHomogeneous);
+	explicit Mat44( float* sixteenValuesBasisMajor );
+	explicit Mat44( const Vec2& iBasis2D, const Vec2& jBasis2D, const Vec2& translation2D );
+	explicit Mat44( const Vec3& iBasis3D, const Vec3& jBasis3D, const Vec3& kBasis3D, const Vec3& translation3D );
+	explicit Mat44( const Vec4& iBasisHomogeneous, const Vec4& jBasisHomogeneous, const Vec4& kBasisHomogeneous, const Vec4& translationHomogeneous );
 
 
 	// Transforming positions & vector quantities using this matrix;
@@ -74,7 +74,7 @@ public:
 	void ScaleNonUniform2D( const Vec2& ScaleFactorsXY);
 	void ScaleUniform3D( float uniformScaleXYZ);
 	void ScaleNonUniform3D( const Vec3& scaleFactorsXYZ);
-	void TransformBy(const Mat44& arbitraryTransFormationToAppend);
+	void Multiply(const Mat44& arbitraryTransFormationToAppend);
 	
 	// Static creation methods to create a matrix of a certain transformation type
 	static const Mat44		CreateXRotationDegrees( float degreesAboutX);
@@ -87,9 +87,22 @@ public:
 	static const Mat44		CreateUniformScale3D( float uniformScale3D);
 	static const Mat44		CreateNonUniformScale3D( const Vec3& scaleFactorsXYZ);
 
+	// Transpose and Invert
+	void TransposeMatrix();
+	void MatrixInvert();
+	bool IsMatrixOrthoNormal() const;
+	Mat44 GetTransposeMatrix() const;
+	Mat44 GetInvertMatrix() const;
+
 	// Projection
-	static const Mat44 CreateOrthographicProjection( const Vec3& min, const Vec3& max );
+	static const Mat44 CreateOrthographicProjectionMatrix( const Vec3& min, const Vec3& max );
+	static const Mat44 CreatePersectiveProjectionMatrix( float fovDegrees, float aspectRadio, float nearZ, float farZ );
+
 private:
-	const Mat44 operator*(const Mat44& rhs) const = delete;
+	// Transpose and Invert
+	void MatrixInvertOrthoNormal();
+	void MatrixGeneralInvert();
+	Mat44 GetGeneralInvertMatrix() const;
+	const Mat44 operator*( const Mat44& rhs ) const = delete;
 };
 

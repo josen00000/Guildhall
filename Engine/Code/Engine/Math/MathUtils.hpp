@@ -1,5 +1,6 @@
 #pragma once
 #include<vector>
+
 struct Vec2;
 struct Vec3;
 struct Vertex_PCU;
@@ -7,8 +8,7 @@ struct AABB2;
 struct OBB2;
 struct IntVec2;
 struct FloatRange;
-
-
+struct Mat44;
 
 //
 //Angle utilities
@@ -20,7 +20,6 @@ float	SinDegrees( const float degrees );
 float	Atan2Degrees( const float y,const float x );
 float	ClampDegressTo360( float degrees );
 Vec2	GetNormalDirectionWithDegrees( const float degrees );
-
 
 //
 //basic 2D & 3D utilities
@@ -67,9 +66,6 @@ bool IsPointInsideAABB2D( const Vec2& point, const AABB2& box );
 bool IsPointInSector(const Vec2& point, const Vec2& center, float radius, Vec2 fwdDir, float apertureDegrees );
 bool IsPointInDisc(const Vec2& point, const Vec2& center, float radius);
 
-
-
-
 void PushDiscOutOfDisc2D(Vec2& centerIn, float radiuIn, const Vec2&centerFix, float radiuFix);
 void PushDiscsOutOfEachOther2D(Vec2& center1, float radiu1, Vec2& center2, float radiu2);
 void PushDiscOutOfPoint2D(Vec2& center, float radiu, const Vec2& point);
@@ -79,7 +75,6 @@ float GetProjectedLength2D(const Vec2& sourceVector, const Vec2& ontoVector);
 const Vec2 GetProjectedOnto2D(const Vec2& sourceVector, const Vec2& ontoVector);
 bool IsPointInForwardSector2D(const Vec2& point, const Vec2& observerPos, float forwardDegrees, float apertureDegrees, float maxDist);
 float GetAngleDegreesBetweenVectors2D(const Vec2& vectorA, const Vec2& vectorB);
-
 
 
 //
@@ -98,19 +93,17 @@ int GetIntFromText(const char* text);
 float GetFloatFromText(const char* text);
 
 //
-//
+// Dot product
 // 
 float DotProduct2D(const Vec2 a, const Vec2 b);
-
-
 
 //
 //Geometric query utilities
 //
-
 const bool DoDiscsOverlap(const Vec2&centerA,float radiusA,const Vec2& centerB, float radiusB);
 const bool DoSpheresOverlap(const Vec3& centerA, float radiusA, const Vec3& centerB,float radiusB);
 const bool DoLineOverlap(const Vec2& centerA, float radiusA,float lineParameterA,float lineParameterB, float lineParameterC);
+
 //
 //Transform utilities
 //
@@ -123,3 +116,10 @@ const std::vector<Vertex_PCU> TransformVertexArray(const std::vector<Vertex_PCU>
 
 //Pos
 IntVec2 TransformFromWorldPosToTilePos(const Vec2 worldPos);
+
+//
+// Almost Check
+// 
+bool IsFloatMostlyEqual( float a, float b, float epsilon=0.001f );
+bool IsVec2MostlyEqual( Vec2 a, Vec2 b, float epsilon=0.001f );
+bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon=0.001f );

@@ -41,5 +41,8 @@
     <FxCompile Include="..\..\Run\Data\Shader\Triangle.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\Default.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

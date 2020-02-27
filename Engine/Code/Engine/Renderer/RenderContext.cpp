@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include "Engine/stb_image.h"
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Math/AABB2.hpp"
@@ -9,6 +8,7 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
+#include "Engine/Renderer/GPUMesh.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Sampler.hpp" 
@@ -17,8 +17,10 @@
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
-#include "Engine\Core\Time.hpp"
+#include "Engine/Core/Time.hpp"
+
 //third party library
+#include "Engine/stb_image.h"
 
 
 
@@ -280,6 +282,16 @@ void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 	ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout(/* Vertex_PCU::LAYOUT*/); // Vertex 
 	m_context->IASetInputLayout( inputLayout );
 	m_context->Draw( numVertexes, vertexOffset ); // what is vertexOffset
+}
+
+void RenderContext::DrawIndexed( int indexCount, int indexOffset /*= 0*/, int vertexOffset /*= 0 */ )
+{
+
+}
+
+void RenderContext::DrawMesh( GPUMesh* mesh )
+{
+
 }
 
 Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )

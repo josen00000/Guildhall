@@ -4,8 +4,7 @@
 #include "Engine/Math/Vec4.hpp"
 
 
-
-
+Mat44 Mat44::IDENTITY = Mat44();
 
 
 Mat44::Mat44()
@@ -391,7 +390,7 @@ void Mat44::RotateXDegrees( float degreesAboutX )
 	temRotate.m_values[Ky] = -sinDegrees;
 	temRotate.m_values[Kz] = cosDegrees;
 
-	TransformBy(temRotate);
+	Multiply( temRotate );
 }
 
 void Mat44::RotateYDegrees( float degreesAboutY )
@@ -404,7 +403,7 @@ void Mat44::RotateYDegrees( float degreesAboutY )
 	temRotate.m_values[Kx] = sinDegrees;
 	temRotate.m_values[Kz] = cosDegrees;
 
-	TransformBy( temRotate );
+	Multiply( temRotate );
 
 }
 
@@ -418,7 +417,7 @@ void Mat44::RotateZDegrees( float degreesAboutZ )
 	temRotate.m_values[Jx] = -sinDegrees;
 	temRotate.m_values[Jy] = cosDegrees;
 
-	TransformBy( temRotate );
+	Multiply( temRotate );
 
 }
 
@@ -428,7 +427,7 @@ void Mat44::Translate2D( const Vec2& translationXY )
 	temTranslate.m_values[Tx] = translationXY.x;
 	temTranslate.m_values[Ty] = translationXY.y;
 
-	TransformBy(temTranslate);
+	Multiply(temTranslate);
 }
 
 void Mat44::Translate3D( const Vec3& translation3D )
@@ -438,7 +437,7 @@ void Mat44::Translate3D( const Vec3& translation3D )
 	temTranslate.m_values[Ty] = translation3D.y;
 	temTranslate.m_values[Tz] = translation3D.z;
 
-	TransformBy( temTranslate );
+	Multiply( temTranslate );
 }
 
 void Mat44::ScaleUniform2D( float uniformScaleXY )
@@ -447,7 +446,7 @@ void Mat44::ScaleUniform2D( float uniformScaleXY )
 	temScale.m_values[Ix] = uniformScaleXY;
 	temScale.m_values[Jy] = uniformScaleXY;
 
-	TransformBy(temScale);
+	Multiply(temScale);
 }
 
 void Mat44::ScaleNonUniform2D( const Vec2& ScaleFactorsXY )
@@ -456,7 +455,7 @@ void Mat44::ScaleNonUniform2D( const Vec2& ScaleFactorsXY )
 	temScale.m_values[Ix] = ScaleFactorsXY.x;
 	temScale.m_values[Jy] = ScaleFactorsXY.y;
 
-	TransformBy( temScale );
+	Multiply( temScale );
 }
 
 void Mat44::ScaleUniform3D( float uniformScaleXYZ )
@@ -466,7 +465,7 @@ void Mat44::ScaleUniform3D( float uniformScaleXYZ )
 	temScale.m_values[Jy] = uniformScaleXYZ;
 	temScale.m_values[Kz] = uniformScaleXYZ;
 
-	TransformBy( temScale );
+	Multiply( temScale );
 
 }
 
@@ -477,11 +476,11 @@ void Mat44::ScaleNonUniform3D( const Vec3& scaleFactorsXYZ )
 	temScale.m_values[Jy] = scaleFactorsXYZ.y;
 	temScale.m_values[Kz] = scaleFactorsXYZ.z;
 
-	TransformBy( temScale );
+	Multiply( temScale );
 
 }
 
-void Mat44::TransformBy( const Mat44& arbitraryTransFormationToAppend )
+void Mat44::Multiply( const Mat44& arbitraryTransFormationToAppend )
 {
 	Mat44 tem = arbitraryTransFormationToAppend;
 	Mat44 temResult;
@@ -607,7 +606,89 @@ const Mat44 Mat44::CreateNonUniformScale3D( const Vec3& scaleFactorsXYZ )
 	return temResult;
 }
 
-const Mat44 Mat44::CreateOrthographicProjection( const Vec3& min, const Vec3& max )
+void Mat44::TransposeMatrix()
+{
+	Mat44 temp = *this;
+	// I
+	m_values[Iy] = temp.m_values[Jx];
+	m_values[Iz] = temp.m_values[Kx];
+	m_values[Iw] = temp.m_values[Tx];
+	// J
+	m_values[Jx] = temp.m_values[Iy];
+	m_values[Jz] = temp.m_values[Ky];
+	m_values[Jw] = temp.m_values[Ty];
+	// K
+	m_values[Kx] = temp.m_values[Iz];
+	m_values[Ky] = temp.m_values[Jz];
+	m_values[Kw] = temp.m_values[Tz];
+	// T
+	m_values[Tx] = temp.m_values[Iw];
+	m_values[Ty] = temp.m_values[Jw];
+	m_values[Tz] = temp.m_values[Kw];
+}
+
+void Mat44::MatrixInvertOrthoNormal()
+{
+	TransposeMatrix();
+}
+
+void Mat44::MatrixInvert()
+{
+	if( IsMatrixOrthoNormal() ){
+		MatrixInvertOrthoNormal();
+		return;
+	}
+	
+	MatrixGeneralInvert();
+}
+
+bool Mat44::IsMatrixOrthoNormal() const
+{
+	Mat44 temp = *this;
+	temp.TransposeMatrix();
+	temp.Multiply( *this );
+	if( IsMat44MostlyEqual( temp, IDENTITY ) ){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+Mat44 Mat44::GetTransposeMatrix() const
+{
+	Mat44 result;
+	// I
+	result.m_values[Iy] = m_values[Jx];
+	result.m_values[Iz] = m_values[Kx];
+	result.m_values[Iw] = m_values[Tx];
+	// J
+	result.m_values[Jx] = m_values[Iy];
+	result.m_values[Jz] = m_values[Ky];
+	result.m_values[Jw] = m_values[Ty];
+	// K
+	result.m_values[Kx] = m_values[Iz];
+	result.m_values[Ky] = m_values[Jz];
+	result.m_values[Kw] = m_values[Tz];
+	// T
+	result.m_values[Tx] = m_values[Iw];
+	result.m_values[Ty] = m_values[Jw];
+	result.m_values[Tz] = m_values[Kw];
+	
+	return result;
+}
+
+Mat44 Mat44::GetInvertMatrix() const
+{
+	if( IsMatrixOrthoNormal() ){
+		return GetTransposeMatrix();
+	}
+	else{
+		return GetGeneralInvertMatrix();
+	}
+}
+
+const Mat44 Mat44::CreateOrthographicProjectionMatrix( const Vec3& min, const Vec3& max )
 {
 	//TODO
 	//ndc.x =  ( x - min.x ) / ( max.x - min.x ) * ( 1.0f - (-1.0f)) + (-1)
@@ -625,4 +706,19 @@ const Mat44 Mat44::CreateOrthographicProjection( const Vec3& min, const Vec3& ma
 		-sum.x / diff.x,	-sum.y / diff.y,	-min.z / diff.z,	1.0f
 	};
 	return Mat44( mat );
+}
+
+const Mat44 Mat44::CreatePersectiveProjectionMatrix( float fovDegrees, float aspectRadio, float nearZ, float farZ )
+{
+	return Mat44();
+}
+
+void Mat44::MatrixGeneralInvert()
+{
+
+}
+
+Mat44 Mat44::GetGeneralInvertMatrix() const
+{
+	return Mat44();
 }

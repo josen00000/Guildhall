@@ -36,6 +36,9 @@ void App::Startup()
 	g_theInputSystem	= new InputSystem();
 	g_theGame			= new Game( g_camera, g_UICamera );
 	g_theEventSystem	= new EventSystem();
+
+	// test Camera
+	g_camera->SetProjectionPerspective( 60, -0.1, -100 );
 	
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );

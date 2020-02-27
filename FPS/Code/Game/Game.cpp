@@ -104,23 +104,37 @@ void Game::UpdateCamera( float deltaSeconds )
 void Game::HandleKeyboardInput()
 {
 	CheckIfExit();
-	HandleCameraMovement();
+	//HandleCameraMovement();
 }
 
 void Game::HandleCameraMovement()
 {
-	Vec2 movement = Vec2::ZERO;
+	float coe = 1.0f;
+	Vec3 movement = Vec3::ZERO;
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ){
+		coe = 2.0f;
+	}
+	else{
+		coe = 1.0f;
+	}
+
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_LEFT_ARROW ) ) {
-		movement.x -= 1.0f;
+		movement.x -= 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_ARROW ) ) {
-		movement.x += 1.0f;
+		movement.x += 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_UP_ARROW ) ) {
-		movement.y += 1.0f;
+		movement.y += 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_DOWN_ARROW ) ) {
-		movement.y -= 1.0f;
+		movement.y -= 1.0f * coe;
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_W ) ){
+		movement.z += 1.0f * coe;
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
+		movement.z -= 1.0f * coe;
 	}
 	Vec3 cameraPos = m_gameCamera->GetPosition();
 	cameraPos += movement;

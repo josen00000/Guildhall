@@ -19,6 +19,7 @@ struct AABB2;
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 struct ID3D11BlendState;
+class GPUMesh;
 
 typedef std::map<std::string, Shader*>::iterator ShaderMapIterator;
 
@@ -73,6 +74,8 @@ public:
 	void BindVertexInput( VertexBuffer* vbo );
 
 	void Draw( int numVertexes, int vertexOffset = 0 );
+	void DrawIndexed( int indexCount, int indexOffset = 0, int vertexOffset = 0 );
+	void DrawMesh( GPUMesh* mesh );
 	void DrawVertexVector( std::vector<Vertex_PCU>& vertices );
 	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
 	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );

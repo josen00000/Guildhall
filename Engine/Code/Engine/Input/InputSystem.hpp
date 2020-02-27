@@ -7,6 +7,11 @@ constexpr int MAX_XBOX_CONTROLLERS=4;
 
 class Camera;
 
+enum CursorMode {
+	CURSOR_ABSOLUTE,
+	CURSOR_RELATIVE
+};
+
 class InputSystem {
 	/*
 	 *Engine input system; 
@@ -25,6 +30,10 @@ public:
 	IntVec2 GetMouseRawDesktopPos() const; // interface to know
 	Vec2 GetNormalizedMousePos() const; // within opengl windows
 	Vec2 GetNormalizedMousePosInCamera( const Camera& camera ) const;
+	void HideSystemCursor();
+	void ShowShstemCursor();
+	void ClipSystemCursor();
+	void SetCursorMode( CursorMode mode );
 	
 	void UpdateKeyBoardButton( unsigned char inValue, bool isPressed );
 	const KeyBoardController& GetKeyBoardController(){return m_keyBoardController; }
@@ -47,4 +56,5 @@ private:
 	};
 	KeyBoardController m_keyBoardController;
 	std::queue<char> m_characters;
+	CursorMode m_cursorMode = CURSOR_ABSOLUTE;
 };

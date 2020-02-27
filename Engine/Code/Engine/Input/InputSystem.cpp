@@ -61,6 +61,27 @@ Vec2 InputSystem::GetNormalizedMousePosInCamera( const Camera& camera ) const
 	return mousePosInCamera;
 }
 
+void InputSystem::HideSystemCursor()
+{
+	while( ShowCursor( false ) > 0 ){}
+}
+
+void InputSystem::ShowShstemCursor()
+{
+	while( ShowCursor( true ) < 0 ){}
+}
+
+void InputSystem::ClipSystemCursor()
+{
+	// get windows rect
+	//ClipCursor( Rect );
+}
+
+void InputSystem::SetCursorMode( CursorMode mode )
+{
+	m_cursorMode = mode;
+}
+
 void InputSystem::UpdateKeyBoardButton( unsigned char inValue, bool isPressed )
 {
 	m_keyBoardController.UpdateButtonCurrentFrame( inValue,isPressed );
