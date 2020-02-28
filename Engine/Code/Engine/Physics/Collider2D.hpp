@@ -46,7 +46,10 @@ public:
 
 	// Mutator
 	virtual void SetPosition( Vec2 pos );
-	void UpdateMaterialBounceness( float deltaRes );
+
+	// Bounciness
+	void UpdateMaterialBounciness( float deltaRes );
+	float GetBounciness() const;
 
 	// debug helpers
 	virtual void DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) = 0;

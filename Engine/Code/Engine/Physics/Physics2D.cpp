@@ -81,8 +81,14 @@ void Physics2D::DetectCollisions()
 	m_collisions.clear();
 	for( int colIndex = 0; colIndex < m_colliders.size(); colIndex++ ) {
 		Collider2D* col1 = m_colliders[colIndex];
+		if( col1 == nullptr ){
+			continue;
+		}
 		for( int colIndex1 = colIndex + 1; colIndex1 < m_colliders.size(); colIndex1++ ) {
 			Collider2D* col2 = m_colliders[colIndex1];
+			if( col2 == nullptr ){
+				continue;
+			}
 			Manifold2D manifold;
 			if( col1->IntersectsAndGetManifold( col2, manifold ) ){
 				CreateCollision( col1, col2, manifold );
@@ -108,12 +114,8 @@ void Physics2D::ResolveCollision( const Collision2D& collision )
 {
 	CorrectObjectsInCollision( collision );
 	Vec2 impulse = CalculateCollisionImpulse( collision );
-// 	if( impulse.GetLength() > 0.00001 ){
-// 		collision.me->m_rigidbody->SetVelocity( Vec2::ZERO );
-// 		collision.other->m_rigidbody->SetVelocity( Vec2::ZERO );
-// 	}
-	collision.me->m_rigidbody->ApplyImpulse( impulse, Vec2::ZERO );
-	collision.other->m_rigidbody->ApplyImpulse( -impulse, Vec2::ZERO );
+	ApplyImpulseInCollision( collision, impulse );
+	
 	// Dynamic vs dynamic 
 	// kinematic vs kinematic
 	// static don't move
@@ -162,9 +164,32 @@ Vec2 Physics2D::CalculateCollisionImpulse( const Collision2D& collision )
 	return result * normal;
 }
 
-void Physics2D::ApplyImpulse( Rigidbody2D* rb, Vec2 impluse )
+void Physics2D::ApplyImpulseInCollision( const Collision2D& collision, Vec2 impulse )
 {
+	Collider2D* me = collision.me;
+	Collider2D* other = collision.other;
+	
+	if( me->m_rigidbody->GetSimulationMode() == other->m_rigidbody->GetSimulationMode()	 ){
+		collision.me->m_rigidbody->ApplyImpulse( impulse, Vec2::ZERO );
+		collision.other->m_rigidbody->ApplyImpulse( -impulse, Vec2::ZERO );
+	}
+	else if( me->m_rigidbody->GetSimulationMode() == RIGIDBODY_STATIC ){
+		other->m_rigidbody->ApplyImpulse( -2 * impulse, Vec2::ZERO );
+	}
+	else if( other->m_rigidbody->GetSimulationMode() == RIGIDBODY_STATIC ){
+		me->m_rigidbody->ApplyImpulse( 2 * impulse, Vec2::ZERO );
+	}
+	else{
+		if( me->m_rigidbody->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
+			me->m_rigidbody->ApplyImpulse( 2 * impulse, Vec2::ZERO );
+		}
+		else{
+			other->m_rigidbody->ApplyImpulse( -2 * impulse, Vec2::ZERO );
+		}
+	}
 
+
+	
 }
 
 void Physics2D::CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold )

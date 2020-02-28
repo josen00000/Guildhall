@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include "Game/GameObject.hpp"
 #include "Engine/Math/Vec2.hpp"
 #include "Engine/Physics/Collider2D.hpp"
 #include "Engine/Physics/Collision2D.hpp"
@@ -53,7 +52,7 @@ public:
 	void ResolveCollision( const Collision2D& collision );
 	void CorrectObjectsInCollision( const Collision2D& collision );
 	Vec2 CalculateCollisionImpulse( const Collision2D& collision );
-	void ApplyImpulse( Rigidbody2D* rb, Vec2 impluse );
+	void ApplyImpulseInCollision( const Collision2D& collision, Vec2 impulse );
 	void CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold );
 
 public:

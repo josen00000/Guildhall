@@ -107,9 +107,14 @@ void Collider2D::SetPosition( Vec2 pos )
 	UNUSED(pos);
 }
 
-void Collider2D::UpdateMaterialBounceness( float deltaRes )
+void Collider2D::UpdateMaterialBounciness( float deltaRes )
 {
-	m_material.restitution += deltaRes;
+	m_material.UpdateRestitution( deltaRes );
+}
+
+float Collider2D::GetBounciness() const
+{
+	return m_material.m_restitution;
 }
 
 Collider2D::~Collider2D()

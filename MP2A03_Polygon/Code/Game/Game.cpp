@@ -239,6 +239,16 @@ void Game::HandleKeyboardInput()
 		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_3 ) ) {
 			m_selectedObj->SetSimulateMode( RIGIDBODY_DYNAMIC );
 		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_PLUS ) ) {
+			if( m_selectedObj != nullptr ){
+				m_selectedObj->UpdateBounciness( 0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_MINUS ) ) {
+			if( m_selectedObj != nullptr ){
+				m_selectedObj->UpdateBounciness( -0.01f );
+			}
+		}
 	}
 	else {
 		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1) ){
@@ -455,15 +465,15 @@ void Game::UpdateGameObjects( float deltaSeconds )
 		obj->Update( deltaSeconds );
 	}
 
-	if( m_gameObjects.size() > 2 ) {
-		GameObject* obj = m_gameObjects[2];
-		Vec2 vel = obj->m_rb->GetVelocity();
-		std::string debug = std::string( " Velocity is + " + std::to_string( vel.x ) + "  " + std::to_string( vel.y ) );
-		for( int i = 0; i < 10; i++ ){
-			g_theConsole->PrintString( Rgba8::RED, debug );
-		}
-
-	}
+// 	if( m_gameObjects.size() > 2 ) {
+// 		GameObject* obj = m_gameObjects[2];
+// 		Vec2 vel = obj->m_rb->GetVelocity();
+// 		std::string debug = std::string( " Velocity is + " + std::to_string( vel.x ) + "  " + std::to_string( vel.y ) );
+// 		for( int i = 0; i < 10; i++ ){
+// 			//g_theConsole->PrintString( Rgba8::RED, debug );
+// 		}
+// 
+// 	}
 }
 
 void Game::DeleteGameObject( GameObject* obj )
