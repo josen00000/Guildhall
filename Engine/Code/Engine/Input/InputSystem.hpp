@@ -1,11 +1,13 @@
 #pragma once
 #include <queue>
+#include "Engine/Platform/Window.hpp"
 #include "Engine/Input/XboxController.hpp"
-#include<Engine/Input/KeyBoardController.hpp>
+#include "Engine/Input/KeyBoardController.hpp"
 
 constexpr int MAX_XBOX_CONTROLLERS=4;
 
 class Camera;
+
 
 enum CursorMode {
 	CURSOR_ABSOLUTE,
@@ -25,15 +27,19 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	void Shutdown();
+	void Update();
 
 	// Mouse 
 	IntVec2 GetMouseRawDesktopPos() const; // interface to know
-	Vec2 GetNormalizedMousePos() const; // within opengl windows
-	Vec2 GetNormalizedMousePosInCamera( const Camera& camera ) const;
+	Vec2 GetNormalizedMousePosInClient( void* hWnd ) const; // within opengl windows
+	Vec2 GetMouseRawPosInClient( void* hWnd ) const;
+	Vec2 GetNormalizedMousePosInCamera( void* hWnd, const Camera& camera ) const;
+	Vec2 GetRelativeMovementPerFrame() const { return m_relativeMovement; }
 	void HideSystemCursor();
 	void ShowShstemCursor();
 	void ClipSystemCursor();
 	void SetCursorMode( CursorMode mode );
+	void UpdateRelativeMode();
 	
 	void UpdateKeyBoardButton( unsigned char inValue, bool isPressed );
 	const KeyBoardController& GetKeyBoardController(){return m_keyBoardController; }
@@ -47,6 +53,8 @@ public:
 	void PushCharacter( char character );
 	bool PopCharacter( char* out );
 	void ClearCharacters();
+
+
 private:
 	XboxController m_controllers[MAX_XBOX_CONTROLLERS]={
 		XboxController( 0 ),
@@ -55,6 +63,10 @@ private:
 		XboxController( 3 )
 	};
 	KeyBoardController m_keyBoardController;
-	std::queue<char> m_characters;
+
 	CursorMode m_cursorMode = CURSOR_ABSOLUTE;
+
+	Window* m_topWindow;
+	std::queue<char> m_characters;
+	Vec2 m_relativeMovement;
 };

@@ -80,6 +80,7 @@ void RenderContext::StartUp( Window* window )
 	m_immediateVBO->m_stride = sizeof(Vertex_PCU);
 
 	m_frameUBO = new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_modelUBO = new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 
 	m_defaultSampler = new Sampler( this, SAMPLER_POINT );
 	m_texDefaultColor = CreateTextureFromColor( Rgba8::WHITE );
@@ -101,16 +102,12 @@ void RenderContext::UpdateFrameTime( float deltaSeconds )
 
 void RenderContext::BeginFrame(  )
 {
-// 	time_data_t frameData;
-// 	frameData.system_time = GetCurrentTimeSeconds();
-// 	frameData.system_delta_time = deltaSeconds;
-// 
-// 	m_frameUBO->Update( &frameData, sizeof(frameData), sizeof(frameData) );
 }
 
 void RenderContext::EndFrame()
 {
 	m_swapChain->Present();
+	m_shaderHasChanged = false;
 }
 
 void RenderContext::Shutdown()
@@ -119,12 +116,14 @@ void RenderContext::Shutdown()
 	delete m_defaultShader;
 	delete m_immediateVBO;
 	delete m_frameUBO;
+	delete m_modelUBO;
 	delete m_defaultSampler;
 
 	m_swapChain			= nullptr;
 	m_currentShader		= nullptr;
 	m_immediateVBO		= nullptr;
 	m_frameUBO			= nullptr;
+	m_modelUBO			= nullptr;
 	m_defaultSampler	= nullptr;
 	m_defaultShader		= nullptr;
 
@@ -162,6 +161,8 @@ void RenderContext::BeginCamera( Camera& camera )
 {
 #if defined(RENDER_DEBUG)
 	m_context->ClearState();
+	m_lastBoundVBO = nullptr;
+	m_lastBoundIBO = nullptr;
 #endif
 	Texture* output = camera.GetColorTarget(); // get texture output
 
@@ -191,23 +192,36 @@ void RenderContext::BeginCamera( Camera& camera )
 	}
 	BindShader( static_cast<Shader*>( nullptr ) );
 	m_lastBoundVBO = nullptr;
+	m_lastBoundIBO = nullptr;
 
+	// Bind and set uniform buffer
 	RenderBuffer* cameraUBO = camera.GetOrCreateCameraBuffer( this );
-
+	Mat44 test = Mat44();
+	SetModelMatrix( Mat44() );
 	BindUniformBuffer( UBO_FRAME_SLOT, m_frameUBO );
-	
 	BindUniformBuffer( UBO_CAMERA_SLOT, cameraUBO );
+	BindUniformBuffer( UBO_MODEL_SLOT, m_modelUBO );
 
 	Texture* temp = CreateOrGetTextureFromFile( "Data/Fonts/SquirrelFixedFont.png" );
 	BindTexture( temp );
 	BindSampler( nullptr );
 
-	SetBlendMode( BlendMode::ALPHA );
+	SetBlendMode( BlendMode::BLEND_ALPHA );
 }
 
 void RenderContext::SetOrthoView( const AABB2& box )
 {
 	UNUSED( box ); 
+}
+
+void RenderContext::UpdateLayoutIfNeeded()
+{
+ 	//if( m_previousLayout != m_currentLayout || m_shaderHasChanged ){
+ 	//	ID3D11InputLayout* layout = m_currentShader->GetOrCreateInputLayout( );
+ 	//	m_context->IASetInputLayout( layout );
+ 	//	m_previousLayout = layout;
+ 	//	m_shaderhasChanged = false;
+ 	//}
 }
 
 void RenderContext::EndCamera( const Camera& camera )
@@ -246,6 +260,7 @@ void RenderContext::BindShader( Shader* shader )
 		m_currentShader = shader;
 	}
 
+	m_shaderHasChanged = true;
 	m_context->VSSetShader( m_currentShader->m_vertexStage.m_vs, nullptr, 0 );
 	m_context->RSSetState( m_currentShader->m_rasterState ); // use defaults
 	m_context->PSSetShader( m_currentShader->m_fragmentStage.m_fs, nullptr, 0 );
@@ -257,10 +272,10 @@ void RenderContext::BindShader( const char* fileName )
 	BindShader( shader );
 }
 
-void RenderContext::BindVertexInput( VertexBuffer* vbo )
+void RenderContext::BindVertexBuffer( VertexBuffer* vbo )
 {
 	ID3D11Buffer* vboHandle = vbo->m_handle;
-	UINT stride = (UINT)vbo->m_stride;
+	UINT stride = (UINT)vbo->m_elementByteSize;
 	UINT offset = 0;
 
 
@@ -269,16 +284,21 @@ void RenderContext::BindVertexInput( VertexBuffer* vbo )
 		m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 		m_lastBoundVBO = vboHandle;
 	}
+}
+
+void RenderContext::BindIndexBuffer( IndexBuffer* ibo )
+{
+	ID3D11Buffer* iboHandle = ibo->m_handle;
+	UINT offset = 0;
 	
+	if( m_lastBoundIBO != iboHandle ){
+		m_context->IASetIndexBuffer( iboHandle, DXGI_FORMAT_R32_UINT, offset );
+		m_lastBoundIBO = iboHandle;
+	}
 }
 
 void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 {
-	// should be in begin camera
-	
-	// shader
-	// should be in bind shader
-
 	ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout(/* Vertex_PCU::LAYOUT*/); // Vertex 
 	m_context->IASetInputLayout( inputLayout );
 	m_context->Draw( numVertexes, vertexOffset ); // what is vertexOffset
@@ -286,11 +306,28 @@ void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 
 void RenderContext::DrawIndexed( int indexCount, int indexOffset /*= 0*/, int vertexOffset /*= 0 */ )
 {
-
+	ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout();
+	m_context->IASetInputLayout( inputLayout );
+	m_context->DrawIndexed( (uint)indexCount, 0, 0 );
 }
 
 void RenderContext::DrawMesh( GPUMesh* mesh )
 {
+	// Get model matrix
+	mesh->UpdateVerticeBuffer( nullptr );
+	mesh->UpdateIndiceBuffer();
+	BindVertexBuffer( mesh->GetOrCreateVertexBuffer() );
+	//UpdateLayoutIfNeeded(); // unfinished
+
+
+	bool hasIndices = mesh->GetIndexCount() > 0;
+	if( hasIndices ){
+		BindIndexBuffer( mesh->GetOrCreateIndexBuffer() );
+		DrawIndexed( mesh->GetIndexCount() );
+	}
+	else{
+		Draw( mesh->GetVertexCount() );
+	}
 
 }
 
@@ -517,7 +554,7 @@ void RenderContext::DrawVertexVector(  std::vector<Vertex_PCU>& vertices )
 	m_immediateVBO->Update( &vertices[0], bufferByteSize, elementSize );
 
 	// bind
-	BindVertexInput( m_immediateVBO );
+	BindVertexBuffer( m_immediateVBO );
 
 	// draw
 	Draw( (int)vertices.size(), 0 );
@@ -531,7 +568,7 @@ void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 	m_immediateVBO->Update( vertexes, bufferByteSize, elementSize );
 
 	// Bind
-	BindVertexInput( m_immediateVBO );
+	BindVertexBuffer( m_immediateVBO );
 	
 	// Draw
 	Draw( vertexNum, 0 );
@@ -539,15 +576,16 @@ void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 
 void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 {
+	float temZ = -20.f;
  	Vertex_PCU temAABB2[6] = {
  		// triangle2
- 		Vertex_PCU(Vec3(bounds.mins,0.f),tint,Vec2(0,0)),
- 		Vertex_PCU(Vec3(bounds.maxs.x,bounds.mins.y,0.f),tint,Vec2(1,0)),
- 		Vertex_PCU(Vec3(bounds.maxs,0.f),tint,Vec2(1,1)),
+ 		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
+ 		Vertex_PCU( Vec3( bounds.maxs.x, bounds.mins.y, temZ ), tint, Vec2( 1, 0 ) ),
+ 		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
  		// triangle2
- 		Vertex_PCU(Vec3(bounds.mins,0.f),tint,Vec2(0,0)),
- 		Vertex_PCU(Vec3(bounds.mins.x,bounds.maxs.y,0.f),tint,Vec2(0,1)),
- 		Vertex_PCU(Vec3(bounds.maxs,0.f),tint,Vec2(1,1)),
+ 		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
+ 		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( 0, 1 ) ),
+ 		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
  	};
  	DrawVertexArray(6,temAABB2);
 }
@@ -607,13 +645,13 @@ void RenderContext::SetBlendMode( BlendMode blendMode )
 	
 	switch( blendMode )
 	{
-	case ALPHA:
+	case BLEND_ALPHA:
 		blendStateHandle = m_alphaBlendState;
 		break;
-	case ADDITIVE:
+	case BLEND_ADDITIVE:
 		blendStateHandle = m_additiveBlendState;
 		break;
-	case OPAQUE:
+	case BLEND_OPAQUE:
 		blendStateHandle = m_opaqueBlendState;
 		break;
 	default:
@@ -621,5 +659,13 @@ void RenderContext::SetBlendMode( BlendMode blendMode )
 	}
 
 	m_context->OMSetBlendState( blendStateHandle, zeroes, (uint)~0 );
+}
+
+
+void RenderContext::SetModelMatrix( Mat44 model )
+{
+	model_t modelData;
+	modelData.model = model;
+	m_modelUBO->Update( &modelData, sizeof( modelData), sizeof( modelData ) );
 }
 

@@ -18,7 +18,7 @@ C29.SD2.A04 : Perspective Camera
     - [x] `MatrixInvertOrthoNormal` implemented to invert the camera's model into a view matrix
         - [x] `MatrixIsOrthoNormal` check added
         - [x] `MatrixTranspose` added
-- [ ] Draw a Quad at `(0, 0, -10)`, or 10 units in front of the origin (should be visible when you start)
+- [x] Draw a Quad at `(0, 0, -10)`, or 10 units in front of the origin (should be visible when you start)
 - [ ] Allow player to move the camera by change the camera transform position
    - [x] `W` & `S`: Forward & Back (movement is relative to where you're looking)
    - [x] `A` & `D`: Left and Right (movement is relative to where you're looking) // left arrow and right arrow
@@ -26,8 +26,8 @@ C29.SD2.A04 : Perspective Camera
    - [x] `Left-Shift`: Move faster while held.
    - *Note:  If you want different controls, just make a note in your readme*
 - [ ] Allow player to turn the camera using the mouse.
-    - [ ] `InputSystem::HideSystemCursor` implemented
-    - [ ] `InputSystem::ClipSystemCursor` implemented
+    - [x] `InputSystem::HideSystemCursor` implemented
+    - [x] `InputSystem::ClipSystemCursor` implemented
     - [ ] `InputSystem::SetCursorMode` implemented
         - [ ] `ABSOLUTE` mode is what you currently have
         - [ ] `RELATIVE` move implemented
@@ -42,9 +42,9 @@ C29.SD2.A04 : Perspective Camera
         - [ ] Do not allow pitch above `85` degrees or below `95` degrees - no going upside down... yet...
         - *Note:  Up to you if you want inverted-y or not.*
 - [ ] Support `RenderContext::SetModelMatrix`
-    - [ ] Create a new uniform buffer for storing a model matrix (slot 2)
-    - [ ] `SetModelMatrix` should update this uniform buffer
-    - [ ] `BeginCamera` should `SetModelMatrix` to the `IDENTITY`, and be sure to bind the buffer.
+    - [x] Create a new uniform buffer for storing a model matrix (slot 2)
+    - [x] `SetModelMatrix` should update this uniform buffer
+    - [x] `BeginCamera` should `SetModelMatrix` to the `IDENTITY`, and be sure to bind the buffer.
 - [ ] Be able to draw a cube mesh at `(1, 0.5, -12.0)`
     - [ ] Create a `GPUMesh` class
         - [ ] Implement `IndexBuffer`

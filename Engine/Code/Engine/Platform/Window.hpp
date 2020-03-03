@@ -2,6 +2,7 @@
 #include "Engine/Core/StringUtils.hpp"
 
 class InputSystem;
+struct Vec2;
 
 class Window
 {
@@ -12,11 +13,16 @@ public:
 	bool Open( std::string const& title, float aspectRatio, float ratioOfHeight = 0.90f );
 	void Close();
 	void BeginFrame();
+	
+	// Accessor
 	int GetClientWidth() const;
 	int GetClientHeight() const;
+	Vec2 GetClientCenter() const;
+
 
 	void SetInputSystem( InputSystem* input );
 	InputSystem* GetInputSystem() const { return m_inputSystem; }
+	static void* GetTopWindowHandle();
 
 public:
 	void* m_hwnd = nullptr;

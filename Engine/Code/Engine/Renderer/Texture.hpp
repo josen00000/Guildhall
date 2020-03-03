@@ -1,6 +1,6 @@
 #pragma once
-#include "Engine/Math/IntVec2.hpp"
 #include <string>
+#include "Engine/Math/IntVec2.hpp"
 
 class RenderContext;
 class TextureView;

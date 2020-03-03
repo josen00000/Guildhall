@@ -4,8 +4,8 @@
 
 buffer_attribute_t Vertex_PCU::s_layout [4] = {
 	buffer_attribute_t( "POSITION",	BUFFER_FORMAT_VEC3,				offsetof( Vertex_PCU, m_pos ) ),
-	buffer_attribute_t( "COLOR",	BUFFER_FORMAT_R8G8B8A8_UNORM,				offsetof( Vertex_PCU, m_color ) ),
-	buffer_attribute_t( "TEXCOORD", BUFFER_FORMAT_VEC2,	offsetof( Vertex_PCU, m_uvTexCoords ) ),
+	buffer_attribute_t( "COLOR",	BUFFER_FORMAT_R8G8B8A8_UNORM,	offsetof( Vertex_PCU, m_color ) ),
+	buffer_attribute_t( "TEXCOORD", BUFFER_FORMAT_VEC2,				offsetof( Vertex_PCU, m_uvTexCoords ) ),
 	buffer_attribute_t() // end - terminator element; 
 };
 
@@ -30,5 +30,15 @@ Vertex_PCU::Vertex_PCU( const Vertex_PCU& copyFrom )
 void Vertex_PCU::UpdatePos( Vec3 pos )
 {
 	m_pos.operator+=(pos);
+}
+
+bool Vertex_PCU::operator==( const Vertex_PCU& compareWith ) const
+{
+	if( m_pos == compareWith.m_pos && m_uvTexCoords == compareWith.m_uvTexCoords && m_color == compareWith.m_color ){
+		return true;
+	}
+	else{
+		return false;
+	}
 }
 

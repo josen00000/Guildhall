@@ -21,7 +21,7 @@ struct Mat44
 {
 public:
 	float m_values[16];
-	enum {Ix, Iy, Iz, Iw,  Jx, Jy, Jz, Jw,  Kx, Ky, Kz, Kw, Tx, Ty, Tz, Tw};
+	enum {Ix, Iy, Iz, Iw, Jx, Jy, Jz, Jw, Kx, Ky, Kz, Kw, Tx, Ty, Tz, Tw };
 	static Mat44 IDENTITY;
 
 public:

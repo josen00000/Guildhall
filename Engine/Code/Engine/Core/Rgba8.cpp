@@ -33,3 +33,13 @@ void Rgba8::SetFromText( const char* text )
 	}
 
 }
+
+bool Rgba8::operator==( const Rgba8 compareWith ) const
+{
+	if( r == compareWith.r && g == compareWith.g && b == compareWith.b && a == compareWith.a ){
+		return true;
+	}
+	else{
+		return false;
+	}
+}

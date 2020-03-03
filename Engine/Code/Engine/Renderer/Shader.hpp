@@ -48,7 +48,7 @@ public:
 	~Shader();
 	bool CreateFromFile( std::string const& fileName );
 	void CreateRasterState();
-	ID3D11InputLayout* GetOrCreateInputLayout( /*buffer*/);
+	ID3D11InputLayout* GetOrCreateInputLayout();
 	DXGI_FORMAT TransformToD3DDataFormat( BufferFormatType type );
 public:
 	RenderContext*	m_owner	= nullptr;

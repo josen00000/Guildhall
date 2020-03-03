@@ -4,10 +4,11 @@
 #include "Engine/Math/vec2.hpp"
 
 
-class RenderContext;
-class InputSystem;
-class RandomNumberGenerator;
 class Camera;
+class InputSystem;
+class GPUMesh;
+class RenderContext;
+class RandomNumberGenerator;
 
 struct Vertex_PCU;
 
@@ -42,6 +43,7 @@ private:
 	void UpdateCamera(float deltaSeconds );
 
 	void HandleKeyboardInput();
+	void HandleMouseInput();
 	void HandleCameraMovement();
 		 
 	//Game State Check
@@ -54,6 +56,8 @@ private:
 	//Load
 	void LoadAssets();
 
+	// Test
+	void CreateTestMesh();
 
 public:
 	bool m_developMode		= false;
@@ -62,12 +66,13 @@ public:
 	bool m_debugCamera		= false;
 	bool m_isAppQuit		= false;
 	bool m_isAttractMode	= false;
-
+	
 	GameState m_gameState	= GAME_STATE_NULL;
 	Camera* m_gameCamera	= nullptr;
 	Camera* m_UICamera		= nullptr;
 	RandomNumberGenerator* m_rng = nullptr;
 	
+	std::vector<Vertex_PCU> m_vertices;
+	GPUMesh* m_meshCube = nullptr;
 	std::vector<Vertex_PCU> m_UIVertices;
-	
 };

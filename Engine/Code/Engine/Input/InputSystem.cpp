@@ -1,11 +1,11 @@
-#include <windows.h>
 #include "InputSystem.hpp"
+#include <windows.h>
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/MathUtils.hpp"
+#include "Engine/Math/Vec2.hpp"
 #include "Engine/Renderer/Camera.hpp"
-
 
 void InputSystem::Startup()
 {
@@ -28,6 +28,20 @@ void InputSystem::Shutdown()
 {
 }
 
+void InputSystem::Update()
+{
+	switch( m_cursorMode )
+	{
+	case CURSOR_ABSOLUTE:
+		return;
+	case CURSOR_RELATIVE:
+		UpdateRelativeMode();
+		break;
+	default:
+		break;
+	}
+}
+
 IntVec2 InputSystem::GetMouseRawDesktopPos() const
 {
 	POINT rawmouseDesktopPos;
@@ -35,27 +49,37 @@ IntVec2 InputSystem::GetMouseRawDesktopPos() const
 	return IntVec2( rawmouseDesktopPos.x, rawmouseDesktopPos.y);
 }
 
-Vec2 InputSystem::GetNormalizedMousePos() const
+Vec2 InputSystem::GetNormalizedMousePosInClient( void* hWnd ) const
 {
-// 	POINT screenMousePos;
-// 	GetCursorPos( &screenMousePos );
-// 	ScreenToClient( g_hWnd, &screenMousePos );
-// 	Vec2 mouseClientPos( (float) screenMousePos.x, (float) screenMousePos.y );
-// 
-// 	RECT clientRect;
-// 	GetClientRect( g_hWnd, &clientRect );
-// 	AABB2 clientBounds( (float)clientRect.left, (float)clientRect.bottom, (float)clientRect.right, (float)clientRect.top ); //need to check the contrustor
-// 	Vec2 mouseNormalizedPos = clientBounds.GetUVForPoint( mouseClientPos );
-// 	mouseNormalizedPos.x = ClampZeroToOne( mouseNormalizedPos.x );
-// 	mouseNormalizedPos.y = ClampZeroToOne( mouseNormalizedPos.y );
-// 	return mouseNormalizedPos;	
-	return Vec2::ZERO;
+	HWND hWnd1 = (HWND)hWnd;
+	POINT screenMousePos;
+	GetCursorPos( &screenMousePos );
+	ScreenToClient( hWnd1, &screenMousePos );
+	Vec2 mouseClientPos( (float) screenMousePos.x, (float) screenMousePos.y );
+	
+	RECT clientRect;
+	GetClientRect( hWnd1, &clientRect );
+	AABB2 clientBounds( (float)clientRect.left, (float)clientRect.bottom, (float)clientRect.right, (float)clientRect.top  ); 
+	Vec2 mouseNormalizedPos = clientBounds.GetUVForPoint( mouseClientPos );
+	mouseNormalizedPos.x = ClampZeroToOne( mouseNormalizedPos.x );
+	mouseNormalizedPos.y = ClampZeroToOne( mouseNormalizedPos.y );
+	return mouseNormalizedPos;	
 }
 
 
-Vec2 InputSystem::GetNormalizedMousePosInCamera( const Camera& camera ) const
+Vec2 InputSystem::GetMouseRawPosInClient( void* hWnd ) const
 {
-	Vec2 mouseNormalizedPos = GetNormalizedMousePos();
+	HWND hWnd1 = (HWND)hWnd;
+	POINT screenMousePos;
+	GetCursorPos( &screenMousePos );
+	ScreenToClient( hWnd1, &screenMousePos );
+	Vec2 mouseClientPos( (float)screenMousePos.x, (float)screenMousePos.y );
+	return mouseClientPos;
+}
+
+Vec2 InputSystem::GetNormalizedMousePosInCamera( void* hWnd, const Camera& camera ) const
+{
+	Vec2 mouseNormalizedPos = GetNormalizedMousePosInClient( hWnd );
 	AABB2 orthoBounds( camera.GetOrthoBottomLeft(), camera.GetOrthoTopRight() );
 	Vec2 mousePosInCamera = orthoBounds.GetPointAtUV( mouseNormalizedPos );
 	return mousePosInCamera;
@@ -80,6 +104,34 @@ void InputSystem::ClipSystemCursor()
 void InputSystem::SetCursorMode( CursorMode mode )
 {
 	m_cursorMode = mode;
+}
+
+void InputSystem::UpdateRelativeMode( )
+{
+	HWND hwnd = (HWND)Window::GetTopWindowHandle();
+	//move mouse to center of screen
+	// calculate the delta of the cursor
+	// get top window
+	POINT cursorPos;
+	
+	IntVec2 positionThisFrame = GetMouseRawDesktopPos();
+	static IntVec2 positionLastFrame = positionThisFrame; 
+	IntVec2 rawRelativeMovement = positionThisFrame - positionLastFrame;
+
+	// temp GetClientCenter in this
+	// Need to debug and get client center in windows
+	RECT clientRect;
+	GetClientRect( hwnd, &clientRect );
+	m_relativeMovement = Vec2 ( ( (float)rawRelativeMovement.x / clientRect.right ), ( (float)rawRelativeMovement.y / clientRect.bottom ) );
+
+	POINT windowCenterPoint;
+	windowCenterPoint.x = clientRect.right / 2;
+	windowCenterPoint.y = clientRect.bottom / 2; 
+	ClientToScreen( hwnd, &windowCenterPoint );
+	SetCursorPos( windowCenterPoint.x, windowCenterPoint.y );
+	//GetCursorPos( &cursorPos );
+	IntVec2 windowCenter = IntVec2( windowCenterPoint.x, windowCenterPoint.y );
+	positionLastFrame = windowCenter;
 }
 
 void InputSystem::UpdateKeyBoardButton( unsigned char inValue, bool isPressed )
@@ -134,3 +186,5 @@ void InputSystem::ClearCharacters()
 	}
 }
 
+
+		

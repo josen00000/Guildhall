@@ -22,6 +22,11 @@ void Transform::SetRotationFromPitchRollYawDegrees( float pitch, float roll, flo
 	m_rotationPRYDegrees = Vec3( pitch, roll, yaw );
 }
 
+void Transform::SetRotationFromPitchRollYawDegrees( Vec3 rotation )
+{
+	SetRotationFromPitchRollYawDegrees( rotation.x, rotation.y, rotation.z );
+}
+
 void Transform::SetScale( Vec3 scale )
 {
 	m_scale = scale;

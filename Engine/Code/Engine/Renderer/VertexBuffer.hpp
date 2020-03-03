@@ -7,7 +7,7 @@ struct ID3D11Buffer;
 class VertexBuffer : public RenderBuffer {
 public:
 	VertexBuffer( RenderContext* ctx, RenderMemoryHint hint );
-		
+	void UpdateVertices();
 
 public:
 	size_t m_stride; // how far from one vertex to the next

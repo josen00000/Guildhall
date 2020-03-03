@@ -19,6 +19,12 @@ enum eCameraClearBitFlag : unsigned int {
 
 };
 
+enum ProjectionType
+{
+	PROJECTION_ORTHOGRAPHIC,
+	PROJECTION_PERSPECTIVE
+};
+
 typedef uint CameraClearFlags;
 
 class Camera{
@@ -27,8 +33,10 @@ public:
 	Camera(){}
 	~Camera();
 	Camera( const Camera& camera ) = delete;
-	explicit Camera( const Vec2& bottomLeft, const Vec2& topRight );
-
+	explicit Camera( const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE );
+	explicit Camera( float fov=60.f, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
+	static Camera* CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& topRight );
+	static Camera* CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
 	void Translate( const Vec3& translation );
 
 public:
@@ -39,9 +47,11 @@ public:
 	Vec2	GetOrthoTopRight() const;
 	Vec3	GetPosition() const;
 	AABB2	GetCameraAsBox() const;
+	ProjectionType GetCameraProjectionType() const{ return m_projectionType; }
 
 	Mat44	GetViewMatrix() const { return m_view; }
 	Mat44	GetProjectionMatrix() const { return m_projection; }
+	Mat44	GetModelMatrix() const;
 
 	bool	GetShouldClearColor() const { return m_shouldClearColor; }
 	Rgba8	GetClearColor() const { return m_clearColor; }
@@ -59,30 +69,28 @@ public:
 	void SetDepthStencilTarget( Texture* texture );
 	void SetPitchRollYawRotation( float pitch, float roll, float yaw );
 
-	//void SetProjectionOrthographic( float size, float nearZ, float farZ );
-	void SetProjectionPerspective( float fov, float nearZ, float farZ );
+	void SetProjectionPerspective( float fov=60, float nearZ=-0.1, float farZ=-100 );
+
 	void UpdateCameraUBO();
+	void UpdateCameraRotation( Vec3 deltaRot );
 
 	// Helper
 	Vec3 ClientTOWorld( Vec2 client, float ndcZ );
 	Vec3 WorldToClient( Vec3 worldPos );
 
-	void UpdateModelMatrixFromTranslation();
 	void UpdateViewMatrix();
-	void UpdateModelMatrix();
 
 private:
 
 public:
 	bool m_shouldClearColor = true;
 	uint m_clearMode = 0;
-	Vec2 m_outputSize;
-	Vec3 m_position = Vec3::ZERO;
+	Vec2 m_dimension;
 	Rgba8 m_clearColor = Rgba8::BLACK;
-	//Transform m_transform;
 	float m_clearDepth = 1.f;
 	float m_clearStencil = 0.f;
 	Transform m_transform;
+	ProjectionType m_projectionType = PROJECTION_ORTHOGRAPHIC;
 
 private:
 	Texture* m_colorTarget = nullptr;    // texture to render to 
@@ -90,5 +98,4 @@ private:
 	RenderBuffer* m_cameraUBO = nullptr; // render data( vertices )
 	Mat44 m_projection;
 	Mat44 m_view;
-	Mat44 m_model;
 };

@@ -5,6 +5,11 @@
 
 class IndexBuffer : public RenderBuffer {
 public:
-	void Update( int iCount, const int* indices );
-	void Update( const std::vector<int>& indices );
+	IndexBuffer( RenderContext* ctx, RenderMemoryHint hint );
+
+public:
+	void Update( const std::vector<uint>& indices );
+
+private:
+	void Update( int iCount, const uint* indices );
 };

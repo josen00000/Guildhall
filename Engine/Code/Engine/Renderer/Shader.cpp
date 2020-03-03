@@ -194,10 +194,9 @@ void Shader::CreateRasterState()
 
 }
 
-ID3D11InputLayout* Shader::GetOrCreateInputLayout(/*buffer*/ )
+ID3D11InputLayout* Shader::GetOrCreateInputLayout()
 {
 	if( m_inputLayout != nullptr ){ return m_inputLayout; }
-	buffer_attribute_t test = Vertex_PCU::s_layout[0];
 
 	D3D11_INPUT_ELEMENT_DESC vertexDesc[3];
 	for( int i = 0; i < 3; i++ ) {
