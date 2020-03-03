@@ -7,16 +7,16 @@
 
 Vec2 BitmapFont::ALIGN_CENTERED = Vec2(0.5, 0.5);
 
-BitmapFont::BitmapFont( const char* fontName, const Texture* fontTexture )
+BitmapFont::BitmapFont( const char* fontName, Texture* fontTexture )
 	:m_fontName(fontName)
 	,m_glyphSpriteSheet (SpriteSheet(*fontTexture, IntVec2(16,16)))
 {
 
 }
 
-const Texture* BitmapFont::GetTexture() const
+Texture* BitmapFont::GetTexture() const
 {
-	const Texture& tem = m_glyphSpriteSheet.GetTexture();
+	Texture& tem = m_glyphSpriteSheet.GetTexture();
 	return &tem;
 }
 

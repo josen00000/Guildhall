@@ -4,7 +4,7 @@
 
 
 
-SpriteSheet::SpriteSheet( const Texture& texture, const IntVec2& simpleGridLayout )
+SpriteSheet::SpriteSheet( Texture& texture, const IntVec2& simpleGridLayout )
 	:m_texture(texture)
 {
 	CreateSpriteDefinitions(simpleGridLayout);

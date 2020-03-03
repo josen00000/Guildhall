@@ -19,7 +19,6 @@ extern App*				g_theApp;
 extern BitmapFont*		g_squirrelFont;	
 extern RenderContext*	g_theRenderer;
 extern InputSystem*		g_theInputSystem;
-extern HWND				g_hWnd;
 extern DevConsole*		g_theConsole;
 extern Physics2D*		g_thePhysics;
 

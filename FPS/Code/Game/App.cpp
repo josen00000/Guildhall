@@ -81,7 +81,7 @@ void App::Shutdown()
 	delete g_theGame;
 	delete g_devCamera;
 	delete g_theEventSystem;
-	//delete g_theRenderer;
+	delete g_theRenderer;
 	
 	g_theGame			= nullptr;
 	g_camera			= nullptr;

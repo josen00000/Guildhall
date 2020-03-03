@@ -16,6 +16,7 @@ App*			g_theApp			= nullptr;
 Game*			g_theGame			= nullptr;
 Camera*			g_camera			= nullptr;
 Camera*			g_UICamera			= nullptr;
+Camera*			g_devCamera			= nullptr;
 BitmapFont*		g_squirrelFont		= nullptr;
 RenderContext*	g_theRenderer		= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
@@ -26,15 +27,19 @@ void App::Startup()
 {
 	g_camera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
 	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
+	g_devCamera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theGame			= new Game( g_camera, g_UICamera );
 	g_thePhysics		= new Physics2D();
 	
-	g_theRenderer->StartUp();
+	g_theWindow->SetInputSystem( g_theInputSystem );
+	g_theRenderer->StartUp( g_theWindow );
 	g_theGame->Startup();
 	g_theInputSystem->Startup();
-	g_theConsole = new DevConsole( g_squirrelFont );
+	g_theConsole = DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
+	g_theConsole->Startup();
+
 }
 
 void App::Shutdown()
@@ -42,10 +47,15 @@ void App::Shutdown()
 	g_theRenderer->Shutdown();
 	g_theInputSystem->Shutdown();
 	g_theGame->Shutdown();
+	g_theConsole->Shutdown();
 	
 	delete g_theInputSystem;
 	delete g_theGame;
 	delete g_theRenderer;
+	delete g_camera;
+	delete g_UICamera;
+	delete g_devCamera;
+
 	
 	g_theGame			= nullptr;
 	g_camera			= nullptr;
@@ -119,13 +129,10 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
-	g_theRenderer->ClearScreen( Rgba8(0,0,0,255) );
-	g_theRenderer->BeginCamera( *g_camera );
 	g_theGame->Render();
 	
-	g_theRenderer->BeginCamera( *g_UICamera );
 	g_theGame->RenderUI();
-	g_theConsole->Render( *g_theRenderer, *g_UICamera, 1.f );
+	g_theConsole->Render( *g_theRenderer );
 }
 
 void App::EndFrame()
