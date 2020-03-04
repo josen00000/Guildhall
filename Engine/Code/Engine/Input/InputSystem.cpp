@@ -33,6 +33,7 @@ void InputSystem::Update()
 	switch( m_cursorMode )
 	{
 	case CURSOR_ABSOLUTE:
+		m_relativeMovement = Vec2::ZERO;
 		return;
 	case CURSOR_RELATIVE:
 		UpdateRelativeMode();

@@ -19,6 +19,7 @@ class Window;
 
 struct AABB2;
 struct ID3D11Buffer;
+struct ID3D11DepthStencilState;
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 struct ID3D11BlendState;
@@ -37,6 +38,27 @@ enum BufferSlot {
 	UBO_FRAME_SLOT	= 0,
 	UBO_CAMERA_SLOT,
 	UBO_MODEL_SLOT
+};
+
+// 	D3D11_COMPARISON_NEVER	= 1,
+// 	D3D11_COMPARISON_LESS	= 2,
+// 	D3D11_COMPARISON_EQUAL	= 3,
+// 	D3D11_COMPARISON_LESS_EQUAL	= 4,
+// 	D3D11_COMPARISON_GREATER	= 5,
+// 	D3D11_COMPARISON_NOT_EQUAL	= 6,
+// 	D3D11_COMPARISON_GREATER_EQUAL	= 7,
+// 	D3D11_COMPARISON_ALWAYS	= 8
+enum DepthCompareFunc {
+	COMPARE_DEPTH_INVALID = 0,
+	COMPARE_DEPTH_NEVER,
+	COMPARE_DEPTH_LESS,
+	COMPARE_DEPTH_EQUAL,
+	COMPARE_DEPTH_LESS_EQUAL,
+	COMPARE_DEPTH_GREATER,
+	COMPARE_DEPTH_NOT_EQUAL,
+	COMPARE_DEPTH_GREATER_EQUAL,
+	COMPARE_DEPTH_ALWAYS,
+	NUM_COMPARE_DEPTH_FUNC
 };
 
 // data used in shader
@@ -97,6 +119,9 @@ public:
 	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );
 	void DrawCircle( Vec3 center, float radiu, float thick, Rgba8& circleColor );
 
+	// Render
+	Texture* GetSwapChainBackBuffer();
+
 	// Create
 	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
 	Texture* CreateTextureFromColor( Rgba8 color );
@@ -106,6 +131,8 @@ public:
 	// Mutator	
 	void SetBlendMode(BlendMode blendMode);
 	void SetModelMatrix( Mat44 model );
+	void SetDepthTest( DepthCompareFunc func, bool writeDepthOnPass );
+	bool CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass );
 
 private:
 	Texture*		CreateTextureFromFile(const char* imageFilePath);
@@ -145,4 +172,5 @@ private:
 	ID3D11BlendState* m_additiveBlendState	= nullptr;
 	ID3D11BlendState* m_alphaBlendState		= nullptr;
 	ID3D11BlendState* m_opaqueBlendState	= nullptr;
+	ID3D11DepthStencilState* m_currentDepthStencilState = nullptr;
 };

@@ -1,6 +1,7 @@
 #include "Game.hpp"
 #include "Game/App.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
@@ -76,6 +77,12 @@ void Game::HandleKeyboardInput()
 {
 	CheckIfExit();
 	HandleCameraMovement();
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ){
+		g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P) ){
+		g_theInputSystem->SetCursorMode( CURSOR_ABSOLUTE );
+	}
 }
 
 void Game::HandleMouseInput()
@@ -195,8 +202,11 @@ void Game::CreateTestMesh()
 	std::vector<Vertex_PCU> vertices;
 	std::vector<uint> indices;
 	AABB2 testAABB = AABB2( Vec2::ZERO, Vec2::ONE * 10 );
+	AABB3 testAABB3 = AABB3( Vec3( -4.f, -4.5f, -7.f ), Vec3( 6.f, 5.5f, -17.f ) );
 	//AppendIndexedVertsForAABB2D( vertices, indices, testAABB, Rgba8::WHITE, Vec2::ZERO, Vec2::ONE );
-	AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, -10.f ), 3.f, 32, 16, Rgba8::RED );
+	AppendIndexedVertsForAABB3D( vertices, indices, testAABB3, Rgba8::RED );
+	//AppendVertsForSphere3D( vertices, Vec3( 0.f, 0.f, -10.f ), 3.f, 16, 32, Rgba8::RED );
+	//AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, -10.f ), 3.f, 3, 2, Rgba8::RED );
 	m_meshCube->UpdateVerticesInCPU( vertices );
 	m_meshCube->UpdateIndicesInCPU( indices );
 }

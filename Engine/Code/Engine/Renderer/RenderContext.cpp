@@ -139,6 +139,7 @@ void RenderContext::Shutdown()
 	DX_SAFE_RELEASE(m_alphaBlendState);
 	DX_SAFE_RELEASE(m_additiveBlendState);
 	DX_SAFE_RELEASE(m_opaqueBlendState);
+	DX_SAFE_RELEASE(m_currentDepthStencilState);
 }
 
 
@@ -151,7 +152,7 @@ void RenderContext::ClearScreen( Texture* output, const Rgba8& clearColor )
 	clearFolats[3] = (float)clearColor.a / 255.f;
 
 	
-	TextureView* backBuffer_rtv = output->GetRenderTargetView();
+	TextureView* backBuffer_rtv = output->GetOrCreateRenderTargetView();
 	ID3D11RenderTargetView* rtv = backBuffer_rtv->GetRTVHandle();
 	m_context->ClearRenderTargetView( rtv, clearFolats );
 
@@ -163,15 +164,20 @@ void RenderContext::BeginCamera( Camera& camera )
 	m_context->ClearState();
 	m_lastBoundVBO = nullptr;
 	m_lastBoundIBO = nullptr;
+
 #endif
 	Texture* output = camera.GetColorTarget(); // get texture output
+	Texture* depthBuffer = camera.GetOrCreateDepthStencilTarget( this );
 
 	if( output == nullptr ) {
-		output = m_swapChain->GetBackBuffer();
+		output = GetSwapChainBackBuffer();
 	}
 
-	TextureView* view = output->GetRenderTargetView(); // texture view: handler of the data in texture
-	ID3D11RenderTargetView* rtv = view->GetRTVHandle();
+	TextureView* renderTargetView = output->GetOrCreateRenderTargetView(); // texture view: handler of the data in texture
+	TextureView* depthStencilView = depthBuffer->GetOrCreateDepthStencilView();	
+	ID3D11RenderTargetView* rtv = renderTargetView->GetRTVHandle();
+	ID3D11DepthStencilView* dsv = depthStencilView->GetDSVHandle();
+
 
 	IntVec2 outputSize = output->GetTexelSize();
 	D3D11_VIEWPORT viewport;
@@ -185,14 +191,14 @@ void RenderContext::BeginCamera( Camera& camera )
 															// Setup the GPU for a draw
 	m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 	m_context->RSSetViewports( 1, &viewport );
-	m_context->OMSetRenderTargets( 1, &rtv, nullptr ); // TODO begin camera
+
+	m_context->ClearDepthStencilView( dsv, D3D11_CLEAR_DEPTH, 1.f, 0 );
+	m_context->OMSetRenderTargets( 1, &rtv, dsv ); // TODO begin camera
 	
 	if( camera.GetShouldClearColor() ) {
 		ClearScreen( output, camera.GetClearColor() );
 	}
 	BindShader( static_cast<Shader*>( nullptr ) );
-	m_lastBoundVBO = nullptr;
-	m_lastBoundIBO = nullptr;
 
 	// Bind and set uniform buffer
 	RenderBuffer* cameraUBO = camera.GetOrCreateCameraBuffer( this );
@@ -315,13 +321,13 @@ void RenderContext::DrawMesh( GPUMesh* mesh )
 {
 	// Get model matrix
 	mesh->UpdateVerticeBuffer( nullptr );
-	mesh->UpdateIndiceBuffer();
 	BindVertexBuffer( mesh->GetOrCreateVertexBuffer() );
 	//UpdateLayoutIfNeeded(); // unfinished
 
 
 	bool hasIndices = mesh->GetIndexCount() > 0;
 	if( hasIndices ){
+		mesh->UpdateIndiceBuffer();
 		BindIndexBuffer( mesh->GetOrCreateIndexBuffer() );
 		DrawIndexed( mesh->GetIndexCount() );
 	}
@@ -637,6 +643,11 @@ void RenderContext::DrawCircle( Vec3 center,float radiu,float thick,Rgba8& circl
 
 }
 
+Texture* RenderContext::GetSwapChainBackBuffer()
+{
+	return m_swapChain->GetBackBuffer();
+}
+
 void RenderContext::SetBlendMode( BlendMode blendMode )
 {
 	float const zeroes[4] = { 0.f, 0.f, 0.f, 0.f };
@@ -667,5 +678,38 @@ void RenderContext::SetModelMatrix( Mat44 model )
 	model_t modelData;
 	modelData.model = model;
 	m_modelUBO->Update( &modelData, sizeof( modelData), sizeof( modelData ) );
+}
+
+void RenderContext::SetDepthTest( DepthCompareFunc func, bool writeDepthOnPass )
+{
+	if( m_currentDepthStencilState != nullptr && CheckDepthStencilState( func, writeDepthOnPass ) ){
+		m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 );
+	}
+	// create depth stencil state
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	dsDesc.DepthEnable		= true;
+	dsDesc.DepthWriteMask	= D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc		= D3D11_COMPARISON_LESS_EQUAL;
+	m_device->CreateDepthStencilState( &dsDesc, &m_currentDepthStencilState );
+	m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 );
+}
+
+bool RenderContext::CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass )
+{
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	m_currentDepthStencilState->GetDesc( &dsDesc );
+
+	bool writeCheck = dsDesc.DepthWriteMask == D3D11_DEPTH_WRITE_MASK_ALL ? true : false;
+	
+	if( writeDepthOnPass != writeCheck ){
+		return false;
+	}
+	if( dsDesc.DepthFunc != (D3D11_COMPARISON_FUNC)func ){
+		return false;
+	}
+
+	return true;
+	
+
 }
 

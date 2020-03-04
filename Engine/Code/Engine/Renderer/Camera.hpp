@@ -58,6 +58,7 @@ public:
 
 	Texture*		GetColorTarget() const { return m_colorTarget; }
 	Texture*		GetDepthStencilTarget() const { return m_depthStencilTarget; }
+	Texture*		GetOrCreateDepthStencilTarget( RenderContext* ctx );
 	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx );
 	
 	// Mutator

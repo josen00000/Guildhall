@@ -13,5 +13,6 @@ void IndexBuffer::Update( int iCount, const uint* indices )
 
 void IndexBuffer::Update( const std::vector<uint>& indices )
 {
-	Update( (int)indices.size(), &indices[0] );
+
+	Update( (int)indices.size(), indices.data() );
 }

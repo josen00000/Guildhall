@@ -20,6 +20,110 @@ void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound
 	vertices.push_back( rightdown );
 }
 
+void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor )
+{
+	Vec3 frontLeftdownPos	= box.min;
+	Vec3 frontRightupPos	= Vec3( box.max.x, box.max.y, box.min.z );
+	Vec3 frontLeftupPos		= Vec3( box.min.x, box.max.y, box.min.z );
+	Vec3 frontRightdownPos	= Vec3( box.max.x, box.min.y, box.min.z );
+
+	Vec3 backLeftdownPos	= Vec3( box.max.x, box.min.y, box.max.z );
+	Vec3 backRightupPos		= Vec3( box.min.x, box.max.y, box.max.z );
+	Vec3 backLeftupPos		= box.max;
+	Vec3 backRightdownPos	= Vec3( box.min.x, box.min.y, box.max.z );
+
+	// front face
+	Vertex_PCU frontLeftdown	= Vertex_PCU( frontLeftdownPos, tintColor, Vec2::ZERO );
+	Vertex_PCU frontRightup		= Vertex_PCU( frontRightupPos, tintColor, Vec2::ONE );
+	Vertex_PCU frontLeftup		= Vertex_PCU( frontLeftupPos, tintColor, Vec2( 0.f, 1.f ) );
+	Vertex_PCU frontRightdown	= Vertex_PCU( frontRightdownPos, tintColor, Vec2( 1.f, 0.f ) );
+
+	// back face
+	Vertex_PCU backLeftdown		= Vertex_PCU( backLeftdownPos, tintColor, Vec2::ZERO );
+	Vertex_PCU backRightup		= Vertex_PCU( backRightupPos, tintColor, Vec2::ONE );
+	Vertex_PCU backLeftup		= Vertex_PCU( backLeftupPos, tintColor, Vec2( 0.f, 1.f ) );
+	Vertex_PCU backRightdown	= Vertex_PCU( backRightdownPos, tintColor, Vec2( 1.f, 0.f ) );
+
+	// left face
+	Vertex_PCU leftLeftdown		= Vertex_PCU( backRightdownPos, tintColor, Vec2::ZERO );
+	Vertex_PCU leftRightup		= Vertex_PCU( frontLeftupPos, tintColor, Vec2::ONE );
+	Vertex_PCU leftLeftup		= Vertex_PCU( backRightupPos, tintColor, Vec2( 0.f, 1.f ) );
+	Vertex_PCU leftRightdown	= Vertex_PCU( frontLeftdownPos, tintColor, Vec2( 1.f, 0.f ) );
+
+	// right face
+	Vertex_PCU rightLeftdown	= Vertex_PCU( frontRightdownPos, tintColor, Vec2::ZERO );
+	Vertex_PCU rightRightup		= Vertex_PCU( backLeftupPos, tintColor, Vec2::ONE );
+	Vertex_PCU rightLeftup		= Vertex_PCU( frontRightupPos, tintColor, Vec2( 0.f, 1.f ) );
+	Vertex_PCU rightRightdown	= Vertex_PCU( backLeftdownPos, tintColor, Vec2( 1.f, 0.f ) );
+
+	// top face
+	Vertex_PCU topLeftdown		= Vertex_PCU( frontLeftupPos, tintColor, Vec2::ZERO );
+	Vertex_PCU topRightup		= Vertex_PCU( backLeftupPos, tintColor, Vec2::ONE );
+	Vertex_PCU topLeftup		= Vertex_PCU( backRightupPos, tintColor, Vec2( 0.f, 1.f ) );
+	Vertex_PCU topRightdown		= Vertex_PCU( frontRightupPos, tintColor, Vec2( 1.f, 0.f ) );
+
+	// bottom face
+	Vertex_PCU bottomLeftdown	= Vertex_PCU( backRightdownPos, tintColor, Vec2::ZERO );
+	Vertex_PCU bottomRightup	= Vertex_PCU( frontLeftdownPos, tintColor, Vec2::ONE );
+	Vertex_PCU bottomLeftup		= Vertex_PCU( frontLeftdownPos, tintColor, Vec2( 0.f, 1.f ) );
+	Vertex_PCU bottomRightdown	= Vertex_PCU( backLeftdownPos, tintColor, Vec2( 1.f, 0.f ) );
+
+	vertices.resize( sizeof(Vertex_PCU)* 36 );
+	// front triangles
+	vertices.push_back( frontLeftdown );
+	vertices.push_back( frontRightup );
+	vertices.push_back( frontRightdown );
+
+	vertices.push_back( frontLeftdown );
+	vertices.push_back( frontRightup );
+	vertices.push_back( frontLeftup );
+
+	// back triangles
+	vertices.push_back( backLeftdown );
+	vertices.push_back( backRightup );
+	vertices.push_back( backRightdown );
+
+	vertices.push_back( backLeftdown );
+	vertices.push_back( backRightup );
+	vertices.push_back( backLeftup );
+
+	// left triangles
+	vertices.push_back( leftLeftdown );
+	vertices.push_back( leftRightup );
+	vertices.push_back( leftRightdown );
+
+	vertices.push_back( leftLeftdown );
+	vertices.push_back( leftRightup );
+	vertices.push_back( leftLeftup );
+
+	// right triangles
+	vertices.push_back( rightLeftdown );
+	vertices.push_back( rightRightup );
+	vertices.push_back( rightRightdown );
+
+	vertices.push_back( rightLeftdown );
+	vertices.push_back( rightRightup );
+	vertices.push_back( rightLeftup );
+
+	// top triangles
+	vertices.push_back( topLeftdown );
+	vertices.push_back( topRightup );
+	vertices.push_back( topRightdown );
+
+	vertices.push_back( topLeftdown );
+	vertices.push_back( topRightup );
+	vertices.push_back( topLeftup );
+
+	// bottom triangles
+	vertices.push_back( bottomLeftdown );
+	vertices.push_back( bottomRightup );
+	vertices.push_back( bottomRightdown );
+
+	vertices.push_back( bottomLeftdown );
+	vertices.push_back( bottomRightup );
+	vertices.push_back( bottomLeftup );
+}
+
 void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
 {
 	UNUSED(uvAtMins);
@@ -106,13 +210,13 @@ void AppendVertsForHalfCircle2D( std::vector<Vertex_PCU>& vertices, const Vec2& 
 
 void AppendVertsForSphere3D( std::vector<Vertex_PCU>& vertices, Vec3 center, float radius, int hCut, int vCut, Rgba8& tintColor )
 {
-	float deltaTheta = 360.f / (float)hCut;
-	float deltaPhi	 = 180.f / (float)vCut;
-	for( int hIndex = 0; hIndex < hCut; hIndex++ ){
-		float phi = -90.f + hIndex * deltaPhi;
-		for( int vIndex = 0; vIndex < vCut; vIndex++ ){
+	float deltaTheta = 360.f / (float)vCut;
+	float deltaPhi	 = 180.f / (float)hCut;
+	for( int rowIndex = 0; rowIndex < hCut; rowIndex++ ){
+		float phi = -90.f + rowIndex * deltaPhi;
+		for( int columnIndex = 0; columnIndex < vCut; columnIndex++ ){
 			// append face
-			float theta = vIndex * deltaTheta;
+			float theta = columnIndex * deltaTheta;
 			Vec3 posLeftDown	= Vec3::MakeFromPolarDegrees( theta, phi, radius );
 			Vec3 posRightDown	= Vec3::MakeFromPolarDegrees( ( theta + deltaTheta ), phi, radius );
 			Vec3 posLeftUp		= Vec3::MakeFromPolarDegrees( theta, ( phi + deltaPhi ), radius );	
@@ -161,6 +265,13 @@ void AppendIndexedVertsForSphere3D( std::vector<Vertex_PCU>& vertices, std::vect
 {
 	std::vector<Vertex_PCU> verticesNotIndexed;
 	AppendVertsForSphere3D( verticesNotIndexed, center, radius, hCut, vCut, tintColor );
+	AppendIndexedVerts( vertices, index, verticesNotIndexed );
+}
+
+void AppendIndexedVertsForAABB3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, AABB3 box, Rgba8& tintColor )
+{
+	std::vector<Vertex_PCU>verticesNotIndexed;
+	AppendVertsForAABB3D( verticesNotIndexed, box, tintColor );
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 

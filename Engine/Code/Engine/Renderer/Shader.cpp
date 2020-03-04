@@ -179,7 +179,7 @@ void Shader::CreateRasterState()
 {
 	D3D11_RASTERIZER_DESC desc;
 	desc.FillMode				= D3D11_FILL_SOLID;
-	desc.CullMode				= D3D11_CULL_NONE	;
+	desc.CullMode				= D3D11_CULL_NONE;
 	desc.FrontCounterClockwise	= TRUE;
 	desc.DepthBias				= 0U;
 	desc.DepthBiasClamp			= 0.0f;

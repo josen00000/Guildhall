@@ -119,7 +119,7 @@ void Camera::SetColorTarget( Texture* colorTarget )
 
 void Camera::SetDepthStencilTarget( Texture* texture )
 {
-
+	m_depthStencilTarget = texture;
 }
 
 void Camera::SetPitchRollYawRotation( float pitch, float roll, float yaw )
@@ -155,6 +155,19 @@ void Camera::SetProjectionPerspective( float fov/*=60*/, float nearZ/*=-0.1*/, f
 	m_projection.m_values[Mat44::Ty] = 0.f;
 	m_projection.m_values[Mat44::Tz] = nearZ * farZ * q;
 	m_projection.m_values[Mat44::Tw] = 0.f;
+}
+
+Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext* ctx )
+{
+	if( m_depthStencilTarget != nullptr ){
+		return m_depthStencilTarget;
+	}
+	if( m_colorTarget == nullptr ){
+		m_colorTarget = ctx->GetSwapChainBackBuffer();
+	}
+
+	m_depthStencilTarget = Texture::CreateDepthStencilBuffer( ctx, m_colorTarget->GetTexelSize().x, m_colorTarget->GetTexelSize().y );
+	return m_depthStencilTarget;
 }
 
 RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx )
