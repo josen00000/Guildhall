@@ -32,7 +32,6 @@ public:
 
 	// Mouse 
 	IntVec2 GetMouseRawDesktopPos() const; // interface to know
-<<<<<<< HEAD
 	Vec2 GetNormalizedMousePos() const; // within opengl windows
 	Vec2 GetNormalizedMousePosInClient( void* hWnd ) const; // within opengl windows
 	Vec2 GetMouseRawPosInClient( void* hWnd ) const;
@@ -54,9 +53,7 @@ public:
 	void SetCursorMode( CursorMode mode );
 	
 	// Xbox controller
-	void UpdateKeyBoardButton( unsigned char inValue, bool isPressed );
-	const KeyBoardController& GetKeyBoardController(){return m_keyBoardController; }
-	const XboxController& GetXboxController(int controllerID);
+	const XboxController* GetXboxController(int controllerID);
 
 	// keyboard
 	void UpdateKeyBoardButton(unsigned char inValue, bool isPressed);

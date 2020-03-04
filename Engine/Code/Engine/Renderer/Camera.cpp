@@ -101,30 +101,10 @@ Vec3 Camera::GetPosition() const
 	return m_transform.GetPosition();
 }
 
-AABB2 Camera::GetCameraBox() const
+AABB2 Camera::GetCameraAsBox() const
 {
 	AABB2 result = AABB2( GetOrthoBottomLeft(), GetOrthoTopRight() );
 	return result;
-}
-
-RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx )
-{
-	if( m_cameraUBO == nullptr ) {
-		m_cameraUBO = new RenderBuffer( ctx, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	}
-	UpdateCameraUBO();
-	return m_cameraUBO;
-}
-
-
-// Mutator
-void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight )
-{
-	m_position.x = ( topRight.x + bottomLeft.x ) / 2;
-	m_position.y = ( topRight.y + bottomLeft.y ) / 2;
-	m_outputSize.x = topRight.x - bottomLeft.x;
-	m_outputSize.y = topRight.y - bottomLeft.y;
-	m_projection = Mat44::CreateOrthographicProjection( Vec3( bottomLeft, 0.0f ), Vec3( topRight, 1.0f ) );
 }
 
 void Camera::SetOutputSize( Vec2 size )
@@ -156,11 +136,6 @@ void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, f
 	SetOutputSize( aspectRatio, height );
 }
 
-void Camera::SetShouldClearColor( bool shouldClearColor )
-{
-	m_shouldClearColor = shouldClearColor;
-}
-
 void Camera::SetClearMode( unsigned int clearFlags, Rgba8 color, float depth /*= 0.0f */, unsigned int stencil /*= 0 */ )
 {
 	m_clearMode = clearFlags;
@@ -172,15 +147,6 @@ void Camera::SetClearMode( unsigned int clearFlags, Rgba8 color, float depth /*=
 void Camera::SetColorTarget( Texture* colorTarget )
 {
 	m_colorTarget = colorTarget;
-}
-
-void Camera::UpdateCameraUBO()
-{
-	camera_ortho_t cameraData;
-	cameraData.projection = m_projection;
-	Mat44 tempTest = Mat44::CreateTranslation3D( m_position );
-	cameraData.view = Mat44::CreateTranslation3D( -m_position );
-	m_cameraUBO->Update( &cameraData, sizeof( cameraData ), sizeof( cameraData ) );
 }
 
 void Camera::SetDepthStencilTarget( Texture* texture )
@@ -255,6 +221,7 @@ void Camera::UpdateCameraUBO()
 	m_cameraUBO->Update( &cameraData, sizeof( cameraData ), sizeof( cameraData ) );
 }
 
+
 void Camera::UpdateCameraRotation( Vec3 deltaRot )
 {
 	Vec3 cameraRot = m_transform.GetRotationPRYDegrees();
@@ -307,11 +274,11 @@ Vec2 Camera::ClientToWorldPosition( Vec2 clientPos )
 // Private
 Vec2 Camera::GetOrthoMin() const
 {
-	return ( Vec2( m_position ) - ( m_outputSize / 2 ) );
+	return Vec2::ZERO;
 }
 
 Vec2 Camera::GetOrthoMax() const
 {
-	return ( Vec2( m_position ) + ( m_outputSize / 2 ) );
-}
+	return Vec2::ZERO;
 
+}

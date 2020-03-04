@@ -124,7 +124,7 @@ void DevConsole::Render( RenderContext& renderer ) const
 void DevConsole::RenderCaret() const
 {
 	float cellWidth = m_font->GetCellWidth( m_lineHeight, 1.f );
-	AABB2 cameraBox = m_camera->GetCameraBox();
+	AABB2 cameraBox = m_camera->GetCameraAsBox();
 	
 	Vec2 start = cameraBox.mins + Vec2( cellWidth * m_caretIndex, 0.f );
 	Vec2 end = cameraBox.mins + Vec2( cellWidth * m_caretIndex, m_lineHeight );
@@ -149,7 +149,7 @@ void DevConsole::EndSelect()
 
 void DevConsole::RenderSelectArea() const
 {
-	AABB2 cameraBox = m_camera->GetCameraBox();
+	AABB2 cameraBox = m_camera->GetCameraAsBox();
 	float cellWidth = m_font->GetCellWidth( m_lineHeight , 1.f );
 	Rgba8 selectColor = Rgba8( 176, 224, 230, 50 );
 
@@ -191,7 +191,7 @@ void DevConsole::AddVertForInput() const
 {
 	// Render input line
 	Vec2 alignment = Vec2::ZERO;
-	m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraBox(), m_lineHeight, m_inputs, m_defaultColor, 1, alignment );
+	m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraAsBox(), m_lineHeight, m_inputs, m_defaultColor, 1, alignment );
 	// Render marker
 	
 }
@@ -205,7 +205,7 @@ void DevConsole::AddVertForContent() const
 	for( int lineIndex = (int)(m_lines.size() - 1); lineIndex > (int)m_lines.size() - maxDisplayedLinesNum; lineIndex-- ) {
 		if( lineIndex < 0 ) { break; }
 		ColoredLine tem = m_lines[lineIndex];
-		m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraBox(), m_lineHeight, tem.text, tem.color, 1.f, alignment );
+		m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraAsBox(), m_lineHeight, tem.text, tem.color, 1.f, alignment );
 		alignment.y += deltaY;
 	}
 }

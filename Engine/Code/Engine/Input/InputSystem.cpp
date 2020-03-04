@@ -101,7 +101,6 @@ Vec2 InputSystem::GetNormalizedMousePosInCamera( void* hWnd, const Camera& camer
 	return mousePosInCamera;
 }
 
-<<<<<<< HEAD
 void InputSystem::UpdateMouseButtonState( MouseButtonID mouseID, bool isPressed )
 {
 	m_mouseController->UpdateButtonCurrentFrame( (unsigned char)mouseID, isPressed );
@@ -170,7 +169,7 @@ void InputSystem::UpdateRelativeMode( )
 	//move mouse to center of screen
 	// calculate the delta of the cursor
 	// get top window
-	POINT cursorPos;
+	//POINT cursorPos;
 	
 	IntVec2 positionThisFrame = GetMouseRawDesktopPos();
 	static IntVec2 positionLastFrame = positionThisFrame; 
@@ -190,12 +189,6 @@ void InputSystem::UpdateRelativeMode( )
 	//GetCursorPos( &cursorPos );
 	IntVec2 windowCenter = IntVec2( windowCenterPoint.x, windowCenterPoint.y );
 	positionLastFrame = windowCenter;
-}
-
-void InputSystem::UpdateKeyBoardButton( unsigned char inValue, bool isPressed )
-{
-	const KeyButtonState& tempMouseButtonState = m_mouseController->m_mouseButton[buttonID];
-	return tempMouseButtonState.WasJustReleased();
 }
 
 const XboxController* InputSystem::GetXboxController( int controllerID )

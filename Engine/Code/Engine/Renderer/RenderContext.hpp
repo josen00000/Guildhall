@@ -129,7 +129,6 @@ public:
 	void DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor );
 	void DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor );
 	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
-	void SetBlendMode( BlendMode blendMode );
 
 	// Render
 	Texture* GetSwapChainBackBuffer();
