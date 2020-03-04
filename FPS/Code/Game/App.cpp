@@ -29,19 +29,21 @@ DevConsole*		g_theConsole		= nullptr;
 
 void App::Startup()
 {
-	g_camera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_camera			= Camera::CreatePerspectiveCamera( 60, -0.1f, -100.f );
 	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
 	g_devCamera			= new Camera( Vec2( -32, -18 ), Vec2( 32, 18 ) );
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theGame			= new Game( g_camera, g_UICamera );
 	g_theEventSystem	= new EventSystem();
+
 	
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );
 	g_theGame->Startup();
 	g_theInputSystem->Startup();
 
+	g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
 	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
 	g_theConsole->PrintString( Rgba8::RED, std::string( "test ") );
@@ -153,6 +155,7 @@ void App::Update( float deltaSeconds )
 	g_theRenderer->UpdateFrameTime( deltaSeconds );
 	g_theGame->RunFrame( deltaSeconds );
 	CheckGameQuit();
+	g_theInputSystem->Update();
 
 	// devconsole
 	HandleDevConsoleInput();

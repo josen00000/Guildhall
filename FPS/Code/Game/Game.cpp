@@ -1,10 +1,13 @@
 #include "Game.hpp"
 #include "Game/App.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
+#include "Engine/Renderer/GPUMesh.hpp"
+#include "Engine/Renderer/MeshUtils.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Shader.hpp"
 
@@ -31,6 +34,7 @@ void Game::Startup()
 	m_debugCamera	= false;
 	m_isAppQuit		= false;
 	m_isAttractMode	= false;
+	CreateTestMesh();
 
 }
 
@@ -57,38 +61,6 @@ void Game::Update( float deltaSeconds )
 	}
 
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
-
-	
-
-// 	switch ( m_gameState )
-// 	{
-// 		case GAME_STATE_LOADING:{
-// 			LoadAssets();
-// 			m_gameState = GAME_STATE_ATTRACT;
-// 			break;
-// 		}
-// 		case GAME_STATE_ATTRACT:{
-// 			static bool isResetFinished = false;
-// 			if( !isResetFinished ){
-// 				Reset();
-// 				isResetFinished = true;
-// 			}
-// 			if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_SPACE)){
-// 				m_gameState = GAME_STATE_PLAYING;
-// 			}
-// 			break;
-// 		}
-// 		case GAME_STATE_PLAYING:{
-// 			if( m_isPause ){ return; }
-// 			m_world->Update( deltaSeconds );
-// 			break;
-// 		}
-// 		case GAME_STATE_END:{
-// 			break;
-// 		}
-// 
-// 
-// 	}
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -105,25 +77,56 @@ void Game::HandleKeyboardInput()
 {
 	CheckIfExit();
 	HandleCameraMovement();
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ){
+		g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P) ){
+		g_theInputSystem->SetCursorMode( CURSOR_ABSOLUTE );
+	}
+}
+
+void Game::HandleMouseInput()
+{
+	
 }
 
 void Game::HandleCameraMovement()
 {
-	Vec2 movement = Vec2::ZERO;
+	float coe = 1.0f;
+	Vec3 movement = Vec3::ZERO;
+	//Vec3 rotation = Vec3::ZERO;
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ){
+		coe = 2.0f;
+	}
+	else{
+		coe = 1.0f;
+	}
+
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_LEFT_ARROW ) ) {
-		movement.x -= 1.0f;
+		movement.x -= 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_ARROW ) ) {
-		movement.x += 1.0f;
+		movement.x += 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_UP_ARROW ) ) {
-		movement.y += 1.0f;
+		movement.y += 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_DOWN_ARROW ) ) {
-		movement.y -= 1.0f;
+		movement.y -= 1.0f * coe;
 	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_W ) ){
+		movement.z += 1.0f * coe;
+	}
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
+		movement.z -= 1.0f * coe;
+	}
+
 	Vec3 cameraPos = m_gameCamera->GetPosition();
 	cameraPos += movement;
+	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
+	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 10;
+	m_gameCamera->UpdateCameraRotation( rotation );
+	//g_theConsole->PrintString( Rgba8::RED, "mouse move is " + std::to_string( mouseMove.x ) + std::to_string( mouseMove.y ) );
 	m_gameCamera->SetPosition( cameraPos );
 }
 
@@ -172,8 +175,11 @@ void Game::Render() const
 	m_gameCamera->m_clearColor = tempColor;
 	g_theRenderer->BeginCamera( *m_gameCamera );
 	g_theRenderer->DrawAABB2D( AABB2( Vec2( -5, -5 ),Vec2::ZERO  ), Rgba8::RED );
-	g_theRenderer->BindShader("data/Shader/Reverse.hlsl");
-	g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
+	//g_theRenderer->BindShader( "data/Shader/Reverse.hlsl" );
+	//g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
+	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
+	g_theRenderer->BindTexture( temp );
+	g_theRenderer->DrawMesh( m_meshCube );
 	g_theRenderer->EndCamera( *m_gameCamera );
 }
 
@@ -187,5 +193,21 @@ void Game::LoadAssets()
 	//g_squirrelFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 	//g_theRenderer->CreateOrGetTextureFromFile("FilePath");
 	//g_theAudioSystem->CreateOrGetSound("FilePath");
+}
+
+void Game::CreateTestMesh()
+{
+	m_meshCube = new GPUMesh();
+	m_meshCube->m_owner = g_theRenderer;
+	std::vector<Vertex_PCU> vertices;
+	std::vector<uint> indices;
+	AABB2 testAABB = AABB2( Vec2::ZERO, Vec2::ONE * 10 );
+	AABB3 testAABB3 = AABB3( Vec3( -4.f, -4.5f, -7.f ), Vec3( 6.f, 5.5f, -17.f ) );
+	//AppendIndexedVertsForAABB2D( vertices, indices, testAABB, Rgba8::WHITE, Vec2::ZERO, Vec2::ONE );
+	AppendIndexedVertsForAABB3D( vertices, indices, testAABB3, Rgba8::RED );
+	//AppendVertsForSphere3D( vertices, Vec3( 0.f, 0.f, -10.f ), 3.f, 16, 32, Rgba8::RED );
+	//AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, -10.f ), 3.f, 3, 2, Rgba8::RED );
+	m_meshCube->UpdateVerticesInCPU( vertices );
+	m_meshCube->UpdateIndicesInCPU( indices );
 }
 

@@ -19,8 +19,7 @@ public:
 
 
 private:
-	Texture* m_backBuffer	= nullptr;
-	Texture* m_colorTarget	= nullptr;
+	Texture* m_backBuffer	= nullptr; // is color target
 
 public:
 	RenderContext* m_owner;

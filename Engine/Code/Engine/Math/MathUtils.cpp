@@ -1,6 +1,7 @@
 #pragma once
 #include <math.h>
 #include "Engine/Math/MathUtils.hpp"
+#include "Engine/Math/Mat44.hpp"
 #include "Engine/Math/Vec2.hpp"
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Math/IntVec2.hpp"
@@ -705,5 +706,36 @@ IntVec2 TransformFromWorldPosToTilePos( const Vec2 worldPos )
 	int temWorldPosY = RoundDownToInt( worldPos.y);
 	IntVec2 tilePos = IntVec2(temWorldPosX, temWorldPosY);
 	return tilePos;
+}
+
+bool IsFloatMostlyEqual( float a, float b, float epsilon/*=0.001f */ )
+{
+	float diff = a - b;
+	if( diff <= epsilon && diff >= -epsilon ) {
+		return true;
+	}
+	else{
+		return true;
+	}
+}
+
+bool IsVec2MostlyEqual( Vec2 a, Vec2 b, float epsilon/*=0.001f */ )
+{
+	if( IsFloatMostlyEqual( a.x, b.x, epsilon ) && IsFloatMostlyEqual( a.y, b.y, epsilon ) ){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon/*=0.01f */ )
+{
+	for( int i = 0; i < 16; i++ ){
+		if( !IsFloatMostlyEqual( a.m_values[i], b.m_values[i], epsilon ) ){
+			return false;
+		}
+	}
+	return true;
 }
 

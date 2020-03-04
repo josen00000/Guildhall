@@ -28,14 +28,16 @@
     <Filter Include="Platform">
       <UniqueIdentifier>{d20bfacb-6c29-4f9d-97ce-444d001c6111}</UniqueIdentifier>
     </Filter>
+<<<<<<< HEAD
     <Filter Include="Math\basic">
       <UniqueIdentifier>{3fc03a6a-ecaf-42bf-a0d9-0247a75a0318}</UniqueIdentifier>
-	</Filter>
+=======
     <Filter Include="Renderer\D3DPipeLine">
       <UniqueIdentifier>{d0e4c9e4-827e-4ea3-9f8d-d2630e7f32b5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\Sprite">
       <UniqueIdentifier>{cc67e17d-f386-40af-b8a8-eba83ec67077}</UniqueIdentifier>
+>>>>>>> sd2/turnin/a04
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +85,23 @@
     </ClCompile>
     <ClCompile Include="Audio\AudioSystem.cpp">
       <Filter>Audio</Filter>
+    </ClCompile>
+<<<<<<< HEAD
+    <ClCompile Include="Renderer\BitmapFont.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\SpriteAnimDefinition.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\SpriteDefinition.cpp">
+      <Filter>Renderer</Filter>
+=======
+    <ClCompile Include="Math\Mat44.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Vec4.cpp">
+      <Filter>Math</Filter>
+>>>>>>> sd2/turnin/a04
     </ClCompile>
     <ClCompile Include="Core\DevConsole.cpp">
       <Filter>Core</Filter>
@@ -301,6 +320,23 @@
     </ClInclude>
     <ClInclude Include="..\ThirdParty\fmod\fmod_output.h">
       <Filter>Audio</Filter>
+    </ClInclude>
+<<<<<<< HEAD
+    <ClInclude Include="Renderer\BitmapFont.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\SpriteAnimDefinition.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\SpriteDefinition.hpp">
+      <Filter>Renderer</Filter>
+=======
+    <ClInclude Include="Math\Mat44.hpp">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Vec4.hpp">
+      <Filter>Math</Filter>
+>>>>>>> sd2/turnin/a04
     </ClInclude>
     <ClInclude Include="Core\DevConsole.hpp">
       <Filter>Core</Filter>

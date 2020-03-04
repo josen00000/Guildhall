@@ -103,6 +103,14 @@ void Vec3::SetText( const char* text )
 
 }
 
+const Vec3 Vec3::MakeFromPolarDegrees( float theta, float phi, float length/*=1.f */ )
+{
+	float cosPhi = CosDegrees( phi );
+	Vec3 result = Vec3( ( cosPhi * CosDegrees( theta ) ), SinDegrees( phi ), ( -cosPhi * SinDegrees( theta ) ) );
+	result = result * length;
+	return result;
+}
+
 //-----------------------------------------------------------------------------------------------
 const Vec3 Vec3::operator+ ( const Vec3& vecToAdd ) const
 {

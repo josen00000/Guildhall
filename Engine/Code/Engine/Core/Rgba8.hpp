@@ -15,6 +15,9 @@ public:
 	//Mutators
 	void SetFromText(const char* text);
 
+	// Operator
+	bool operator==( const Rgba8 compareWith ) const;
+
 public:
 	static Rgba8 WHITE;
 	static Rgba8 BLACK;

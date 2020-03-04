@@ -15,3 +15,8 @@ void TextureView::SetSRVHandle( ID3D11ShaderResourceView* srv )
 {
 	m_srv = srv;
 }
+
+void TextureView::SetDSVHandle( ID3D11DepthStencilView* dsv )
+{
+	m_dsv = dsv;
+}

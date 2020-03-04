@@ -29,14 +29,45 @@ Texture::~Texture()
 {
 	delete m_renderTargetView;
 	delete m_shaderResourcwView;
-	m_renderTargetView = nullptr;
-	m_shaderResourcwView = nullptr;
+	delete m_depthStencilView;
+
+	m_renderTargetView		= nullptr;
+	m_shaderResourcwView	= nullptr;
+	m_depthStencilView		= nullptr;
 	m_owner = nullptr;
 	DX_SAFE_RELEASE(m_handle);
 
 }
 
-TextureView* Texture::GetRenderTargetView()
+Texture* Texture::CreateDepthStencilBuffer( RenderContext* ctx, int width, int height )
+{
+	// Create depth texture desc
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width				= width;
+	desc.Height				= height;
+	desc.MipLevels			= 1;
+	desc.ArraySize			= 1;
+	desc.Format				= DXGI_FORMAT_D32_FLOAT;
+	desc.SampleDesc.Count	= 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage				= D3D11_USAGE_DEFAULT; // mip-chains, GPU/DEFAUTE
+	desc.BindFlags			= D3D11_BIND_DEPTH_STENCIL; //| D3D11_BIND_SHADER_RESOURCE do it later only be r 32; // what does it means?
+	desc.CPUAccessFlags		= 0;
+	desc.MiscFlags			= 0;
+	
+	ID3D11Texture2D* texHandle = nullptr;
+	ctx->m_device->CreateTexture2D( &desc, NULL, &texHandle );
+
+	Texture* depthBuffer = new Texture( ctx, texHandle );
+	return depthBuffer;
+}
+
+void Texture::SetTextureID( int textureID )
+{
+	m_textureID=textureID;
+}
+
+TextureView* Texture::GetOrCreateRenderTargetView()
 {
 	if( m_renderTargetView ){
 		return m_renderTargetView;
@@ -67,3 +98,19 @@ TextureView* Texture::GetOrCreateShaderResourceView()
 	}
 	return m_shaderResourcwView;
 }
+
+TextureView* Texture::GetOrCreateDepthStencilView()
+{
+	if( m_depthStencilView != nullptr ){ return m_depthStencilView; }
+
+	ID3D11Device* dev = m_owner->m_device;
+	ID3D11DepthStencilView* dsv = nullptr;
+	dev->CreateDepthStencilView( m_handle, nullptr, &dsv );
+
+	if( dsv != nullptr ){
+		m_depthStencilView = new TextureView();
+		m_depthStencilView->m_dsv = dsv;
+	}
+	return m_depthStencilView;
+}
+

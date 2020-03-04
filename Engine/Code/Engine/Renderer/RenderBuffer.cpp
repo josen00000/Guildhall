@@ -24,6 +24,7 @@ bool RenderBuffer::Update( void const* data, size_t dataByteSize, size_t element
 	// 1. if not compatible - destroy the old buffer
 	if( !IsCompatible( dataByteSize,elementByteSize ) ) {
 		Cleanup();// destroy the handle, reset things
+		Create( dataByteSize, elementByteSize );
 	}
 	// our elementSize matches the passed in 
 	// if we're GPU
@@ -31,7 +32,6 @@ bool RenderBuffer::Update( void const* data, size_t dataByteSize, size_t element
 	// if we're dynamic
 		// passed in buffer size is less than our bufferSize 
 	// 2. if no buffer, create one that is compatible
-	Create( dataByteSize, elementByteSize );
 	// 3. updating the buffer
 
 	ID3D11DeviceContext* ctx = m_owner->m_context;
@@ -138,5 +138,7 @@ bool RenderBuffer::Create( size_t dataByteSize, size_t elementByteSize )
 	desc.StructureByteStride = (UINT)elementByteSize;
 	device->CreateBuffer( &desc, nullptr, &m_handle );
 
+	m_bufferByteSize = dataByteSize;
+	m_elementByteSize = elementByteSize;
 	return ( m_handle != nullptr );
 }

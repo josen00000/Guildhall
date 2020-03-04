@@ -22,12 +22,14 @@ public:
 	float GetLengthXYSquared() const;
 	float GetAngleAboutZRadians() const;
 	float GetAngleAboutZDegrees() const;
-	const Vec3 GetRotatedAboutZRadians(float deltaRadians)const;
-	const Vec3 GetRotatedAboutZDegrees(float deltaDegrees)const;
-	const Vec3 GetClamped(float maxLength)const;
+	const Vec3 GetRotatedAboutZRadians( float deltaRadians ) const;
+	const Vec3 GetRotatedAboutZDegrees( float deltaDegrees ) const;
+	const Vec3 GetClamped( float maxLength )const;
 	const Vec3 GetNormalized() const;
 
 	void SetText( const char* text);
+
+	static const Vec3 MakeFromPolarDegrees( float theta, float phi, float length=1.f );
 
 public:
 	// Operators (const)

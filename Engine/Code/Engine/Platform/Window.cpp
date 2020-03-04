@@ -3,9 +3,11 @@
 #include <windows.h>
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Math/AABB2.hpp"
 
 static wchar_t const* WND_CLASS_NAME = TEXT("Simple Window Class");
 extern DevConsole* g_theConsole;
+extern Window* g_theWindow;
 
 //-----------------------------------------------------------------------------------------------
 // Handles Windows (Win32) messages/events; i.e. the OS is trying to tell us something happened.
@@ -216,7 +218,25 @@ int Window::GetClientHeight() const
 	return m_clientHeight;
 }
 
+Vec2 Window::GetClientCenter() const
+{
+	RECT clientRect;
+	GetClientRect( static_cast<HWND>(m_hwnd), &clientRect );
+	return Vec2( clientRect.right / 2, clientRect.bottom / 2 );
+}
+
 void Window::SetInputSystem( InputSystem* input )
 {
 	m_inputSystem = input;
+}
+
+void* Window::GetTopWindowHandle()
+{
+	// TODO function should get the current top window and return. 
+	// temp just return g_theWindow. there is only one windows using. 
+	// Need to implement later.
+	HWND topWindowHandle;
+	topWindowHandle = GetTopWindow( NULL );
+	return (void*)g_theWindow->m_hwnd;
+	//return (void*)topWindowHandle;
 }
