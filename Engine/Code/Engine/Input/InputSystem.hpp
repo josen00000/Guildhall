@@ -32,7 +32,6 @@ public:
 
 	// Mouse 
 	IntVec2 GetMouseRawDesktopPos() const; // interface to know
-	Vec2 GetNormalizedMousePos() const; // within opengl windows
 	Vec2 GetNormalizedMousePosInClient( void* hWnd ) const; // within opengl windows
 	Vec2 GetMouseRawPosInClient( void* hWnd ) const;
 	Vec2 GetNormalizedMousePosInCamera( void* hWnd, const Camera& camera ) const;

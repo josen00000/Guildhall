@@ -82,6 +82,7 @@ float GetAngleDegreesBetweenVectors2D(const Vec2& vectorA, const Vec2& vectorB);
 // 
 float Interpolate(float a,float b,float fractionOfB);
 float RangeMapFloat(const float inStart,const float inEnd,const float outStart,const float outEnd, const float inValue);
+Vec3 RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 inValue );
 float ClampFloat(float inMin,float inMax,float inValue);
 float temClampFloat(float inValue, float inMin, float inMax);
 float ClampZeroToOne(float value);

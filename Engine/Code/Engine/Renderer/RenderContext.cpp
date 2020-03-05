@@ -116,6 +116,8 @@ void RenderContext::Shutdown()
 	delete m_swapChain;
 	delete m_defaultShader;
 	delete m_immediateVBO;
+	//delete m_lastBoundVBO;
+	//delete m_lastBoundIBO;
 	delete m_frameUBO;
 	delete m_modelUBO;
 	delete m_defaultSampler;
@@ -129,6 +131,7 @@ void RenderContext::Shutdown()
 	m_defaultShader		= nullptr;
 
 	CleanTextures();
+	m_texDefaultColor = nullptr;
 
 	for( ShaderMapIterator it = m_shaders.begin(); it != m_shaders.end(); ++it ) {
 		delete it->second;
@@ -141,6 +144,8 @@ void RenderContext::Shutdown()
 	DX_SAFE_RELEASE(m_additiveBlendState);
 	DX_SAFE_RELEASE(m_opaqueBlendState);
 	DX_SAFE_RELEASE(m_currentDepthStencilState);
+	DX_SAFE_RELEASE(m_lastBoundIBO);
+	//DX_SAFE_RELEASE(m_lastBoundVBO);
 }
 
 

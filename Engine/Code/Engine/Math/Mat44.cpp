@@ -688,6 +688,7 @@ Mat44 Mat44::GetInvertMatrix() const
 	}
 }
 
+
 const Mat44 Mat44::CreateOrthographicProjectionMatrix( const Vec3& min, const Vec3& max )
 {
 	//TODO
@@ -708,17 +709,177 @@ const Mat44 Mat44::CreateOrthographicProjectionMatrix( const Vec3& min, const Ve
 	return Mat44( mat );
 }
 
-const Mat44 Mat44::CreatePersectiveProjectionMatrix( float fovDegrees, float aspectRadio, float nearZ, float farZ )
+const Mat44 Mat44::CreatePerspectiveProjectionMatrix( float fovDegrees, float aspectRadio, float nearZ, float farZ )
 {
-	return Mat44();
+	float fovRadians = ConvertDegreesToRadians( fovDegrees );
+	float height = 1.f / (float)tan( fovRadians * 0.5 );
+	float zRange = farZ - nearZ;
+	float q = 1.0f / zRange;
+
+
+	Mat44 projection;
+	// I
+	projection.m_values[Mat44::Ix] = height / aspectRadio;
+	projection.m_values[Mat44::Iy] = 0.f;
+	projection.m_values[Mat44::Iz] = 0.f;
+	projection.m_values[Mat44::Iw] = 0.f;
+	// J
+	projection.m_values[Mat44::Jx] = 0.f;
+	projection.m_values[Mat44::Jy] = height;
+	projection.m_values[Mat44::Jz] = 0.f;
+	projection.m_values[Mat44::Jw] = 0.f;
+	// K
+	projection.m_values[Mat44::Kx] = 0.f;
+	projection.m_values[Mat44::Ky] = 0.f;
+	projection.m_values[Mat44::Kz] = -farZ * q;
+	projection.m_values[Mat44::Kw] = -1;
+	// T
+	projection.m_values[Mat44::Tx] = 0.f;
+	projection.m_values[Mat44::Ty] = 0.f;
+	projection.m_values[Mat44::Tz] = nearZ * farZ * q;
+	projection.m_values[Mat44::Tw] = 0.f;
+
+	return projection;
 }
 
 void Mat44::MatrixGeneralInvert()
 {
+	Mat44 invertMatrix = GetGeneralInvertMatrix();
+	for( int i = 0; i < 16; i++ ){
+		m_values[i] = invertMatrix.m_values[i];
+	}
 
 }
 
 Mat44 Mat44::GetGeneralInvertMatrix() const
 {
-	return Mat44();
+	float inv[16];
+	float det;
+	float m[16];
+	int i;
+
+	for( i = 0; i < 16; ++i ) {
+		m[i] = m_values[i];
+	}
+
+	inv[0] = m[5]  * m[10] * m[15] -
+		m[5]  * m[11] * m[14] -
+		m[9]  * m[6]  * m[15] +
+		m[9]  * m[7]  * m[14] +
+		m[13] * m[6]  * m[11] -
+		m[13] * m[7]  * m[10];
+
+	inv[4] = -m[4]  * m[10] * m[15] +
+		m[4]  * m[11] * m[14] +
+		m[8]  * m[6]  * m[15] -
+		m[8]  * m[7]  * m[14] -
+		m[12] * m[6]  * m[11] +
+		m[12] * m[7]  * m[10];
+
+	inv[8] = m[4]  * m[9]  * m[15] -
+		m[4]  * m[11] * m[13] -
+		m[8]  * m[5]  * m[15] +
+		m[8]  * m[7]  * m[13] +
+		m[12] * m[5]  * m[11] -
+		m[12] * m[7]  * m[9];
+
+	inv[12] = -m[4]  * m[9]  * m[14] +
+		m[4]  * m[10] * m[13] +
+		m[8]  * m[5]  * m[14] -
+		m[8]  * m[6]  * m[13] -
+		m[12] * m[5]  * m[10]  +
+		m[12] * m[6]  * m[9];
+
+	inv[1] = -m[1]  * m[10] * m[15] +
+		m[1]  * m[11] * m[14] +
+		m[9]  * m[2]  * m[15] -
+		m[9]  * m[3]  * m[14] -
+		m[13] * m[2]  * m[11] +
+		m[13] * m[3]  * m[10];
+
+	inv[5] = m[0]  * m[10] * m[15] -
+		m[0]  * m[11] * m[14] -
+		m[8]  * m[2]  * m[15] +
+		m[8]  * m[3]  * m[14] +
+		m[12] * m[2]  * m[11] -
+		m[12] * m[3]  * m[10];
+
+	inv[9] = -m[0]  * m[9]  * m[15] +
+		m[0]  * m[11] * m[13] +
+		m[8]  * m[1]  * m[15] -
+		m[8]  * m[3]  * m[13] -
+		m[12] * m[1]  * m[11] +
+		m[12] * m[3]  * m[9];
+
+	inv[13] = m[0]  * m[9]  * m[14] -
+		m[0]  * m[10] * m[13] -
+		m[8]  * m[1]  * m[14] +
+		m[8]  * m[2]  * m[13] +
+		m[12] * m[1]  * m[10] -
+		m[12] * m[2]  * m[9];
+
+	inv[2] = m[1]  * m[6] * m[15] -
+		m[1]  * m[7] * m[14] -
+		m[5]  * m[2] * m[15] +
+		m[5]  * m[3] * m[14] +
+		m[13] * m[2] * m[7] -
+		m[13] * m[3] * m[6];
+
+	inv[6] = -m[0]  * m[6] * m[15] +
+		m[0]  * m[7] * m[14] +
+		m[4]  * m[2] * m[15] -
+		m[4]  * m[3] * m[14] -
+		m[12] * m[2] * m[7] +
+		m[12] * m[3] * m[6];
+
+	inv[10] = m[0]  * m[5] * m[15] -
+		m[0]  * m[7] * m[13] -
+		m[4]  * m[1] * m[15] +
+		m[4]  * m[3] * m[13] +
+		m[12] * m[1] * m[7] -
+		m[12] * m[3] * m[5];
+
+	inv[14] = -m[0]  * m[5] * m[14] +
+		m[0]  * m[6] * m[13] +
+		m[4]  * m[1] * m[14] -
+		m[4]  * m[2] * m[13] -
+		m[12] * m[1] * m[6] +
+		m[12] * m[2] * m[5];
+
+	inv[3] = -m[1] * m[6] * m[11] +
+		m[1] * m[7] * m[10] +
+		m[5] * m[2] * m[11] -
+		m[5] * m[3] * m[10] -
+		m[9] * m[2] * m[7] +
+		m[9] * m[3] * m[6];
+
+	inv[7] = m[0] * m[6] * m[11] -
+		m[0] * m[7] * m[10] -
+		m[4] * m[2] * m[11] +
+		m[4] * m[3] * m[10] +
+		m[8] * m[2] * m[7] -
+		m[8] * m[3] * m[6];
+
+	inv[11] = -m[0] * m[5] * m[11] +
+		m[0] * m[7] * m[9] +
+		m[4] * m[1] * m[11] -
+		m[4] * m[3] * m[9] -
+		m[8] * m[1] * m[7] +
+		m[8] * m[3] * m[5];
+
+	inv[15] = m[0] * m[5] * m[10] -
+		m[0] * m[6] * m[9] -
+		m[4] * m[1] * m[10] +
+		m[4] * m[2] * m[9] +
+		m[8] * m[1] * m[6] -
+		m[8] * m[2] * m[5];
+
+	det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+	det = 1.0 / det;
+
+	Mat44 ret;
+	for( i = 0; i < 16; i++ ) {
+		ret.m_values[i] = (float)( inv[i] * det );
+	}
+	return ret;
 }

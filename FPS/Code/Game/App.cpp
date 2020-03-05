@@ -79,9 +79,9 @@ void App::Shutdown()
 	
 	delete g_camera;
 	delete g_UICamera;
+	delete g_devCamera;
 	delete g_theInputSystem;
 	delete g_theGame;
-	delete g_devCamera;
 	delete g_theEventSystem;
 	delete g_theRenderer;
 	

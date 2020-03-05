@@ -4,7 +4,7 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
-#include "Engine/Core/Time.hpp"
+#include "Engine/Core/Time/Time.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -12,22 +12,26 @@
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Physics/Physics2D.hpp"
 
+// Game
 App*			g_theApp			= nullptr;
 Game*			g_theGame			= nullptr;
+
+// Engine
+BitmapFont*		g_squirrelFont		= nullptr;
 Camera*			g_camera			= nullptr;
 Camera*			g_UICamera			= nullptr;
 Camera*			g_devCamera			= nullptr;
-BitmapFont*		g_squirrelFont		= nullptr;
-RenderContext*	g_theRenderer		= nullptr;
+DevConsole*		g_theConsole		= nullptr;
+EventSystem*	g_theEventSystem	= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
 Physics2D*		g_thePhysics		= nullptr;
-DevConsole*		g_theConsole		= nullptr;
+RenderContext*	g_theRenderer		= nullptr;
 
 void App::Startup()
 {
 	g_camera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
 	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
-	g_devCamera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_devCamera			= new Camera( Vec2( 0, 0 ), Vec2( 30, 20 ) );
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theGame			= new Game( g_camera, g_UICamera );
@@ -37,6 +41,7 @@ void App::Startup()
 	g_theRenderer->StartUp( g_theWindow );
 	g_theGame->Startup();
 	g_theInputSystem->Startup();
+	
 	g_theConsole = DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
 	g_theConsole->Startup();
 
@@ -52,17 +57,17 @@ void App::Shutdown()
 	delete g_theInputSystem;
 	delete g_theGame;
 	delete g_theRenderer;
-	delete g_camera;
 	delete g_UICamera;
 	delete g_devCamera;
+	delete g_theEventSystem;
 
 	
 	g_theGame			= nullptr;
-	g_camera			= nullptr;
 	g_UICamera			= nullptr;
 	g_squirrelFont		= nullptr;
 	g_theRenderer		= nullptr;
 	g_theInputSystem	= nullptr;
+	g_theRenderer		= nullptr;
 	
 }
 
@@ -123,6 +128,7 @@ void App::BeginFrame()
 
 void App::Update( float deltaSeconds )
 {
+	g_theRenderer->UpdateFrameTime( deltaSeconds );
 	g_theGame->RunFrame( deltaSeconds );
 	CheckGameQuit();
 }
@@ -138,6 +144,7 @@ const void App::Render() const
 void App::EndFrame()
 {
 	g_theInputSystem->EndFrame();
+	g_theRenderer->EndFrame();
 }
 
 

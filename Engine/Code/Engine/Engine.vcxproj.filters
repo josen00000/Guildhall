@@ -24,18 +24,21 @@
     </Filter>
     <Filter Include="Math\shape">
       <UniqueIdentifier>{332bf928-b622-4b13-8232-f668158f8219}</UniqueIdentifier>
-	</Filter>
+    </Filter>
     <Filter Include="Platform">
       <UniqueIdentifier>{d20bfacb-6c29-4f9d-97ce-444d001c6111}</UniqueIdentifier>
     </Filter>
     <Filter Include="Math\basic">
       <UniqueIdentifier>{3fc03a6a-ecaf-42bf-a0d9-0247a75a0318}</UniqueIdentifier>
-	</Filter>
+    </Filter>
     <Filter Include="Renderer\D3DPipeLine">
       <UniqueIdentifier>{d0e4c9e4-827e-4ea3-9f8d-d2630e7f32b5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Renderer\Sprite">
       <UniqueIdentifier>{cc67e17d-f386-40af-b8a8-eba83ec67077}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Time">
+      <UniqueIdentifier>{018ab54c-492e-4746-ace1-a6656c2e6f72}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -68,9 +71,6 @@
     </ClCompile>
     <ClCompile Include="Input\XboxController.cpp">
       <Filter>Input</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Time.cpp">
-      <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Input\KeyBoardController.cpp">
       <Filter>Input</Filter>
@@ -231,6 +231,15 @@
     <ClCompile Include="Renderer\Texture.cpp">
       <Filter>Renderer\D3DPipeLine</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Time\Clock.cpp">
+      <Filter>Core\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Time\Time.cpp">
+      <Filter>Core\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Time\Timer.cpp">
+      <Filter>Core\Time</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
@@ -265,9 +274,6 @@
     </ClInclude>
     <ClInclude Include="Input\XboxController.hpp">
       <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Time.hpp">
-      <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Input\KeyBoardController.hpp">
       <Filter>Input</Filter>
@@ -454,6 +460,15 @@
     </ClInclude>
     <ClInclude Include="Renderer\Texture.hpp">
       <Filter>Renderer\D3DPipeLine</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Time\Clock.hpp">
+      <Filter>Core\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Time\Time.hpp">
+      <Filter>Core\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Time\Timer.hpp">
+      <Filter>Core\Time</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

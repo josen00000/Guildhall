@@ -83,6 +83,15 @@ float RangeMapFloat(const float inStart, const float inEnd, const float outStart
 	return outValue;
 }
 
+Vec3 RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 inValue )
+{
+	Vec3 result;
+	result.x = RangeMapFloat( inStart.x, inEnd.x, outStart.x, outEnd.x, inValue.x );
+	result.y = RangeMapFloat( inStart.y, inEnd.y, outStart.y, outEnd.y, inValue.y );
+	result.z = RangeMapFloat( inStart.z, inEnd.z, outStart.z, outEnd.z, inValue.z );
+	return result;
+}
+
 float ClampFloat( float inMin, float inMax, float inValue )
 {
 	if(inValue<=inMin){

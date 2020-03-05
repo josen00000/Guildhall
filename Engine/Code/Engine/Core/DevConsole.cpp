@@ -3,11 +3,13 @@
 #include <windows.h>
 #include "DevConsole.hpp"
 #include "Engine/Core/Rgba8.hpp"
+#include "Engine/Core/EventSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 
+extern EventSystem*		g_theEventSystem;
 extern InputSystem*		g_theInputSystem;
 extern RenderContext*	g_theRenderer;
 
@@ -103,8 +105,8 @@ void DevConsole::Render( RenderContext& renderer ) const
 
 	AddVertForInput();
 	AddVertForContent();
-	//const Texture* temTexture = m_font->GetTexture();
-	//g_theRenderer->BindTexture( temTexture );
+	Texture* temTexture = m_font->GetTexture();
+	g_theRenderer->BindTexture( temTexture );
 	renderer.DrawVertexVector( m_vertices );
 
 
@@ -205,6 +207,7 @@ void DevConsole::AddVertForContent() const
 	for( int lineIndex = (int)(m_lines.size() - 1); lineIndex > (int)m_lines.size() - maxDisplayedLinesNum; lineIndex-- ) {
 		if( lineIndex < 0 ) { break; }
 		ColoredLine tem = m_lines[lineIndex];
+		AABB2 cameraBox = m_camera->GetCameraAsBox();
 		m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraAsBox(), m_lineHeight, tem.text, tem.color, 1.f, alignment );
 		alignment.y += deltaY;
 	}
@@ -378,8 +381,8 @@ void DevConsole::ExecuteCommand( std::string comd )
 		PrintString( m_defaultColor, comd + "test for history" );
 		return;
 	}
-	if( CheckIfCommandExist( comd ) ){
-		g_theEventSystem->FireTheEvent( comd, tempEventArgs );	
+	if( CheckIfCommandExist( comd ) ) {
+		g_theEventSystem->FireTheEvent( comd, tempEventArgs );
 	}
 	else{
 		LogErrorMessage();

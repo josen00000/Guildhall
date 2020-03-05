@@ -48,7 +48,6 @@ void Game::Shutdown()
 {
 	delete m_rng;
 	delete m_gameCamera;
-	delete m_UICamera;
 }
 
 void Game::RunFrame( float deltaSeconds )
@@ -58,11 +57,13 @@ void Game::RunFrame( float deltaSeconds )
 
 void Game::Update( float deltaSeconds )
 {
+
 	CheckIfExit();
 	UpdateMouse( deltaSeconds );
 	UpdateCamera( deltaSeconds );
 	UpdatePhysics( deltaSeconds );
 	UpdateGameObjects( deltaSeconds );
+	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 }
 
 void Game::UpdatePhysics( float deltaSeconds )
@@ -104,13 +105,14 @@ void Game::UpdateMouseWheel()
 
 void Game::UpdateMousePos()
 {
-	Vec2 clientPos = g_theInputSystem->GetNormalizedMousePos();
-
-	POINT screenMousePos;
-	GetCursorPos( &screenMousePos );
-	ScreenToClient( g_hWnd, &screenMousePos );
-	Vec2 mouseClientPos( (float)screenMousePos.x, (float)screenMousePos.y );
-	m_mousePos = m_gameCamera->ClientToWorldPosition( mouseClientPos );
+	HWND tophWnd = (HWND)Window::GetTopWindowHandle();
+	Vec2 clientPos = g_theInputSystem->GetNormalizedMousePosInClient( tophWnd );
+	Vec2 mouseClientPos( clientPos.x, clientPos.y );
+	m_mousePos = m_gameCamera->ClientToWorld( mouseClientPos, 1 );
+	std::string mouseClientPosStr = std::string(" client pos = " + std::to_string( mouseClientPos.x ) + "  " + std::to_string( mouseClientPos.y ) );
+	std::string mouseWorldPos = std::string(" world pos = " + std::to_string( m_mousePos.x) + "  " + std::to_string( m_mousePos.y ) );
+	//g_theConsole->PrintString( Rgba8::RED, mouseClientPosStr );
+	//g_theConsole->PrintString( Rgba8::BLUE, mouseWorldPos );
 
 	// handle drag object
 	if( m_isDragging ) {
@@ -153,7 +155,7 @@ void Game::UpdateCameraHeight( float deltaSeconds )
 	float clampedScroll = ClampFloat( 0.f, 100.f, m_mouseScroll );
 	float height = RangeMapFloat( 0.f, 100.f, 100.f, 50.f, clampedScroll );
 
-	m_gameCamera->SetProjectionOrthographic( height );
+	//m_gameCamera->SetProjectionOrthographic( height );
 }
 
 void Game::UpdateCameraPos( float deltaSeconds )
@@ -215,6 +217,7 @@ void Game::HandleMouseInput()
 
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F ) ) {
 		g_theConsole->SetIsOpen( true );
+		g_theConsole->PrintString( Rgba8::RED, std::string( "isopen" ) );
 		g_theConsole->PrintString( Rgba8::RED, std::string( "isopen" ) );
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_C ) ) {
@@ -317,6 +320,8 @@ bool Game::IsDrawedPolygonConvex() const
 
 void Game::Render() const
 {
+	m_gameCamera->m_clearColor = Rgba8::GRAY;
+	g_theRenderer->BeginCamera( *m_gameCamera );
 	g_theRenderer->BindTexture( nullptr );
 	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
 		if( m_gameObjects[objIndex] == nullptr ){ continue; }
@@ -357,7 +362,7 @@ void Game::RenderGravity() const
 	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
 	std::vector<Vertex_PCU> gravityVertices;
 	std::string gravity = "The Gravity is: " + std::to_string( g_thePhysics->m_gravityAccel.y );
-	g_squirrelFont->AddVertsForTextInBox2D( gravityVertices, m_UICamera->GetCameraBox(), 3.f, gravity, Rgba8::RED, 1.f, Vec2::ZERO );
+	g_squirrelFont->AddVertsForTextInBox2D( gravityVertices, m_UICamera->GetCameraAsBox(), 3.f, gravity, Rgba8::RED, 1.f, Vec2::ZERO );
 	g_theRenderer->DrawVertexVector( gravityVertices );
 }
 

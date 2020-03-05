@@ -9,6 +9,13 @@ Transform::Transform( Vec3 pos, Vec3 rotation, Vec3 scale )
 {
 }
 
+Transform::Transform()
+{
+	m_pos = Vec3::ZERO;
+	m_rotationPRYDegrees = Vec3::ZERO;
+	m_scale = Vec3::ONE;
+}
+
 void Transform::SetPosition( Vec3 pos )
 {
 	m_pos = pos;

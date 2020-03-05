@@ -96,7 +96,7 @@ public:
 
 	// Projection
 	static const Mat44 CreateOrthographicProjectionMatrix( const Vec3& min, const Vec3& max );
-	static const Mat44 CreatePersectiveProjectionMatrix( float fovDegrees, float aspectRadio, float nearZ, float farZ );
+	static const Mat44 CreatePerspectiveProjectionMatrix( float fovDegrees, float aspectRadio, float nearZ, float farZ );
 
 private:
 	// Transpose and Invert

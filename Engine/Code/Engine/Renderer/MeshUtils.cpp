@@ -64,7 +64,7 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 
 	// bottom face
 	Vertex_PCU bottomLeftdown	= Vertex_PCU( backRightdownPos, tintColor, Vec2::ZERO );
-	Vertex_PCU bottomRightup	= Vertex_PCU( frontLeftdownPos, tintColor, Vec2::ONE );
+	Vertex_PCU bottomRightup	= Vertex_PCU( frontRightdownPos, tintColor, Vec2::ONE );
 	Vertex_PCU bottomLeftup		= Vertex_PCU( frontLeftdownPos, tintColor, Vec2( 0.f, 1.f ) );
 	Vertex_PCU bottomRightdown	= Vertex_PCU( backLeftdownPos, tintColor, Vec2( 1.f, 0.f ) );
 
@@ -249,7 +249,7 @@ void AppendIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index
 		}
 		else{
 			dest.push_back( sourceVertex );
-			index.push_back( dest.size() - (uint)1 );
+			index.push_back( (uint)dest.size() - 1 );
 		}
 	}
 }

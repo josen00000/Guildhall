@@ -44,7 +44,7 @@ public:
 	// Accessor
 	float	GetCameraHeight() const;
 	float	GetCameraWidth() const;
-	float	GetAspectRatio() const;
+	float	GetOutputAspectRatio();
 	Vec2	GetOrthoBottomLeft() const;
 	Vec2	GetOrthoTopRight() const;
 	Vec3	GetPosition() const;
@@ -61,15 +61,13 @@ public:
 	Rgba8	GetClearColor() const { return m_clearColor; }
 
 
-	Texture*		GetColorTarget() const { return m_colorTarget; }
+	Texture*		GetColorTarget() const;
 	Texture*		GetDepthStencilTarget() const { return m_depthStencilTarget; }
 	Texture*		GetOrCreateDepthStencilTarget( RenderContext* ctx );
 	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx );
 
 		// Mutator
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight );
-	void SetOutputSize( Vec2 size );
-	void SetOutputSize( float aspectRatio, float height );
 	void SetPosition( const Vec3& position );
 	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f );
 	
@@ -85,12 +83,10 @@ public:
 	void UpdateCameraRotation( Vec3 deltaRot );
 
 	// Helper
-	Vec3 ClientTOWorld( Vec2 client, float ndcZ );
+	Vec3 ClientToWorld( Vec2 client, float ndcZ ) const;
 	Vec3 WorldToClient( Vec3 worldPos );
 
 	void UpdateViewMatrix();
-
-	Vec2 ClientToWorldPosition( Vec2 clientPos );
 
 private:
 	Vec2 GetOrthoMin() const;
@@ -99,7 +95,6 @@ private:
 public:
 	uint m_clearMode = 0;
 	bool m_shouldClearColor = true;
-	Vec2 m_outputSize;
 	Vec2 m_dimension;
 	Rgba8 m_clearColor = Rgba8::BLACK;
 	float m_clearDepth = 1.f;

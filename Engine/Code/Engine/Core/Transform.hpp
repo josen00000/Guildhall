@@ -6,7 +6,7 @@ struct Mat44;
 
 class Transform {
 public:
-	Transform(){}
+	Transform();
 	~Transform(){}
 	Transform( Vec3 pos, Vec3 rotation, Vec3 scale );
 public:
