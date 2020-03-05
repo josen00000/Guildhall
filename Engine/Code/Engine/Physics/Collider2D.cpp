@@ -112,6 +112,11 @@ void Collider2D::UpdateMaterialBounciness( float deltaRes )
 	m_material.UpdateRestitution( deltaRes );
 }
 
+void Collider2D::UpdateMaterialFriction( float deltaFric )
+{
+	m_material.UpdateFriction( deltaFric );
+}
+
 float Collider2D::GetBounciness() const
 {
 	return m_material.m_restitution;

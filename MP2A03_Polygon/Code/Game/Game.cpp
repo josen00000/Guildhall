@@ -249,6 +249,36 @@ void Game::HandleKeyboardInput()
 				m_selectedObj->UpdateBounciness( -0.01f );
 			}
 		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_LEFT_BRACKET ) ){
+			if( m_selectedObj != nullptr) {
+				m_selectedObj->UpdateMass( -0.1f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_BRACKET ) ){
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateMass( 0.1f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_COMMA ) ){
+			if( m_selectedObj != nullptr ){
+				m_selectedObj->UpdateFriction( -0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_PERIOD ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateFriction( 0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SEMICOLON ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateDrag( -0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_BACKSLASH ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateDrag( 0.01f );
+			}
+		}
 	}
 	else {
 		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1) ){

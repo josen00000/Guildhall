@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
+#include "Engine/Core/Time/Clock.hpp"
 #include "Engine/Core/Time.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
@@ -109,6 +110,7 @@ void App::ResetGame()
 void App::BeginFrame()
 {
 	g_theInputSystem->BeginFrame();
+	Clock::BeginFrame();
 }
 
 void App::Update( float deltaSeconds )

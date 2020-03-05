@@ -69,6 +69,14 @@ void Rigidbody2D::SetSimulationMode( SimulationMode mode )
 	m_mode = mode;
 }
 
+void Rigidbody2D::UpdateDrag( float deltaDrag )
+{
+	m_drag += deltaDrag;
+	if( m_drag < 0 ){
+		m_drag = 0;
+	}
+}
+
 void Rigidbody2D::UpdateVelocityPerFrame( const Vec2& deltaVel )
 {
 	m_velocity += deltaVel;
@@ -79,6 +87,14 @@ void Rigidbody2D::UpdatePositionPerFrame( const Vec2& deltaPos )
 	m_worldPosition += deltaPos;
 	if( !m_isDestroyed ){
 		SetColliderPosition();
+	}
+}
+
+void Rigidbody2D::UpdateMass( float deltaMass )
+{
+	m_mass += deltaMass;
+	if( m_mass < 0.001f ){
+		m_mass = 0.001f;
 	}
 }
 

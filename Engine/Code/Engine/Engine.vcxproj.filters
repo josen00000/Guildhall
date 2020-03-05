@@ -189,6 +189,12 @@
     <ClCompile Include="Physics\PhysicsMaterial.cpp">
       <Filter>Physic</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Time\Timer.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Time\Clock.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
@@ -373,6 +379,12 @@
     </ClInclude>
     <ClInclude Include="Physics\PhysicsMaterial.hpp">
       <Filter>Physic</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Time\Timer.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Time\Clock.hpp">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

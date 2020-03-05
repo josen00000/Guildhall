@@ -1,4 +1,6 @@
 #include "Physics2D.hpp"
+#include "Engine/Core/Time/Clock.hpp"
+#include "Engine/Core/Time/Timer.hpp"
 #include "Engine/Physics/Collider2D.hpp"
 #include "Engine/Physics/DiscCollider2D.hpp"
 #include "Engine/Physics/PolygonCollider2D.hpp"
@@ -29,7 +31,9 @@ void Physics2D::BeginFrame()
 
 void Physics2D::Update( float deltaSeconds )
 {
-	AdvanceSimulation( deltaSeconds );
+	while( m_timer->CheckAndDecrement() ){
+		AdvanceSimulation( deltaSeconds );
+	}
 }
 
 void Physics2D::AdvanceSimulation( float deltaSeconds )
@@ -198,6 +202,11 @@ void Physics2D::CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D 
 	m_collisions.push_back( collision );
 }
 
+void Physics2D::SetFixedDeltaTime( float frameTimeSeconds )
+{
+	m_fixedDeltaTime = frameTimeSeconds;
+}
+
 void Physics2D::CleanupDestroyedObjects()
 {
 	for( int rIndex = 0; rIndex < m_rigidbodies.size(); rIndex++ ) {
@@ -229,6 +238,14 @@ void Physics2D::ModifyGravity( float deltaGravity )
 
 void Physics2D::EndFrame()
 {
+}
+
+void Physics2D::StartUp()
+{
+	m_clock = new Clock();
+	m_timer = new Timer();
+
+	m_timer->SetSeconds( m_clock, m_fixedDeltaTime );
 }
 
 Rigidbody2D* Physics2D::CreateRigidbody( Vec2 worldPos /*= Vec2::ZERO */ )

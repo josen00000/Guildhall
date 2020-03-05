@@ -46,6 +46,9 @@ public:
 	void SetSimulateMode( SimulationMode mode );
 
 	void UpdateBounciness( float deltaBounce );
+	void UpdateMass( float deltaMass ); 
+	void UpdateFriction( float deltaFric );
+	void UpdateDrag( float deltaDrag );
 
 public:
 	bool m_isDestroyed	= false;

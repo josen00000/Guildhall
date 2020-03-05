@@ -4,11 +4,12 @@
 #include "Engine/Physics/Collider2D.hpp"
 #include "Engine/Physics/Collision2D.hpp"
 
+class Clock;
+class Timer;
 class DiscCollider2D;
 class PolygonCollider2D;
 class Rigidbody2D;
 struct Polygon2;
-
 
 class Physics2D {
 public:
@@ -17,6 +18,7 @@ public:
 public:
 	void BeginFrame();
 	void EndFrame(); // Cleanup destroyed objects
+	void StartUp();
 
 	// Update each frame
 	void Update( float deltaSeconds );
@@ -55,11 +57,17 @@ public:
 	void ApplyImpulseInCollision( const Collision2D& collision, Vec2 impulse );
 	void CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold );
 
+	// Physic Time
+	float GetFixedDeltaTime() const { return m_fixedDeltaTime; }
+	void SetFixedDeltaTime( float frameTimeSeconds );
 public:
 	Vec2 m_gravityAccel = Vec2( 0.f, -2.f );
 
 private:
+	double m_fixedDeltaTime = 1.0 / 120;
 	std::vector<Collider2D*> m_colliders;
 	std::vector<Rigidbody2D*> m_rigidbodies;
 	std::vector<Collision2D> m_collisions;
+	Clock* m_clock = nullptr;
+	Timer* m_timer = nullptr;
 };

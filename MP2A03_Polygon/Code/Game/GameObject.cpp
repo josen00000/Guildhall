@@ -215,6 +215,21 @@ void GameObject::UpdateBounciness( float deltaBounce )
 	m_rb->GetCollider()->UpdateMaterialBounciness( deltaBounce );
 }
 
+void GameObject::UpdateMass( float deltaMass )
+{
+	m_rb->UpdateMass( deltaMass );
+}
+
+void GameObject::UpdateFriction( float deltaFric )
+{
+	m_rb->GetCollider()->UpdateMaterialFriction( deltaFric );
+}
+
+void GameObject::UpdateDrag( float deltaDrag )
+{
+	m_rb->UpdateDrag( deltaDrag );
+}
+
 void GameObject::SetPosition( Vec2 pos )
 {
 	m_rb->SetPosition( pos );

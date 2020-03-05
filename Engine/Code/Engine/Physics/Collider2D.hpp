@@ -49,6 +49,7 @@ public:
 
 	// Bounciness
 	void UpdateMaterialBounciness( float deltaRes );
+	void UpdateMaterialFriction( float deltaFric );
 	float GetBounciness() const;
 
 	// debug helpers

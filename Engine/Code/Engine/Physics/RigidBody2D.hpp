@@ -42,8 +42,10 @@ public:
 	void SetColliderPosition();
 	void SetMass( float mass );
 	void SetSimulationMode( SimulationMode mode );
+	void UpdateDrag( float deltaDrag );
 	void UpdateVelocityPerFrame( const Vec2& deltaVel );
 	void UpdatePositionPerFrame( const Vec2& deltaPos );
+	void UpdateMass( float deltaMass );
 
 	void DisablePhysics();
 	void EnablePhysics();
@@ -57,6 +59,7 @@ private:
 	bool m_isDestroyed	= false;
 	bool m_isEnable		= true;
 	float m_mass		= 1.f;
+	float m_drag		= 0.f;
 	Vec2 m_velocity		= Vec2::ZERO;
 
 	SimulationMode m_mode = RIGIDBODY_DYNAMIC;

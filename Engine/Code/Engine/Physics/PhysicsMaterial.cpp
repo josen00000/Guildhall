@@ -16,3 +16,9 @@ void PhysicsMaterial::UpdateRestitution( float deltaRes )
 	m_restitution += deltaRes;
 	m_restitution = ClampFloat( 0.f, 1.f, m_restitution );
 }
+
+void PhysicsMaterial::UpdateFriction( float deltaFric )
+{
+	m_friction += deltaFric;
+	m_friction = ClampFloat( 0.f, 1.f, m_friction );
+}
