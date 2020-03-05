@@ -3,7 +3,7 @@
 #include <vector>
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/StringUtils.hpp"
-#include "Engine/Core/Time.hpp"
+#include "Engine/Core/Time/Time.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Platform/Window.hpp"
@@ -19,7 +19,7 @@
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
-#include "Engine/Core/Time.hpp"
+
 
 
 //third party library
@@ -318,6 +318,8 @@ void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 
 void RenderContext::DrawIndexed( int indexCount, int indexOffset /*= 0*/, int vertexOffset /*= 0 */ )
 {
+	UNUSED(indexOffset);
+	UNUSED(vertexOffset);
 	ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout();
 	m_context->IASetInputLayout( inputLayout );
 	m_context->DrawIndexed( (uint)indexCount, 0, 0 );
@@ -329,7 +331,7 @@ void RenderContext::DrawMesh( GPUMesh* mesh )
 	mesh->UpdateVerticeBuffer( nullptr );
 	BindVertexBuffer( mesh->GetOrCreateVertexBuffer() );
 	//UpdateLayoutIfNeeded(); // unfinished
-
+	SetModelMatrix( mesh->GetModelMatrix() );
 
 	bool hasIndices = mesh->GetIndexCount() > 0;
 	if( hasIndices ){

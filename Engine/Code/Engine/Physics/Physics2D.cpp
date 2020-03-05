@@ -164,7 +164,8 @@ Vec2 Physics2D::CalculateCollisionImpulse( const Collision2D& collision )
 
 void Physics2D::ApplyImpulse( Rigidbody2D* rb, Vec2 impluse )
 {
-
+	UNUSED( rb );
+	UNUSED( impluse );
 }
 
 void Physics2D::CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold )

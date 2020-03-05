@@ -41,6 +41,10 @@ void Game::Startup()
 void Game::Shutdown()
 {
 	delete m_rng;
+	delete m_meshCube;
+	for( int i = 0; i < m_meshSpheres.size(); i++ ){
+		delete m_meshSpheres[i];
+	}
 }
 
 void Game::RunFrame( float deltaSeconds )
@@ -59,7 +63,7 @@ void Game::Update( float deltaSeconds )
 	if( !g_theConsole->IsOpen() ) {
 		HandleKeyboardInput();
 	}
-
+	UpdateMeshes( deltaSeconds );
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 }
 
@@ -73,6 +77,36 @@ void Game::UpdateCamera( float deltaSeconds )
 	UNUSED( deltaSeconds );
 }
 
+void Game::UpdateMeshes( float deltaSeconds )
+{
+	static float totalSeconds = 0.f;
+	totalSeconds += deltaSeconds;
+	float rotCoe = SinDegrees( totalSeconds );
+	Vec3 rotation = Vec3( 0, 0, rotCoe * 180 );
+	m_meshCube->SetRotation( rotation );
+
+	UpdateSphereMeshes( deltaSeconds );
+}
+
+void Game::UpdateSphereMeshes( float deltaSeconds )
+{
+	static float totalSeconds = 0.f;
+	totalSeconds += deltaSeconds;
+	Vec2 XY = Vec2( 10, 0 );
+	float deltaDegrees = 360.f / 16;
+	float degrees = 0.f;
+	for( int i = 0; i < m_meshSpheres.size(); i++ ){
+		float offset = 30.f * i;
+		float rotCoe = SinDegrees( offset + totalSeconds );
+		Vec3 rotation = Vec3( 0, 0, rotCoe * 180 );
+		m_meshSpheres[i]->SetRotation( rotation );
+		// pos
+		XY.SetAngleDegrees( degrees + totalSeconds * 20 );
+		degrees += deltaDegrees;
+		m_meshSpheres[i]->SetPosition( Vec3( XY.x, XY.y, -20 ) );
+	}
+}
+
 void Game::HandleKeyboardInput()
 {
 	CheckIfExit();
@@ -82,6 +116,12 @@ void Game::HandleKeyboardInput()
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P) ){
 		g_theInputSystem->SetCursorMode( CURSOR_ABSOLUTE );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_C) ){
+		g_theInputSystem->ClipSystemCursor();
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_V ) ){
+		g_theInputSystem->UnClipSystemCursor();
 	}
 }
 
@@ -179,8 +219,20 @@ void Game::Render() const
 	//g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
 	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
 	g_theRenderer->BindTexture( temp );
+	g_theRenderer->SetModelMatrix( m_meshCube->GetModelMatrix() );
 	g_theRenderer->DrawMesh( m_meshCube );
+
+	RenderSpheres();
 	g_theRenderer->EndCamera( *m_gameCamera );
+
+	
+}
+
+void Game::RenderSpheres() const
+{
+	for( int i = 0; i <16; i++ ) {
+		g_theRenderer->DrawMesh( m_meshSpheres[i] );
+	}
 }
 
 void Game::RenderUI() const
@@ -202,12 +254,31 @@ void Game::CreateTestMesh()
 	std::vector<Vertex_PCU> vertices;
 	std::vector<uint> indices;
 	AABB2 testAABB = AABB2( Vec2::ZERO, Vec2::ONE * 10 );
-	AABB3 testAABB3 = AABB3( Vec3( -4.f, -4.5f, -7.f ), Vec3( 6.f, 5.5f, -17.f ) );
+	AABB3 testAABB3 = AABB3( Vec3::ZERO, Vec3::ONE );
+	m_meshCube->SetPosition( Vec3( 1.f, 0.5f, -12.f ) );
+	//m_meshCube->SetPosition( Vec3( 5, 5, 5 ) );
 	//AppendIndexedVertsForAABB2D( vertices, indices, testAABB, Rgba8::WHITE, Vec2::ZERO, Vec2::ONE );
 	AppendIndexedVertsForAABB3D( vertices, indices, testAABB3, Rgba8::RED );
 	//AppendVertsForSphere3D( vertices, Vec3( 0.f, 0.f, -10.f ), 3.f, 16, 32, Rgba8::RED );
 	//AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, -10.f ), 3.f, 3, 2, Rgba8::RED );
 	m_meshCube->UpdateVerticesInCPU( vertices );
 	m_meshCube->UpdateIndicesInCPU( indices );
+
+	CreateSphereMesh();
+}
+
+void Game::CreateSphereMesh()
+{
+	
+	for( int i = 0; i < 16; i++ ){
+		GPUMesh* meshSphere = new GPUMesh();
+		meshSphere->m_owner = g_theRenderer;
+		std::vector<Vertex_PCU> vertices;
+		std::vector<uint> indices;
+		AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, 0.f ), 3.f, 32, 16, Rgba8::RED );
+		meshSphere->UpdateVerticesInCPU( vertices );
+		meshSphere->UpdateIndicesInCPU( indices );
+		m_meshSpheres.push_back( meshSphere );
+	}
 }
 

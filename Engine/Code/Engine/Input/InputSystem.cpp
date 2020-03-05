@@ -5,9 +5,11 @@
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/Vec2.hpp"
-#include "Engine/Renderer/Camera.hpp"
 #include "Engine/Input/KeyBoardController.hpp"
 #include "Engine/input/MouseController.hpp"
+#include "Engine/Platform/Window.hpp"
+#include "Engine/Renderer/Camera.hpp"
+
 
 void InputSystem::Startup()
 {
@@ -15,6 +17,7 @@ void InputSystem::Startup()
 	m_keyBoardController	= new KeyBoardController();
 	m_mouseController->InitialButtonStates();
 	m_keyBoardController->InitialButtonStates();
+	ClipSystemCursor();
 
 }
 
@@ -33,6 +36,8 @@ void InputSystem::EndFrame()
 
 void InputSystem::Shutdown()
 {
+	UnClipSystemCursor();
+	ShowSystemCursor();
 	delete m_keyBoardController;
 	delete m_mouseController;
 	for( int cIndex = 0; cIndex < MAX_XBOX_CONTROLLERS; cIndex++ ) {
@@ -147,19 +152,38 @@ void InputSystem::HideSystemCursor()
 	while( ShowCursor( false ) > 0 ){}
 }
 
-void InputSystem::ShowShstemCursor()
+void InputSystem::ShowSystemCursor()
 {
 	while( ShowCursor( true ) < 0 ){}
 }
 
 void InputSystem::ClipSystemCursor()
 {
+	HWND topHWnd = (HWND)Window::GetTopWindowHandle();
+	RECT winRect;
+	GetWindowRect( topHWnd, &winRect );
 	// get windows rect
-	//ClipCursor( Rect );
+	ClipCursor( &winRect );
+}
+
+void InputSystem::UnClipSystemCursor()
+{
+	ClipCursor( NULL );
 }
 
 void InputSystem::SetCursorMode( CursorMode mode )
 {
+	switch( mode )
+	{
+	case CURSOR_ABSOLUTE:
+		ShowSystemCursor();
+		break;
+	case CURSOR_RELATIVE:
+		HideSystemCursor();
+		break;
+	default:
+		break;
+	}
 	m_cursorMode = mode;
 }
 

@@ -49,6 +49,7 @@ bool Timer::CheckAndDecrement()
 {
 	if( HasElapsed() ){
 		m_startSeconds += m_durationSeconds;
+		return true;
 	}
 	else{
 		return false;
@@ -68,6 +69,7 @@ bool Timer::CheckAndReset()
 {
 	if( HasElapsed() ) {
 		m_startSeconds = m_clock->GetTotalSeconds();
+		return true;
 	}
 	else {
 		return false;

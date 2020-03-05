@@ -1,5 +1,6 @@
 #include "Engine/Core/Time/Clock.hpp"
 #include "Engine/Core/Time/Time.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 static Clock g_masterClock = Clock( nullptr );
 
@@ -65,7 +66,8 @@ void Clock::SetScale( double scale )
 
 void Clock::SetFrameLimits( double minFrameTime, double maxFrameTime )
 {
-
+	UNUSED(minFrameTime);
+	UNUSED(maxFrameTime);
 }
 
 void Clock::SetParent( Clock* parent )

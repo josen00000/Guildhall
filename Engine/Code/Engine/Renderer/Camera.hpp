@@ -98,7 +98,7 @@ public:
 	Vec2 m_dimension;
 	Rgba8 m_clearColor = Rgba8::BLACK;
 	float m_clearDepth = 1.f;
-	float m_clearStencil = 0.f;
+	uint m_clearStencil = 0;
 	Transform m_transform;
 	ProjectionType m_projectionType = PROJECTION_ORTHOGRAPHIC;
 

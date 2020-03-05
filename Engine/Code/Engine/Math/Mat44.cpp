@@ -875,7 +875,7 @@ Mat44 Mat44::GetGeneralInvertMatrix() const
 		m[8] * m[2] * m[5];
 
 	det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-	det = 1.0 / det;
+	det = 1.f / det;
 
 	Mat44 ret;
 	for( i = 0; i < 16; i++ ) {

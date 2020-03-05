@@ -9,6 +9,7 @@
 #include "Engine/Core/NamedStrings.hpp"
 
 #define UNUSED(x) (void)(x);
+#define SELF_SAFE_RELEASE(ptr) if(nullptr !=ptr) { delete ptr; ptr = nullptr; } 
 
 typedef unsigned int uint;
 typedef unsigned char byte;

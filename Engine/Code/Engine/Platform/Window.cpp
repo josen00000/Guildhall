@@ -37,6 +37,27 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			return 0; // "Consumes" this message (tells Windows "okay, we handled it")
 		}
 
+		case WM_ACTIVATE:{
+			if( window == nullptr ){ break; }
+			InputSystem* input = window->GetInputSystem();
+
+			switch( wParam )
+			{
+				case WA_ACTIVE: {
+					input->ClipSystemCursor();
+					break;
+				}
+				case WA_INACTIVE: {
+					input->UnClipSystemCursor();
+					break;
+				}
+				default:
+					break;
+			}
+			break;
+		}
+
+
 		// Raw physical keyboard "key-was-just-depressed" event (case-insensitive, not translated)
 		case WM_KEYDOWN:
 		{
@@ -222,7 +243,7 @@ Vec2 Window::GetClientCenter() const
 {
 	RECT clientRect;
 	GetClientRect( static_cast<HWND>(m_hwnd), &clientRect );
-	return Vec2( clientRect.right / 2, clientRect.bottom / 2 );
+	return Vec2( (float)clientRect.right / 2, (float)clientRect.bottom / 2 );
 }
 
 void Window::SetInputSystem( InputSystem* input )
@@ -233,10 +254,11 @@ void Window::SetInputSystem( InputSystem* input )
 void* Window::GetTopWindowHandle()
 {
 	// TODO function should get the current top window and return. 
+	// TODO Debug
 	// temp just return g_theWindow. there is only one windows using. 
 	// Need to implement later.
 	HWND topWindowHandle;
 	topWindowHandle = GetTopWindow( NULL );
 	return (void*)g_theWindow->m_hwnd;
-	//return (void*)topWindowHandle;
+	//return (void*)topWindowHandle; 
 }

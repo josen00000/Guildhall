@@ -34,6 +34,7 @@ public:
 	void RunFrame( float deltaSeclnds );
 	void Reset();
 	void Render() const;
+	void RenderSpheres() const;
 	void RenderUI() const;
 
 	
@@ -41,6 +42,8 @@ private:
 	void Update( float deltaSeconds );
 	void UpdateUI( float deltaSeconds );
 	void UpdateCamera(float deltaSeconds );
+	void UpdateMeshes( float deltaSeconds );
+	void UpdateSphereMeshes( float deltaSeconds );
 
 	void HandleKeyboardInput();
 	void HandleMouseInput();
@@ -58,6 +61,7 @@ private:
 
 	// Test
 	void CreateTestMesh();
+	void CreateSphereMesh();
 
 public:
 	bool m_developMode		= false;
@@ -74,5 +78,7 @@ public:
 	
 	std::vector<Vertex_PCU> m_vertices;
 	GPUMesh* m_meshCube = nullptr;
+	std::vector<GPUMesh*> m_meshSpheres;
+
 	std::vector<Vertex_PCU> m_UIVertices;
 };

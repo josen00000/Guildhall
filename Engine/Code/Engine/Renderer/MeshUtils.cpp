@@ -227,13 +227,13 @@ void AppendVertsForSphere3D( std::vector<Vertex_PCU>& vertices, Vec3 center, flo
 			Vec2 uvLeftUp		= MakeSphereUVFromPolayDegrees( theta, ( phi + deltaPhi ) );
 			Vec2 uvRightup		= MakeSphereUVFromPolayDegrees( ( theta + deltaTheta ), ( phi + deltaPhi ) );
 
-			vertices.push_back( Vertex_PCU( ( posLeftDown + center ),	Rgba8::WHITE, uvLeftDown ) );
-			vertices.push_back( Vertex_PCU( ( posRightDown + center ),	Rgba8::WHITE, uvRightDown ) );
-			vertices.push_back( Vertex_PCU( ( posRightUp + center ),	Rgba8::WHITE, uvRightup ) );
+			vertices.push_back( Vertex_PCU( ( posLeftDown + center ),	tintColor, uvLeftDown ) );
+			vertices.push_back( Vertex_PCU( ( posRightDown + center ),	tintColor, uvRightDown ) );
+			vertices.push_back( Vertex_PCU( ( posRightUp + center ),	tintColor, uvRightup ) );
 
-			vertices.push_back( Vertex_PCU( ( posLeftDown + center ),	Rgba8::WHITE, uvLeftDown ) );
-			vertices.push_back( Vertex_PCU( ( posLeftUp + center ),		Rgba8::WHITE, uvLeftUp ) );
-			vertices.push_back( Vertex_PCU( ( posRightUp + center ),	Rgba8::WHITE, uvRightup ) );
+			vertices.push_back( Vertex_PCU( ( posLeftDown + center ),	tintColor, uvLeftDown ) );
+			vertices.push_back( Vertex_PCU( ( posLeftUp + center ),		tintColor, uvLeftUp ) );
+			vertices.push_back( Vertex_PCU( ( posRightUp + center ),	tintColor, uvRightup ) );
 		}
 	}
 
@@ -257,7 +257,7 @@ void AppendIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index
 void AppendIndexedVertsForAABB2D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
 {
 	std::vector<Vertex_PCU> verticesNotIndexed;
-	AppendVertsForAABB2D( verticesNotIndexed, bound, Rgba8::WHITE, Vec2::ZERO, Vec2::ONE );
+	AppendVertsForAABB2D( verticesNotIndexed, bound, tintColor, uvAtMins, uvAtMaxs );
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 

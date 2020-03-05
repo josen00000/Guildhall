@@ -2,7 +2,14 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Renderer/IndexBuffer.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
+#include "Engine/Renderer/D3D11Common.hpp"
 
+
+GPUMesh::~GPUMesh()
+{
+	SELF_SAFE_RELEASE(m_vertexBuffer);
+	//SELF_SAFE_RELEASE( m_indiceBuffer);
+}
 
 void GPUMesh::UpdateVerticeBuffer( const buffer_attribute_t* layout  )
 {
@@ -26,6 +33,31 @@ void GPUMesh::UpdateIndiceBuffer()
 void GPUMesh::UpdateIndicesInCPU( std::vector<uint> indices )
 {
 	m_indices = indices;
+}
+
+void GPUMesh::SetPosition( Vec3 pos )
+{
+	m_transform.SetPosition( pos );
+}
+
+void GPUMesh::SetRotation( Vec3 rot )
+{
+	m_transform.SetRotationFromPitchRollYawDegrees( rot );
+}
+
+Vec3 GPUMesh::GetPosition() const
+{
+	return m_transform.GetPosition();
+}
+
+Vec3 GPUMesh::GetRotation() const
+{
+	return m_transform.GetRotationPRYDegrees();
+}
+
+Mat44 GPUMesh::GetModelMatrix() const
+{
+	return m_transform.ToMatrix();
 }
 
 VertexBuffer* GPUMesh::GetOrCreateVertexBuffer()

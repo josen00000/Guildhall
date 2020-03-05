@@ -41,7 +41,7 @@ Camera* Camera::CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec
 
 void Camera::Translate( const Vec3& translation )
 {
-
+	UNUSED( translation );
 }
 
 Camera::~Camera()
@@ -97,7 +97,7 @@ Vec3 Camera::GetPosition() const
 float Camera::GetOutputAspectRatio()
 {
 	IntVec2 outputSize = GetColorTarget()->GetTexelSize();
-	float ratio = outputSize.x / outputSize.y;
+	float ratio = (float)( outputSize.x / outputSize.y );
 	return ratio;
 }
 
@@ -130,8 +130,8 @@ void Camera::SetClearMode( unsigned int clearFlags, Rgba8 color, float depth /*=
 {
 	m_clearMode = clearFlags;
 	m_clearColor = color;
-	UNUSED( depth );
-	UNUSED( stencil );
+	m_clearDepth = depth;
+	m_clearStencil = stencil;
 }
 
 void Camera::SetColorTarget( Texture* colorTarget )
@@ -199,6 +199,7 @@ void Camera::UpdateCameraRotation( Vec3 deltaRot )
 {
 	Vec3 cameraRot = m_transform.GetRotationPRYDegrees();
 	cameraRot += deltaRot;
+	//cameraRot.x = ClampFloat();
 	m_transform.SetRotationFromPitchRollYawDegrees( cameraRot );
 }
 

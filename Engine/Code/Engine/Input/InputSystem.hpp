@@ -47,8 +47,9 @@ public:
 	Vec2 GetRelativeMovementPerFrame() const { return m_relativeMovement; }
 	void UpdateRelativeMode();
 	void HideSystemCursor();
-	void ShowShstemCursor();
+	void ShowSystemCursor();
 	void ClipSystemCursor();
+	void UnClipSystemCursor();
 	void SetCursorMode( CursorMode mode );
 	
 	// Xbox controller
