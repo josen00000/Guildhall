@@ -211,10 +211,17 @@ Vec3 Camera::ClientToWorld( Vec2 client, float ndcZ )const
 	Mat44 worldToClip = proj;
 	worldToClip.Multiply( GetViewMatrix() );
 
-	Mat44 clipToWorld = worldToClip.GetInvertMatrix();
+	Mat44 clipToWorld = worldToClip.GetInvertMatrix(); // no bug
 	Mat44 test = clipToWorld;
 	test.Multiply( worldToClip );
 
+	test = GetViewMatrix();
+	if( IsMat44MostlyEqual( test, Mat44::IDENTITY ) ){
+		int a =0;
+	}
+	else{
+		int b =0;
+	}
 
 
 	Vec4 worldHomogenous = clipToWorld.TransformHomogeneousPoint3D( Vec4( ndc.x, ndc.y, ndc.z, 1.f) );
