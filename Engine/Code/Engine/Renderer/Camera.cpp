@@ -170,7 +170,6 @@ Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext* ctx )
 	if( m_colorTarget == nullptr ){
 		m_colorTarget = ctx->GetSwapChainBackBuffer();
 	}
-
 	m_depthStencilTarget = Texture::CreateDepthStencilBuffer( ctx, m_colorTarget->GetTexelSize().x, m_colorTarget->GetTexelSize().y );
 	return m_depthStencilTarget;
 }
@@ -199,6 +198,7 @@ void Camera::UpdateCameraRotation( Vec3 deltaRot )
 {
 	Vec3 cameraRot = m_transform.GetRotationPRYDegrees();
 	cameraRot += deltaRot;
+	cameraRot.x = ClampFloat( -85.f ,85.f, cameraRot.x );
 	//cameraRot.x = ClampFloat();
 	m_transform.SetRotationFromPitchRollYawDegrees( cameraRot );
 }
@@ -216,12 +216,12 @@ Vec3 Camera::ClientToWorld( Vec2 client, float ndcZ )const
 	test.Multiply( worldToClip );
 
 	test = GetViewMatrix();
-	if( IsMat44MostlyEqual( test, Mat44::IDENTITY ) ){
-		int a =0;
-	}
-	else{
-		int b =0;
-	}
+// 	if( IsMat44MostlyEqual( test, Mat44::IDENTITY ) ){
+// 		int a =0;
+// 	}
+// 	else{
+// 		int b =0;
+// 	}
 
 
 	Vec4 worldHomogenous = clipToWorld.TransformHomogeneousPoint3D( Vec4( ndc.x, ndc.y, ndc.z, 1.f) );
@@ -247,7 +247,7 @@ void Camera::UpdateViewMatrix()
 
 	Vec3 translation = m_transform.GetPosition();
 	Vec3 inverse_translation = m_view.TransformPosition3D( -translation );
-	m_view.SetTranslation3D( -translation );
+	m_view.SetTranslation3D( inverse_translation );
 }
 
 void Camera::SetShouldClearColor( bool shouldClearColor ){

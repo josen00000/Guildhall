@@ -24,8 +24,12 @@ void Transform::SetPosition( Vec3 pos )
 void Transform::SetRotationFromPitchRollYawDegrees( float pitch, float roll, float yaw )
 {
 	pitch = ClampFloat( -90.f, 90.f, pitch );
-	roll = ClampFloat( -180.f, 180.f, roll );
-	yaw = ClampFloat( -180.f, 180.f, yaw );
+	roll = ClampDegressTo360( roll );
+	yaw = ClampDegressTo360( yaw );
+	//roll = RangeMapFloat( 0.f, 360.f, -180.f, 180.f, roll );
+	//yaw = RangeMapFloat( 0.f, 360.f, -180.f, 180.f, yaw );
+	//roll = ClampFloat( -180.f, 180.f, roll );
+	//yaw = ClampFloat( -180.f, 180.f, yaw );
 	m_rotationPRYDegrees = Vec3( pitch, roll, yaw );
 }
 

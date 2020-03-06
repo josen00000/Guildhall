@@ -100,6 +100,7 @@ public:
 	void ClearScreen( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 	void SetOrthoView(const AABB2& box);
 
+	void AddTexture( Texture* tex );
 
 	//IA
 	void UpdateLayoutIfNeeded();

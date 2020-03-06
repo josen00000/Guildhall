@@ -724,7 +724,7 @@ bool IsFloatMostlyEqual( float a, float b, float epsilon/*=0.001f */ )
 		return true;
 	}
 	else{
-		return true;
+		return false;
 	}
 }
 

@@ -230,7 +230,7 @@ void Game::Render() const
 
 void Game::RenderSpheres() const
 {
-	for( int i = 0; i <16; i++ ) {
+	for( int i = 0; i <m_meshSpheres.size(); i++ ) {
 		g_theRenderer->DrawMesh( m_meshSpheres[i] );
 	}
 }
@@ -270,7 +270,7 @@ void Game::CreateTestMesh()
 void Game::CreateSphereMesh()
 {
 	
-	for( int i = 0; i < 16; i++ ){
+	for( int i = 0; i < 8; i++ ){
 		GPUMesh* meshSphere = new GPUMesh();
 		meshSphere->m_owner = g_theRenderer;
 		std::vector<Vertex_PCU> vertices;

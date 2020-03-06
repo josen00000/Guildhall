@@ -57,8 +57,8 @@ Texture* Texture::CreateDepthStencilBuffer( RenderContext* ctx, int width, int h
 	
 	ID3D11Texture2D* texHandle = nullptr;
 	ctx->m_device->CreateTexture2D( &desc, NULL, &texHandle );
-
 	Texture* depthBuffer = new Texture( ctx, texHandle );
+	ctx->AddTexture( depthBuffer );
 	return depthBuffer;
 }
 

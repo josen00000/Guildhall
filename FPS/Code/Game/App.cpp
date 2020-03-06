@@ -73,10 +73,10 @@ void App::Startup()
 
 void App::Shutdown()
 {
-	g_theRenderer->Shutdown();
-	g_theInputSystem->Shutdown();
 	g_theGame->Shutdown();
+	g_theInputSystem->Shutdown();
 	g_theConsole->Shutdown();
+	g_theRenderer->Shutdown();
 	
 	delete g_camera;
 	delete g_UICamera;

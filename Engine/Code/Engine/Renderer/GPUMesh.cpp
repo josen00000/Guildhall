@@ -8,7 +8,7 @@
 GPUMesh::~GPUMesh()
 {
 	SELF_SAFE_RELEASE(m_vertexBuffer);
-	//SELF_SAFE_RELEASE( m_indiceBuffer);
+	SELF_SAFE_RELEASE( m_indiceBuffer);
 }
 
 void GPUMesh::UpdateVerticeBuffer( const buffer_attribute_t* layout  )

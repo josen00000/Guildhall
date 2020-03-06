@@ -83,6 +83,8 @@ void DevConsole::StartDevConcole()
 	m_isOpen = true;
 	g_theInputSystem->ClearCharacters();
 	m_inputs.clear();
+	g_theInputSystem->SetCursorMode( CURSOR_ABSOLUTE );
+	g_theInputSystem->UnClipSystemCursor();
 }
 
 void DevConsole::EndDevConcole()
@@ -91,6 +93,8 @@ void DevConsole::EndDevConcole()
 	EndSelect();
 	ClearInput();
 	g_theInputSystem->ClearCharacters();
+	g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
+	g_theInputSystem->ClipSystemCursor();
 }
 
 void DevConsole::Render( RenderContext& renderer ) const

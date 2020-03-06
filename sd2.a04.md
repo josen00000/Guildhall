@@ -42,52 +42,52 @@ By the end of this, we will have a 5-DoF (Degree of Freedom) camera, allowing mo
    - [x] `Space` & `C`: Up and Down Movement (movement is absolute (world up and world down) // up and down arrow
    - [x] `Left-Shift`: Move faster while held.
    - *Note:  If you want different controls, just make a note in your readme*
-- [ ] Allow player to turn the camera using the mouse.
-    - [ ] `InputSystem::HideSystemCursor` implemented
-    - [ ] `InputSystem::ClipSystemCursor` implemented
-    - [ ] `InputSystem::SetCursorMode` implemented
-        - [ ] `ABSOLUTE` mode is what you currently have
-        - [ ] `RELATIVE` move implemented
-            - [ ] Move mouse to the center of the screen, and store off the cursor position
+- [x] Allow player to turn the camera using the mouse.
+    - [x] `InputSystem::HideSystemCursor` implemented
+    - [x] `InputSystem::ClipSystemCursor` implemented
+    - [x] `InputSystem::SetCursorMode` implemented
+        - [x] `ABSOLUTE` mode is what you currently have
+        - [x] `RELATIVE` move implemented
+            - [x] Move mouse to the center of the screen, and store off the cursor position
                 - *Note:  Be sure to actually make the system call, not just assume where you moved it is where it went.  This can cause drifting.*
-            - [ ] Each frame, get the cursor position, and calculate frame delta.
-            - [ ] ...after which, reset to center of screen and reget the current position.
-    - [ ] Game should be set to `RELATIVE` mode
-        - [ ] `DevConsole` should unlock the mouse and set to `ABSOLUTE` mode
-    - [ ] Associate `X` movement with `yaw`
-    - [ ] Associate `Y` movement with `pitch`
-        - [ ] Do not allow pitch above `85` degrees or below `95` degrees - no going upside down... yet...
+            - [x] Each frame, get the cursor position, and calculate frame delta.
+            - [x] ...after which, reset to center of screen and reget the current position.
+    - [x] Game should be set to `RELATIVE` mode
+        - [x] `DevConsole` should unlock the mouse and set to `ABSOLUTE` mode
+    - [x] Associate `X` movement with `yaw`
+    - [x] Associate `Y` movement with `pitch`
+        - [x] Do not allow pitch above `85` degrees or below `85` degrees - no going upside down... yet...
         - *Note:  Up to you if you want inverted-y or not.*
-- [ ] Support `RenderContext::SetModelMatrix`
-    - [ ] Create a new uniform buffer for storing a model matrix (slot 2)
-    - [ ] `SetModelMatrix` should update this uniform buffer
-    - [ ] `BeginCamera` should `SetModelMatrix` to the `IDENTITY`, and be sure to bind the buffer.
-- [ ] Be able to draw a cube mesh at `(1, 0.5, -12.0)`
-    - [ ] Create a `GPUMesh` class
-        - [ ] Implement `IndexBuffer`
-        - [ ] Be able to construct a mesh from a vertex and index array
-        - [ ] Add `RenderContext::BindIndexBuffer`
-        - [ ] Add `RenderContext::DrawIndexed`
-        - [ ] Add `RenderContext::DrawMesh`
+- [x] Support `RenderContext::SetModelMatrix`
+    - [x] Create a new uniform buffer for storing a model matrix (slot 2)
+    - [x] `SetModelMatrix` should update this uniform buffer
+    - [x] `BeginCamera` should `SetModelMatrix` to the `IDENTITY`, and be sure to bind the buffer.
+- [x] Be able to draw a cube mesh at `(1, 0.5, -12.0)`
+    - [x] Create a `GPUMesh` class
+        - [x] Implement `IndexBuffer`
+        - [x] Be able to construct a mesh from a vertex and index array
+        - [x] Add `RenderContext::BindIndexBuffer`
+        - [x] Add `RenderContext::DrawIndexed`
+        - [x] Add `RenderContext::DrawMesh`
             - This should bind the vertex buffer, index buffer, and then `DrawIndexed`
-    - [ ] Game creates a `cube mesh` around the origin with 2 unit sides.
-    - [ ] Game has a `Transform` for the cube set at `(1, 0.5, -12.0f)`,
-    - [ ] Cube transform sets `yaw` rotation to current time each frame
-    - [ ] Game should `SetModelMatrix` to the cube transform matrix
-- [ ] Support a depth buffer
-    - [ ] `Texture::CreateDepthStencilBuffer` added
-    - [ ] `Camera::SetDepthStencilBuffer` added
-    - [ ] `RenderContext` now automatcially creates a depth buffer during init matching the swap chain's size
-    - [ ] `RenderContext::GetDefaultBackbuffer` implemented to return this
-    - [ ] `RenderContext::BeginCamera`, now binds the camera's back buffer as well.
+    - [x] Game creates a `cube mesh` around the origin with 2 unit sides.
+    - [x] Game has a `Transform` for the cube set at `(1, 0.5, -12.0f)`,
+    - [x] Cube transform sets `yaw` rotation to current time each frame
+    - [x] Game should `SetModelMatrix` to the cube transform matrix
+- [x] Support a depth buffer
+    - [x] `Texture::CreateDepthStencilBuffer` added
+    - [x] `Camera::SetDepthStencilBuffer` added
+    - [x] `RenderContext` now automatcially creates a depth buffer during init matching the swap chain's size
+    - [x] `RenderContext::GetDefaultBackbuffer` implemented to return this
+    - [x] `RenderContext::BeginCamera`, now binds the camera's back buffer as well.
         - [ ] **IMPORANT:  Do not bind the default one automatically if the camera doesn't have one set.  There are reasons a camera may not want a depth buffer!**
-    - [ ] Camera's clear options should now store off the `depth` and `stencil` clear values.
-    - [ ] If camera has a depth buffer and says it should clear depth, also clear the depth buffer.
+    - [x] Camera's clear options should now store off the `depth` and `stencil` clear values.
+    - [x] If camera has a depth buffer and says it should clear depth, also clear the depth buffer.
         - Use `ID3D11DeviceConext::ClearDepthStencilView` to clear if camera says to.
-- [ ] Generate a **UV Sphere** mesh during `Game::Startup`
-    - [ ] `MeshUtils.hpp` has a function
+- [x] Generate a **UV Sphere** mesh during `Game::Startup`
+    - [x] `MeshUtils.hpp` has a function
           `AddUVSphereToIndexedVertexArray( std::vector<VertexPCU>& verts, std::vector<uint>& indices, vec3 center, float radius, uint horizintalCuts, uint verticalCuts, RGBA color )`
-    - [ ] Draw this UV sphere multiple times as a large moving ring in your game.  Each one rotating along a local axis as well as rotating along a global axis.  See demo.
+    - [x] Draw this UV sphere multiple times as a large moving ring in your game.  Each one rotating along a local axis as well as rotating along a global axis.  See demo.
 
 ------
 

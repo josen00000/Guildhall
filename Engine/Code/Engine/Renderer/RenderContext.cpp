@@ -129,6 +129,8 @@ void RenderContext::Shutdown()
 	m_modelUBO			= nullptr;
 	m_defaultSampler	= nullptr;
 	m_defaultShader		= nullptr;
+	m_lastBoundIBO		= nullptr;
+	m_lastBoundVBO		= nullptr;
 
 	CleanTextures();
 	m_texDefaultColor = nullptr;
@@ -144,7 +146,7 @@ void RenderContext::Shutdown()
 	DX_SAFE_RELEASE(m_additiveBlendState);
 	DX_SAFE_RELEASE(m_opaqueBlendState);
 	DX_SAFE_RELEASE(m_currentDepthStencilState);
-	DX_SAFE_RELEASE(m_lastBoundIBO);
+	//DX_SAFE_RELEASE(m_lastBoundIBO);
 	//DX_SAFE_RELEASE(m_lastBoundVBO);
 }
 
@@ -226,6 +228,11 @@ void RenderContext::SetOrthoView( const AABB2& box )
 	UNUSED( box ); 
 }
 
+void RenderContext::AddTexture( Texture* tex )
+{
+	m_textureList.push_back( tex );
+}
+
 void RenderContext::UpdateLayoutIfNeeded()
 {
  	//if( m_previousLayout != m_currentLayout || m_shaderHasChanged ){
@@ -239,6 +246,7 @@ void RenderContext::UpdateLayoutIfNeeded()
 void RenderContext::EndCamera( const Camera& camera )
 {
 	UNUSED(camera);
+	DX_SAFE_RELEASE(m_currentDepthStencilState);
 }
 
 void RenderContext::BindTexture( Texture* texture )
@@ -737,8 +745,13 @@ void RenderContext::SetModelMatrix( Mat44 model )
 
 void RenderContext::SetDepthTest( DepthCompareFunc func, bool writeDepthOnPass )
 {
-	if( m_currentDepthStencilState != nullptr && CheckDepthStencilState( func, writeDepthOnPass ) ){
-		m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 );
+	if( m_currentDepthStencilState != nullptr  ){
+		if( CheckDepthStencilState( func, writeDepthOnPass ) ){
+			m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 );
+		}
+		else{
+			DX_SAFE_RELEASE(m_currentDepthStencilState);
+		}
 	}
 	// create depth stencil state
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
