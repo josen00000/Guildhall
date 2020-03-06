@@ -78,7 +78,6 @@ void RenderContext::StartUp( Window* window )
 	m_defaultShader = new Shader( this );
 	m_defaultShader->CreateFromFile( "data/Shader/default.hlsl" );
 	m_immediateVBO = new VertexBuffer( this, MEMORY_HINT_DYNAMIC );
-	m_immediateVBO->m_stride = sizeof(Vertex_PCU);
 
 	m_frameUBO = new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	m_modelUBO = new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
