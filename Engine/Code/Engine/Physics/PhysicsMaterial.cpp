@@ -11,6 +11,11 @@ float PhysicsMaterial::GetRestitutionBetweenTwoMaterial( PhysicsMaterial PM1, Ph
 	return ( PM1.m_restitution + PM2.m_restitution ) / 2;
 }
 
+float PhysicsMaterial::GetFrictionBetweenTwoMaterial( PhysicsMaterial PM1, PhysicsMaterial PM2 )
+{
+	return ( PM1.m_friction + PM2.m_friction ) / 2;
+}
+
 void PhysicsMaterial::UpdateRestitution( float deltaRes )
 {
 	m_restitution += deltaRes;

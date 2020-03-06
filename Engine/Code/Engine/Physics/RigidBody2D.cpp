@@ -6,6 +6,7 @@
 #include "Engine/Physics/PolygonCollider2D.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 
+
 Rigidbody2D::Rigidbody2D( Physics2D* owner, Vec2 worldPos, Collider2D* col /*= nullptr */ )
 	:m_system( owner )
 	,m_worldPosition(worldPos)
@@ -98,6 +99,11 @@ void Rigidbody2D::UpdateMass( float deltaMass )
 	}
 }
 
+void Rigidbody2D::UpdateFrameStartPos()
+{
+	m_frameStartPosition = m_worldPosition;
+}
+
 void Rigidbody2D::DisablePhysics()
 {
 	m_isEnable = false;
@@ -112,6 +118,24 @@ void Rigidbody2D::ApplyImpulse( Vec2 impulse, Vec2 point )
 {
 	UNUSED(point);
 	m_velocity += impulse / m_mass;
+}
+
+void Rigidbody2D::ApplyDragForce()
+{
+	Vec2 vel = GetVelocity();
+	Vec2 dragForce = - vel * m_drag;
+	AddForce( dragForce );
+}
+
+void Rigidbody2D::AddForce( Vec2 force )
+{
+	m_force += force;
+}
+
+Vec2 Rigidbody2D::GetVerletVelocity() const
+{
+	Vec2 verletVelocity = ( m_worldPosition - m_frameStartPosition ) / 1;
+	return verletVelocity;
 }
 
 void Rigidbody2D::SetPosition( Vec2 position )

@@ -9,6 +9,7 @@ public:
 
 	void Update( double deltaSeconds );
 	void Reset();
+	void SelfBeginFrame();
 
 	// Control
 	void Pause();

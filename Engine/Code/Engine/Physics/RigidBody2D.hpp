@@ -29,9 +29,11 @@ public:
 
 	// Accessor
 	float GetMass() const { return m_mass; }
+	float GetDrag() const { return m_drag; }
 	bool IsDestroied() const { return m_isDestroyed; }
 	Vec2 GetPosition() const { return m_worldPosition; }
 	Vec2 GetVelocity() const { return m_velocity; }
+	Vec2 GetVerletVelocity() const;
 	Collider2D* GetCollider() const { return m_collider; }
 	SimulationMode GetSimulationMode() const { return m_mode; }
 	
@@ -46,11 +48,15 @@ public:
 	void UpdateVelocityPerFrame( const Vec2& deltaVel );
 	void UpdatePositionPerFrame( const Vec2& deltaPos );
 	void UpdateMass( float deltaMass );
+	void UpdateFrameStartPos();
 
 	void DisablePhysics();
 	void EnablePhysics();
 
 	void ApplyImpulse( Vec2 impulse, Vec2 point );
+	void ApplyDragForce();
+
+	void AddForce( Vec2 force );
 	// help
 	void DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
 	void DebugRender( RenderContext* ctx );
@@ -61,6 +67,8 @@ private:
 	float m_mass		= 1.f;
 	float m_drag		= 0.f;
 	Vec2 m_velocity		= Vec2::ZERO;
+	Vec2 m_frameStartPosition = Vec2::ZERO;
+	Vec2 m_force		= Vec2::ZERO;
 
 	SimulationMode m_mode = RIGIDBODY_DYNAMIC;
 	Physics2D*	m_system	= nullptr;

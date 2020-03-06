@@ -20,6 +20,7 @@ public:
 	void EndFrame(); // Cleanup destroyed objects
 	void StartUp();
 
+	static double s_fixedDeltaTime;
 	// Update each frame
 	void Update( float deltaSeconds );
 	void AdvanceSimulation( float deltaSeconds );
@@ -28,6 +29,7 @@ public:
 	void MoveRigidbodies( float deltaSeconds );
 	void CleanupDestroyedObjects();
 	void ModifyGravity( float deltaGravity );
+	void UpdateFrameStartPos();
 
 	// Rigidbody
 	Rigidbody2D* CreateRigidbody( Vec2 worldPos = Vec2::ZERO );
@@ -53,18 +55,25 @@ public:
 	void ResolveCollisions();
 	void ResolveCollision( const Collision2D& collision );
 	void CorrectObjectsInCollision( const Collision2D& collision );
-	Vec2 CalculateCollisionImpulse( const Collision2D& collision );
+	float CalculateCollisionNormalImpulse( const Collision2D& collision );
+	float CalculateCollisionTangentImpulse( const Collision2D& collision, float normalImpulse );
 	void ApplyImpulseInCollision( const Collision2D& collision, Vec2 impulse );
+	void ApplyTangentalImpulse( const Collision2D& collision, Vec2 impulse );
 	void CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold );
 
 	// Physic Time
-	float GetFixedDeltaTime() const { return m_fixedDeltaTime; }
+	double GetTimeScale();
+	double GetFixedDeltaTime() const { return Physics2D::s_fixedDeltaTime; }
+	bool IsClockPause();
 	void SetFixedDeltaTime( float frameTimeSeconds );
+	void PausePhysicsTime();
+	void ResumePhysicsTime();
+	void SetTimeScale( double scale );
+
 public:
 	Vec2 m_gravityAccel = Vec2( 0.f, -2.f );
 
 private:
-	double m_fixedDeltaTime = 1.0 / 120;
 	std::vector<Collider2D*> m_colliders;
 	std::vector<Rigidbody2D*> m_rigidbodies;
 	std::vector<Collision2D> m_collisions;

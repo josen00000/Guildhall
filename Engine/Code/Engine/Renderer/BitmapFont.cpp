@@ -59,8 +59,8 @@ void BitmapFont::AddVertsForTextInBox2D( std::vector<Vertex_PCU>& vertexArray, c
 	float textLength = cellWidth * text.length();
 	float maxX = box.maxs.x - textLength;
 	float maxY = box.maxs.y - cellHeight;
-	float minPosX = RangeMapFloat(0, 1, 0, maxX, alignment.x);
-	float minPosY = RangeMapFloat(0, 1, 0, maxY, alignment.y);
+	float minPosX = RangeMapFloat(0, 1, box.mins.x, maxX, alignment.x);
+	float minPosY = RangeMapFloat(0, 1, box.mins.y, maxY, alignment.y);
 
 	Vec2 minPos = Vec2(minPosX, minPosY);
 	float cellRightPosX = cellWidth;

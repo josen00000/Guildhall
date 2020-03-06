@@ -19,5 +19,6 @@ public:
 	// Accessor
 	float GetDist() const;
 	Vec2 GetNormal() const;
+	Vec2 GetTangent() const;
 	Manifold2D GetManifold() const;
 };

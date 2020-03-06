@@ -98,8 +98,10 @@ void GameObject::CheckIfOutCameraVertical( Camera* camera )
 	}
 	if( pos.y < camera->GetOrthoBottomLeft().y ) {
 		Vec2 vel = m_rb->GetVelocity();
-		vel.y = - vel.y;
-		m_rb->SetVelocity( vel );
+		if( vel.y < 0 ){
+			vel.y = - vel.y;
+			m_rb->SetVelocity( vel );
+		}
 	}
 
 }

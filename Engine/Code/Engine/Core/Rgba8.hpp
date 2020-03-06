@@ -22,6 +22,7 @@ public:
 	static Rgba8 GREEN;
 	static Rgba8 BLUE;
 	static Rgba8 YELLOW;
+	static Rgba8 GRAY;
 	//static Rgba8 RED;
 
 	

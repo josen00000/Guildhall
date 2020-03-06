@@ -36,6 +36,7 @@ public:
 	bool IntersectsAndGetManifold( const Collider2D* other, Manifold2D& manifold );
 	Manifold2D GetManifold();
 	float GetBounceWith( const Collider2D* other ) const;
+	float GetFrictionWith( const Collider2D* other )const;
 	void Move( Vec2 displacement );
 
 	// Accessor
@@ -51,6 +52,9 @@ public:
 	void UpdateMaterialBounciness( float deltaRes );
 	void UpdateMaterialFriction( float deltaFric );
 	float GetBounciness() const;
+
+	// friction
+	float GetFriction() const;
 
 	// debug helpers
 	virtual void DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) = 0;

@@ -35,6 +35,7 @@ void App::Startup()
 	g_theRenderer->StartUp();
 	g_theGame->Startup();
 	g_theInputSystem->Startup();
+	g_thePhysics->StartUp();
 	g_theConsole = new DevConsole( g_squirrelFont );
 }
 
@@ -110,6 +111,7 @@ void App::ResetGame()
 void App::BeginFrame()
 {
 	g_theInputSystem->BeginFrame();
+	g_thePhysics->BeginFrame();
 	Clock::BeginFrame();
 }
 

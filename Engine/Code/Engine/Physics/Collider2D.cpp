@@ -92,6 +92,12 @@ float Collider2D::GetBounceWith( const Collider2D* other ) const
 	return result;
 }
 
+float Collider2D::GetFrictionWith( const Collider2D* other ) const
+{
+	float result = PhysicsMaterial::GetRestitutionBetweenTwoMaterial( m_material, other->m_material );
+	return result;
+}
+
 void Collider2D::Move( Vec2 displacement )
 {
 	m_rigidbody->Move( displacement );
@@ -120,6 +126,11 @@ void Collider2D::UpdateMaterialFriction( float deltaFric )
 float Collider2D::GetBounciness() const
 {
 	return m_material.m_restitution;
+}
+
+float Collider2D::GetFriction() const
+{
+	return m_material.m_friction;
 }
 
 Collider2D::~Collider2D()
