@@ -101,6 +101,7 @@ void DiscCollider2D::SetPosition( Vec2 pos )
 void DiscCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
 {
 	// TODO test and debug 
+
 	ctx->DrawCircle( m_worldPosition, m_radius, 1, borderColor );
 	ctx->DrawFilledCircle( m_worldPosition, ( m_radius - 0.9f ), fillColor );
 }

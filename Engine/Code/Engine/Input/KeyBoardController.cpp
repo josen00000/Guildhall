@@ -1,8 +1,6 @@
 #include"KeyBoardController.hpp"
 
 
-
-
 const KeyButtonState& KeyBoardController::GetButtonState( KeyBoardButtonID buttonID ) const
 {
 	return m_buttonStates[buttonID];

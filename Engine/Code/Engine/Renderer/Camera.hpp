@@ -16,7 +16,7 @@ enum eCameraClearBitFlag : unsigned int {
 	CLEAR_COLOR_BIT		= (1 << 0),
 	CLEAR_DEPTH_BIT		= (1 << 1),
 	CLEAR_STENCIL_BIT	= (1 << 2),
-
+	// How to use it
 };
 
 enum ProjectionType
@@ -57,8 +57,12 @@ public:
 	Mat44	GetModelMatrix() const;
 
 
-	bool	GetShouldClearColor() const { return m_shouldClearColor; }
+	bool	IsClearColor() const;
 	Rgba8	GetClearColor() const { return m_clearColor; }
+	bool	IsClearDepth() const;
+	float	GetClearDepth() const { return m_clearDepth; }
+	bool	IsClearStencil() const;
+	uint	GetClearStencil() const { return m_clearStencil; }
 
 
 	Texture*		GetColorTarget() const;
@@ -70,9 +74,15 @@ public:
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight );
 	void SetPosition( const Vec3& position );
 	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f );
-	
-	void SetShouldClearColor( bool shouldClearColor );
-	void SetClearMode( unsigned int clearFlags, Rgba8 color, float depth = 0.0f , unsigned int stencil = 0 );
+
+	void SetClearMode( uint clearFlags, Rgba8 color, float depth = 0.0f , unsigned int stencil = 0 );
+	void EnableClearColor( Rgba8 color );
+	void EnableClearDepth( float depth );
+	void EnableClearStencil( uint stencil );
+	void DisableClearColor();
+	void DisableClearDepth();
+	void DisableClearStencil();
+
 	void SetColorTarget( Texture* colorTarget );
 	void SetDepthStencilTarget( Texture* texture );
 	void SetPitchRollYawRotation( float pitch, float roll, float yaw );
@@ -93,8 +103,7 @@ private:
 	Vec2 GetOrthoMax() const;
 
 public:
-	uint m_clearMode = 0;
-	bool m_shouldClearColor = true;
+	uint m_clearState;
 	Vec2 m_dimension;
 	Rgba8 m_clearColor = Rgba8::BLACK;
 	float m_clearDepth = 1.f;

@@ -1,17 +1,18 @@
 MP2.A04 Collision REsponse
+project: MP2A03_Polygon
 ## Checklist
 
-- [ ] Stop coloring objects red that are intersecting (it becomes a strobe light in this assignment otherwise)
+- [x] Stop coloring objects red that are intersecting (it becomes a strobe light in this assignment otherwise)
 - [x] Make sure your game creates polygons as `STATIC` by default, and discs create as `DYNAMIC` by default
 - [x] Add support for `disc Collider2D::GetWorldBounds` for existing colliders
 	- [ ] **Easier Option**: Implement this using `AABB2` bounding boxes
     - [x] **Challenge Option**: Implement this using a bounding `Disc`
-    - [ ] Update this bounds whenever you update the world shape of the object.
+    - [x] Update this bounds whenever you update the world shape of the object.
 - [x] Switch `Collider2D::Intersects` to be non-virtual, and instead use a matrix lookup
     - [x] Use a *mid-phase* check to early out of a collision by comparing the bounds first.
     - [x] If passes the bounds check, lookup and call the appropriate callback
-- [ ] Add `Collider2D::GetManifold` that also uses a collision matrix or half matrix
-    - [?] Again do an early out using the bounds. // already collision happen
+- [x] Add `Collider2D::GetManifold` that also uses a collision matrix or half matrix // funcion name is IntersectsAndGetManifold()
+    - [x] Again do an early out using the bounds. // already collision happen
     - [x] Implement a disc versus disc manifold
     - [x] Implement a disc versus polygon manifold
     - **Note: We are not doing polygon -vs- polygon yet**
@@ -19,8 +20,8 @@ MP2.A04 Collision REsponse
     - [x] `PhysicsMaterial` has a property for `restitution` (or `bounciness` if you prefer)
     - [x] `Collider2D::GetBounceWith(Collider2D const* other) const` implemented to compute restitution between two objects
         - There are multiple methods for computing the restitution.  Product, Min, Max, Spherical, Lookup, etc...
-    - [ ] Allow user to adjust bounciness using `+` and `-` while the object is selected.
-    - [ ] Set the alpha for the fill color to the counciness of the object.
+    - [x] Allow user to adjust bounciness using `+` and `-` while the object is selected.
+    - [x] Set the alpha for the fill color to the counciness of the object.
 - [x] Add a `Collision2D` object that contains..
     - Two pointers to the `Collider2D` objects involved in the collision (`me` and `them`)
     - A `manifold2` struct containing...

@@ -99,6 +99,11 @@ TextureView* Texture::GetOrCreateShaderResourceView()
 	return m_shaderResourcwView;
 }
 
+TextureView* Texture::GetDepthStencilView()
+{
+	return m_depthStencilView;
+}
+
 TextureView* Texture::GetOrCreateDepthStencilView()
 {
 	if( m_depthStencilView != nullptr ){ return m_depthStencilView; }

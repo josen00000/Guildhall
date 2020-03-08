@@ -15,7 +15,6 @@ extern Game*			g_theGame;
 extern Physics2D*		g_thePhysics;
 extern RenderContext*	g_theRenderer;
 extern Camera*			g_camera;
-extern DevConsole*		g_theConsole;
 
 GameObject::GameObject( Vec2 pos, float radius )
 {
@@ -98,10 +97,8 @@ void GameObject::CheckIfOutCameraVertical( Camera* camera )
 	}
 	if( pos.y < camera->GetOrthoBottomLeft().y ) {
 		Vec2 vel = m_rb->GetVelocity();
-		if( vel.y < 0 ){
-			vel.y = - vel.y;
-			m_rb->SetVelocity( vel );
-		}
+		vel.y = - vel.y;
+		m_rb->SetVelocity( vel );
 	}
 
 }
@@ -166,13 +163,6 @@ void GameObject::Render() const
 	if( m_isIntersect ) {
 		FilledColor = Rgba8( 255, 0, 0, 128 );
 	}
-	float bounciness = m_rb->GetCollider()->GetBounciness();
-	int test = (int)RangeMapFloat( 0.f, 1.f, 0.f, 255.f, bounciness );
-	FilledColor.a = (unsigned char)test;
-	std::string testString = "Color alpha is " + std::to_string( FilledColor.a );
-	std::string testString1 = "bounciness is " + std::to_string( bounciness );
-	g_theConsole->PrintString( Rgba8::RED, testString );
-	g_theConsole->PrintString( Rgba8::BLUE, testString1 );
 	col->DebugRender( g_theRenderer, borderColor, FilledColor );
 	m_rb->DebugRender( g_theRenderer );
 }
@@ -210,26 +200,6 @@ void GameObject::SetVelocity( Vec2 vel )
 void GameObject::SetSimulateMode( SimulationMode mode )
 {
 	m_rb->SetSimulationMode( mode );
-}
-
-void GameObject::UpdateBounciness( float deltaBounce )
-{
-	m_rb->GetCollider()->UpdateMaterialBounciness( deltaBounce );
-}
-
-void GameObject::UpdateMass( float deltaMass )
-{
-	m_rb->UpdateMass( deltaMass );
-}
-
-void GameObject::UpdateFriction( float deltaFric )
-{
-	m_rb->GetCollider()->UpdateMaterialFriction( deltaFric );
-}
-
-void GameObject::UpdateDrag( float deltaDrag )
-{
-	m_rb->UpdateDrag( deltaDrag );
 }
 
 void GameObject::SetPosition( Vec2 pos )

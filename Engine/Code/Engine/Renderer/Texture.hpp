@@ -20,6 +20,7 @@ public:
 	IntVec2 GetTexelSize() const { return m_texelSizeCoords; }
 	TextureView* GetOrCreateRenderTargetView();
 	TextureView* GetOrCreateShaderResourceView();
+	TextureView* GetDepthStencilView();
 	TextureView* GetOrCreateDepthStencilView();
 
 public:

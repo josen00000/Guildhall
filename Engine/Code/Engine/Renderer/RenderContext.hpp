@@ -16,7 +16,6 @@ class Shader;
 class Texture;
 class VertexBuffer;
 class Window;
-class RenderBuffer;
 
 struct AABB2;
 struct ID3D11BlendState;
@@ -67,7 +66,6 @@ enum DepthCompareFunc {
 struct time_data_t {
 	float system_time;
 	float system_delta_time;
-
 	float padding[2];
 };
 
@@ -88,24 +86,20 @@ public :
 public:
 	void StartUp( Window* window );
 	void Shutdown();
-	void BeginView();
-	
-	void UpdateFrameTime( float deltaSeconds );
-	void BeginCamera( Camera& camera);
-	void EndCamera(const Camera& camera);
-	
+	void BeginView(){}	// TODO Any use?
 	void BeginFrame();
 	void EndFrame();
 	
-	void ClearScreen( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
-	void SetOrthoView(const AABB2& box);
+	void UpdateFrameTime( float deltaSeconds );
+	
+	void BeginCamera( Camera& camera);
+	void EndCamera();
+	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 
-	void AddTexture( Texture* tex );
 
-	//IA
+	// IA
 	void UpdateLayoutIfNeeded();
 	
-
 	// Bind
 	void BindTexture( Texture* texture);
 	void BindSampler( const Sampler* sampler );
@@ -114,7 +108,6 @@ public:
 
 	void BindVertexBuffer( VertexBuffer* vbo );
 	void BindIndexBuffer( IndexBuffer* ibo );
-
 	void BindUniformBuffer( uint slot, RenderBuffer* ubo ); // ubo - uniform buffer object
 
 	// Draw
@@ -123,10 +116,8 @@ public:
 	void DrawMesh( GPUMesh* mesh );
 	void DrawVertexVector( std::vector<Vertex_PCU>& vertices );
 	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
-	
 	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
 	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );
-
 	void DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor );
 	void DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor );
 	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
@@ -135,27 +126,27 @@ public:
 	Texture* GetSwapChainBackBuffer();
 
 	// Create
-	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
-
-	Texture* CreateTextureFromColor( Rgba8 color );
 	BitmapFont* CreateOrGetBitmapFontFromFile(const char* fontName, const char* fontFilePath);
+	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
+	Texture* CreateTextureFromColor( Rgba8 color );
 	Shader* GetOrCreateShader( char const* fileName );
-
+	void AddTexture( Texture* tex );
 
 	// Mutator	
-	void SetBlendMode(BlendMode blendMode);
+	void SetBlendMode( BlendMode blendMode );
 	void SetModelMatrix( Mat44 model );
-	void SetDepthTest( DepthCompareFunc func, bool writeDepthOnPass );
+	void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
+	void DisableDepth();
 	bool CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass );
 
-
 private:
-	Texture*		CreateTextureFromFile(const char* imageFilePath);
-	BitmapFont*		CreateBitmapFontFromFile(const char* fontName, const char* fontFilePath);
 	void			CreateBlendState();
-	Texture*		CheckTextureExist(const char* imageFilePath) const;
 	BitmapFont*		CheckBitmapFontExist( const char* fontName ) const;
+	BitmapFont*		CreateBitmapFontFromFile(const char* fontName, const char* fontFilePath);
+	Texture*		CreateTextureFromFile(const char* imageFilePath);
+	Texture*		CheckTextureExist(const char* imageFilePath) const;
 	void			CleanTextures();
+	void			CleanShaders();
 
 public:
 	ID3D11DeviceContext*	m_context	= nullptr; // how we issue command
@@ -167,12 +158,14 @@ private:
 	std::vector <Texture*> m_textureList;
 	std::map<std::string, Texture*>			m_loadedTextures;
 	std::map<std::string, BitmapFont*>		m_loadedFonts;
-
-
-	Sampler*	m_defaultSampler	= nullptr;
-	Shader*			m_currentShader = nullptr;
-	Shader*			m_defaultShader	= nullptr;
 	std::map<std::string, Shader*> m_shaders;
+
+	Sampler*	m_defaultSampler = nullptr;
+
+
+	Camera*		m_currentCamera	= nullptr;
+	Shader*		m_currentShader = nullptr;
+	Shader*		m_defaultShader	= nullptr;
 
 	ID3D11Buffer*	m_lastBoundIBO	= nullptr;	
 	ID3D11Buffer*	m_lastBoundVBO	= nullptr;
@@ -183,7 +176,6 @@ private:
 // 	buffer_attribute_t* m_currentLayout		= nullptr;
 // 	buffer_attribute_t* m_previousLayout	= nullptr;
 
-
 	Texture* m_texDefaultColor = nullptr;
 
 	// states
@@ -192,5 +184,4 @@ private:
 	ID3D11BlendState* m_opaqueBlendState	= nullptr;
 
 	ID3D11DepthStencilState* m_currentDepthStencilState = nullptr;
-
 };

@@ -4,12 +4,7 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
-<<<<<<< HEAD:MP2Asg/Code/Game/App.cpp
 #include "Engine/Core/Time/Time.hpp"
-=======
-#include "Engine/Core/Time/Clock.hpp"
-#include "Engine/Core/Time.hpp"
->>>>>>> mp2/turnin/a05:MP2A03_Polygon/Code/Game/App.cpp
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -34,27 +29,38 @@ RenderContext*	g_theRenderer		= nullptr;
 
 void App::Startup()
 {
-	g_camera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
-	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
-	g_devCamera			= new Camera( Vec2( 0, 0 ), Vec2( 30, 20 ) );
+	StartupStage1();
+	StartupStage2();
+	StartupStage3();
+}
+
+void App::StartupStage1()
+{
+	// current unused
+}
+
+void App::StartupStage2()
+{
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
-	g_theGame			= new Game( g_camera, g_UICamera );
 	g_thePhysics		= new Physics2D();
-	
+	g_devCamera			= new Camera( Vec2( DEV_CAMERA_MIN_X, DEV_CAMERA_MIN_Y ), Vec2( DEV_CAMERA_MAX_X, DEV_CAMERA_MAX_Y ) );
+
+	g_theInputSystem->Startup();
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );
-	g_theGame->Startup();
-	g_theInputSystem->Startup();
-<<<<<<< HEAD:MP2Asg/Code/Game/App.cpp
-	
-	g_theConsole = DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
-	g_theConsole->Startup();
+}
 
-=======
-	g_thePhysics->StartUp();
-	g_theConsole = new DevConsole( g_squirrelFont );
->>>>>>> mp2/turnin/a05:MP2A03_Polygon/Code/Game/App.cpp
+void App::StartupStage3()
+{
+	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
+	g_camera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_theGame			= new Game( g_camera, g_UICamera );
+	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
+
+	g_theConsole->Startup();
+	g_theGame->Startup();
 }
 
 void App::Shutdown()
@@ -134,8 +140,7 @@ void App::ResetGame()
 void App::BeginFrame()
 {
 	g_theInputSystem->BeginFrame();
-	g_thePhysics->BeginFrame();
-	Clock::BeginFrame();
+	g_theGame->BeginFrame();
 }
 
 void App::Update( float deltaSeconds )

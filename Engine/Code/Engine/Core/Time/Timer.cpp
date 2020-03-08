@@ -1,5 +1,6 @@
 #include "Engine/Core/Time/Timer.hpp"
 
+
 void Timer::SetSeconds( Clock* clock, double timeToWait )
 {
 	m_clock = clock;
@@ -22,6 +23,7 @@ void Timer::Reset()
 
 void Timer::Stop()
 {
+	// what we do in stop
 	m_clock->Pause();
 }
 

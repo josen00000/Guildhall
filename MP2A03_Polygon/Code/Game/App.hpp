@@ -11,6 +11,9 @@ public:
 	App(){}
 	~App() {}
 	void Startup();
+	void StartupStage1();	// Critial system
+	void StartupStage2();	// Other system dependencies 
+	void StartupStage3();	// Object
 	void Shutdown();
 	void BeginFrame();
 	void RunFrame();

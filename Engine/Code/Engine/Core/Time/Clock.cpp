@@ -12,7 +12,9 @@ Clock::Clock()
 Clock::Clock( Clock* parent )
 {
 	m_parent = parent;
-	parent->AddChild( this );
+	if( m_parent != nullptr ){
+		parent->AddChild( this );
+	}
 }
 
 Clock::~Clock()
@@ -46,6 +48,16 @@ void Clock::Reset()
 	m_scale = 1;
 	m_totalTime = 0;
 	m_deltaTime = 0;
+}
+
+void Clock::SelfBeginFrame()
+{
+	static double timePreviousFrame = GetCurrentTimeSeconds();
+	double timeThisFrame = GetCurrentTimeSeconds();
+
+	double dt = timeThisFrame - timePreviousFrame;
+	timePreviousFrame = timeThisFrame;
+	Update( dt );
 }
 
 void Clock::Pause()

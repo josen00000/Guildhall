@@ -29,3 +29,8 @@ constexpr float UI_CAMERA_MIN_X		= 0;
 constexpr float UI_CAMERA_MIN_Y		= 0;
 constexpr float UI_CAMERA_MAX_X		= 200;
 constexpr float UI_CAMERA_MAX_Y		= 100;
+
+constexpr float DEV_CAMERA_MIN_X	= 0;
+constexpr float DEV_CAMERA_MIN_Y	= 0;
+constexpr float DEV_CAMERA_MAX_X	= 30;
+constexpr float DEV_CAMERA_MAX_Y	= 20;

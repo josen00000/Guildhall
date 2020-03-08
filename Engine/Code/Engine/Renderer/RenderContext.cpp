@@ -1,8 +1,6 @@
 #pragma once
-
 #include <vector>
-#include "Engine/Core/ErrorWarningAssert.hpp"
-#include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/Time/Time.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/LineSegment2.hpp"
@@ -20,8 +18,6 @@
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
 
-
-
 //third party library
 #include "Engine/stb_image.h"
 
@@ -30,6 +26,7 @@
 #pragma comment( lib, "d3dcompiler.lib" )   // needed when we get to shaders
 
 #define RENDER_DEBUG
+
 
 void RenderContext::StartUp( Window* window )
 {
@@ -74,21 +71,14 @@ void RenderContext::StartUp( Window* window )
 		&m_context );
 
 	m_swapChain = new SwapChain( this, swapchain );
-
 	m_defaultShader = new Shader( this );
 	m_defaultShader->CreateFromFile( "data/Shader/default.hlsl" );
 	m_immediateVBO = new VertexBuffer( this, MEMORY_HINT_DYNAMIC );
-
 	m_frameUBO = new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	m_modelUBO = new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-
 	m_defaultSampler = new Sampler( this, SAMPLER_POINT );
 	m_texDefaultColor = CreateTextureFromColor( Rgba8::WHITE );
 	CreateBlendState();
-}
-
-void RenderContext::BeginView(){
-
 }
 
 void RenderContext::UpdateFrameTime( float deltaSeconds )
@@ -113,13 +103,11 @@ void RenderContext::EndFrame()
 void RenderContext::Shutdown()
 {
 	delete m_swapChain;
+	delete m_defaultSampler;
 	delete m_defaultShader;
 	delete m_immediateVBO;
-	//delete m_lastBoundVBO;
-	//delete m_lastBoundIBO;
 	delete m_frameUBO;
 	delete m_modelUBO;
-	delete m_defaultSampler;
 
 	m_swapChain			= nullptr;
 	m_currentShader		= nullptr;
@@ -132,37 +120,29 @@ void RenderContext::Shutdown()
 	m_lastBoundVBO		= nullptr;
 
 	CleanTextures();
-	m_texDefaultColor = nullptr;
-
-	for( ShaderMapIterator it = m_shaders.begin(); it != m_shaders.end(); ++it ) {
-		delete it->second;
-	}
-	m_shaders.clear();
-
+	CleanShaders();
+	
 	DX_SAFE_RELEASE(m_device);
 	DX_SAFE_RELEASE(m_context);
 	DX_SAFE_RELEASE(m_alphaBlendState);
 	DX_SAFE_RELEASE(m_additiveBlendState);
 	DX_SAFE_RELEASE(m_opaqueBlendState);
 	DX_SAFE_RELEASE(m_currentDepthStencilState);
-	//DX_SAFE_RELEASE(m_lastBoundIBO);
-	//DX_SAFE_RELEASE(m_lastBoundVBO);
 }
 
 
-void RenderContext::ClearScreen( Texture* output, const Rgba8& clearColor )
+void RenderContext::ClearTargetView( Texture* output, const Rgba8& clearColor )
 {
 	float clearFolats[4];
 	clearFolats[0] = (float)clearColor.r / 255.f;
 	clearFolats[1] = (float)clearColor.g / 255.f;
 	clearFolats[2] = (float)clearColor.b / 255.f;
 	clearFolats[3] = (float)clearColor.a / 255.f;
-
 	
-	TextureView* backBuffer_rtv = output->GetOrCreateRenderTargetView();
-	ID3D11RenderTargetView* rtv = backBuffer_rtv->GetRTVHandle();
-	m_context->ClearRenderTargetView( rtv, clearFolats );
+	TextureView* targetView_rtv = output->GetOrCreateRenderTargetView();
+	ID3D11RenderTargetView* rtv = targetView_rtv->GetRTVHandle();
 
+	m_context->ClearRenderTargetView( rtv, clearFolats );
 }
 
 void RenderContext::BeginCamera( Camera& camera )
@@ -171,19 +151,15 @@ void RenderContext::BeginCamera( Camera& camera )
 	m_context->ClearState();
 	m_lastBoundVBO = nullptr;
 	m_lastBoundIBO = nullptr;
-
 #endif
+
 	Texture* output = camera.GetColorTarget(); // get texture output
-	Texture* depthBuffer = camera.GetOrCreateDepthStencilTarget( this );
 
 	if( output == nullptr ) {
 		output = GetSwapChainBackBuffer();
 	}
-
 	TextureView* renderTargetView = output->GetOrCreateRenderTargetView(); // texture view: handler of the data in texture
-	TextureView* depthStencilView = depthBuffer->GetOrCreateDepthStencilView();	
 	ID3D11RenderTargetView* rtv = renderTargetView->GetRTVHandle();
-	ID3D11DepthStencilView* dsv = depthStencilView->GetDSVHandle();
 
 
 	IntVec2 outputSize = output->GetTexelSize();
@@ -199,11 +175,20 @@ void RenderContext::BeginCamera( Camera& camera )
 	m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 	m_context->RSSetViewports( 1, &viewport );
 
-	m_context->ClearDepthStencilView( dsv, D3D11_CLEAR_DEPTH, 1.f, 0 );
-	m_context->OMSetRenderTargets( 1, &rtv, dsv ); // TODO begin camera
+	if( camera.IsClearDepth() ){
+		ID3D11DepthStencilView* dsv = nullptr;
+		Texture* depthBuffer = camera.GetOrCreateDepthStencilTarget( this );
+		TextureView* depthStencilView = depthBuffer->GetDepthStencilView();	
+		dsv = depthStencilView->GetDSVHandle();
+		m_context->ClearDepthStencilView( dsv, D3D11_CLEAR_DEPTH, 1.f, 0 );
+		m_context->OMSetRenderTargets( 1, &rtv, dsv ); // dsv always exist
+	}
+	else{
+		m_context->OMSetRenderTargets( 1, &rtv, NULL );
+	}
 	
-	if( camera.GetShouldClearColor() ) {
-		ClearScreen( output, camera.GetClearColor() );
+	if( camera.IsClearColor() ) {
+		ClearTargetView( output, camera.GetClearColor() );
 	}
 	BindShader( static_cast<Shader*>( nullptr ) );
 
@@ -220,11 +205,7 @@ void RenderContext::BeginCamera( Camera& camera )
 	BindSampler( nullptr );
 
 	SetBlendMode( BlendMode::BLEND_ALPHA );
-}
-
-void RenderContext::SetOrthoView( const AABB2& box )
-{
-	UNUSED( box ); 
+	m_currentCamera = &camera;
 }
 
 void RenderContext::AddTexture( Texture* tex )
@@ -242,9 +223,9 @@ void RenderContext::UpdateLayoutIfNeeded()
  	//}
 }
 
-void RenderContext::EndCamera( const Camera& camera )
+void RenderContext::EndCamera()
 {
-	UNUSED(camera);
+	m_currentCamera = nullptr;
 	DX_SAFE_RELEASE(m_currentDepthStencilState);
 }
 
@@ -492,13 +473,11 @@ void RenderContext::CreateBlendState()
 	alphaDesc.RenderTarget[0].BlendEnable = true;
 	alphaDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 	alphaDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA; 
-		//D3D11_BLEND_SRC_ALPHA;
 	alphaDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 
 	alphaDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	alphaDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	alphaDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-
 	alphaDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
 	m_device->CreateBlendState( &alphaDesc, &m_alphaBlendState );
@@ -520,7 +499,7 @@ void RenderContext::CreateBlendState()
 
 	m_device->CreateBlendState( &additiveDesc, &m_additiveBlendState );
 
-	//
+	// Opaque
 	D3D11_BLEND_DESC opaqueDesc;
 	opaqueDesc.AlphaToCoverageEnable = false;
 	opaqueDesc.IndependentBlendEnable = false;
@@ -536,12 +515,11 @@ void RenderContext::CreateBlendState()
 
 	opaqueDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	m_device->CreateBlendState( &opaqueDesc, &m_opaqueBlendState );
-
 }
 
 BitmapFont* RenderContext::CheckBitmapFontExist( const char* imageFilePath ) const
 {
-	auto it =  m_loadedFonts.find(imageFilePath);
+	auto it =  m_loadedFonts.find( imageFilePath );
 	if(it != m_loadedFonts.end() ){
 		return it->second;
 	}
@@ -556,6 +534,16 @@ void RenderContext::CleanTextures()
 			m_textureList[texIndex] = nullptr;
 		}
 	}
+
+	m_texDefaultColor = nullptr;
+}
+
+void RenderContext::CleanShaders()
+{
+	for( ShaderMapIterator it = m_shaders.begin(); it != m_shaders.end(); ++it ) {
+		delete it->second;
+	}
+	m_shaders.clear();
 }
 
 Texture* RenderContext::CheckTextureExist(const char* imageFilePath) const
@@ -613,28 +601,6 @@ void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 
 void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, const float thick, const Rgba8& lineColor )
 {
-// 	float halfThick = thick / 2;
-// 	Vec2 direction = endPoint -  startPoint;
-// 	direction.SetLength( halfThick );
-// 	Vec2 tem_position = endPoint+direction;
-// 	Vec2 rightTop = tem_position +( Vec2(-direction.y,direction.x));
-// 	Vec2 rightdown=tem_position.operator+(Vec2(direction.y,-direction.x));
-// 	Vec2 tem_position1=startPoint-direction;
-// 	Vec2 leftTop=tem_position1.operator+( Vec2( -direction.y, direction.x ) );
-// 	Vec2 leftdown=tem_position1.operator+(  Vec2( direction.y, -direction.x ));
-// 	Vec2 tem_uv=Vec2(0.f,0.f);
-// 	Vertex_PCU line[6]={
-// 		Vertex_PCU( Vec3( rightTop.x,rightTop.y,0 ),	Rgba8(lineColor.r,lineColor.g,lineColor.b),	Vec2( 0, 0 ) ),
-// 		Vertex_PCU( Vec3(rightdown.x,rightdown.y,0),	Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 )), 
-// 		Vertex_PCU( Vec3(leftTop.x,leftTop.y,0),		Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-// 		Vertex_PCU( Vec3( leftTop.x,leftTop.y, 0 ),		Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-// 		Vertex_PCU( Vec3( leftdown.x,leftdown.y, 0 ),	Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ) ),
-// 		Vertex_PCU( Vec3( rightdown.x,rightdown.y, 0 ), Rgba8(lineColor.r,lineColor.g,lineColor.b), Vec2( 0, 0 ))
-// 	};
-// 
-// 
-// 	DrawVertexArray(6,line);
-
 	LineSegment2 tem = LineSegment2( startPoint, endPoint );
 	DrawLine( tem, thick, lineColor );
 }
@@ -659,7 +625,6 @@ void RenderContext::DrawLine( const LineSegment2& lineSeg, float thick, const Rg
 		Vertex_PCU( Vec3( leftdown.x,leftdown.y, 0 ),	Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
 		Vertex_PCU( Vec3( rightdown.x,rightdown.y, 0 ), Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) )
 	};
-
 
 	DrawVertexArray( 6, line );
 }
@@ -742,8 +707,10 @@ void RenderContext::SetModelMatrix( Mat44 model )
 	m_modelUBO->Update( &modelData, sizeof( modelData), sizeof( modelData ) );
 }
 
-void RenderContext::SetDepthTest( DepthCompareFunc func, bool writeDepthOnPass )
+void RenderContext::EnableDepth( DepthCompareFunc func, bool writeDepthOnPass )
 {
+	GUARANTEE_OR_DIE( m_currentCamera != nullptr, std::string( "current camera must not be empty." ) );
+
 	if( m_currentDepthStencilState != nullptr  ){
 		if( CheckDepthStencilState( func, writeDepthOnPass ) ){
 			m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 );
@@ -753,10 +720,24 @@ void RenderContext::SetDepthTest( DepthCompareFunc func, bool writeDepthOnPass )
 		}
 	}
 	// create depth stencil state
-	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	D3D11_DEPTH_STENCIL_DESC dsDesc = D3D11_DEPTH_STENCIL_DESC();
 	dsDesc.DepthEnable		= true;
-	dsDesc.DepthWriteMask	= D3D11_DEPTH_WRITE_MASK_ALL;
-	dsDesc.DepthFunc		= D3D11_COMPARISON_LESS_EQUAL;
+	dsDesc.DepthWriteMask	= writeDepthOnPass ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc		= (D3D11_COMPARISON_FUNC)func;
+	m_device->CreateDepthStencilState( &dsDesc, &m_currentDepthStencilState );
+	m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 ); // stencilRef what is this
+}	
+
+void RenderContext::DisableDepth()
+{
+	GUARANTEE_OR_DIE( m_currentCamera != nullptr, std::string( "current camera must not be empty." ) );
+
+	if( m_currentDepthStencilState != nullptr ) {
+		DX_SAFE_RELEASE( m_currentDepthStencilState );
+	}
+	// create depth stencil state
+	D3D11_DEPTH_STENCIL_DESC dsDesc = D3D11_DEPTH_STENCIL_DESC();
+	dsDesc.DepthEnable		= false;
 	m_device->CreateDepthStencilState( &dsDesc, &m_currentDepthStencilState );
 	m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 );
 }

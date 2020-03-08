@@ -45,11 +45,6 @@ public:
 	void SetVelocity( Vec2 vel );
 	void SetSimulateMode( SimulationMode mode );
 
-	void UpdateBounciness( float deltaBounce );
-	void UpdateMass( float deltaMass ); 
-	void UpdateFriction( float deltaFric );
-	void UpdateDrag( float deltaDrag );
-
 public:
 	bool m_isDestroyed	= false;
 	bool m_isMouseIn	= false;

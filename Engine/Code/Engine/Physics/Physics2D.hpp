@@ -4,11 +4,12 @@
 #include "Engine/Physics/Collider2D.hpp"
 #include "Engine/Physics/Collision2D.hpp"
 
+class Clock;
+class Timer;
 class DiscCollider2D;
 class PolygonCollider2D;
 class Rigidbody2D;
 struct Polygon2;
-
 
 class Physics2D {
 public:
@@ -17,7 +18,9 @@ public:
 public:
 	void BeginFrame();
 	void EndFrame(); // Cleanup destroyed objects
+	void StartUp();
 
+	static double s_fixedDeltaTime;
 	// Update each frame
 	void Update( float deltaSeconds );
 	void AdvanceSimulation( float deltaSeconds );
@@ -26,6 +29,7 @@ public:
 	void MoveRigidbodies( float deltaSeconds );
 	void CleanupDestroyedObjects();
 	void ModifyGravity( float deltaGravity );
+	void UpdateFrameStartPos();
 
 	// Rigidbody
 	Rigidbody2D* CreateRigidbody( Vec2 worldPos = Vec2::ZERO );
@@ -51,9 +55,20 @@ public:
 	void ResolveCollisions();
 	void ResolveCollision( const Collision2D& collision );
 	void CorrectObjectsInCollision( const Collision2D& collision );
-	Vec2 CalculateCollisionImpulse( const Collision2D& collision );
-	void ApplyImpulse( Rigidbody2D* rb, Vec2 impluse );
+	float CalculateCollisionNormalImpulse( const Collision2D& collision );
+	float CalculateCollisionTangentImpulse( const Collision2D& collision, float normalImpulse );
+	void ApplyImpulseInCollision( const Collision2D& collision, Vec2 impulse );
+	void ApplyTangentalImpulse( const Collision2D& collision, Vec2 impulse );
 	void CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold );
+
+	// Physic Time
+	double GetTimeScale();
+	double GetFixedDeltaTime() const { return Physics2D::s_fixedDeltaTime; }
+	bool IsClockPause();
+	void SetFixedDeltaTime( float frameTimeSeconds );
+	void PausePhysicsTime();
+	void ResumePhysicsTime();
+	void SetTimeScale( double scale );
 
 public:
 	Vec2 m_gravityAccel = Vec2( 0.f, -2.f );
@@ -62,4 +77,6 @@ private:
 	std::vector<Collider2D*> m_colliders;
 	std::vector<Rigidbody2D*> m_rigidbodies;
 	std::vector<Collision2D> m_collisions;
+	Clock* m_clock = nullptr;
+	Timer* m_timer = nullptr;
 };

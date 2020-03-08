@@ -23,12 +23,12 @@ public:
 	//basic
 	void Startup();
 	void Shutdown();
+	void BeginFrame();
 	void RunFrame( float deltaSeclnds );
+	void EndFrame();
 	void Render() const;
 	void RenderUI() const;
-	void RenderToolTip() const;
 	void RenderGravity() const;
-	void RenderTime() const;
 	void GenerateTempPoints();
 	void GenerateTestPoints();
 
@@ -69,7 +69,6 @@ private:
 	void CreateDiscGameObject();
 	void UpdateGameObjects( float deltaSeconds );
 	void DeleteGameObject( GameObject* obj );
-	bool IsMouseOverObject();
 
 	//Load
 	void LoadAssets();
@@ -92,8 +91,7 @@ public:
 	float m_mouseScroll;
 
 	Polygon2 m_drawPoly;
-	GameObject* m_selectedObj = nullptr;
-	GameObject* m_overObj = nullptr;
+	GameObject* m_selectedObj;
 	Vec2 m_selectOffset;
 
 	std::vector<GameObject*> m_gameObjects;

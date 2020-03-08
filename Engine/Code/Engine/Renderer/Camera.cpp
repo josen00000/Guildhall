@@ -9,9 +9,9 @@
 #include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 
-
 //extern HWND g_hWnd;
 extern RenderContext* g_theRenderer;
+
 
 Camera::Camera( const Vec2& bottomLeft, const Vec2& topRight )
 {
@@ -64,8 +64,6 @@ float Camera::GetCameraWidth() const
 	return m_dimension.x;
 }
 
-
-
 void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight )
 {
 	m_dimension.x = topRight.x - bottomLeft.x;
@@ -112,6 +110,21 @@ Mat44 Camera::GetModelMatrix() const
 	return m_transform.ToMatrix();
 }
 
+bool Camera::IsClearColor() const
+{
+	return m_clearState & CLEAR_COLOR_BIT; 
+}
+
+bool Camera::IsClearDepth() const
+{
+	return m_clearState & CLEAR_DEPTH_BIT;
+}
+
+bool Camera::IsClearStencil() const
+{
+	return m_clearState & CLEAR_STENCIL_BIT;
+}
+
 void Camera::SetPosition( const Vec3& position )
 {
 	m_transform.SetPosition( position );
@@ -126,12 +139,45 @@ void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, f
 	m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max );
 }
 
-void Camera::SetClearMode( unsigned int clearFlags, Rgba8 color, float depth /*= 0.0f */, unsigned int stencil /*= 0 */ )
+void Camera::SetClearMode( uint clearFlags, Rgba8 color, float depth /*= 0.0f */, unsigned int stencil /*= 0 */ )
 {
-	m_clearMode = clearFlags;
+	m_clearState = clearFlags;
 	m_clearColor = color;
 	m_clearDepth = depth;
 	m_clearStencil = stencil;
+}
+
+void Camera::EnableClearColor( Rgba8 color )
+{
+	m_clearColor = color;
+	m_clearState = m_clearState | CLEAR_COLOR_BIT;
+}
+
+void Camera::EnableClearDepth( float depth )
+{
+	m_clearDepth = depth;
+	m_clearState = m_clearState | CLEAR_DEPTH_BIT;
+}
+
+void Camera::EnableClearStencil( uint stencil )
+{
+	m_clearStencil = stencil;
+	m_clearState = m_clearState | CLEAR_STENCIL_BIT;
+}
+
+void Camera::DisableClearColor()
+{
+	m_clearState = m_clearState & ~CLEAR_COLOR_BIT;
+}
+
+void Camera::DisableClearDepth()
+{
+	m_clearState = m_clearState & ~CLEAR_DEPTH_BIT;
+}
+
+void Camera::DisableClearStencil()
+{
+	m_clearState = m_clearState & ~CLEAR_STENCIL_BIT;
 }
 
 void Camera::SetColorTarget( Texture* colorTarget )
@@ -216,12 +262,7 @@ Vec3 Camera::ClientToWorld( Vec2 client, float ndcZ )const
 	test.Multiply( worldToClip );
 
 	test = GetViewMatrix();
-// 	if( IsMat44MostlyEqual( test, Mat44::IDENTITY ) ){
-// 		int a =0;
-// 	}
-// 	else{
-// 		int b =0;
-// 	}
+
 
 
 	Vec4 worldHomogenous = clipToWorld.TransformHomogeneousPoint3D( Vec4( ndc.x, ndc.y, ndc.z, 1.f) );
@@ -249,11 +290,6 @@ void Camera::UpdateViewMatrix()
 	Vec3 inverse_translation = m_view.TransformPosition3D( -translation );
 	m_view.SetTranslation3D( inverse_translation );
 }
-
-void Camera::SetShouldClearColor( bool shouldClearColor ){
-	m_shouldClearColor = shouldClearColor;
-}
-
 
 // Private
 Vec2 Camera::GetOrthoMin() const
