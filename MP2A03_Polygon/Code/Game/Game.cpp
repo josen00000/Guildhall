@@ -14,6 +14,7 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Platform/Window.hpp"
 
 extern App*				g_theApp;
 extern BitmapFont*		g_squirrelFont;	
@@ -21,6 +22,7 @@ extern RenderContext*	g_theRenderer;
 extern InputSystem*		g_theInputSystem;
 extern DevConsole*		g_theConsole;
 extern Physics2D*		g_thePhysics;
+extern Window*			g_theWindow;
 
 Game::Game( Camera* gameCamera, Camera* UICamera )
 	:m_gameCamera(gameCamera)
@@ -33,16 +35,15 @@ void Game::Startup()
 {
 	m_isAppQuit		= false;
 	LoadAssets();
-	g_thePhysics->StartUp();
 	//BitmapFont* 
 	
 	//
 	//Vec2 polyPoints[5] ={ Vec2( 10, 10 ), Vec2( 20, 10 ), Vec2( 20, 20 ), Vec2( 15, 15 ), Vec2( 10, 20 )};
 	GenerateTempPoints();
 	GenerateTestPoints();
-	Polygon2 tempPoly = Polygon2::MakeConvexFromPointCloud( m_tempPoints );
-	GameObject* polyTest = new GameObject( tempPoly );
-	m_gameObjects.push_back( polyTest );
+	//Polygon2 tempPoly = Polygon2::MakeConvexFromPointCloud( m_tempPoints );
+	//GameObject* polyTest = new GameObject( tempPoly );
+	//m_gameObjects.push_back( polyTest );
 }
 
 void Game::Shutdown()
@@ -51,19 +52,9 @@ void Game::Shutdown()
 	delete m_gameCamera;
 }
 
-void Game::BeginFrame()
-{
-	g_thePhysics->BeginFrame();
-}
-
 void Game::RunFrame( float deltaSeconds )
 {
 	Update( deltaSeconds );
-}
-
-void Game::EndFrame()
-{
-
 }
 
 void Game::Update( float deltaSeconds )
@@ -75,6 +66,7 @@ void Game::Update( float deltaSeconds )
 	UpdatePhysics( deltaSeconds );
 	UpdateGameObjects( deltaSeconds );
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
+	IsMouseOverObject();
 }
 
 void Game::UpdatePhysics( float deltaSeconds )
@@ -195,7 +187,7 @@ void Game::UpdateCameraPos( float deltaSeconds )
 
 void Game::SetCameraToOrigin()
 {
-	m_gameCamera->SetOrthoView( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	m_gameCamera->SetOrthoView( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ), 0.9f );
 	g_theInputSystem->ResetMouseWheel();
 }
 
@@ -252,6 +244,46 @@ void Game::HandleKeyboardInput()
 		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_3 ) ) {
 			m_selectedObj->SetSimulateMode( RIGIDBODY_DYNAMIC );
 		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_PLUS ) ) {
+			if( m_selectedObj != nullptr ){
+				m_selectedObj->UpdateBounciness( 0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_MINUS ) ) {
+			if( m_selectedObj != nullptr ){
+				m_selectedObj->UpdateBounciness( -0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_LEFT_BRACKET ) ){
+			if( m_selectedObj != nullptr) {
+				m_selectedObj->UpdateMass( -0.1f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_BRACKET ) ){
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateMass( 0.1f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_COMMA ) ){
+			if( m_selectedObj != nullptr ){
+				m_selectedObj->UpdateFriction( -0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_PERIOD ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateFriction( 0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SEMICOLON ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateDrag( -0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_BACKSLASH ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateDrag( 0.01f );
+			}
+		}
 	}
 	else {
 		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1) ){
@@ -272,11 +304,31 @@ void Game::HandleKeyboardInput()
 		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ) {
 			SetCameraToOrigin();
 		}
+		if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_P ) ){
+			static bool isPause = false;
+			if( isPause ){
+				g_thePhysics->PausePhysicsTime();
+			}
+			else{
+				g_thePhysics->ResumePhysicsTime();
+			}
+			isPause = !isPause;
+		}
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_8 ) ){
+			double scale = g_thePhysics->GetTimeScale();
+			scale /= 2;
+			g_thePhysics->SetTimeScale( scale );
+		}
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_9 ) ){
+			double scale = g_thePhysics->GetTimeScale();
+			scale *= 2;
+			g_thePhysics->SetTimeScale( scale );
+		}
+		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_0 ) ) {
+			g_thePhysics->SetTimeScale( 1 );
+			g_thePhysics->ResumePhysicsTime();
+		}
 	}
-
-	
-
-
 }
 
 void Game::BeginDrawPolygon()
@@ -331,32 +383,30 @@ bool Game::IsDrawedPolygonConvex() const
 
 void Game::Render() const
 {
-	m_gameCamera->m_clearColor = Rgba8::GRAY;
-	g_theRenderer->BeginCamera( *m_gameCamera );
 	g_theRenderer->BindTexture( nullptr );
 	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
 		if( m_gameObjects[objIndex] == nullptr ){ continue; }
 		m_gameObjects[objIndex]->Render();
 	}
  	// test render
- 	for( int pointIndex = 0; pointIndex < m_tempPoints.size(); pointIndex++ ) {
- 		g_theRenderer->DrawCircle( Vec3( m_tempPoints[pointIndex] ), 0.5f, 0.5f, Rgba8::RED );
- 	}
+//  	for( int pointIndex = 0; pointIndex < m_tempPoints.size(); pointIndex++ ) {
+//  		g_theRenderer->DrawCircle( Vec3( m_tempPoints[pointIndex] ), 0.5f, 0.5f, Rgba8::RED );
+//  	}
  
- 	PolygonCollider2D* testPolyCol =  (PolygonCollider2D*)m_gameObjects[0]->m_rb->GetCollider();
+ 	//PolygonCollider2D* testPolyCol =  (PolygonCollider2D*)m_gameObjects[0]->m_rb->GetCollider();
  	
- 	for( int pointIndex = 0; pointIndex < m_testPoints.size(); pointIndex++ ) {
- 		const Vec2& point = m_testPoints[pointIndex];
- 		if( testPolyCol->Contains( point ) ){
- 			g_theRenderer->DrawCircle( Vec3( point ), 0.5f, 0.5f, Rgba8::GREEN );
- 		}
- 		else {
- 			g_theRenderer->DrawCircle( Vec3( point ), 0.5f, 0.5f, Rgba8::YELLOW );
- 		}
- 		Vec2 closestPoint = testPolyCol->GetClosestPoint( point );
- 		g_theRenderer->DrawLine( closestPoint, point, 0.2f, Rgba8::WHITE );
- 		g_theRenderer->DrawCircle( Vec3( closestPoint ), 0.5f, 0.5f, Rgba8::WHITE );
- 	}
+//  	for( int pointIndex = 0; pointIndex < m_testPoints.size(); pointIndex++ ) {
+//  		const Vec2& point = m_testPoints[pointIndex];
+//  		if( testPolyCol->Contains( point ) ){
+//  			g_theRenderer->DrawCircle( Vec3( point ), 0.5f, 0.5f, Rgba8::GREEN );
+//  		}
+//  		else {
+//  			g_theRenderer->DrawCircle( Vec3( point ), 0.5f, 0.5f, Rgba8::YELLOW );
+//  		}
+//  		Vec2 closestPoint = testPolyCol->GetClosestPoint( point );
+//  		g_theRenderer->DrawLine( closestPoint, point, 0.2f, Rgba8::WHITE );
+//  		g_theRenderer->DrawCircle( Vec3( closestPoint ), 0.5f, 0.5f, Rgba8::WHITE );
+//  	}
 	if( m_isDrawMode ) {
 		RenderDrawingPolygon();
 	}
@@ -366,6 +416,59 @@ void Game::Render() const
 void Game::RenderUI() const
 {
 	RenderGravity();
+	RenderTime();
+	RenderToolTip();
+}
+
+void Game::RenderToolTip() const
+{
+	float textHeight = 1.5f;
+	if( m_overObj != nullptr ){
+		HWND hWnd = (HWND)g_theWindow->GetTopWindowHandle();
+		Vec2 clientPos = g_theInputSystem->GetNormalizedMousePosInClient( hWnd );
+		Vec2 UIMousePos = m_UICamera->GetCameraAsBox().GetPointAtUV( clientPos );
+		AABB2 toolBox = AABB2( UIMousePos + Vec2( 20, 20 ), UIMousePos + Vec2( 80, 40 ));
+		g_theRenderer->BindTexture( nullptr );
+		g_theRenderer->DrawAABB2D( toolBox, Rgba8::GRAY );
+		g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+
+		std::vector<Vertex_PCU> toolVertices;
+		std::string mode;
+		switch( m_overObj->m_rb->GetSimulationMode() )
+		{
+			case RIGIDBODY_STATIC:{
+				mode = "Static";
+				break;
+			}
+			case RIGIDBODY_DYNAMIC: {
+				mode = "Dynamic";
+				break;
+			}
+			case RIGIDBODY_KINEMATIC:{
+				mode = "Kinematic";
+				break;
+			}
+			default: 
+				break;
+		}
+		std::string toolMode = "The simulation mode : " +  mode;
+		std::string toolMass = "Mass : " + std::to_string( m_overObj->m_rb->GetMass() );
+		std::string toolVelocity = "Velocity : " + std::to_string( m_overObj->m_rb->GetVerletVelocity().x ) + ", " + std::to_string( m_overObj->m_rb->GetVerletVelocity().y );
+		std::string toolVerletVelocity = "Verlet Velocity : " + std::to_string( m_overObj->m_rb->GetVelocity().x ) + ", " + std::to_string( m_overObj->m_rb->GetVelocity().y );
+		std::string toolBounce = "Restitution : " + std::to_string( m_overObj->m_rb->GetCollider()->GetBounciness() );
+		std::string toolFric = "Friction : " + std::to_string( m_overObj->m_rb->GetCollider()->GetFriction() );
+		std::string toolDrag = "Drag : " + std::to_string( m_overObj->m_rb->GetDrag() );
+		
+		float height = toolBox.maxs.y - toolBox.mins.y;
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolMode, Rgba8::RED, 1.f, Vec2::ZERO );
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolMass, Rgba8::RED, 1.f, Vec2::ZERO + Vec2( 0, textHeight * 1 / height  ));
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolVelocity, Rgba8::RED, 1.f, Vec2::ZERO + Vec2( 0, textHeight * 2 /height) );
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolVerletVelocity, Rgba8::RED, 1.f, Vec2::ZERO + Vec2( 0, textHeight * 3/height ) );
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolBounce, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 4/height ) );
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolFric, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 5/height ) );
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolDrag, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 6/height ) );
+		g_theRenderer->DrawVertexVector( toolVertices );
+	}
 }
 
 void Game::RenderGravity() const
@@ -375,6 +478,21 @@ void Game::RenderGravity() const
 	std::string gravity = "The Gravity is: " + std::to_string( g_thePhysics->m_gravityAccel.y );
 	g_squirrelFont->AddVertsForTextInBox2D( gravityVertices, m_UICamera->GetCameraAsBox(), 3.f, gravity, Rgba8::RED, 1.f, Vec2::ZERO );
 	g_theRenderer->DrawVertexVector( gravityVertices );
+}
+
+void Game::RenderTime() const
+{
+	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+	std::vector<Vertex_PCU> timeVertices;
+	std::string time;
+	if( g_thePhysics->IsClockPause() ){
+		time = "Time Scale: " + std::to_string( g_thePhysics->GetTimeScale() ) + ".    Pause state: True.";
+	}
+	else{
+		time = "Time Scale: " + std::to_string( g_thePhysics->GetTimeScale() ) + ".    Pause state: False.";
+	}
+	g_squirrelFont->AddVertsForTextInBox2D( timeVertices, m_UICamera->GetCameraAsBox(), 3.f, time, Rgba8::RED, 1.f, Vec2( 0.f, ( 6 / m_UICamera->GetCameraHeight() ) ) );
+	g_theRenderer->DrawVertexVector( timeVertices );
 }
 
 void Game::GenerateTempPoints()
@@ -470,15 +588,6 @@ void Game::UpdateGameObjects( float deltaSeconds )
 		obj->Update( deltaSeconds );
 	}
 
-	if( m_gameObjects.size() > 2 ) {
-		GameObject* obj = m_gameObjects[2];
-		Vec2 vel = obj->m_rb->GetVelocity();
-		std::string debug = std::string( " Velocity is + " + std::to_string( vel.x ) + "  " + std::to_string( vel.y ) );
-		for( int i = 0; i < 10; i++ ){
-			g_theConsole->PrintString( Rgba8::RED, debug );
-		}
-
-	}
 }
 
 void Game::DeleteGameObject( GameObject* obj )
@@ -493,7 +602,23 @@ void Game::DeleteGameObject( GameObject* obj )
 	}
 }
 
+bool Game::IsMouseOverObject( )
+{
+	if( m_gameObjects.size() == 0 ) { return false; }
+
+	for( int objIndex = (int)m_gameObjects.size() - 1; objIndex >= 0; objIndex-- ) {
+		if( m_gameObjects[objIndex] == nullptr ) { continue; }
+		if( m_gameObjects[objIndex]->m_isMouseIn ) {
+			m_overObj = m_gameObjects[objIndex];
+			return true;
+		}
+	}
+	m_overObj = nullptr;
+	return false;
+}
+
 void Game::LoadAssets()
 {
+	g_squirrelFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 }
 

@@ -63,11 +63,8 @@ void Game::Update( float deltaSeconds )
 	UpdateCamera( deltaSeconds );
 	UpdatePhysics( deltaSeconds );
 	UpdateGameObjects( deltaSeconds );
-<<<<<<< HEAD:MP2Asg/Code/Game/Game.cpp
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
-=======
 	IsMouseOverObject();
->>>>>>> mp2/turnin/a05:MP2A03_Polygon/Code/Game/Game.cpp
 }
 
 void Game::UpdatePhysics( float deltaSeconds )
@@ -159,7 +156,7 @@ void Game::UpdateCameraHeight( float deltaSeconds )
 	float clampedScroll = ClampFloat( 0.f, 100.f, m_mouseScroll );
 	float height = RangeMapFloat( 0.f, 100.f, 100.f, 50.f, clampedScroll );
 
-	//m_gameCamera->SetProjectionOrthographic( height );
+	m_gameCamera->SetProjectionOrthographic( height );
 }
 
 void Game::UpdateCameraPos( float deltaSeconds )
@@ -330,13 +327,9 @@ void Game::HandleKeyboardInput()
 			g_thePhysics->ResumePhysicsTime();
 		}
 	}
-
-	
-
-
 }
 
-void Game::BeginDrawPolygon()
+v	oid Game::BeginDrawPolygon()
 {
 	m_isDrawMode = true;
 	Vec2 start = m_mousePos;

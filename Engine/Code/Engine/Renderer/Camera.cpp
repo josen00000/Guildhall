@@ -13,10 +13,10 @@
 extern RenderContext* g_theRenderer;
 
 
-Camera::Camera( const Vec2& bottomLeft, const Vec2& topRight )
+Camera::Camera( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio )
 {
 	m_transform = Transform();
-	SetOrthoView( bottomLeft, topRight );
+	SetOrthoView( bottomLeft, topRight, aspectRatio );
 	m_projectionType = PROJECTION_ORTHOGRAPHIC;
 }
 
@@ -64,27 +64,11 @@ float Camera::GetCameraWidth() const
 	return m_dimension.x;
 }
 
-void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight )
+void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio )
 {
 	m_dimension.x = topRight.x - bottomLeft.x;
 	m_dimension.y = topRight.y - bottomLeft.y;
-	m_projection = Mat44::CreateOrthographicProjectionMatrix( Vec3( bottomLeft, 0.f ), Vec3( topRight, -1.f ) );
-}
-
-Vec2 Camera::GetOrthoBottomLeft() const
-{
-	Vec2 bottomLeft;
-	bottomLeft.x = GetPosition().x - ( m_dimension.x / 2 );
-	bottomLeft.y = GetPosition().y - ( m_dimension.y / 2 );
-	return bottomLeft;
-}
-
-Vec2 Camera::GetOrthoTopRight() const
-{
-	Vec2 topRight;
-	topRight.x = GetPosition().x + (m_dimension.x / 2 );
-	topRight.y = GetPosition().y + (m_dimension.y / 2 );
-	return topRight;
+	m_projection = Mat44::CreateOrthographicProjectionMatrix( Vec3( bottomLeft, 0.f ), Vec3( topRight, -1.f ), aspectRatio );
 }
 
 Vec3 Camera::GetPosition() const
@@ -136,7 +120,7 @@ void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, f
 	Vec2 extents = Vec2( aspectRatio * height * 0.5f, height * 0.5f );
 	Vec3 min = Vec3( -extents, nearZ );
 	Vec3 max = Vec3( extents, farZ );
-	m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max );
+	//m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max );
 }
 
 void Camera::SetClearMode( uint clearFlags, Rgba8 color, float depth /*= 0.0f */, unsigned int stencil /*= 0 */ )

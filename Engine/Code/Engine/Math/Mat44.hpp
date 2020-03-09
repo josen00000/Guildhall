@@ -95,7 +95,7 @@ public:
 	Mat44 GetInvertMatrix() const;
 
 	// Projection
-	static const Mat44 CreateOrthographicProjectionMatrix( const Vec3& min, const Vec3& max );
+	static const Mat44 CreateOrthographicProjectionMatrix( const Vec3& min, const Vec3& max, float aspectRatio );
 	static const Mat44 CreatePerspectiveProjectionMatrix( float fovDegrees, float aspectRadio, float nearZ, float farZ );
 
 private:

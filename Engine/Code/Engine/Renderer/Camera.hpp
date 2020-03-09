@@ -34,7 +34,7 @@ public:
 	~Camera();
 
 	Camera( const Camera& camera ) = delete;
-	explicit Camera( const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE );
+	explicit Camera( const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
 	explicit Camera( float fov=60.f, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
 	static Camera* CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& topRight );
 	static Camera* CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
@@ -45,8 +45,8 @@ public:
 	float	GetCameraHeight() const;
 	float	GetCameraWidth() const;
 	float	GetOutputAspectRatio();
-	Vec2	GetOrthoBottomLeft() const;
-	Vec2	GetOrthoTopRight() const;
+	Vec2	GetOrthoMin() const;
+	Vec2	GetOrthoMax() const;
 	Vec3	GetPosition() const;
 
 	AABB2	GetCameraAsBox() const;
@@ -71,7 +71,7 @@ public:
 	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx );
 
 		// Mutator
-	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight );
+	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio );
 	void SetPosition( const Vec3& position );
 	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f );
 
@@ -99,8 +99,6 @@ public:
 	void UpdateViewMatrix();
 
 private:
-	Vec2 GetOrthoMin() const;
-	Vec2 GetOrthoMax() const;
 
 public:
 	uint m_clearState;

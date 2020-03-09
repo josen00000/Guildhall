@@ -5,6 +5,7 @@
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
 #include "Engine/Core/Time/Time.hpp"
+#include "Engine/Core/Time/Clock.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -18,7 +19,7 @@ Game*			g_theGame			= nullptr;
 
 // Engine
 BitmapFont*		g_squirrelFont		= nullptr;
-Camera*			g_camera			= nullptr;
+Camera*			g_gameCamera		= nullptr;
 Camera*			g_UICamera			= nullptr;
 Camera*			g_devCamera			= nullptr;
 DevConsole*		g_theConsole		= nullptr;
@@ -29,38 +30,22 @@ RenderContext*	g_theRenderer		= nullptr;
 
 void App::Startup()
 {
-	StartupStage1();
-	StartupStage2();
-	StartupStage3();
-}
-
-void App::StartupStage1()
-{
-	// current unused
-}
-
-void App::StartupStage2()
-{
+	g_gameCamera		= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ), 0.9f );
+	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
+	g_devCamera			= new Camera( Vec2( 0, 0 ), Vec2( 30, 20 ) );
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
+	g_theGame			= new Game( g_gameCamera, g_UICamera );
 	g_thePhysics		= new Physics2D();
-	g_devCamera			= new Camera( Vec2( DEV_CAMERA_MIN_X, DEV_CAMERA_MIN_Y ), Vec2( DEV_CAMERA_MAX_X, DEV_CAMERA_MAX_Y ) );
-
-	g_theInputSystem->Startup();
+	
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );
-}
-
-void App::StartupStage3()
-{
-	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
-	g_camera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
-	g_theGame			= new Game( g_camera, g_UICamera );
-	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
-	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
-
-	g_theConsole->Startup();
 	g_theGame->Startup();
+	g_theInputSystem->Startup();
+	
+	g_thePhysics->StartUp();
+	g_theConsole = DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
+	g_theConsole->Startup();
 }
 
 void App::Shutdown()
@@ -140,7 +125,8 @@ void App::ResetGame()
 void App::BeginFrame()
 {
 	g_theInputSystem->BeginFrame();
-	g_theGame->BeginFrame();
+	g_thePhysics->BeginFrame();
+	Clock::BeginFrame();
 }
 
 void App::Update( float deltaSeconds )
@@ -152,10 +138,18 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
+	g_gameCamera->m_clearColor = Rgba8::DARK_GRAY;
+	g_theRenderer->BeginCamera( *g_gameCamera );
 	g_theGame->Render();
+	g_theRenderer->EndCamera();
 	
+	g_theRenderer->BeginCamera( *g_UICamera );
 	g_theGame->RenderUI();
+	g_theRenderer->EndCamera();
+
+	g_theRenderer->BeginCamera( *g_devCamera );
 	g_theConsole->Render( *g_theRenderer );
+	g_theRenderer->EndCamera();
 }
 
 void App::EndFrame()

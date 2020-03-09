@@ -111,8 +111,6 @@ int WINAPI WinMain( _In_ HINSTANCE applicationInstanceHandle, _In_opt_ HINSTANCE
 	UNUSED( commandLineString );
 	UNUSED( applicationInstanceHandle );
 
-	//CreateOSWindow(applicationInstanceHandle,CLIENT_ASPECT);
-	//CreateRenderContext();
 
 	g_theApp = new App();
 	g_theWindow = new Window();

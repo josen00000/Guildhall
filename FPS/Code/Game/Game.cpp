@@ -223,7 +223,7 @@ void Game::Render() const
 	g_theRenderer->DrawMesh( m_meshCube );
 
 	RenderSpheres();
-	g_theRenderer->EndCamera( *m_gameCamera );
+	g_theRenderer->EndCamera( );
 
 	
 }

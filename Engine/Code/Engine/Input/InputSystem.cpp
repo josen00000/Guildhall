@@ -101,7 +101,7 @@ Vec2 InputSystem::GetMouseRawPosInClient( void* hWnd ) const
 Vec2 InputSystem::GetNormalizedMousePosInCamera( void* hWnd, const Camera& camera ) const
 {
 	Vec2 mouseNormalizedPos = GetNormalizedMousePosInClient( hWnd );
-	AABB2 orthoBounds( camera.GetOrthoBottomLeft(), camera.GetOrthoTopRight() );
+	AABB2 orthoBounds( camera.GetOrthoMin(), camera.GetOrthoMax() );
 	Vec2 mousePosInCamera = orthoBounds.GetPointAtUV( mouseNormalizedPos );
 	return mousePosInCamera;
 }

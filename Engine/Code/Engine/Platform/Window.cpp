@@ -18,12 +18,12 @@ extern Window* g_theWindow;
 static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam )
 {
 	Window* window = (Window*) ::GetWindowLongPtr( windowHandle, GWLP_USERDATA );
-// 	if( wmMessageCode == WM_KEYDOWN ){
-// 		int a = 0;
-// 	}
-// 	if( wmMessageCode == WM_KEYUP ) {
-// 		int b = 0;
-// 	}
+	InputSystem* input = nullptr;
+	//if( window == nullptr ){ return 0; }
+	if( window != nullptr ){
+		input = window->GetInputSystem();
+	}
+
 	switch( wmMessageCode )
 	{
 
@@ -38,9 +38,6 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 		}
 
 		case WM_ACTIVATE:{
-			if( window == nullptr ){ break; }
-			InputSystem* input = window->GetInputSystem();
-
 			switch( wParam )
 			{
 				case WA_ACTIVE: {
@@ -57,11 +54,9 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			break;
 		}
 
-
 		// Raw physical keyboard "key-was-just-depressed" event (case-insensitive, not translated)
 		case WM_KEYDOWN:
 		{
-			InputSystem* input = window->GetInputSystem();
 			unsigned char asKey = (unsigned char)wParam;
 			input->UpdateKeyBoardButton( asKey, true );
 			break;
@@ -71,14 +66,12 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 		case WM_KEYUP:
 		{
 			unsigned char asKey = (unsigned char)wParam;
-			InputSystem* input = window->GetInputSystem();
 			input->UpdateKeyBoardButton( asKey, false );
 			break;
 		}
 		case WM_CHAR: {
 			wchar_t character = (wchar_t)wParam;
 			if( 32 <= character && character <= 126 ) {
-				InputSystem* input = window->GetInputSystem();
 				input->PushCharacter( (char)character );
 			}
 			if( character == 0x03 ){
@@ -89,6 +82,48 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			}
 			break;
 
+		}
+					  // Mouse Input
+		case WM_LBUTTONDOWN:
+		{
+			input->UpdateMouseButtonState( MOUSE_BUTTON_LEFT, true );
+			break;
+		}
+
+		case WM_RBUTTONDOWN:
+		{
+			input->UpdateMouseButtonState( MOUSE_BUTTON_RIGHT, true );
+			break;
+		}
+
+		case WM_MBUTTONDOWN:
+		{
+			input->UpdateMouseButtonState( MOUSE_BUTTON_MIDDLE, true );
+			break;
+		}
+
+		case WM_RBUTTONUP: {
+			input->UpdateMouseButtonState( MOUSE_BUTTON_RIGHT, false );
+			break;
+		}
+
+		case WM_LBUTTONUP: {
+			input->UpdateMouseButtonState( MOUSE_BUTTON_LEFT, false );
+			break;
+		}
+
+		case WM_MBUTTONUP: {
+			input->UpdateMouseButtonState( MOUSE_BUTTON_MIDDLE, false );
+			break;
+		}
+
+		case WM_MOUSEWHEEL:
+		{
+			float zDelta = (float)GET_WHEEL_DELTA_WPARAM( wParam ) / WHEEL_DELTA; // shift away low word part, leaving only the highword
+																				  //g_theConsole->PrintString( Rgba8::GREEN, std::to_string(zDelta) );
+																				  //float scrollAmount = (float)scrollFixedPoint / 120.0f; // convert to a numeric value
+			input->UpdateMouseWheelAmount( zDelta );
+			break;
 		}
 	}
 
