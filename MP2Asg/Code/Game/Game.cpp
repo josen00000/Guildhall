@@ -14,6 +14,7 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Platform/Window.hpp"
 
 extern App*				g_theApp;
 extern BitmapFont*		g_squirrelFont;	
@@ -21,6 +22,7 @@ extern RenderContext*	g_theRenderer;
 extern InputSystem*		g_theInputSystem;
 extern DevConsole*		g_theConsole;
 extern Physics2D*		g_thePhysics;
+extern Window*			g_theWindow;
 
 Game::Game( Camera* gameCamera, Camera* UICamera )
 	:m_gameCamera(gameCamera)
@@ -185,7 +187,7 @@ void Game::UpdateCameraPos( float deltaSeconds )
 
 void Game::SetCameraToOrigin()
 {
-	m_gameCamera->SetOrthoView( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	m_gameCamera->SetOrthoView( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ), 0.9f );
 	g_theInputSystem->ResetMouseWheel();
 }
 
@@ -329,7 +331,7 @@ void Game::HandleKeyboardInput()
 	}
 }
 
-v	oid Game::BeginDrawPolygon()
+void Game::BeginDrawPolygon()
 {
 	m_isDrawMode = true;
 	Vec2 start = m_mousePos;
@@ -381,8 +383,6 @@ bool Game::IsDrawedPolygonConvex() const
 
 void Game::Render() const
 {
-	m_gameCamera->m_clearColor = Rgba8::GRAY;
-	g_theRenderer->BeginCamera( *m_gameCamera );
 	g_theRenderer->BindTexture( nullptr );
 	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
 		if( m_gameObjects[objIndex] == nullptr ){ continue; }
@@ -424,8 +424,9 @@ void Game::RenderToolTip() const
 {
 	float textHeight = 1.5f;
 	if( m_overObj != nullptr ){
-		Vec2 clientPos = g_theInputSystem->GetNormalizedMousePos();
-		Vec2 UIMousePos = m_UICamera->GetCameraBox().GetPointAtUV( clientPos );
+		HWND hWnd = (HWND)g_theWindow->GetTopWindowHandle();
+		Vec2 clientPos = g_theInputSystem->GetNormalizedMousePosInClient( hWnd );
+		Vec2 UIMousePos = m_UICamera->GetCameraAsBox().GetPointAtUV( clientPos );
 		AABB2 toolBox = AABB2( UIMousePos + Vec2( 20, 20 ), UIMousePos + Vec2( 80, 40 ));
 		g_theRenderer->BindTexture( nullptr );
 		g_theRenderer->DrawAABB2D( toolBox, Rgba8::GRAY );
@@ -490,7 +491,7 @@ void Game::RenderTime() const
 	else{
 		time = "Time Scale: " + std::to_string( g_thePhysics->GetTimeScale() ) + ".    Pause state: False.";
 	}
-	g_squirrelFont->AddVertsForTextInBox2D( timeVertices, m_UICamera->GetCameraBox(), 3.f, time, Rgba8::RED, 1.f, Vec2( 0.f, ( 6 / m_UICamera->GetWidth() ) ) );
+	g_squirrelFont->AddVertsForTextInBox2D( timeVertices, m_UICamera->GetCameraAsBox(), 3.f, time, Rgba8::RED, 1.f, Vec2( 0.f, ( 6 / m_UICamera->GetCameraHeight() ) ) );
 	g_theRenderer->DrawVertexVector( timeVertices );
 }
 
@@ -575,6 +576,7 @@ void Game::CreateDiscGameObject()
 			return;
 		}
 	}
+	//tempGameObj->DisablePhysics();
 	m_gameObjects.push_back( tempGameObj );
 }
 

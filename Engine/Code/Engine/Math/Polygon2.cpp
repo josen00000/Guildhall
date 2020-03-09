@@ -171,6 +171,25 @@ Vec2 Polygon2::GetClosestPoint( Vec2 point ) const
 	return closestPoint + m_center; 
 }
 
+Vec2 Polygon2::GetClosestPointOnEdges( Vec2 point ) const
+{
+	point = point - m_center;
+
+	LineSegment2 closestEdge;
+	float shortestDist = 0;
+	Vec2 closestPoint;
+	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
+		LineSegment2 edge = m_edges[edgeIndex];
+		float length = edge.GetLengthOfPointToLineSegment( point );
+		if( shortestDist == 0 || length < shortestDist ) {
+			shortestDist = length;
+			closestEdge = edge;
+		}
+	}
+	closestPoint = closestEdge.GetNearestPoint( point );
+	return closestPoint + m_center;
+}
+
 Vec2 Polygon2::GetBadCenter( std::vector<Vec2> rawPoints ) const
 {
 	Vec2 result = Vec2::ZERO;

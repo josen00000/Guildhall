@@ -28,6 +28,7 @@ public:
 	int		GetVertexCount() const;
 	int		GetEdgeCount() const;
 	Vec2	GetClosestPoint( Vec2 point ) const;
+	Vec2	GetClosestPointOnEdges( Vec2 point ) const;
 	Vec2	GetBadCenter( std::vector<Vec2> rawPoints ) const;
 	Vec2	GetMassCenter() const { return m_center; }
 	LineSegment2 GetEdge( int index );

@@ -28,9 +28,14 @@ public:
 
 
 	// Accessor
+	bool IsDestroied() const { return m_isDestroyed; }
+	bool IsEnablePhysics() const { return m_isEnable; }
 	float GetMass() const { return m_mass; }
 	float GetDrag() const { return m_drag; }
-	bool IsDestroied() const { return m_isDestroyed; }
+	float GetRotationInRadians() const { return m_rotationInRadians; }
+	float GetAngularVelocity() const { return m_angularVelocity; }
+	float GetFrameTorque() const { return m_frameTorque; }
+	float GetMoment() const { return m_moment; }
 	Vec2 GetPosition() const { return m_worldPosition; }
 	Vec2 GetVelocity() const { return m_velocity; }
 	Vec2 GetVerletVelocity() const;
@@ -38,11 +43,15 @@ public:
 	SimulationMode GetSimulationMode() const { return m_mode; }
 	
 	// Mutator
+	void SetMass( float mass );
+	void SetRotationInRadians( float rot );
+	void SetAngularVelocity( float angVel ); 
+	void SetFrameTorque( float frameTorque ); 
+	void SetMoment( float moment );
 	void SetPosition( Vec2 position );
 	void SetVelocity( Vec2 velocity );
 	void SetCollider( Collider2D* collider ); 
 	void SetColliderPosition();
-	void SetMass( float mass );
 	void SetSimulationMode( SimulationMode mode );
 	void UpdateDrag( float deltaDrag );
 	void UpdateVelocityPerFrame( const Vec2& deltaVel );
@@ -66,13 +75,17 @@ private:
 	bool m_isEnable		= true;
 	float m_mass		= 1.f;
 	float m_drag		= 0.f;
+	float m_rotationInRadians	= 0;
+	float m_angularVelocity		= 0;
+	float m_frameTorque			= 0;
+	float m_moment				= 0;
 	Vec2 m_velocity		= Vec2::ZERO;
-	Vec2 m_frameStartPosition = Vec2::ZERO;
 	Vec2 m_force		= Vec2::ZERO;
+	Vec2 m_frameStartPosition = Vec2::ZERO;
+	Vec2 m_worldPosition;
 
 	SimulationMode m_mode = RIGIDBODY_DYNAMIC;
 	Physics2D*	m_system	= nullptr;
 	Collider2D* m_collider	= nullptr;
 
-	Vec2 m_worldPosition;
 };

@@ -37,7 +37,7 @@ void PolygonCollider2D::UpdateWorldShape()
 
 Vec2 PolygonCollider2D::GetClosestPoint( const Vec2& pos ) const
 {
-	Vec2 point = m_polygon.GetClosestPoint( pos );
+	Vec2 point = m_polygon.GetClosestPointOnEdges( pos );
 	return point;
 }
 
@@ -59,36 +59,15 @@ Disc2 PolygonCollider2D::GetWorldBounds() const
 	return result;
 }
 
-// bool PolygonCollider2D::Intersects( const Collider2D* other ) const
-// {
-// 	switch( other->m_type )
-// 	{
-// 	case COLLIDER2D_DISC: {
-// 		DiscCollider2D* discCol = (DiscCollider2D*)other;
-// 		Vec2 closestPoint = GetClosestPoint( discCol->m_worldPosition );
-// 		float distSqr = GetDistanceSquared2D( closestPoint, discCol->m_worldPosition );
-// 		if( distSqr > (discCol->m_radius * discCol->m_radius) ) {
-// 			return false;
-// 		}
-// 		else {
-// 			return true;
-// 		}
-// 	}
-// 	case COLLIDER2D_POLYGON: {
-// 		return false;
-// 	}
-// 
-// 	default:
-// 		return false;
-// 	}
-// 	
-// 
-//}
-
 void PolygonCollider2D::SetPosition( Vec2 pos )
 {
 	m_polygon.SetCenter( pos );
 	m_worldPos = pos;
+}
+
+float PolygonCollider2D::CalculateMoment( float mass ) const
+{
+
 }
 
 void PolygonCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor )

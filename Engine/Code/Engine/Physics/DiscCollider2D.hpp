@@ -24,6 +24,7 @@ public:
 	// Mutator
 	virtual void SetPosition( Vec2 pos ) override;
 
+	virtual float CalculateMoment( float mass ) const override;
 	// debug helpers
 	virtual void DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) override;
 

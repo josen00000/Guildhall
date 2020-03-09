@@ -98,6 +98,11 @@ void DiscCollider2D::SetPosition( Vec2 pos )
 	m_worldPosition = pos;
 }
 
+float DiscCollider2D::CalculateMoment( float mass ) const
+{
+
+}
+
 void DiscCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
 {
 	// TODO test and debug 

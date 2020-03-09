@@ -14,7 +14,7 @@
 extern Game*			g_theGame;
 extern Physics2D*		g_thePhysics;
 extern RenderContext*	g_theRenderer;
-extern Camera*			g_camera;
+extern Camera*			g_gameCamera;
 extern DevConsole*		g_theConsole;
 
 GameObject::GameObject( Vec2 pos, float radius )
@@ -96,7 +96,7 @@ void GameObject::CheckIfOutCameraVertical( Camera* camera )
 		default:
 			break;
 	}
-	if( pos.y < camera->GetOrthoBottomLeft().y ) {
+	if( pos.y < camera->GetOrthoMin().y ) {
 		Vec2 vel = m_rb->GetVelocity();
 		if( vel.y < 0 ){
 			vel.y = - vel.y;
@@ -126,11 +126,11 @@ void GameObject::CheckIfOutCameraHorizontal( Camera* camera )
 		default:
 			break;
 	}
-	if( pos.x < camera->GetOrthoBottomLeft().x - dist ) {
-		pos.x = camera->GetOrthoTopRight().x + dist;
+	if( pos.x < camera->GetOrthoMin().x - dist ) {
+		pos.x = camera->GetOrthoMax().x + dist;
 	}
-	else if( pos.x > camera->GetOrthoTopRight().x + dist ) {
-		pos.x = camera->GetOrthoBottomLeft().x - dist;
+	else if( pos.x > camera->GetOrthoMax().x + dist ) {
+		pos.x = camera->GetOrthoMin().x - dist;
 	}
 	SetPosition( pos );
 }
@@ -139,8 +139,8 @@ void GameObject::Update( float deltaSeconds )
 {
 	UNUSED( deltaSeconds );
 	CheckIfMouseIn( g_theGame->m_mousePos );
-	CheckIfOutCameraVertical( g_camera );
-	CheckIfOutCameraHorizontal( g_camera );
+	CheckIfOutCameraVertical( g_gameCamera );
+	CheckIfOutCameraHorizontal( g_gameCamera );
 }
 
 void GameObject::Render() const

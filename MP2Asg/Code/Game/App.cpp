@@ -4,12 +4,8 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
-<<<<<<< HEAD:MP2Asg/Code/Game/App.cpp
 #include "Engine/Core/Time/Time.hpp"
-=======
 #include "Engine/Core/Time/Clock.hpp"
-#include "Engine/Core/Time.hpp"
->>>>>>> mp2/turnin/a05:MP2A03_Polygon/Code/Game/App.cpp
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -23,7 +19,7 @@ Game*			g_theGame			= nullptr;
 
 // Engine
 BitmapFont*		g_squirrelFont		= nullptr;
-Camera*			g_camera			= nullptr;
+Camera*			g_gameCamera		= nullptr;
 Camera*			g_UICamera			= nullptr;
 Camera*			g_devCamera			= nullptr;
 DevConsole*		g_theConsole		= nullptr;
@@ -34,27 +30,22 @@ RenderContext*	g_theRenderer		= nullptr;
 
 void App::Startup()
 {
-	g_camera			= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_gameCamera		= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ), 0.9f );
 	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
 	g_devCamera			= new Camera( Vec2( 0, 0 ), Vec2( 30, 20 ) );
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
-	g_theGame			= new Game( g_camera, g_UICamera );
+	g_theGame			= new Game( g_gameCamera, g_UICamera );
 	g_thePhysics		= new Physics2D();
 	
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );
 	g_theGame->Startup();
 	g_theInputSystem->Startup();
-<<<<<<< HEAD:MP2Asg/Code/Game/App.cpp
 	
+	g_thePhysics->StartUp();
 	g_theConsole = DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
 	g_theConsole->Startup();
-
-=======
-	g_thePhysics->StartUp();
-	g_theConsole = new DevConsole( g_squirrelFont );
->>>>>>> mp2/turnin/a05:MP2A03_Polygon/Code/Game/App.cpp
 }
 
 void App::Shutdown()
@@ -147,10 +138,18 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
+	g_gameCamera->m_clearColor = Rgba8::DARK_GRAY;
+	g_theRenderer->BeginCamera( *g_gameCamera );
 	g_theGame->Render();
+	g_theRenderer->EndCamera();
 	
+	g_theRenderer->BeginCamera( *g_UICamera );
 	g_theGame->RenderUI();
+	g_theRenderer->EndCamera();
+
+	g_theRenderer->BeginCamera( *g_devCamera );
 	g_theConsole->Render( *g_theRenderer );
+	g_theRenderer->EndCamera();
 }
 
 void App::EndFrame()

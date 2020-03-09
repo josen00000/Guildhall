@@ -34,7 +34,7 @@ public:
 	virtual bool Contains( const Vec2& pos )			const = 0;
 	bool Intersects( const Collider2D* other ) const;	
 	bool IntersectsAndGetManifold( const Collider2D* other, Manifold2D& manifold );
-	Manifold2D GetManifold();
+	//Manifold2D GetManifold();
 	float GetBounceWith( const Collider2D* other ) const;
 	float GetFrictionWith( const Collider2D* other )const;
 	void Move( Vec2 displacement );
@@ -43,6 +43,7 @@ public:
 	virtual bool IsDestroied() const { return m_isDestroyed; }
 	Collider2DType GetType() const { return m_type; }
 	virtual Disc2 GetWorldBounds() const = 0;
+	Rigidbody2D* GetRigidbody() const { return m_rigidbody; }
 	float GetMass() const; 
 
 	// Mutator
@@ -55,6 +56,9 @@ public:
 
 	// friction
 	float GetFriction() const;
+
+	// Angular
+	virtual float CalculateMoment( float mass ) const = 0;
 
 	// debug helpers
 	virtual void DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) = 0;

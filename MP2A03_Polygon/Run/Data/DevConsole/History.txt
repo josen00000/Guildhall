@@ -1,5 +1,0 @@
-help
-test1
-test2
-quit
-test

@@ -58,7 +58,6 @@ public:
 	float CalculateCollisionNormalImpulse( const Collision2D& collision );
 	float CalculateCollisionTangentImpulse( const Collision2D& collision, float normalImpulse );
 	void ApplyImpulseInCollision( const Collision2D& collision, Vec2 impulse );
-	void ApplyTangentalImpulse( const Collision2D& collision, Vec2 impulse );
 	void CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold );
 
 	// Physic Time

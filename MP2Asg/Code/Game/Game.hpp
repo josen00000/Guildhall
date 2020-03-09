@@ -92,8 +92,8 @@ public:
 	float m_mouseScroll;
 
 	Polygon2 m_drawPoly;
-	GameObject* m_selectedObj = nullptr;
-	GameObject* m_overObj = nullptr;
+	GameObject* m_selectedObj	= nullptr;
+	GameObject* m_overObj		= nullptr;
 	Vec2 m_selectOffset;
 
 	std::vector<GameObject*> m_gameObjects;

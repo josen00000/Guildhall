@@ -32,6 +32,7 @@ void Physics2D::BeginFrame()
 
 void Physics2D::Update( float deltaSeconds )
 {
+	UNUSED(deltaSeconds);
 	while( m_timer->CheckAndDecrement() ){
 		UpdateFrameStartPos();
 		AdvanceSimulation( (float)GetFixedDeltaTime() );
@@ -90,13 +91,16 @@ void Physics2D::DetectCollisions()
 	m_collisions.clear();
 	for( int colIndex = 0; colIndex < m_colliders.size(); colIndex++ ) {
 		Collider2D* col1 = m_colliders[colIndex];
-		if( col1 == nullptr ){
+		if( col1 == nullptr || !col1->GetRigidbody()->IsEnablePhysics() ){
 			continue;
 		}
 		for( int colIndex1 = colIndex + 1; colIndex1 < m_colliders.size(); colIndex1++ ) {
 			Collider2D* col2 = m_colliders[colIndex1];
-			if( col2 == nullptr ){
+			if( col2 == nullptr || !col2->GetRigidbody()->IsEnablePhysics() ){
 				continue;
+			}
+			else{
+				bool test = col2->GetRigidbody()->IsEnablePhysics();
 			}
 			Manifold2D manifold;
 			if( col1->IntersectsAndGetManifold( col2, manifold ) ){
@@ -229,8 +233,6 @@ void Physics2D::ApplyImpulseInCollision( const Collision2D& collision, Vec2 impu
 		me->m_rigidbody->ApplyImpulse( impulse, Vec2::ZERO );
 	}
 }
-
-
 
 void Physics2D::CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold )
 {

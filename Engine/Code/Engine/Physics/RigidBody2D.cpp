@@ -65,6 +65,26 @@ void Rigidbody2D::SetMass( float mass )
 	m_mass = mass;
 }
 
+void Rigidbody2D::SetRotationInRadians( float rot )
+{
+	m_rotationInRadians = rot;
+}
+
+void Rigidbody2D::SetAngularVelocity( float angVel )
+{
+	m_angularVelocity = angVel;
+}
+
+void Rigidbody2D::SetFrameTorque( float frameTorque )
+{
+	m_frameTorque = frameTorque;
+}
+
+void Rigidbody2D::SetMoment( float moment )
+{
+	m_moment = moment;
+}
+
 void Rigidbody2D::SetSimulationMode( SimulationMode mode )
 {
 	m_mode = mode;
