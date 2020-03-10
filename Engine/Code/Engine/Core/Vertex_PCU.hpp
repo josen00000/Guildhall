@@ -20,10 +20,7 @@ public:
 	explicit Vertex_PCU( const Vec3& position, const Rgba8& tint, const Vec2& uvTexCoords );
 	void UpdatePos(Vec3 pos);
 
-	// transformVertexArray();
-	//gathering vertex and draw lines once
-	//void AppendLine2D(std::vector<Vertex_PCU>& vertexArray,const Vec2&start, const Vec2& end, float thickness, const Rgba8& color);
-//	void AppendAABB2D(std::vector<Vertex_PCU>& vertexArray, const AABB2& box, const Rgba8& color);
+	static Vertex_PCU GetMiddleVertForTwoVerts( const Vertex_PCU& A, const Vertex_PCU& B );
 
 	// operator
 	bool operator==( const Vertex_PCU& compareWith ) const;

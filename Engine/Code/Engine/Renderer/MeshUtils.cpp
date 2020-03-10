@@ -296,3 +296,44 @@ Vec2 MakeSphereUVFromPolayDegrees( float theta, float phi )
 	return result;
 }
 
+void AppendTesselateIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index, const std::vector<Vertex_PCU> source )
+{
+	// For Each triangle in dest
+	// find total 6 vertices
+	// append 4 triangle into the dest
+	std::vector<Vertex_PCU> vertices;
+	GUARANTEE_OR_DIE( source.size() % 3 == 0, std::string( "verts are not triangles!" ) );
+	int  i = 0;
+	while( i < source.size() - 2  ){
+		Vertex_PCU vertA = source[i];
+		Vertex_PCU vertB = source[i + 1];
+		Vertex_PCU vertC = source[i + 2];
+		Vertex_PCU vertAB = Vertex_PCU::GetMiddleVertForTwoVerts( vertA, vertB );
+		Vertex_PCU vertBC = Vertex_PCU::GetMiddleVertForTwoVerts( vertB, vertC );
+		Vertex_PCU vertCA = Vertex_PCU::GetMiddleVertForTwoVerts( vertC, vertA );
+
+		// triangle A, AB, AC
+		vertices.push_back( vertA );
+		vertices.push_back( vertAB );
+		vertices.push_back( vertCA );
+
+		//triangle AB, B, BC
+		vertices.push_back( vertAB );
+		vertices.push_back( vertB );
+		vertices.push_back( vertBC );
+		
+		// triangle AB, BC, AC
+		vertices.push_back( vertAB );
+		vertices.push_back( vertBC );
+		vertices.push_back( vertCA );
+		
+		// triangle AC, BC, CC
+		vertices.push_back( vertCA );
+		vertices.push_back( vertBC );
+		vertices.push_back( vertC );
+		i = i + 3;
+	}
+
+	AppendIndexedVerts( dest, index, vertices );
+}
+

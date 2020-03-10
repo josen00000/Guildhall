@@ -30,3 +30,5 @@ void AppendIndexedVertsForAABB3D( std::vector<Vertex_PCU>& vertices, std::vector
 bool IsPointInsideDest( const Vertex_PCU point, const std::vector<Vertex_PCU> dest, uint& index );
 
 Vec2 MakeSphereUVFromPolayDegrees( float theta, float phi );
+
+void AppendTesselateIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index, const std::vector<Vertex_PCU> source );

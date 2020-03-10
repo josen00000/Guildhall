@@ -75,7 +75,7 @@ public:
 	void SetPosition( const Vec3& position );
 	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f );
 
-	void SetClearMode( uint clearFlags, Rgba8 color, float depth = 0.0f , unsigned int stencil = 0 );
+	void SetClearMode( uint clearFlags, Rgba8 color=Rgba8::DARK_GRAY, float depth = 0.0f , unsigned int stencil = 0 );
 	void EnableClearColor( Rgba8 color );
 	void EnableClearDepth( float depth );
 	void EnableClearStencil( uint stencil );

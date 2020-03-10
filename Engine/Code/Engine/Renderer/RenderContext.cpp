@@ -178,7 +178,7 @@ void RenderContext::BeginCamera( Camera& camera )
 	if( camera.IsClearDepth() ){
 		ID3D11DepthStencilView* dsv = nullptr;
 		Texture* depthBuffer = camera.GetOrCreateDepthStencilTarget( this );
-		TextureView* depthStencilView = depthBuffer->GetDepthStencilView();	
+		TextureView* depthStencilView = depthBuffer->GetOrCreateDepthStencilView();	
 		dsv = depthStencilView->GetDSVHandle();
 		m_context->ClearDepthStencilView( dsv, D3D11_CLEAR_DEPTH, 1.f, 0 );
 		m_context->OMSetRenderTargets( 1, &rtv, dsv ); // dsv always exist
@@ -319,7 +319,6 @@ void RenderContext::DrawMesh( GPUMesh* mesh )
 	mesh->UpdateVerticeBuffer( nullptr );
 	BindVertexBuffer( mesh->GetOrCreateVertexBuffer() );
 	//UpdateLayoutIfNeeded(); // unfinished
-	SetModelMatrix( mesh->GetModelMatrix() );
 
 	bool hasIndices = mesh->GetIndexCount() > 0;
 	if( hasIndices ){

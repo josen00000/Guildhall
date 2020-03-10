@@ -1,5 +1,6 @@
 #include "Game.hpp"
 #include "Game/App.hpp"
+#include "Game/GameObject.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
@@ -34,16 +35,20 @@ void Game::Startup()
 	m_debugCamera	= false;
 	m_isAppQuit		= false;
 	m_isAttractMode	= false;
-	CreateTestMesh();
+	CreateTestObjects();
 
 }
 
 void Game::Shutdown()
 {
 	delete m_rng;
-	delete m_meshCube;
-	for( int i = 0; i < m_meshSpheres.size(); i++ ){
-		delete m_meshSpheres[i];
+	delete m_cubeMesh;
+	delete m_sphereMesh;
+	delete m_tesMesh;
+
+	// clear game objects
+	for( int i = 0; i < m_sphereObjects.size(); i++ ){
+		delete m_sphereObjects[i];
 	}
 }
 
@@ -64,7 +69,6 @@ void Game::Update( float deltaSeconds )
 		HandleKeyboardInput();
 	}
 	UpdateMeshes( deltaSeconds );
-	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -83,7 +87,7 @@ void Game::UpdateMeshes( float deltaSeconds )
 	totalSeconds += deltaSeconds;
 	float rotCoe = SinDegrees( totalSeconds );
 	Vec3 rotation = Vec3( 0, 0, rotCoe * 180 );
-	m_meshCube->SetRotation( rotation );
+	m_cubeMesh->SetRotation( rotation );
 
 	UpdateSphereMeshes( deltaSeconds );
 }
@@ -95,15 +99,15 @@ void Game::UpdateSphereMeshes( float deltaSeconds )
 	Vec2 XY = Vec2( 10, 0 );
 	float deltaDegrees = 360.f / 16;
 	float degrees = 0.f;
-	for( int i = 0; i < m_meshSpheres.size(); i++ ){
+	for( int i = 0; i < m_sphereObjects.size(); i++ ){
 		float offset = 30.f * i;
 		float rotCoe = SinDegrees( offset + totalSeconds );
 		Vec3 rotation = Vec3( 0, 0, rotCoe * 180 );
-		m_meshSpheres[i]->SetRotation( rotation );
+		m_sphereObjects[i]->SetRotation( rotation );
 		// pos
 		XY.SetAngleDegrees( degrees + totalSeconds * 20 );
 		degrees += deltaDegrees;
-		m_meshSpheres[i]->SetPosition( Vec3( XY.x, XY.y, -20 ) );
+		m_sphereObjects[i]->SetPosition( Vec3( XY.x, XY.y, -20 ) );
 	}
 }
 
@@ -165,9 +169,9 @@ void Game::HandleCameraMovement()
 	cameraPos += movement;
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
 	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 10;
+	m_gameCamera->SetPosition( cameraPos );
 	m_gameCamera->UpdateCameraRotation( rotation );
 	//g_theConsole->PrintString( Rgba8::RED, "mouse move is " + std::to_string( mouseMove.x ) + std::to_string( mouseMove.y ) );
-	m_gameCamera->SetPosition( cameraPos );
 }
 
 void Game::CheckIfExit()
@@ -219,10 +223,11 @@ void Game::Render() const
 	//g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
 	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
 	g_theRenderer->BindTexture( temp );
-	g_theRenderer->SetModelMatrix( m_meshCube->GetModelMatrix() );
-	g_theRenderer->DrawMesh( m_meshCube );
+	g_theRenderer->SetModelMatrix( m_cubeMesh->GetModelMatrix() );
+	g_theRenderer->DrawMesh( m_cubeMesh );
 
 	RenderSpheres();
+	RenderTesSpheres();
 	g_theRenderer->EndCamera( );
 
 	
@@ -230,9 +235,15 @@ void Game::Render() const
 
 void Game::RenderSpheres() const
 {
-	for( int i = 0; i <m_meshSpheres.size(); i++ ) {
-		g_theRenderer->DrawMesh( m_meshSpheres[i] );
+	for( int i = 0; i <m_sphereObjects.size(); i++ ) {
+		m_sphereObjects[i]->Render();
 	}
+}
+
+void Game::RenderTesSpheres() const
+{
+	m_tesselationObject->Render();
+	
 }
 
 void Game::RenderUI() const
@@ -247,38 +258,49 @@ void Game::LoadAssets()
 	//g_theAudioSystem->CreateOrGetSound("FilePath");
 }
 
-void Game::CreateTestMesh()
+void Game::CreateTestObjects()
 {
-	m_meshCube = new GPUMesh();
-	m_meshCube->m_owner = g_theRenderer;
+	m_cubeMesh = new GPUMesh();
+	m_cubeMesh->m_owner = g_theRenderer;
 	std::vector<Vertex_PCU> vertices;
 	std::vector<uint> indices;
 	AABB2 testAABB = AABB2( Vec2::ZERO, Vec2::ONE * 10 );
 	AABB3 testAABB3 = AABB3( Vec3::ZERO, Vec3::ONE );
-	m_meshCube->SetPosition( Vec3( 1.f, 0.5f, -12.f ) );
-	//m_meshCube->SetPosition( Vec3( 5, 5, 5 ) );
-	//AppendIndexedVertsForAABB2D( vertices, indices, testAABB, Rgba8::WHITE, Vec2::ZERO, Vec2::ONE );
+	m_cubeMesh->SetPosition( Vec3( 1.f, 0.5f, -12.f ) );
 	AppendIndexedVertsForAABB3D( vertices, indices, testAABB3, Rgba8::RED );
-	//AppendVertsForSphere3D( vertices, Vec3( 0.f, 0.f, -10.f ), 3.f, 16, 32, Rgba8::RED );
-	//AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, -10.f ), 3.f, 3, 2, Rgba8::RED );
-	m_meshCube->UpdateVerticesInCPU( vertices );
-	m_meshCube->UpdateIndicesInCPU( indices );
+	m_cubeMesh->UpdateVerticesInCPU( vertices );
+	m_cubeMesh->UpdateIndicesInCPU( indices );
 
-	CreateSphereMesh();
+	CreateSphereObjects();
+
+	// tesselation object
+	m_tesselationObject = new GameObject();
+	m_tesMesh = new GPUMesh();
+	m_tesMesh->m_owner = g_theRenderer;
+	std::vector<Vertex_PCU> sphereVertices;
+	std::vector<Vertex_PCU> tesIndexedVertices;
+	std::vector<uint> tesIndices;
+	AppendVertsForSphere3D( sphereVertices, Vec3::ZERO, 5.f, 4, 6, Rgba8::BLUE );
+	AppendTesselateIndexedVerts( tesIndexedVertices, tesIndices, sphereVertices );
+	m_tesMesh->UpdateVerticesInCPU( tesIndexedVertices );
+	m_tesMesh->UpdateIndicesInCPU( tesIndices );
+	m_tesselationObject->m_mesh = m_tesMesh;
 }
 
-void Game::CreateSphereMesh()
+void Game::CreateSphereObjects()
 {
+	m_sphereMesh = new GPUMesh();
+	m_sphereMesh->m_owner = g_theRenderer;
+	std::vector<Vertex_PCU> vertices;
+	std::vector<uint> indices;
+	AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, 0.f ), 3.f, 32, 16, Rgba8::RED );
+	m_sphereMesh->UpdateVerticesInCPU( vertices );
+	m_sphereMesh->UpdateIndicesInCPU( indices );
 	
 	for( int i = 0; i < 8; i++ ){
-		GPUMesh* meshSphere = new GPUMesh();
-		meshSphere->m_owner = g_theRenderer;
-		std::vector<Vertex_PCU> vertices;
-		std::vector<uint> indices;
-		AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, 0.f ), 3.f, 32, 16, Rgba8::RED );
-		meshSphere->UpdateVerticesInCPU( vertices );
-		meshSphere->UpdateIndicesInCPU( indices );
-		m_meshSpheres.push_back( meshSphere );
+		GameObject* meshObjects = new GameObject();
+		meshObjects->m_mesh = m_sphereMesh;
+		m_sphereObjects.push_back( meshObjects );
 	}
 }
 
