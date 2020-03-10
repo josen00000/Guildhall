@@ -100,7 +100,7 @@ void DiscCollider2D::SetPosition( Vec2 pos )
 
 float DiscCollider2D::CalculateMoment( float mass ) const
 {
-
+	return 0.5f * mass * m_radius * m_radius;
 }
 
 void DiscCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
