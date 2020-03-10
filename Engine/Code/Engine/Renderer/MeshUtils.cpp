@@ -313,9 +313,9 @@ void AppendTesselateIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uin
 		Vertex_PCU vertCA = Vertex_PCU::GetMiddleVertForTwoVerts( vertC, vertA );
 
 		// triangle A, AB, AC
-		vertices.push_back( vertA );
-		vertices.push_back( vertAB );
-		vertices.push_back( vertCA );
+		//vertices.push_back( vertA );
+		//vertices.push_back( vertAB );
+		//vertices.push_back( vertCA );
 
 		//triangle AB, B, BC
 		vertices.push_back( vertAB );
