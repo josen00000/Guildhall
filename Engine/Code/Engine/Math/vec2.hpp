@@ -56,6 +56,9 @@ public:
 	float NormalizeAndGetPreviousLength();
 	void Reflect(const Vec2& normal);
 
+	// static
+	static float CrossProduct( Vec2 a, Vec2 b );
+
 	// Operators (const)
 	bool		operator==( const Vec2& compare ) const;		// vec2 == vec2
 	bool		operator!=( const Vec2& compare ) const;		// vec2 != vec2

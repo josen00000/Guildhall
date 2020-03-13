@@ -44,6 +44,7 @@ public:
 	Collider2DType GetType() const { return m_type; }
 	virtual Disc2 GetWorldBounds() const = 0;
 	Rigidbody2D* GetRigidbody() const { return m_rigidbody; }
+	virtual Vec2 GetCentroid() const = 0;
 	float GetMass() const; 
 
 	// Mutator

@@ -27,6 +27,7 @@ public:
 	void ApplyEffectors( float deltaSeconds );
 	void ApplyAccelerationToRigidbody( Rigidbody2D* rb, float deltaSeconds );
 	void MoveRigidbodies( float deltaSeconds );
+	void RotateRigidbodies( float deltaSeconds );
 	void CleanupDestroyedObjects();
 	void ModifyGravity( float deltaGravity );
 	void UpdateFrameStartPos();

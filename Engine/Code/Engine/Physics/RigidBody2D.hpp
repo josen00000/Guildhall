@@ -26,7 +26,6 @@ public:
 	
 	void Move( Vec2 displacement );
 
-
 	// Accessor
 	bool IsDestroied() const { return m_isDestroyed; }
 	bool IsEnablePhysics() const { return m_isEnable; }
@@ -36,6 +35,7 @@ public:
 	float GetAngularVelocity() const { return m_angularVelocity; }
 	float GetFrameTorque() const { return m_frameTorque; }
 	float GetMoment() const { return m_moment; }
+	Vec2 GetImpactVelocity( Vec2 contact );
 	Vec2 GetPosition() const { return m_worldPosition; }
 	Vec2 GetVelocity() const { return m_velocity; }
 	Vec2 GetVerletVelocity() const;
@@ -53,11 +53,18 @@ public:
 	void SetCollider( Collider2D* collider ); 
 	void SetColliderPosition();
 	void SetSimulationMode( SimulationMode mode );
+
 	void UpdateDrag( float deltaDrag );
 	void UpdateVelocityPerFrame( const Vec2& deltaVel );
 	void UpdatePositionPerFrame( const Vec2& deltaPos );
 	void UpdateMass( float deltaMass );
 	void UpdateFrameStartPos();
+
+	// rotation
+	void UpdateAngularVelocity( float deltaAngVel );
+	void ResetAngularVelocity();
+	void UpdateRotationRadians( float deltaRadians );
+	void UpdateAngular( float deltaSeconds );
 
 	void DisablePhysics();
 	void EnablePhysics();
@@ -66,6 +73,7 @@ public:
 	void ApplyDragForce();
 
 	void AddForce( Vec2 force );
+
 	// help
 	void DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
 	void DebugRender( RenderContext* ctx );
@@ -75,10 +83,10 @@ private:
 	bool m_isEnable		= true;
 	float m_mass		= 1.f;
 	float m_drag		= 0.f;
-	float m_rotationInRadians	= 0;
-	float m_angularVelocity		= 0;
-	float m_frameTorque			= 0;
-	float m_moment				= 0;
+	float m_rotationInRadians	= 0.f;
+	float m_angularVelocity		= 0.f;
+	float m_frameTorque			= 0.f;
+	float m_moment				= 0.f;
 	Vec2 m_velocity		= Vec2::ZERO;
 	Vec2 m_force		= Vec2::ZERO;
 	Vec2 m_frameStartPosition = Vec2::ZERO;

@@ -43,6 +43,7 @@ void Physics2D::AdvanceSimulation( float deltaSeconds )
 {
 	ApplyEffectors( deltaSeconds );
 	MoveRigidbodies( deltaSeconds );
+	RotateRigidbodies( deltaSeconds );
 	DetectCollisions();
 	ResolveCollisions();
 	CleanupDestroyedObjects();
@@ -86,6 +87,14 @@ void Physics2D::MoveRigidbodies( float deltaSeconds )
 	}
 }
 
+void Physics2D::RotateRigidbodies( float deltaSeconds )
+{
+	for( int i = 0 ; i < m_rigidbodies.size(); i++ ){
+		if( m_rigidbodies[i] == nullptr ){ continue; }
+		m_rigidbodies[i]->UpdateAngular( deltaSeconds );
+	}
+}
+
 void Physics2D::DetectCollisions()
 {
 	m_collisions.clear();
@@ -98,9 +107,6 @@ void Physics2D::DetectCollisions()
 			Collider2D* col2 = m_colliders[colIndex1];
 			if( col2 == nullptr || !col2->GetRigidbody()->IsEnablePhysics() ){
 				continue;
-			}
-			else{
-				bool test = col2->GetRigidbody()->IsEnablePhysics();
 			}
 			Manifold2D manifold;
 			if( col1->IntersectsAndGetManifold( col2, manifold ) ){
@@ -173,17 +179,29 @@ float Physics2D::CalculateCollisionNormalImpulse( const Collision2D& collision )
 	Rigidbody2D* rbOther = collision.other->m_rigidbody;
 	float result = 0;
 	float res = PhysicsMaterial::GetRestitutionBetweenTwoMaterial( collision.me->m_material, collision.other->m_material );
-	Vec2 velMe = rbMe->GetVelocity();
-	Vec2 velOther = rbOther->GetVelocity();
+	Vec2 velMe = rbMe->GetImpactVelocity( collision.GetContact() );
+	Vec2 velOther = rbOther->GetImpactVelocity( collision.GetContact() );
 	Vec2 normal = collision.GetNormal();
+	Vec2 vAB = velOther - velMe;
+	Vec2 contact = collision.GetContact();
+	Vec2 rAPTangent = contact - collision.me->GetCentroid();
+	Vec2 rBPTangent = contact - collision.other->GetCentroid();
+	rAPTangent.Rotate90Degrees();
+	rBPTangent.Rotate90Degrees();
+	float rAPDotSqur = DotProduct2D( rAPTangent, normal );
+	float rBPDotSqur = DotProduct2D( rBPTangent, normal );
+	rAPDotSqur = rAPDotSqur * rAPDotSqur;
+	rBPDotSqur = rBPDotSqur * rBPDotSqur;
+
+	result = ( 1 + res ) * ( DotProduct2D( vAB, normal ) );
 	if( rbMe->GetSimulationMode() == RIGIDBODY_DYNAMIC && rbOther->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		result = ( ( rbMe->GetMass() * rbOther->GetMass() ) / ( rbMe->GetMass() + rbOther->GetMass() ) ) * ( 1 + res ) * DotProduct2D( ( velOther - velMe ), normal );
+		result = result /  ( ( ( 1 / rbMe->GetMass() ) + ( 1 / rbOther->GetMass() ) ) + ( rAPDotSqur / rbMe->GetMoment()) + ( rBPDotSqur / rbOther->GetMoment() ) );
 	}
 	else if( rbMe->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		result = rbMe->GetMass() * ( 1 + res ) * DotProduct2D( ( velOther - velMe ), normal );
+		result = result / ( ( 1 / rbMe->GetMass() ) + ( rAPDotSqur / rbMe->GetMoment() ) );
 	}
 	else if( rbOther->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		result = rbOther->GetMass() * ( 1 + res ) * DotProduct2D( ( velOther - velMe ), normal );
+		result = result / (( 1 / rbOther->GetMass() ) + ( rBPDotSqur / rbOther->GetMoment() ) );
 	}
 	return result;
 }
@@ -196,22 +214,34 @@ float Physics2D::CalculateCollisionTangentImpulse( const Collision2D& collision,
 	Rigidbody2D* rbOther = collision.other->m_rigidbody;
 	float result = 0;
 	float res = PhysicsMaterial::GetRestitutionBetweenTwoMaterial( collision.me->m_material, collision.other->m_material );
-	Vec2 velMe = rbMe->GetVelocity();
-	Vec2 velOther = rbOther->GetVelocity();
+	Vec2 velMe = rbMe->GetImpactVelocity( collision.GetContact() );
+	Vec2 velOther = rbOther->GetImpactVelocity( collision.GetContact() );
 	Vec2 normal = collision.GetNormal();
 	normal.Rotate90Degrees();
+	Vec2 vAB = velOther - velMe;
+	Vec2 contact = collision.GetContact();
+	Vec2 rAPTangent = contact - collision.me->GetCentroid();
+	Vec2 rBPTangent = contact - collision.other->GetCentroid();
+	rAPTangent.Rotate90Degrees();
+	rBPTangent.Rotate90Degrees();
+	float rAPDotSqur = DotProduct2D( rAPTangent, normal );
+	float rBPDotSqur = DotProduct2D( rBPTangent, normal );
+	rAPDotSqur = rAPDotSqur * rAPDotSqur;
+	rBPDotSqur = rBPDotSqur * rBPDotSqur;
+
+	result = ( 1 + res ) * ( DotProduct2D( vAB, normal ) );
 	if( rbMe->GetSimulationMode() == RIGIDBODY_DYNAMIC && rbOther->GetSimulationMode() == RIGIDBODY_DYNAMIC ) {
-		result = ((rbMe->GetMass() * rbOther->GetMass()) / (rbMe->GetMass() + rbOther->GetMass())) * (1 + res) * DotProduct2D( (velOther - velMe), normal );
+		result = result /  ( ( ( 1 / rbMe->GetMass() ) + ( 1 / rbOther->GetMass() ) ) + ( rAPDotSqur / rbMe->GetMoment()) + ( rBPDotSqur / rbOther->GetMoment() ) );
 	}
 	else if( rbMe->GetSimulationMode() == RIGIDBODY_DYNAMIC ) {
-		result = rbMe->GetMass() * (1 + res) * DotProduct2D( (velOther - velMe), normal );
+		result = result / ( ( 1 / rbMe->GetMass() ) + ( rAPDotSqur / rbMe->GetMoment() ) );
 	}
 	else if( rbOther->GetSimulationMode() == RIGIDBODY_DYNAMIC ) {
-		result = rbOther->GetMass() * (1 + res) * DotProduct2D( (velOther - velMe), normal );
+		result = result / (( 1 / rbOther->GetMass() ) + ( rBPDotSqur / rbOther->GetMoment() ) );
 	}
 	float friction = collision.me->GetFrictionWith( collision.other );
 	float sign = (result > 0) ? 1.f : -1.f;
-	if( abs( result ) > friction * normalImpulse ) {
+	if( abs( result ) > abs( friction * normalImpulse ) ) {
 		result = sign * normalImpulse * friction;
 	}
 	return result;
@@ -223,14 +253,14 @@ void Physics2D::ApplyImpulseInCollision( const Collision2D& collision, Vec2 impu
 	Collider2D* other = collision.other;
 	
 	if( me->m_rigidbody->GetSimulationMode() == other->m_rigidbody->GetSimulationMode()	&& me->m_rigidbody->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		collision.me->m_rigidbody->ApplyImpulse( impulse, Vec2::ZERO );
-		collision.other->m_rigidbody->ApplyImpulse( -impulse, Vec2::ZERO );
+		collision.me->m_rigidbody->ApplyImpulse( impulse, collision.GetContact() );
+		collision.other->m_rigidbody->ApplyImpulse( -impulse, collision.GetContact() );
 	}
 	else if( other->m_rigidbody->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		other->m_rigidbody->ApplyImpulse( -impulse, Vec2::ZERO );
+		other->m_rigidbody->ApplyImpulse( -impulse, collision.GetContact() );
 	}
 	else if(  me->m_rigidbody->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		me->m_rigidbody->ApplyImpulse( impulse, Vec2::ZERO );
+		me->m_rigidbody->ApplyImpulse( impulse, collision.GetContact() );
 	}
 }
 
@@ -302,6 +332,7 @@ void Physics2D::ModifyGravity( float deltaGravity )
 void Physics2D::UpdateFrameStartPos()
 {
 	for( int i = 0; i < m_rigidbodies.size(); i++ ){
+		if( m_rigidbodies[i] == nullptr ) { continue; }
 		m_rigidbodies[i]->UpdateFrameStartPos();
 	}
 }
@@ -354,7 +385,8 @@ DiscCollider2D* Physics2D::CreateDiscCollider( Vec2 worldPosition, float radius,
 PolygonCollider2D* Physics2D::CreatePolyCollider( std::vector<Vec2> points, Rigidbody2D* rb /*= nullptr */ )
 {
 	PolygonCollider2D* tempPolyCol = dynamic_cast<PolygonCollider2D*> ( CreateCollider( Collider2DType::COLLIDER2D_POLYGON, rb ) );
-	tempPolyCol->m_polygon.SetEdgesFromPoints( points );
+	tempPolyCol->m_localPolygon.SetEdgesFromPoints( points );
+	tempPolyCol->m_worldPolygon = tempPolyCol->m_localPolygon;
 	rb->SetSimulationMode( RIGIDBODY_STATIC );
 	return tempPolyCol;
 }
@@ -362,7 +394,8 @@ PolygonCollider2D* Physics2D::CreatePolyCollider( std::vector<Vec2> points, Rigi
 PolygonCollider2D* Physics2D::CreatePolyCollider( Polygon2 polygon, Rigidbody2D* rb /*= nullptr */ )
 {
 	PolygonCollider2D* polyCol = dynamic_cast<PolygonCollider2D*> (CreateCollider( COLLIDER2D_POLYGON, rb ));
-	polyCol->m_polygon = polygon;
+	polyCol->m_localPolygon = polygon;
+	polyCol->m_worldPolygon = polygon;
 	polyCol->m_worldPos = polygon.m_center;
 	rb->SetSimulationMode( RIGIDBODY_STATIC );
 	return polyCol;

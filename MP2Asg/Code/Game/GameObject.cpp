@@ -35,7 +35,7 @@ GameObject::GameObject( std::vector<Vec2> points )
 	Polygon2 tempPoly = Polygon2( points );
 	m_rb = g_thePhysics->CreateRigidbody( tempPoly.m_center );
 	PolygonCollider2D* polyCol = g_thePhysics->CreatePolyCollider( tempPoly, m_rb );
-	if( !polyCol->m_polygon.IsConvex() ) {
+	if( !polyCol->m_worldPolygon.IsConvex() ) {
 		GUARANTEE_OR_DIE( false, "Try to create a concave polygon!" );
 	}
 	m_rb->SetCollider( polyCol );
@@ -90,7 +90,7 @@ void GameObject::CheckIfOutCameraVertical( Camera* camera )
 		}
 		case COLLIDER2D_POLYGON:{
 			PolygonCollider2D* polyCol = dynamic_cast<PolygonCollider2D*>(col);
-			pos += polyCol->m_polygon.GetLowestPoint();
+			pos += polyCol->m_worldPolygon.GetLowestPoint();
 			break;
 		}
 		default:
@@ -120,7 +120,7 @@ void GameObject::CheckIfOutCameraHorizontal( Camera* camera )
 		}
 		case COLLIDER2D_POLYGON: {
 			PolygonCollider2D* polyCol = (PolygonCollider2D*)col;
-			dist = polyCol->m_polygon.GetLongestDistance();
+			dist = polyCol->m_worldPolygon.GetLongestDistance();
 			break;
 		}
 		default:
@@ -135,12 +135,23 @@ void GameObject::CheckIfOutCameraHorizontal( Camera* camera )
 	SetPosition( pos );
 }
 
+void GameObject::UpdateColliderShape()
+{
+	m_rb->GetCollider()->UpdateWorldShape();
+}
+
 void GameObject::Update( float deltaSeconds )
 {
 	UNUSED( deltaSeconds );
 	CheckIfMouseIn( g_theGame->m_mousePos );
 	CheckIfOutCameraVertical( g_gameCamera );
 	CheckIfOutCameraHorizontal( g_gameCamera );
+	UpdateColliderShape();
+}
+
+void GameObject::UpdateAngular( float deltaSeconds )
+{
+	m_rb->UpdateAngular( deltaSeconds );
 }
 
 void GameObject::Render() const
@@ -230,6 +241,21 @@ void GameObject::UpdateFriction( float deltaFric )
 void GameObject::UpdateDrag( float deltaDrag )
 {
 	m_rb->UpdateDrag( deltaDrag );
+}
+
+void GameObject::UpdateAngularVelocity( float deltaAngVel )
+{
+	m_rb->UpdateAngularVelocity( deltaAngVel );
+}
+
+void GameObject::ResetAngularVelocity()
+{
+	m_rb->ResetAngularVelocity();
+}
+
+void GameObject::UpdateRotationRadians( float deltaRadians )
+{
+	m_rb->UpdateRotationRadians( deltaRadians );
 }
 
 void GameObject::SetPosition( Vec2 pos )

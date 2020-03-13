@@ -28,6 +28,7 @@ public:
 	void RenderUI() const;
 	void RenderToolTip() const;
 	void RenderGravity() const;
+	void RenderMouse() const;
 	void RenderTime() const;
 	void GenerateTempPoints();
 	void GenerateTestPoints();

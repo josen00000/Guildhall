@@ -20,6 +20,7 @@ public:
 
 	// Accessor
 	virtual Disc2 GetWorldBounds() const override;
+	virtual Vec2 GetCentroid() const override;
 
 	// Mutator
 	virtual void SetPosition( Vec2 pos ) override;

@@ -748,3 +748,14 @@ bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon/*=0.01f */ )
 	return true;
 }
 
+float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c )
+{
+	Vec2 ab = b - a;
+	Vec2 ac = c - a;
+	float area = Vec2::CrossProduct( ab, ac ) * 0.5f;
+	if( area < 0 ){
+		area = - area;
+	}
+	return area;
+}
+

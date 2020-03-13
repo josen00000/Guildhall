@@ -161,6 +161,11 @@ void Vec2::Reflect( const Vec2& normal )
 	y = temVec2.y;
 }
 
+float Vec2::CrossProduct( Vec2 a, Vec2 b )
+{
+	return a.x * b.y - a.y * b.x;
+}
+
 // Mutators(non-const methods)
 void Vec2::SetAngleRadians( float newAngleRadians ) {
 	const float tem_Len=GetLength();

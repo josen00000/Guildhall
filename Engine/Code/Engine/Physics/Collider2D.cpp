@@ -94,7 +94,7 @@ float Collider2D::GetBounceWith( const Collider2D* other ) const
 
 float Collider2D::GetFrictionWith( const Collider2D* other ) const
 {
-	float result = PhysicsMaterial::GetRestitutionBetweenTwoMaterial( m_material, other->m_material );
+	float result = PhysicsMaterial::GetFrictionBetweenTwoMaterial( m_material, other->m_material );
 	return result;
 }
 
@@ -195,6 +195,7 @@ Manifold2D GetDiscVSDiscManifold( const Collider2D* colA, const Collider2D* colB
 	Vec2 disp = discColA->m_worldPosition - discColB->m_worldPosition;
 	result.dist = discColB->m_radius + discColA->m_radius - disp.GetLength();
 	result.normal = disp.GetNormalized();
+	result.contact = discColA->m_worldPosition - result.normal * discColA->m_radius;
 	return result;
 }
 
@@ -214,6 +215,7 @@ Manifold2D GetDiscVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 		result.normal = ( discColA->m_worldPosition - closestPoint ).GetNormalized();
 		result.dist	 = discColA->m_radius - dist;
 	}
+	result.contact = discColA->m_worldPosition - result.normal * discColA->m_radius;
 	return result;
 }
 
@@ -226,6 +228,7 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 
 Manifold2D GetPolyVSDiscManifold( const Collider2D* colA, const Collider2D* colB ){ // A is poly B is disc push a out of b
 	Manifold2D result = GetDiscVSPolyManifold( colB, colA );
+	result.contact = result.contact + result.normal * result.dist;
 	result.normal = -result.normal;
 	return result;
 }

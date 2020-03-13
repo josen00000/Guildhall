@@ -4,7 +4,7 @@
 
 Polygon2::Polygon2( std::vector<Vec2> points )
 {
-	m_center = GetBadCenter( points );
+	m_center = GetMassCenter( points );
 	for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
 		Vec2 firstPoint = points[pointIndex - 1] - m_center;
 		Vec2 secondPoint = points[pointIndex] - m_center;
@@ -190,26 +190,33 @@ Vec2 Polygon2::GetClosestPointOnEdges( Vec2 point ) const
 	return closestPoint + m_center;
 }
 
-Vec2 Polygon2::GetBadCenter( std::vector<Vec2> rawPoints ) const
+Vec2 Polygon2::GetMassCenter( std::vector<Vec2> rawPoints ) const
 {
-	Vec2 result = Vec2::ZERO;
-	for( int pointIndex = 0; pointIndex < rawPoints.size(); pointIndex++ ) {
-		result += rawPoints[pointIndex];
+	//if( m_edges.size() < 3 ){ return Vec2::ZERO; }
+	float totalArea = 0;
+	Vec2 totalAreaWithCentroid = Vec2::ZERO;
+	for( int i = 1 ; i < rawPoints.size() - 1; i++ ){
+		// for each triangle
+		Vec2 a = rawPoints[0];
+		Vec2 b = rawPoints[i];
+		Vec2 c = rawPoints[i+1];
+		Vec2 triangleCentroid = ( a + b + c ) / 3;
+		float triangleArea = GetAreaOfTriangle( a, b, c );
+		totalAreaWithCentroid += triangleArea * triangleCentroid;
+		totalArea += triangleArea;
 	}
-
-	result.x /= (int)rawPoints.size();
-	result.y /= (int)rawPoints.size();
+	Vec2 result = totalAreaWithCentroid / totalArea;
 	return result;
 }
 
-LineSegment2 Polygon2::GetEdge( int index )
+LineSegment2 Polygon2::GetEdge( int index ) const
 {
 	return m_edges[index];
 }
 
 void Polygon2::SetEdgesFromPoints( std::vector<Vec2> points )
 {
-	m_center = GetBadCenter( points );
+	m_center = GetMassCenter( points );
 	m_edges.clear();
 	for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
 		Vec2 firstPoint = points[pointIndex - 1];

@@ -127,3 +127,6 @@ IntVec2 TransformFromWorldPosToTilePos(const Vec2 worldPos);
 bool IsFloatMostlyEqual( float a, float b, float epsilon=0.001f );
 bool IsVec2MostlyEqual( Vec2 a, Vec2 b, float epsilon=0.001f );
 bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon=0.001f );
+
+// Area
+float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c );

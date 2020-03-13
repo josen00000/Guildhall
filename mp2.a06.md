@@ -7,28 +7,28 @@ MP2.A06 Friction
     - [x] Add `float m_frameTorque`
     - [x] Add `float m_moment`
     - [x] Add appropriate getter/setter methods
-- [ ] `Rigidbody2D::CalculateMoment` to calculate moment based on attached collider and mass
-    - [ ] `virtual float Collider2D::CalculateMoment( float mass )`
-    - [ ] Implement `DiscCollider::CalculateMoment`
-    - [ ] Implement `PolygonCollider::CalculateMoment`
-    - [ ] When setting **mass** or **collider** on a rigidbody - recalculate your moment.
+- [x] `Rigidbody2D::CalculateMoment` to calculate moment based on attached collider and mass
+    - [x] `virtual float Collider2D::CalculateMoment( float mass )`
+    - [x] Implement `DiscCollider::CalculateMoment`
+    - [x] Implement `PolygonCollider::CalculateMoment`
+    - [x] When setting **mass** or **collider** on a rigidbody - recalculate your moment.
         - *Note: When setting mass, you can do less work by taking advantage of the ratio of new mass to old mass should match the ratios of the moments*.
-- [ ] Rotating a `Rigidbody2D` properly updates the **world shape** of the collider.
-    - [ ] Add controls to rotate a selected object
+- [x] Rotating a `Rigidbody2D` properly updates the **world shape** of the collider.
+    - [x] Add controls to rotate a selected object
         - Suggest **R** and **F**
-    - [ ] Add controls to update the rotational velocity of an object
+    - [x] Add controls to update the rotational velocity of an object
         - Suggest **T**, **G**, and **V** to increase, decrease, and reset
-- [ ] `Rigidbody2D` now do angular calculations during their update.
-    - [ ] Use torque to compute an angular acceleration
-    - [ ] Apply angular acceleration to update angular velocity
-    - [ ] Apply angular velocity to update rotation
-- [ ] Update `Rigidbody2D::GetImpactVelocity` to take into account rotational velocity.
-- [ ] Update `ApplyImpulseAt` to apply impulse to torque based on positions.
-- [ ] Update impulse calculations to take into account rotational forces, see PDF in lnks
-- [ ] Update tooltip to show...
-    - [ ] Moment of Inertia
-    - [ ] Current Rotation (degrees)
-    - [ ] Current Angular Velocity
+- [x] `Rigidbody2D` now do angular calculations during their update.
+    - [x] Use torque to compute an angular acceleration
+    - [x] Apply angular acceleration to update angular velocity
+    - [x] Apply angular velocity to update rotation
+- [x] Update `Rigidbody2D::GetImpactVelocity` to take into account rotational velocity.
+- [x] Update `ApplyImpulseAt` to apply impulse to torque based on positions.
+- [x] Update impulse calculations to take into account rotational forces, see PDF in lnks
+- [x] Update tooltip to show...
+    - [x] Moment of Inertia
+    - [x] Current Rotation (degrees)
+    - [x] Current Angular Velocity
 
 
 ------

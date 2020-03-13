@@ -24,9 +24,11 @@ private:
 	void CheckIfMouseIn( Vec2 mousePos );
 	void CheckIfOutCameraVertical( Camera* camera );
 	void CheckIfOutCameraHorizontal( Camera* camera );
+	void UpdateColliderShape();
 
 public:
-	virtual void Update(float deltaSeconds);
+	void Update( float deltaSeconds );
+	void UpdateAngular( float deltaSeconds );
 	virtual void Render() const;
 
 	// Accessor
@@ -49,6 +51,11 @@ public:
 	void UpdateMass( float deltaMass ); 
 	void UpdateFriction( float deltaFric );
 	void UpdateDrag( float deltaDrag );
+	
+	// rotation
+	void UpdateAngularVelocity( float deltaAngVel );
+	void ResetAngularVelocity();
+	void UpdateRotationRadians( float deltaRadians );
 
 public:
 	bool m_isDestroyed	= false;

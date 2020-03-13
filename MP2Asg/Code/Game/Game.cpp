@@ -284,6 +284,31 @@ void Game::HandleKeyboardInput()
 				m_selectedObj->UpdateDrag( 0.01f );
 			}
 		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_R ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateRotationRadians( 0.1f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_E ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateRotationRadians( -0.1f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_T ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateAngularVelocity( 0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_G ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->UpdateAngularVelocity( -0.01f );
+			}
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_V ) ) {
+			if( m_selectedObj != nullptr ) {
+				m_selectedObj->ResetAngularVelocity();
+			}
+		}
 	}
 	else {
 		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1) ){
@@ -371,7 +396,8 @@ bool Game::IsDrawedPolygonConvex() const
 {
 	std::vector<Vec2> tempPoints;
 	tempPoints = m_drawPoints;
-	tempPoints.push_back( m_mousePos );
+	//tempPoints.push_back( m_mousePos );
+	if( tempPoints.size() < 3 ){ return false; }
 	Polygon2 tempPoly = Polygon2( tempPoints );
 	if( !tempPoly.IsConvex() ) {
 		return false;
@@ -417,6 +443,7 @@ void Game::RenderUI() const
 {
 	RenderGravity();
 	RenderTime();
+	RenderMouse();
 	RenderToolTip();
 }
 
@@ -451,13 +478,19 @@ void Game::RenderToolTip() const
 			default: 
 				break;
 		}
-		std::string toolMode = "The simulation mode : " +  mode;
-		std::string toolMass = "Mass : " + std::to_string( m_overObj->m_rb->GetMass() );
-		std::string toolVelocity = "Velocity : " + std::to_string( m_overObj->m_rb->GetVerletVelocity().x ) + ", " + std::to_string( m_overObj->m_rb->GetVerletVelocity().y );
-		std::string toolVerletVelocity = "Verlet Velocity : " + std::to_string( m_overObj->m_rb->GetVelocity().x ) + ", " + std::to_string( m_overObj->m_rb->GetVelocity().y );
-		std::string toolBounce = "Restitution : " + std::to_string( m_overObj->m_rb->GetCollider()->GetBounciness() );
-		std::string toolFric = "Friction : " + std::to_string( m_overObj->m_rb->GetCollider()->GetFriction() );
-		std::string toolDrag = "Drag : " + std::to_string( m_overObj->m_rb->GetDrag() );
+
+		float rotationDegree = ConvertRadiansToDegrees( m_overObj->m_rb->GetRotationInRadians() );
+
+		std::string toolMode			= "The simulation mode : " +  mode;
+		std::string toolMass			= "Mass : " + std::to_string( m_overObj->m_rb->GetMass() );
+		std::string toolVelocity		= "Velocity : " + std::to_string( m_overObj->m_rb->GetVerletVelocity().x ) + ", " + std::to_string( m_overObj->m_rb->GetVerletVelocity().y );
+		std::string toolVerletVelocity	= "Verlet Velocity : " + std::to_string( m_overObj->m_rb->GetVelocity().x ) + ", " + std::to_string( m_overObj->m_rb->GetVelocity().y );
+		std::string toolBounce			= "Restitution : " + std::to_string( m_overObj->m_rb->GetCollider()->GetBounciness() );
+		std::string toolFric			= "Friction : " + std::to_string( m_overObj->m_rb->GetCollider()->GetFriction() );
+		std::string toolDrag			= "Drag : " + std::to_string( m_overObj->m_rb->GetDrag() );
+		std::string toolMoment			= " Moment : " + std::to_string( m_overObj->m_rb->GetMoment() );
+		std::string toolRotation		= " Rotation : " + std::to_string( rotationDegree );
+		std::string toolAngularVel		= " Angular Velocity : " + std::to_string( m_overObj->m_rb->GetAngularVelocity() );
 		
 		float height = toolBox.maxs.y - toolBox.mins.y;
 		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolMode, Rgba8::RED, 1.f, Vec2::ZERO );
@@ -467,6 +500,9 @@ void Game::RenderToolTip() const
 		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolBounce, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 4/height ) );
 		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolFric, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 5/height ) );
 		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolDrag, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 6/height ) );
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolMoment, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 7/height ) );
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolRotation, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 8/height ) );
+		g_squirrelFont->AddVertsForTextInBox2D( toolVertices, toolBox, textHeight, toolAngularVel, Rgba8::RED, 1.f, Vec2::ZERO+ Vec2( 0, textHeight * 9/height ) );
 		g_theRenderer->DrawVertexVector( toolVertices );
 	}
 }
@@ -478,6 +514,16 @@ void Game::RenderGravity() const
 	std::string gravity = "The Gravity is: " + std::to_string( g_thePhysics->m_gravityAccel.y );
 	g_squirrelFont->AddVertsForTextInBox2D( gravityVertices, m_UICamera->GetCameraAsBox(), 3.f, gravity, Rgba8::RED, 1.f, Vec2::ZERO );
 	g_theRenderer->DrawVertexVector( gravityVertices );
+}
+
+void Game::RenderMouse() const
+{
+	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+	std::vector<Vertex_PCU> mouseVertices;
+	std::string gravity = "The mousePos is: " + std::to_string( m_mousePos.x ) + " , " + std::to_string( m_mousePos.y );
+	g_squirrelFont->AddVertsForTextInBox2D( mouseVertices, m_UICamera->GetCameraAsBox(), 3.f, gravity, Rgba8::RED, 1.f, Vec2( 0.f, ( 9 / m_UICamera->GetCameraHeight() ) ) );
+	g_theRenderer->DrawVertexVector( mouseVertices );
+
 }
 
 void Game::RenderTime() const

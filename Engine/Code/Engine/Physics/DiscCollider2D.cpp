@@ -58,6 +58,11 @@ Disc2 DiscCollider2D::GetWorldBounds() const
 	return result;
 }
 
+Vec2 DiscCollider2D::GetCentroid() const
+{
+	return m_worldPosition;
+}
+
 // bool DiscCollider2D::Intersects( const Collider2D* other ) const
 // {
 // 	//TODO
@@ -106,7 +111,10 @@ float DiscCollider2D::CalculateMoment( float mass ) const
 void DiscCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
 {
 	// TODO test and debug 
-
+	float m_rotRadians = m_rigidbody->GetRotationInRadians();
+	Vec2 direction = Vec2( 1.f, 0.f );
+	direction.SetAngleRadians( m_rotRadians );
+	ctx->DrawLine( m_worldPosition, ( m_worldPosition + direction * m_radius ), 0.5f, Rgba8::BLACK );
 	ctx->DrawCircle( m_worldPosition, m_radius, 1, borderColor );
 	ctx->DrawFilledCircle( m_worldPosition, ( m_radius - 0.9f ), fillColor );
 }

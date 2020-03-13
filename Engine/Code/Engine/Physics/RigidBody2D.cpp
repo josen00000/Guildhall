@@ -12,7 +12,7 @@ Rigidbody2D::Rigidbody2D( Physics2D* owner, Vec2 worldPos, Collider2D* col /*= n
 	,m_worldPosition(worldPos)
 	,m_collider(col)
 {
-
+	//m_moment = col->CalculateMoment( m_mass );
 }
 
 Rigidbody2D::~Rigidbody2D()
@@ -63,6 +63,7 @@ void Rigidbody2D::SetColliderPosition()
 void Rigidbody2D::SetMass( float mass )
 {
 	m_mass = mass;
+	m_moment = m_collider->CalculateMoment( m_mass	);
 }
 
 void Rigidbody2D::SetRotationInRadians( float rot )
@@ -117,11 +118,37 @@ void Rigidbody2D::UpdateMass( float deltaMass )
 	if( m_mass < 0.001f ){
 		m_mass = 0.001f;
 	}
+	m_moment = m_collider->CalculateMoment( m_mass );
 }
 
 void Rigidbody2D::UpdateFrameStartPos()
 {
 	m_frameStartPosition = m_worldPosition;
+}
+
+void Rigidbody2D::UpdateAngularVelocity( float deltaAngVel )
+{
+	m_angularVelocity += deltaAngVel;
+}
+
+void Rigidbody2D::ResetAngularVelocity()
+{
+	m_angularVelocity = 0.f;
+}
+
+void Rigidbody2D::UpdateRotationRadians( float deltaRadians )
+{
+	m_rotationInRadians += deltaRadians;
+}
+
+void Rigidbody2D::UpdateAngular( float deltaSeconds )
+{
+	if( m_moment == 0.f ){
+		m_moment = m_collider->CalculateMoment( m_mass );
+	}
+	float angularAccel = m_frameTorque / m_moment;
+	m_angularVelocity += angularAccel * deltaSeconds;
+	m_rotationInRadians += m_angularVelocity * deltaSeconds;
 }
 
 void Rigidbody2D::DisablePhysics()
@@ -136,8 +163,11 @@ void Rigidbody2D::EnablePhysics()
 
 void Rigidbody2D::ApplyImpulse( Vec2 impulse, Vec2 point )
 {
-	UNUSED(point);
+	Vec2 rAP = point - m_collider->GetCentroid();
+	rAP.Rotate90Degrees();
+
 	m_velocity += impulse / m_mass;
+	m_angularVelocity += DotProduct2D( rAP, impulse ) / m_moment; 
 }
 
 void Rigidbody2D::ApplyDragForce()
@@ -150,6 +180,14 @@ void Rigidbody2D::ApplyDragForce()
 void Rigidbody2D::AddForce( Vec2 force )
 {
 	m_force += force;
+}
+
+Vec2 Rigidbody2D::GetImpactVelocity( Vec2 contact )
+{
+	// current velocity + angular Velocity * radius( dist between center of mass and contact);
+	Vec2 disp = contact - m_collider->GetCentroid();
+	disp.Rotate90Degrees();
+	return m_velocity + m_angularVelocity * disp;
 }
 
 Vec2 Rigidbody2D::GetVerletVelocity() const
