@@ -1,4 +1,5 @@
 MP2.A06 Friction
+Project name : MP2Asg
 
 ## Checklist
 - [x] Angular Update - Add members to `Rigidbody2D`
