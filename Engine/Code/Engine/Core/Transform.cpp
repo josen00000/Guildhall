@@ -16,6 +16,23 @@ Transform::Transform()
 	m_scale = Vec3::ONE;
 }
 
+Mat44 Transform::GetRotationMatrix() const
+{
+	Mat44 pitch		= Mat44();
+	Mat44 roll		= Mat44();
+	Mat44 yaw		= Mat44();
+	Mat44 rotation	= Mat44();
+
+	pitch.RotateXDegrees( m_rotationPRYDegrees.x );
+	roll.RotateZDegrees( m_rotationPRYDegrees.y );
+	yaw.RotateYDegrees( m_rotationPRYDegrees.z );
+
+	rotation = yaw;
+	rotation.Multiply( roll );
+	rotation.Multiply( pitch );
+	return rotation;
+}
+
 void Transform::SetPosition( Vec3 pos )
 {
 	m_pos = pos;
@@ -47,23 +64,15 @@ Mat44 Transform::ToMatrix() const
 {
 	// Calculate Transalation matrix times rotation matrix
 	Mat44 translation = Mat44();
-	Mat44 pitch = Mat44();
-	Mat44 roll = Mat44();
-	Mat44 yaw = Mat44();
 	Mat44 rotation = Mat44();
 	Mat44 scale = Mat44();
 	Mat44 model = Mat44();
 	
 	scale.ScaleNonUniform3D( m_scale );
-	pitch.RotateXDegrees( m_rotationPRYDegrees.x );
-	roll.RotateZDegrees( m_rotationPRYDegrees.y );
-	yaw.RotateYDegrees( m_rotationPRYDegrees.z );
 	translation.SetTranslation3D( m_pos );
 	
 	// calculate rotation matrix
-	rotation = yaw; 
-	rotation.Multiply( roll );
-	rotation.Multiply( pitch );
+	rotation = GetRotationMatrix();
 
 	model = translation;
 	model.Multiply( rotation );

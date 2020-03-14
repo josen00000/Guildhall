@@ -14,6 +14,7 @@ public:
 	Vec3 GetPosition() const { return m_pos; }
 	Vec3 GetRotationPRYDegrees() const { return m_rotationPRYDegrees; }
 	Vec3 GetScale() const { return m_scale; }
+	Mat44 GetRotationMatrix() const;
 
 	// Mutator
 	void SetPosition( Vec3 pos );

@@ -4,6 +4,7 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Math/Vec4.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -138,7 +139,6 @@ void Game::HandleCameraMovement()
 {
 	float coe = 1.0f;
 	Vec3 movement = Vec3::ZERO;
-	//Vec3 rotation = Vec3::ZERO;
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ){
 		coe = 2.0f;
 	}
@@ -165,12 +165,17 @@ void Game::HandleCameraMovement()
 		movement.z -= 1.0f * coe;
 	}
 
-	Vec3 cameraPos = m_gameCamera->GetPosition();
-	cameraPos += movement;
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
 	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 10;
-	m_gameCamera->SetPosition( cameraPos );
 	m_gameCamera->UpdateCameraRotation( rotation );
+	
+	Mat44 rotationMatrix = m_gameCamera->m_transform.GetRotationMatrix();
+	float temY = movement.y;
+	Vec3 cameraPos = m_gameCamera->GetPosition();
+	movement = rotationMatrix.TransformPosition3D( movement ); 
+	movement.y = temY;
+	cameraPos += movement;
+	m_gameCamera->SetPosition( cameraPos );
 	//g_theConsole->PrintString( Rgba8::RED, "mouse move is " + std::to_string( mouseMove.x ) + std::to_string( mouseMove.y ) );
 }
 

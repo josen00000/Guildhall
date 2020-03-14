@@ -1,5 +1,7 @@
 #include "Vec4.hpp"
 #include "Engine/Core/StringUtils.hpp"
+#include "Engine/Math/Vec3.hpp"
+
 
 Vec4::Vec4( float inputX, float inputY, float inputZ, float inputW )
 {
@@ -7,6 +9,15 @@ Vec4::Vec4( float inputX, float inputY, float inputZ, float inputW )
 	y = inputY;
 	z = inputZ;
 	w = inputW;
+}
+
+Vec4::Vec4( Vec3 XYZ, float w )
+	:x(XYZ.x)
+	,y(XYZ.y)
+	,z(XYZ.z)
+	,w(w)
+
+{
 }
 
 void Vec4::SetFormText( const char* text )
