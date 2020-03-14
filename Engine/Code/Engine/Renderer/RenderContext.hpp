@@ -90,7 +90,6 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	
-	void UpdateFrameTime( float deltaSeconds );
 	
 	void BeginCamera( Camera& camera);
 	void EndCamera();
@@ -98,22 +97,29 @@ public:
 
 
 	// IA
-	void UpdateLayoutIfNeeded();
+	void UpdateLayoutIfNeeded(); // private
 	
 	// Bind
 	void BindTexture( Texture* texture);
 	void BindSampler( const Sampler* sampler );
 	void BindShader( Shader* shader );
 	void BindShader( const char* fileName );
-
 	void BindVertexBuffer( VertexBuffer* vbo );
 	void BindIndexBuffer( IndexBuffer* ibo );
 	void BindUniformBuffer( uint slot, RenderBuffer* ubo ); // ubo - uniform buffer object
+	
+	// Set State	
+	void SetBlendMode( BlendMode blendMode );
+	void SetModelMatrix( Mat44 model );
+	void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
+	void DisableDepth();
+	bool CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass );
 
 	// Draw
 	void Draw( int numVertexes, int vertexOffset = 0 );
 	void DrawIndexed( int indexCount, int indexOffset = 0, int vertexOffset = 0 );
 	void DrawMesh( GPUMesh* mesh );
+
 	void DrawVertexVector( std::vector<Vertex_PCU>& vertices );
 	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
 	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
@@ -122,22 +128,15 @@ public:
 	void DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor );
 	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
 
-	// Render
-	Texture* GetSwapChainBackBuffer();
-
 	// Create
+	// Database( resource management )
+	Texture* GetSwapChainBackBuffer();
 	BitmapFont* CreateOrGetBitmapFontFromFile(const char* fontName, const char* fontFilePath);
 	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
 	Texture* CreateTextureFromColor( Rgba8 color );
 	Shader* GetOrCreateShader( char const* fileName );
 	void AddTexture( Texture* tex );
 
-	// Mutator	
-	void SetBlendMode( BlendMode blendMode );
-	void SetModelMatrix( Mat44 model );
-	void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
-	void DisableDepth();
-	bool CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass );
 
 private:
 	void			CreateBlendState();
@@ -154,6 +153,7 @@ public:
 	SwapChain*				m_swapChain	= nullptr;
 
 private:
+	void UpdateFrameTime( float deltaSeconds );
 	bool m_shaderHasChanged = false;
 	std::vector <Texture*> m_textureList;
 	std::map<std::string, Texture*>			m_loadedTextures;

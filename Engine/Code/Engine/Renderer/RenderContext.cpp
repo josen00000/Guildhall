@@ -36,6 +36,9 @@ void RenderContext::StartUp( Window* window )
 #if defined(RENDER_DEBUG)
 	flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif	
+	// Initial context
+	// Create resource( swapchain, sampler, shader ...)
+	// new function more readbility
 
 	// define swapchain
 	DXGI_SWAP_CHAIN_DESC swapchainDesc;
@@ -92,16 +95,17 @@ void RenderContext::UpdateFrameTime( float deltaSeconds )
 
 void RenderContext::BeginFrame(  )
 {
+	// update frame time here
 }
 
 void RenderContext::EndFrame()
 {
 	m_swapChain->Present();
-	m_shaderHasChanged = false;
 }
 
 void RenderContext::Shutdown()
 {
+	// add debug module
 	delete m_swapChain;
 	delete m_defaultSampler;
 	delete m_defaultShader;
@@ -148,6 +152,7 @@ void RenderContext::ClearTargetView( Texture* output, const Rgba8& clearColor )
 void RenderContext::BeginCamera( Camera& camera )
 {
 #if defined(RENDER_DEBUG)
+	// move it to my function ClearState();
 	m_context->ClearState();
 	m_lastBoundVBO = nullptr;
 	m_lastBoundIBO = nullptr;
@@ -175,13 +180,15 @@ void RenderContext::BeginCamera( Camera& camera )
 	m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 	m_context->RSSetViewports( 1, &viewport );
 
+	if( camera.UseDepth() ){} // two seperate ider with clear depth
+		//ID3D11DepthStencilView* dsv = nullptr;
+		//Texture* depthBuffer = camera.GetOrCreateDepthStencilTarget( this );
+		//TextureView* depthStencilView = depthBuffer->GetDepthStencilView();	
+		//dsv = depthStencilView->GetDSVHandle();
+		//m_context->OMSetRenderTargets( 1, &rtv, dsv ); // dsv always exist
+	
 	if( camera.IsClearDepth() ){
-		ID3D11DepthStencilView* dsv = nullptr;
-		Texture* depthBuffer = camera.GetOrCreateDepthStencilTarget( this );
-		TextureView* depthStencilView = depthBuffer->GetDepthStencilView();	
-		dsv = depthStencilView->GetDSVHandle();
 		m_context->ClearDepthStencilView( dsv, D3D11_CLEAR_DEPTH, 1.f, 0 );
-		m_context->OMSetRenderTargets( 1, &rtv, dsv ); // dsv always exist
 	}
 	else{
 		m_context->OMSetRenderTargets( 1, &rtv, NULL );
@@ -200,11 +207,13 @@ void RenderContext::BeginCamera( Camera& camera )
 	BindUniformBuffer( UBO_CAMERA_SLOT, cameraUBO );
 	BindUniformBuffer( UBO_MODEL_SLOT, m_modelUBO );
 
-	Texture* temp = CreateOrGetTextureFromFile( "Data/Fonts/SquirrelFixedFont.png" );
-	BindTexture( temp );
+	Bind default texture;
+	//Texture* temp = CreateOrGetTextureFromFile( "Data/Fonts/SquirrelFixedFont.png" );
+	//BindTexture( temp );
 	BindSampler( nullptr );
 
-	SetBlendMode( BlendMode::BLEND_ALPHA );
+	// default blend mode and set
+	SetBlendMode( BlendMode::BLEND_ALPHA ); // opaque is mostly use default blend mode, alpha for 2d
 	m_currentCamera = &camera;
 }
 
@@ -215,6 +224,7 @@ void RenderContext::AddTexture( Texture* tex )
 
 void RenderContext::UpdateLayoutIfNeeded()
 {
+	// happen in both draw
  	//if( m_previousLayout != m_currentLayout || m_shaderHasChanged ){
  	//	ID3D11InputLayout* layout = m_currentShader->GetOrCreateInputLayout( );
  	//	m_context->IASetInputLayout( layout );
@@ -225,7 +235,9 @@ void RenderContext::UpdateLayoutIfNeeded()
 
 void RenderContext::EndCamera()
 {
+	// clean up current state tracker
 	m_currentCamera = nullptr;
+	m_shaderHasChanged = false; // shader may chage with camera. put it here
 	DX_SAFE_RELEASE(m_currentDepthStencilState);
 }
 
@@ -238,6 +250,10 @@ void RenderContext::BindTexture( Texture* texture )
 	TextureView* shaderResourceView = tempTexture->GetOrCreateShaderResourceView();
 	ID3D11ShaderResourceView* srvHandle = shaderResourceView->GetSRVHandle();
 	m_context->PSSetShaderResources( 0, 1, &srvHandle ); // texture shader resource
+	// can bind in vertex shader 
+	// color lUT
+	// faster find colro in pixel shader
+	// fancy staff
 }
 
 void RenderContext::BindSampler( const Sampler* sampler )
@@ -253,15 +269,17 @@ void RenderContext::BindSampler( const Sampler* sampler )
 void RenderContext::BindShader( Shader* shader )
 {
 		// Assert_OR_DIE( isdrawing)  DO I have a camera;
+
 	if( shader == nullptr ) {
-		m_currentShader = m_defaultShader;
+		shader = m_defaultShader;
 	}
-	else {
-		m_currentShader = shader;
-	}
+	if( m_currentShader == shader ) { return; }
+	
+	m_currentShader = shader;
 
 	m_shaderHasChanged = true;
 	m_context->VSSetShader( m_currentShader->m_vertexStage.m_vs, nullptr, 0 );
+	// move out to render context.
 	m_context->RSSetState( m_currentShader->m_rasterState ); // use defaults
 	m_context->PSSetShader( m_currentShader->m_fragmentStage.m_fs, nullptr, 0 );
 }
@@ -274,10 +292,12 @@ void RenderContext::BindShader( const char* fileName )
 
 void RenderContext::BindVertexBuffer( VertexBuffer* vbo )
 {
+	// interlaced format
+	// using PCU array of struct
+	// if using struct of array
 	ID3D11Buffer* vboHandle = vbo->m_handle;
 	UINT stride = (UINT)vbo->m_elementByteSize;
-	UINT offset = 0;
-
+	UINT offset = 0; // not do here, for multiple vertexbuffer
 
 	if( m_lastBoundVBO != vboHandle ) {
 		m_context->IASetVertexBuffers( 0, 1, &vboHandle, &stride, &offset );
@@ -299,18 +319,19 @@ void RenderContext::BindIndexBuffer( IndexBuffer* ibo )
 
 void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 {
-	ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout(/* Vertex_PCU::LAYOUT*/); // Vertex 
-	m_context->IASetInputLayout( inputLayout );
+	//ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout(/* Vertex_PCU::LAYOUT*/); // Vertex 
+	//m_context->IASetInputLayout( inputLayout );
+	//Updateinputlayoutifchange();
 	m_context->Draw( numVertexes, vertexOffset ); // what is vertexOffset
 }
 
 void RenderContext::DrawIndexed( int indexCount, int indexOffset /*= 0*/, int vertexOffset /*= 0 */ )
 {
-	UNUSED(indexOffset);
-	UNUSED(vertexOffset);
+	// same to draw;
+	// update layout if change
 	ID3D11InputLayout* inputLayout = m_currentShader->GetOrCreateInputLayout();
 	m_context->IASetInputLayout( inputLayout );
-	m_context->DrawIndexed( (uint)indexCount, 0, 0 );
+	m_context->DrawIndexed( (uint)indexCount,indexOffset, vertexOffset );
 }
 
 void RenderContext::DrawMesh( GPUMesh* mesh )
@@ -318,8 +339,7 @@ void RenderContext::DrawMesh( GPUMesh* mesh )
 	// Get model matrix
 	mesh->UpdateVerticeBuffer( nullptr );
 	BindVertexBuffer( mesh->GetOrCreateVertexBuffer() );
-	//UpdateLayoutIfNeeded(); // unfinished
-	SetModelMatrix( mesh->GetModelMatrix() );
+	//SetModelMatrix( mesh->GetModelMatrix() );
 
 	bool hasIndices = mesh->GetIndexCount() > 0;
 	if( hasIndices ){
@@ -330,13 +350,10 @@ void RenderContext::DrawMesh( GPUMesh* mesh )
 	else{
 		Draw( mesh->GetVertexCount() );
 	}
-
 }
 
 Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )
 {
-	UNUSED( imageFilePath );
- 
  	int imageTexelSizeX = 0; // This will be filled in for us to indicate image width
  	int imageTexelSizeY = 0; // This will be filled in for us to indicate image height
  	int numComponents = 0; // This will be filled in for us to indicate how many color components the image had (e.g. 3=RGB=24bit, 4=RGBA=32bit)
@@ -372,13 +389,11 @@ Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )
 	ID3D11Texture2D* texHandle = nullptr;
 	// DirectX Creation
 	m_device->CreateTexture2D( &desc, &initialData, &texHandle );
-	
-	
-	
-	
 			
  	Texture* temTexture = new Texture( imageFilePath, this, texHandle );
- 	m_textureList.push_back( temTexture );					
+ 	//m_textureList.push_back( temTexture ); // better not push. in create or get
+ 											// for who only create the texture, need to handle the texture
+											// create or get, handle it in date resource
  	stbi_image_free( imageData );
  	return temTexture;
 }
@@ -391,12 +406,14 @@ Texture* RenderContext::CreateOrGetTextureFromFile( const char* imageFilePath )
 	}
 	else{
 		temTexture = CreateTextureFromFile(imageFilePath);
+		m_textureList.push_back( temTexture );
 		return temTexture;
 	}
 }
 
 Texture* RenderContext::CreateTextureFromColor( Rgba8 color )
 {
+	// get or create
 	D3D11_TEXTURE2D_DESC desc;
 	desc.Width				= 1;
 	desc.Height				= 1;
@@ -419,9 +436,8 @@ Texture* RenderContext::CreateTextureFromColor( Rgba8 color )
 	ID3D11Texture2D* texHandle = nullptr;
 	m_device->CreateTexture2D( &desc, &initialData, &texHandle );
 	Texture* tempTexture = new Texture( this, texHandle );
-	m_textureList.push_back( tempTexture );
+	m_textureList.push_back( tempTexture ); // not here, in get or create
 	return tempTexture;
-
 }
 
 BitmapFont* RenderContext::CreateOrGetBitmapFontFromFile( const char* fontName, const char* fontFilePath )
@@ -534,7 +550,6 @@ void RenderContext::CleanTextures()
 			m_textureList[texIndex] = nullptr;
 		}
 	}
-
 	m_texDefaultColor = nullptr;
 }
 
@@ -585,7 +600,7 @@ void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 
 void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 {
-	float temZ = -20.f;
+	float temZ = -20.f; // set to zero or use default
  	Vertex_PCU temAABB2[6] = {
  		// triangle2
  		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
@@ -695,7 +710,6 @@ void RenderContext::SetBlendMode( BlendMode blendMode )
 	default:
 		break;
 	}
-
 	m_context->OMSetBlendState( blendStateHandle, zeroes, (uint)~0 );
 }
 
@@ -725,11 +739,12 @@ void RenderContext::EnableDepth( DepthCompareFunc func, bool writeDepthOnPass )
 	dsDesc.DepthWriteMask	= writeDepthOnPass ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
 	dsDesc.DepthFunc		= (D3D11_COMPARISON_FUNC)func;
 	m_device->CreateDepthStencilState( &dsDesc, &m_currentDepthStencilState );
-	m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 ); // stencilRef what is this
+	m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 ); // stencilRef what is this: compare to value
 }	
 
 void RenderContext::DisableDepth()
 {
+	// isdrawing();
 	GUARANTEE_OR_DIE( m_currentCamera != nullptr, std::string( "current camera must not be empty." ) );
 
 	if( m_currentDepthStencilState != nullptr ) {
@@ -755,9 +770,6 @@ bool RenderContext::CheckDepthStencilState( DepthCompareFunc func, bool writeDep
 	if( dsDesc.DepthFunc != (D3D11_COMPARISON_FUNC)func ){
 		return false;
 	}
-
 	return true;
-	
-
 }
 
