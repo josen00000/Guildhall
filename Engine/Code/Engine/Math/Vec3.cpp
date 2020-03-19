@@ -32,7 +32,12 @@ Vec3::Vec3( const Vec2& copyFrom, float initialZ )
 {
 }
 
-
+Vec3::Vec3( float initialValue )
+	:x(initialValue)
+	,y(initialValue)
+	,z(initialValue)
+{
+}
 
 float Vec3::GetLength() const{
 	return sqrtf(x*x+y*y+z*z);
@@ -46,6 +51,23 @@ float Vec3::GetLengthSquared() const{
 float Vec3::GetLengthXYSquared() const{
 	return x*x+y*y;
 }
+
+float Vec3::GetThetaDegrees() const
+{
+	float theta = atan2f( z, x );
+	theta = ConvertRadiansToDegrees( theta );
+	return theta;
+}
+
+float Vec3::GetPhiDegrees() const
+{
+	float temY = y;
+	float temX = sqrtf( x * x + z * z );
+	float phi = atan2f( temY , temX );
+	phi = ConvertRadiansToDegrees( phi );
+	return phi;
+}
+
 float Vec3::GetAngleAboutZRadians() const{
 	return (atan2f(y,x));
 }

@@ -1,5 +1,6 @@
 #include "Game.hpp"
 #include "Game/App.hpp"
+#include "Game/CubeSphere.hpp"
 #include "Game/GameObject.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB3.hpp"
@@ -46,6 +47,7 @@ void Game::Shutdown()
 	delete m_cubeMesh;
 	delete m_sphereMesh;
 	delete m_tesMesh;
+	SELF_SAFE_RELEASE(m_cubeSphereMesh);
 
 	// clear game objects
 	for( int i = 0; i < m_sphereObjects.size(); i++ ){
@@ -166,7 +168,7 @@ void Game::HandleCameraMovement()
 	}
 
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
-	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 10;
+	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 15;
 	m_gameCamera->UpdateCameraRotation( rotation );
 	
 	Mat44 rotationMatrix = m_gameCamera->m_transform.GetRotationMatrix();
@@ -219,7 +221,6 @@ void Game::CheckIfNoClip()
 
 void Game::Render() const
 {
-	//m_world->Render(); past code
 	Rgba8 tempColor = Rgba8::GRAY;
 	m_gameCamera->m_clearColor = tempColor;
 	g_theRenderer->BeginCamera( *m_gameCamera );
@@ -231,8 +232,9 @@ void Game::Render() const
 	g_theRenderer->SetModelMatrix( m_cubeMesh->GetModelMatrix() );
 	g_theRenderer->DrawMesh( m_cubeMesh );
 
-	RenderSpheres();
-	RenderTesSpheres();
+	//RenderSpheres();
+	RenderCubeSphere();
+	//RenderTesSpheres();
 	g_theRenderer->EndCamera( );
 
 	
@@ -249,6 +251,11 @@ void Game::RenderTesSpheres() const
 {
 	m_tesselationObject->Render();
 	
+}
+
+void Game::RenderCubeSphere() const
+{
+	m_cubeSphereObject->Render();
 }
 
 void Game::RenderUI() const
@@ -276,6 +283,7 @@ void Game::CreateTestObjects()
 	m_cubeMesh->UpdateVerticesInCPU( vertices );
 	m_cubeMesh->UpdateIndicesInCPU( indices );
 
+	CreateCubeSphereObjects();
 	CreateSphereObjects();
 
 	// tesselation object
@@ -307,5 +315,22 @@ void Game::CreateSphereObjects()
 		meshObjects->m_mesh = m_sphereMesh;
 		m_sphereObjects.push_back( meshObjects );
 	}
+}
+
+void Game::CreateCubeSphereObjects()
+{
+	AABB3 cube = AABB3( Vec3::ZERO, Vec3::ONE );
+	std::vector<Vertex_PCU> vertices;
+	std::vector<uint> indices;
+	AppendIndexedVertsForCubeSphere3D( vertices, indices, cube, 1 );
+	m_cubeSphereMesh = new GPUMesh();
+	m_cubeSphereMesh->m_owner = g_theRenderer;
+	m_cubeSphereMesh->UpdateVerticesInCPU( vertices );
+	m_cubeSphereMesh->UpdateIndicesInCPU( indices );
+
+	m_cubeSphereObject = new GameObject();
+	m_cubeSphereObject->m_mesh = m_cubeSphereMesh;
+
+
 }
 

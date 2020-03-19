@@ -13,6 +13,7 @@ public:
 	Vec3(){}
 	~Vec3(){}
 	Vec3(const Vec3&copyFrom);
+	explicit Vec3( float initialValue );
 	explicit Vec3(float initialX,float initialY,float initialZ);
 	Vec3(const Vec2& copyFromVec2,float initialZ=0 );
 	// Accessors(const methods)
@@ -20,6 +21,8 @@ public:
 	float GetLengthXY() const;
 	float GetLengthSquared() const;
 	float GetLengthXYSquared() const;
+	float GetThetaDegrees() const;
+	float GetPhiDegrees() const;
 	float GetAngleAboutZRadians() const;
 	float GetAngleAboutZDegrees() const;
 	const Vec3 GetRotatedAboutZRadians( float deltaRadians ) const;

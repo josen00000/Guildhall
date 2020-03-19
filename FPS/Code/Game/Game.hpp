@@ -6,6 +6,7 @@
 
 class Camera;
 class GameObject;
+class CubeSphere;
 class GPUMesh;
 class InputSystem;
 class RenderContext;
@@ -62,8 +63,10 @@ private:
 	void UpdateMeshes( float deltaSeconds );
 	void UpdateSphereMeshes( float deltaSeconds );
 	void CreateSphereObjects();
+	void CreateCubeSphereObjects();
 	void RenderSpheres() const;
 	void RenderTesSpheres() const;
+	void RenderCubeSphere() const;
 
 public:
 	bool m_developMode		= false;
@@ -78,11 +81,13 @@ public:
 	Camera* m_UICamera		= nullptr;
 	RandomNumberGenerator* m_rng = nullptr;
 	
-	GPUMesh* m_cubeMesh		= nullptr;
-	GPUMesh* m_sphereMesh	= nullptr;
-	GPUMesh* m_tesMesh		= nullptr;
+	GPUMesh* m_cubeMesh			= nullptr;
+	GPUMesh* m_sphereMesh		= nullptr;
+	GPUMesh* m_tesMesh			= nullptr;
+	GPUMesh* m_cubeSphereMesh	= nullptr;
 
 	GameObject* m_tesselationObject = nullptr;
+	GameObject* m_cubeSphereObject = nullptr;
 
 	std::vector<Vertex_PCU> m_vertices;
 	std::vector<Vertex_PCU> m_UIVertices;

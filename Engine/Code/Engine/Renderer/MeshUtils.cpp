@@ -68,7 +68,7 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 	Vertex_PCU bottomLeftup		= Vertex_PCU( frontLeftdownPos, tintColor, Vec2( 0.f, 1.f ) );
 	Vertex_PCU bottomRightdown	= Vertex_PCU( backLeftdownPos, tintColor, Vec2( 1.f, 0.f ) );
 
-	vertices.resize( sizeof(Vertex_PCU)* 36 );
+	vertices.reserve( 36 );
 	// front triangles
 	vertices.push_back( frontLeftdown );
 	vertices.push_back( frontRightup );
@@ -239,6 +239,146 @@ void AppendVertsForSphere3D( std::vector<Vertex_PCU>& vertices, Vec3 center, flo
 
 }
 
+void AppendVertsForCubeSPhere3D( std::vector<Vertex_PCU>& vertices, const AABB3& cube, int level )
+{
+	// TODO unfinished
+	// assume cube be cube.
+	GUARANTEE_OR_DIE( cube.IsCube(), "input box is not a cube!" );
+	
+	std::vector<Vertex_PCU> cubeVertices;
+	AppendVertsForAABB3D( cubeVertices, cube, Rgba8::WHITE );
+
+	float halfSideLength = cube.GetSideLength() / 2;
+	Vec3 offset =  Vec3( halfSideLength );
+
+	int verticesNumber = 36 * ( level * level );
+	vertices.reserve( verticesNumber );
+	
+	// front, back, left, right
+	for( int faceIndex = 0; faceIndex < 4; faceIndex++ ) {
+		Vertex_PCU leftDown		= cubeVertices[faceIndex * 6];
+		Vertex_PCU rightUp		= cubeVertices[(faceIndex * 6) + 1];
+		Vertex_PCU rightdown	= cubeVertices[(faceIndex * 6) + 2];
+		Vertex_PCU leftUp		= cubeVertices[(faceIndex * 6) + 5];
+
+		leftDown.m_pos	-= offset;
+		rightUp.m_pos	-= offset;
+		rightdown.m_pos -= offset;
+		leftUp.m_pos	-= offset;
+
+		// pos
+		float leftDownTheta	= leftDown.m_pos.GetThetaDegrees();
+		float rightUpTheta	= rightUp.m_pos.GetThetaDegrees();
+		float leftDownPhi	= leftDown.m_pos.GetPhiDegrees();
+		float rightUpPhi	= rightUp.m_pos.GetPhiDegrees();
+
+		float deltaTheta	= (rightUpTheta - leftDownTheta) / level;
+		float deltaPhi		= (rightUpPhi - leftDownPhi) / level;
+
+		// uv
+		float deltaU	= ( rightUp.m_uvTexCoords.x - leftDown.m_uvTexCoords.x ) / level;
+		float deltaV	= ( rightUp.m_uvTexCoords.y - leftDown.m_uvTexCoords.y ) / level;
+
+		float diagonalLength = cube.GetDiagonalsLength();
+		diagonalLength *= 0.5f;
+
+		for( int i = 0; i < level; i++ ) {
+			float phi	= leftDownPhi + deltaPhi * i;
+			float v		= leftDown.m_uvTexCoords.y + deltaV * i;
+			for( int j = 0; j < level; j++ ) {
+				float theta = leftDownTheta + deltaTheta * i;
+				float u		= leftDown.m_uvTexCoords.x + deltaU * i;
+
+				Vec3 tinyLeftDownPos	= Vec3::MakeFromPolarDegrees( theta, phi, diagonalLength ); 
+				Vec3 tinyRightUpPos		= Vec3::MakeFromPolarDegrees( ( theta + deltaTheta ), ( phi + deltaPhi ), diagonalLength );
+				Vec3 tinyLeftUpPos		= Vec3::MakeFromPolarDegrees( theta, ( phi + deltaPhi ), diagonalLength );
+				Vec3 tinyRightDownPos	= Vec3::MakeFromPolarDegrees( ( theta + deltaTheta ), phi, diagonalLength );
+
+				Vec2 tinyLeftDownUV		= Vec2( u, v );
+				Vec2 tinyRightUpUV		= Vec2( ( u + deltaU ), ( v + deltaV ) );
+				Vec2 tinyLeftUpUV		= Vec2( u, ( v + deltaV ) );
+				Vec2 tinyRightDownUV	= Vec2( ( u + deltaU ), v );
+
+				Vertex_PCU tinyLeftDown = Vertex_PCU( tinyLeftDownPos, Rgba8::WHITE, tinyLeftDownUV );
+				Vertex_PCU tinyRightUp	= Vertex_PCU( tinyRightUpPos, Rgba8::WHITE, tinyRightUpUV );
+				Vertex_PCU tinyLeftUp	= Vertex_PCU( tinyLeftUpPos, Rgba8::WHITE, tinyLeftUpUV );
+				Vertex_PCU tinyRightDown	= Vertex_PCU( tinyRightDownPos, Rgba8::WHITE, tinyRightDownUV );
+
+				vertices.push_back( tinyLeftDown );
+				vertices.push_back( tinyRightUp );
+				vertices.push_back( tinyLeftUp );
+
+				vertices.push_back( tinyLeftDown );
+				vertices.push_back( tinyRightUp );
+				vertices.push_back( tinyRightDown );
+			}
+
+		}
+	}
+
+	// top and down face
+	for( int faceIndex = 4; faceIndex < 6; faceIndex++ ) {
+		Vertex_PCU leftDown		= cubeVertices[faceIndex * 6];
+		Vertex_PCU rightUp		= cubeVertices[(faceIndex * 6) + 1];
+		Vertex_PCU rightdown	= cubeVertices[(faceIndex * 6) + 2];
+		Vertex_PCU leftUp		= cubeVertices[(faceIndex * 6) + 5];
+
+		leftDown.m_pos	-= offset;
+		rightUp.m_pos	-= offset;
+		rightdown.m_pos -= offset;
+		leftUp.m_pos	-= offset;
+
+		// pos
+		float leftDownTheta	= leftDown.m_pos.GetThetaDegrees();
+		float rightUpTheta	= rightUp.m_pos.GetThetaDegrees();
+		float leftDownPhi	= leftDown.m_pos.GetPhiDegrees();
+		float rightUpPhi	= rightUp.m_pos.GetPhiDegrees();
+
+		float deltaTheta	= (rightUpTheta - leftDownTheta) / level;
+		float deltaPhi		= (rightUpPhi - leftDownPhi) / level;
+
+		// uv
+		float deltaU	= (rightUp.m_uvTexCoords.x - leftDown.m_uvTexCoords.x) / level;
+		float deltaV	= (rightUp.m_uvTexCoords.y - leftDown.m_uvTexCoords.y) / level;
+
+		float diagonalLength = cube.GetDiagonalsLength();
+		diagonalLength *= 0.5f;
+
+		for( int i = 0; i < level; i++ ) {
+			float phi	= leftDownPhi + deltaPhi * i;
+			float v		= leftDown.m_uvTexCoords.y + deltaV * i;
+			for( int j = 0; j < level; j++ ) {
+				float theta = leftDownTheta + deltaTheta * i;
+				float u		= leftDown.m_uvTexCoords.x + deltaU * i;
+
+				Vec3 tinyLeftDownPos	= Vec3::MakeFromPolarDegrees( theta, phi, diagonalLength );
+				Vec3 tinyRightUpPos		= Vec3::MakeFromPolarDegrees( (theta + deltaTheta), (phi + deltaPhi), diagonalLength );
+				Vec3 tinyLeftUpPos		= Vec3::MakeFromPolarDegrees( theta, (phi + deltaPhi), diagonalLength );
+				Vec3 tinyRightDownPos	= Vec3::MakeFromPolarDegrees( (theta + deltaTheta), phi, diagonalLength );
+
+				Vec2 tinyLeftDownUV		= Vec2( u, v );
+				Vec2 tinyRightUpUV		= Vec2( (u + deltaU), (v + deltaV) );
+				Vec2 tinyLeftUpUV		= Vec2( u, (v + deltaV) );
+				Vec2 tinyRightDownUV	= Vec2( (u + deltaU), v );
+
+				Vertex_PCU tinyLeftDown = Vertex_PCU( tinyLeftDownPos, Rgba8::WHITE, tinyLeftDownUV );
+				Vertex_PCU tinyRightUp	= Vertex_PCU( tinyRightUpPos, Rgba8::WHITE, tinyRightUpUV );
+				Vertex_PCU tinyLeftUp	= Vertex_PCU( tinyLeftUpPos, Rgba8::WHITE, tinyLeftUpUV );
+				Vertex_PCU tinyRightDown	= Vertex_PCU( tinyRightDownPos, Rgba8::WHITE, tinyRightDownUV );
+
+				vertices.push_back( tinyLeftDown );
+				vertices.push_back( tinyRightUp );
+				vertices.push_back( tinyLeftUp );
+
+				vertices.push_back( tinyLeftDown );
+				vertices.push_back( tinyRightUp );
+				vertices.push_back( tinyRightDown );
+			}
+
+		}
+	}
+}
+
 void AppendIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index, const std::vector<Vertex_PCU> source )
 {
 	for( int sIndex = 0; sIndex < source.size(); sIndex++ ){
@@ -272,6 +412,13 @@ void AppendIndexedVertsForAABB3D( std::vector<Vertex_PCU>& vertices, std::vector
 {
 	std::vector<Vertex_PCU>verticesNotIndexed;
 	AppendVertsForAABB3D( verticesNotIndexed, box, tintColor );
+	AppendIndexedVerts( vertices, index, verticesNotIndexed );
+}
+
+void AppendIndexedVertsForCubeSphere3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, const AABB3& cube, int level )
+{
+	std::vector<Vertex_PCU> verticesNotIndexed;
+	AppendVertsForCubeSPhere3D( verticesNotIndexed, cube, level );
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 
