@@ -13,9 +13,6 @@
     <Filter Include="Input">
       <UniqueIdentifier>{2eaa82f2-f67a-40f9-b8b7-fe8b5f388013}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Physic">
-      <UniqueIdentifier>{639b1882-a310-41ed-af8d-a92744d05b92}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Audio">
       <UniqueIdentifier>{2ca48fab-d5ea-472f-98c8-a646a5353377}</UniqueIdentifier>
     </Filter>
@@ -40,12 +37,15 @@
     <Filter Include="Core\Time">
       <UniqueIdentifier>{018ab54c-492e-4746-ace1-a6656c2e6f72}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\DebugRenderSystem">
+      <UniqueIdentifier>{e60dd3c3-4439-4d79-a7b3-3787d363b5d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="physics">
+      <UniqueIdentifier>{3f0da5f4-0e33-463e-bc33-c68f606484e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Camera.cpp">
-      <Filter>Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\RenderContext.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Core\Rgba8.cpp">
@@ -78,9 +78,6 @@
     <ClCompile Include="Core\Image.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Physics\RaycastResult.cpp">
-      <Filter>Physic</Filter>
-    </ClCompile>
     <ClCompile Include="Audio\AudioSystem.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
@@ -104,18 +101,6 @@
     </ClCompile>
     <ClCompile Include="Renderer\MeshUtils.cpp">
       <Filter>Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Physics\Physics2D.cpp">
-      <Filter>Physic</Filter>
-    </ClCompile>
-    <ClCompile Include="Physics\RigidBody2D.cpp">
-      <Filter>Physic</Filter>
-    </ClCompile>
-    <ClCompile Include="Physics\Collider2D.cpp">
-      <Filter>Physic</Filter>
-    </ClCompile>
-    <ClCompile Include="Physics\DiscCollider2D.cpp">
-      <Filter>Physic</Filter>
     </ClCompile>
     <ClCompile Include="Input\MouseController.cpp">
       <Filter>Input</Filter>
@@ -174,15 +159,6 @@
     <ClCompile Include="Math\Plane2.cpp">
       <Filter>Math\shape</Filter>
     </ClCompile>
-    <ClCompile Include="Physics\PolygonCollider2D.cpp">
-      <Filter>Physic</Filter>
-    </ClCompile>
-    <ClCompile Include="Physics\Collision2D.cpp">
-      <Filter>Physic</Filter>
-    </ClCompile>
-    <ClCompile Include="Physics\PhysicsMaterial.cpp">
-      <Filter>Physic</Filter>
-    </ClCompile>
     <ClCompile Include="Platform\Window.cpp">
       <Filter>Platform</Filter>
     </ClCompile>
@@ -225,9 +201,6 @@
     <ClCompile Include="Renderer\TextureView.cpp">
       <Filter>Renderer\D3DPipeLine</Filter>
     </ClCompile>
-    <ClCompile Include="Math\AABB3.cpp">
-      <Filter>Math</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer\Texture.cpp">
       <Filter>Renderer\D3DPipeLine</Filter>
     </ClCompile>
@@ -240,12 +213,54 @@
     <ClCompile Include="Core\Time\Timer.cpp">
       <Filter>Core\Time</Filter>
     </ClCompile>
+    <ClCompile Include="Math\AABB3.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\RenderContext.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Cylinder3.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\DebugRender.cpp">
+      <Filter>Renderer\DebugRenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\DebugRenderObject.cpp">
+      <Filter>Renderer\DebugRenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\Cone3.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\OBB3.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\Collider2D.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\Collision2D.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\DiscCollider2D.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\Physics2D.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\PhysicsMaterial.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\PolygonCollider2D.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\RaycastResult.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\RigidBody2D.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
-      <Filter>Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\RenderContext.hpp">
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Core\Rgba8.hpp">
@@ -277,9 +292,6 @@
     </ClInclude>
     <ClInclude Include="Input\KeyBoardController.hpp">
       <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics\RaycastResult.hpp">
-      <Filter>Physic</Filter>
     </ClInclude>
     <ClInclude Include="Audio\AudioSystem.hpp">
       <Filter>Audio</Filter>
@@ -328,18 +340,6 @@
     </ClInclude>
     <ClInclude Include="Renderer\MeshUtils.hpp">
       <Filter>Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics\Physics2D.hpp">
-      <Filter>Physic</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics\RigidBody2D.hpp">
-      <Filter>Physic</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics\Collider2D.hpp">
-      <Filter>Physic</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics\DiscCollider2D.hpp">
-      <Filter>Physic</Filter>
     </ClInclude>
     <ClInclude Include="Input\MouseController.hpp">
       <Filter>Input</Filter>
@@ -398,15 +398,6 @@
     <ClInclude Include="Math\Plane2.hpp">
       <Filter>Math\shape</Filter>
     </ClInclude>
-    <ClInclude Include="Physics\PolygonCollider2D.hpp">
-      <Filter>Physic</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics\Collision2D.hpp">
-      <Filter>Physic</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics\PhysicsMaterial.hpp">
-      <Filter>Physic</Filter>
-    </ClInclude>
     <ClInclude Include="Platform\Window.hpp">
       <Filter>Platform</Filter>
     </ClInclude>
@@ -455,9 +446,6 @@
     <ClInclude Include="Renderer\TextureView.hpp">
       <Filter>Renderer\D3DPipeLine</Filter>
     </ClInclude>
-    <ClInclude Include="Math\AABB3.hpp">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer\Texture.hpp">
       <Filter>Renderer\D3DPipeLine</Filter>
     </ClInclude>
@@ -469,6 +457,51 @@
     </ClInclude>
     <ClInclude Include="Core\Time\Timer.hpp">
       <Filter>Core\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\AABB3.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\RenderContext.hpp">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Cylinder3.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\DebugRender.hpp">
+      <Filter>Renderer\DebugRenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\DebugRenderObject.hpp">
+      <Filter>Renderer\DebugRenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Cone3.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\OBB3.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\Collider2D.hpp">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\Collision2D.hpp">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\DiscCollider2D.hpp">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\Physics2D.hpp">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\PhysicsMaterial.hpp">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\PolygonCollider2D.hpp">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\RaycastResult.hpp">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\RigidBody2D.hpp">
+      <Filter>physics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

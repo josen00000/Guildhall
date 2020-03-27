@@ -80,7 +80,7 @@ By the end of this, we will have a 5-DoF (Degree of Freedom) camera, allowing mo
     - [x] `RenderContext` now automatcially creates a depth buffer during init matching the swap chain's size
     - [x] `RenderContext::GetDefaultBackbuffer` implemented to return this
     - [x] `RenderContext::BeginCamera`, now binds the camera's back buffer as well.
-        - [ ] **IMPORANT:  Do not bind the default one automatically if the camera doesn't have one set.  There are reasons a camera may not want a depth buffer!**
+        - [x] **IMPORANT:  Do not bind the default one automatically if the camera doesn't have one set.  There are reasons a camera may not want a depth buffer!**
     - [x] Camera's clear options should now store off the `depth` and `stencil` clear values.
     - [x] If camera has a depth buffer and says it should clear depth, also clear the depth buffer.
         - Use `ID3D11DeviceConext::ClearDepthStencilView` to clear if camera says to.
@@ -94,7 +94,7 @@ By the end of this, we will have a 5-DoF (Degree of Freedom) camera, allowing mo
 ## Extras
 - [ ] *X04.10: 03%*: Mouse input, show, and clip options should use a stack to track state `InputSystem::PushMouseOptions`, see notes...
 - [ ] *X04.11: 02%*: **Requires X04.10** - Mouse options are disabled when window loses focus, and re-applied when gaining focus.
-- [ ] *X04.15: 04%*: CPU Mesh Subdivide (tesselation)
+- [x] *X04.15: 04%*: CPU Mesh Subdivide (tesselation)
 - [ ] *X04.20: 02%*: Cube Sphere Generation
 - [ ] *X04.30: 04%*: IcoSphere Generation (No UV)
 - [ ] *X04.31: 02%*: **Requiers X04.30** - IcoSphere UVs (Can use spherical projection - there's no clean seam so  will require a wrapping sampler to wo -k)

@@ -47,13 +47,11 @@ public:
 	Shader( RenderContext* owner );
 	~Shader();
 	bool CreateFromFile( std::string const& fileName );
-	void CreateRasterState();
 	ID3D11InputLayout* GetOrCreateInputLayout();
 	DXGI_FORMAT TransformToD3DDataFormat( BufferFormatType type );
 public:
 	RenderContext*	m_owner	= nullptr;
 	ShaderStage m_vertexStage;
 	ShaderStage m_fragmentStage;
-	ID3D11RasterizerState* m_rasterState = nullptr;
 	ID3D11InputLayout* m_inputLayout = nullptr;
 };

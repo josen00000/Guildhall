@@ -1,4 +1,7 @@
 #pragma once
+
+struct Vec3;
+
 struct Vec4
 {
 public:
@@ -9,6 +12,7 @@ public:
 
 	Vec4(){}
 	~Vec4(){}
+	Vec4( Vec3 XYZ, float w );
 	Vec4(float inputX, float inputY, float inputZ, float inputW  );
 
 	//Mutators

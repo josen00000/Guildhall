@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include<Engine/Math/MathUtils.hpp>
+#include "Engine/Math/MathUtils.hpp"
 
 struct Vec3 {
 public:
@@ -13,13 +13,17 @@ public:
 	Vec3(){}
 	~Vec3(){}
 	Vec3(const Vec3&copyFrom);
-	explicit Vec3(float initialX,float initialY,float initialZ);
-	Vec3(const Vec2& copyFromVec2,float initialZ=0 );
+	explicit Vec3( float initialValue );
+	explicit Vec3( float initialX, float initialY, float initialZ );
+	Vec3( const Vec2& copyFromVec2, float initialZ = 0 );
+
 	// Accessors(const methods)
 	float GetLength() const;
 	float GetLengthXY() const;
 	float GetLengthSquared() const;
 	float GetLengthXYSquared() const;
+	float GetThetaDegrees() const;
+	float GetPhiDegrees() const;
 	float GetAngleAboutZRadians() const;
 	float GetAngleAboutZDegrees() const;
 	const Vec3 GetRotatedAboutZRadians( float deltaRadians ) const;
@@ -27,7 +31,10 @@ public:
 	const Vec3 GetClamped( float maxLength )const;
 	const Vec3 GetNormalized() const;
 
-	void SetText( const char* text);
+	// Mutator
+	void Normalize();
+
+	void SetFromText( const char* text);
 
 	static const Vec3 MakeFromPolarDegrees( float theta, float phi, float length=1.f );
 

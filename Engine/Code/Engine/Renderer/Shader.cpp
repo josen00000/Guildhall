@@ -150,12 +150,10 @@ size_t ShaderStage::GetByteCodeLength() const
 Shader::Shader( RenderContext* owner )
 	:m_owner(owner)
 {
-	CreateRasterState();
 }
 
 Shader::~Shader()
 {
-	DX_SAFE_RELEASE(m_rasterState);
 	DX_SAFE_RELEASE(m_inputLayout);
 	m_owner = nullptr;
 }
@@ -173,25 +171,6 @@ bool Shader::CreateFromFile( std::string const& fileName )
 
 	delete[] source;
 	return m_vertexStage.IsValid() && m_fragmentStage.IsValid();
-}
-
-void Shader::CreateRasterState()
-{
-	D3D11_RASTERIZER_DESC desc;
-	desc.FillMode				= D3D11_FILL_SOLID;
-	desc.CullMode				= D3D11_CULL_NONE;
-	desc.FrontCounterClockwise	= TRUE;
-	desc.DepthBias				= 0U;
-	desc.DepthBiasClamp			= 0.0f;
-	desc.SlopeScaledDepthBias	= 0.0f;
-	desc.DepthClipEnable		= TRUE;
-	desc.ScissorEnable			= FALSE;
-	desc.MultisampleEnable		= FALSE;
-	desc.AntialiasedLineEnable	= FALSE;
-
-	ID3D11Device* device = m_owner->m_device;
-	device->CreateRasterizerState( &desc, &m_rasterState );
-
 }
 
 ID3D11InputLayout* Shader::GetOrCreateInputLayout()

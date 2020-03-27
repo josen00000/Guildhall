@@ -1,7 +1,7 @@
 #pragma once
+#include "Engine/Math/Vec3.hpp"
 
 struct Vec2;
-struct Vec3;
 struct Vec4;
 
 
@@ -86,6 +86,7 @@ public:
 	static const Mat44		CreateNonUniformScaleXY( const Vec2& scaleFactorsXY);
 	static const Mat44		CreateUniformScale3D( float uniformScale3D);
 	static const Mat44		CreateNonUniformScale3D( const Vec3& scaleFactorsXYZ);
+	static Mat44 GetLookAtMatrix( Vec3 pos, Vec3 target, Vec3 worldUp= Vec3( 0.f, 1.f, 0.f ) );		
 
 	// Transpose and Invert
 	void TransposeMatrix();

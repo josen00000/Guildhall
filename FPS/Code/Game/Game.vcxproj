@@ -198,12 +198,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="CubeSphere.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Main_Windows.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp" />
+    <ClInclude Include="CubeSphere.hpp" />
     <ClInclude Include="EngineBuildPreferences.hpp" />
+    <ClInclude Include="GameObject.hpp" />
     <ClInclude Include="Game.hpp" />
     <ClInclude Include="GameCommon.hpp" />
   </ItemGroup>

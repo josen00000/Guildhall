@@ -177,6 +177,20 @@ float CrossProduct2D( const Vec2& commonPoint, const Vec2& point1, const Vec2& p
 	return CrossProduct2D( a, b );
 }
 
+Vec3 CrossProduct3D( const Vec3& a, const Vec3& b )
+{
+	Vec3 i = Vec3( 1.f, 0.f, 0.f );
+	Vec3 j = Vec3( 0.f, 1.f, 0.f );
+	Vec3 k = Vec3( 0.f, 0.f, 1.f );
+
+	float detI = ( a.y * b.z ) - ( a.z * b.y );
+	float detJ = ( a.x * b.z ) - ( a.z * b.x );
+	float detK = ( a.x * b.y ) - ( a.y * b.x );
+
+	Vec3 result = ( detI * i ) - ( detJ * j ) + ( detK * k );
+	return result;
+}
+
 //
 //basic 2D & 3D utilities
 //
@@ -734,6 +748,16 @@ bool IsVec2MostlyEqual( Vec2 a, Vec2 b, float epsilon/*=0.001f */ )
 		return true;
 	}
 	else{
+		return false;
+	}
+}
+
+bool IsVec3MostlyEqual( Vec3 a, Vec3 b, float epsilon/*=0.001f */ )
+{
+	if( IsFloatMostlyEqual( a.x, b.x, epsilon ) && IsFloatMostlyEqual( a.y, b.y, epsilon ) && IsFloatMostlyEqual( a.z, b.z, epsilon ) ) {
+		return true;
+	}
+	else {
 		return false;
 	}
 }

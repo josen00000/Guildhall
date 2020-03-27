@@ -6,6 +6,7 @@
 #include "Engine/Math/Mat44.hpp"
 
 class BitmapFont;
+class Clock;
 class Camera;
 class GPUMesh;
 class IndexBuffer;
@@ -18,12 +19,16 @@ class VertexBuffer;
 class Window;
 
 struct AABB2;
+struct D3D11_RASTERIZER_DESC;
 struct ID3D11BlendState;
 struct ID3D11Buffer;
 struct ID3D11DepthStencilState;
 struct ID3D11Device;
 struct ID3D11DeviceContext;
+struct ID3D11InputLayout;
+struct ID3D11RasterizerState;
 struct LineSegment2;
+struct Vec4;
 
 typedef std::map<std::string, Shader*>::iterator ShaderMapIterator;
 
@@ -38,7 +43,25 @@ enum BlendMode
 enum BufferSlot {
 	UBO_FRAME_SLOT	= 0,
 	UBO_CAMERA_SLOT,
-	UBO_MODEL_SLOT
+	UBO_MODEL_SLOT,
+	UBO_TINT_SLOT
+};
+
+// raster state
+enum RasterCullMode {
+	RASTER_CULL_NONE,
+	RASTER_CULL_FRONT,
+	RASTER_CULL_BACK,
+};
+
+enum RasterFillMode {
+	RASTER_FILL_WIREFRAME,
+	RASTER_FILL_SOLID,
+};
+
+enum RasterWindOrder {
+	FRONT_CLOCKWISE,
+	FRONT_COUNTER_CLOCKWISE
 };
 
 // 	D3D11_COMPARISON_NEVER	= 1,
@@ -78,6 +101,13 @@ struct camera_ortho_t {
 	Mat44 view;
 };
 
+struct tint_color {
+	float r;
+	float g;
+	float b;
+	float a;
+};
+
 class RenderContext{
 public :
 	RenderContext(){}
@@ -90,20 +120,18 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	
-	
-	void BeginCamera( Camera& camera);
+	void BeginCamera( Camera* camera);
 	void EndCamera();
+
+	void ClearState();
 	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 
-
-	// IA
-	void UpdateLayoutIfNeeded(); // private
-	
 	// Bind
 	void BindTexture( Texture* texture);
 	void BindSampler( const Sampler* sampler );
 	void BindShader( Shader* shader );
 	void BindShader( const char* fileName );
+	void BindRasterState();
 	void BindVertexBuffer( VertexBuffer* vbo );
 	void BindIndexBuffer( IndexBuffer* ibo );
 	void BindUniformBuffer( uint slot, RenderBuffer* ubo ); // ubo - uniform buffer object
@@ -111,9 +139,17 @@ public:
 	// Set State	
 	void SetBlendMode( BlendMode blendMode );
 	void SetModelMatrix( Mat44 model );
+	void SetTintColor( Vec4 color );
+	void SetTintColor( Rgba8 color );
 	void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
 	void DisableDepth();
 	bool CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass );
+
+	// raster state
+	
+	void SetCullMode( RasterCullMode mode );
+	void SetFillMode( RasterFillMode mode );
+	void SetFrontFaceWindOrder( RasterWindOrder order );
 
 	// Draw
 	void Draw( int numVertexes, int vertexOffset = 0 );
@@ -127,19 +163,34 @@ public:
 	void DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor );
 	void DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor );
 	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
-
-	// Create
+	
 	// Database( resource management )
-	Texture* GetSwapChainBackBuffer();
-	BitmapFont* CreateOrGetBitmapFontFromFile(const char* fontName, const char* fontFilePath);
-	Texture* CreateOrGetTextureFromFile(const char* imageFilePath);
+	BitmapFont* CreateOrGetBitmapFontFromFile( const char* fontName, const char* fontFilePath );
+	Texture* CreateOrGetTextureFromFile( const char* imageFilePath );
 	Texture* CreateTextureFromColor( Rgba8 color );
-	Shader* GetOrCreateShader( char const* fileName );
+	Texture* GetSwapChainBackBuffer();
 	void AddTexture( Texture* tex );
 
+	Shader* GetOrCreateShader( char const* fileName );
+	SwapChain* CreateSwapChain( Window* window, uint flags );
+	void createRasterState();
+
+	// end 
+	void Prensent();
 
 private:
-	void			CreateBlendState();
+	void	UpdateLayoutIfNeeded(); 
+	void	UpdateFrameTime( float deltaSeconds );
+	void	CreateBlendState();
+
+	
+
+
+	// begin camera
+	void BeginCameraViewport( IntVec2 viewPortSize );
+	void BeginCameraRTVAndViewport( Camera* camera );
+
+
 	BitmapFont*		CheckBitmapFontExist( const char* fontName ) const;
 	BitmapFont*		CreateBitmapFontFromFile(const char* fontName, const char* fontFilePath);
 	Texture*		CreateTextureFromFile(const char* imageFilePath);
@@ -147,31 +198,39 @@ private:
 	void			CleanTextures();
 	void			CleanShaders();
 
+	void	CreateDefaultRasterStateDesc();
+
 public:
 	ID3D11DeviceContext*	m_context	= nullptr; // how we issue command
 	ID3D11Device*			m_device	= nullptr; // reference to gpu
 	SwapChain*				m_swapChain	= nullptr;
 
+	Clock*					m_clock = nullptr;
+
+
 private:
-	void UpdateFrameTime( float deltaSeconds );
 	bool m_shaderHasChanged = false;
 	std::vector <Texture*> m_textureList;
 	std::map<std::string, Texture*>			m_loadedTextures;
 	std::map<std::string, BitmapFont*>		m_loadedFonts;
-	std::map<std::string, Shader*> m_shaders;
+	std::map<std::string, Shader*>			m_shaders;
 
-	Sampler*	m_defaultSampler = nullptr;
+	// default
+	Camera*		m_currentCamera		= nullptr;
+	Shader*		m_currentShader		= nullptr;
+	Shader*		m_defaultShader		= nullptr;
+	Sampler*	m_defaultSampler	= nullptr;
 
+	ID3D11InputLayout* m_previousLayout = nullptr;
+	ID3D11InputLayout* m_currentLayout	= nullptr;
 
-	Camera*		m_currentCamera	= nullptr;
-	Shader*		m_currentShader = nullptr;
-	Shader*		m_defaultShader	= nullptr;
 
 	ID3D11Buffer*	m_lastBoundIBO	= nullptr;	
 	ID3D11Buffer*	m_lastBoundVBO	= nullptr;
 	VertexBuffer*	m_immediateVBO	= nullptr;
 	RenderBuffer*	m_frameUBO		= nullptr;
 	RenderBuffer*	m_modelUBO		= nullptr;
+	RenderBuffer*	m_tintUBO		= nullptr;
 
 // 	buffer_attribute_t* m_currentLayout		= nullptr;
 // 	buffer_attribute_t* m_previousLayout	= nullptr;
@@ -184,4 +243,7 @@ private:
 	ID3D11BlendState* m_opaqueBlendState	= nullptr;
 
 	ID3D11DepthStencilState* m_currentDepthStencilState = nullptr;
+
+	D3D11_RASTERIZER_DESC* m_defaultRasterStateDesc = nullptr;
+	ID3D11RasterizerState* m_rasterState		= nullptr;
 };

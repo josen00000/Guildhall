@@ -1,8 +1,11 @@
 #include "Game.hpp"
 #include "Game/App.hpp"
+#include "Game/CubeSphere.hpp"
+#include "Game/GameObject.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Math/Vec4.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -10,6 +13,7 @@
 #include "Engine/Renderer/MeshUtils.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Shader.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
 
 extern App*				g_theApp;
 extern BitmapFont*		g_squirrelFont;
@@ -34,17 +38,27 @@ void Game::Startup()
 	m_debugCamera	= false;
 	m_isAppQuit		= false;
 	m_isAttractMode	= false;
-	CreateTestMesh();
 
+	// debug render system
+	DebugRenderSystemStartup( g_theRenderer );
+	CreateTestObjects();
+	CreateDebugRenderObjects();
 }
 
 void Game::Shutdown()
 {
 	delete m_rng;
-	delete m_meshCube;
-	for( int i = 0; i < m_meshSpheres.size(); i++ ){
-		delete m_meshSpheres[i];
+	delete m_cubeMesh;
+	delete m_sphereMesh;
+	delete m_tesMesh;
+	SELF_SAFE_RELEASE(m_cubeSphereMesh);
+
+	// clear game objects
+	for( int i = 0; i < m_sphereObjects.size(); i++ ){
+		delete m_sphereObjects[i];
 	}
+
+	DebugRenderSystemShutdown();
 }
 
 void Game::RunFrame( float deltaSeconds )
@@ -61,10 +75,9 @@ void Game::Update( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
 	if( !g_theConsole->IsOpen() ) {
-		HandleKeyboardInput();
+		HandleKeyboardInput( deltaSeconds );
 	}
 	UpdateMeshes( deltaSeconds );
-	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -83,7 +96,7 @@ void Game::UpdateMeshes( float deltaSeconds )
 	totalSeconds += deltaSeconds;
 	float rotCoe = SinDegrees( totalSeconds );
 	Vec3 rotation = Vec3( 0, 0, rotCoe * 180 );
-	m_meshCube->SetRotation( rotation );
+	m_cubeMesh->SetRotation( rotation );
 
 	UpdateSphereMeshes( deltaSeconds );
 }
@@ -95,22 +108,22 @@ void Game::UpdateSphereMeshes( float deltaSeconds )
 	Vec2 XY = Vec2( 10, 0 );
 	float deltaDegrees = 360.f / 16;
 	float degrees = 0.f;
-	for( int i = 0; i < m_meshSpheres.size(); i++ ){
+	for( int i = 0; i < m_sphereObjects.size(); i++ ){
 		float offset = 30.f * i;
 		float rotCoe = SinDegrees( offset + totalSeconds );
 		Vec3 rotation = Vec3( 0, 0, rotCoe * 180 );
-		m_meshSpheres[i]->SetRotation( rotation );
+		m_sphereObjects[i]->SetRotation( rotation );
 		// pos
 		XY.SetAngleDegrees( degrees + totalSeconds * 20 );
 		degrees += deltaDegrees;
-		m_meshSpheres[i]->SetPosition( Vec3( XY.x, XY.y, -20 ) );
+		m_sphereObjects[i]->SetPosition( Vec3( XY.x, XY.y, -20 ) );
 	}
 }
 
-void Game::HandleKeyboardInput()
+void Game::HandleKeyboardInput( float deltaSeconds )
 {
 	CheckIfExit();
-	HandleCameraMovement();
+	HandleCameraMovement( deltaSeconds );
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ){
 		g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
 	}
@@ -130,11 +143,10 @@ void Game::HandleMouseInput()
 	
 }
 
-void Game::HandleCameraMovement()
+void Game::HandleCameraMovement( float deltaSeconds )
 {
 	float coe = 1.0f;
 	Vec3 movement = Vec3::ZERO;
-	//Vec3 rotation = Vec3::ZERO;
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SHIFT ) ){
 		coe = 2.0f;
 	}
@@ -161,13 +173,18 @@ void Game::HandleCameraMovement()
 		movement.z -= 1.0f * coe;
 	}
 
-	Vec3 cameraPos = m_gameCamera->GetPosition();
-	cameraPos += movement;
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
-	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 10;
+	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 15;
 	m_gameCamera->UpdateCameraRotation( rotation );
-	//g_theConsole->PrintString( Rgba8::RED, "mouse move is " + std::to_string( mouseMove.x ) + std::to_string( mouseMove.y ) );
+	
+	Mat44 rotationMatrix = m_gameCamera->m_transform.GetRotationMatrix();
+	float temY = movement.y;
+	Vec3 cameraPos = m_gameCamera->GetPosition();
+	movement = rotationMatrix.TransformPosition3D( movement ); 
+	movement.y = temY;
+	cameraPos += movement * deltaSeconds;
 	m_gameCamera->SetPosition( cameraPos );
+	//g_theConsole->PrintString( Rgba8::RED, "mouse move is " + std::to_string( mouseMove.x ) + std::to_string( mouseMove.y ) );
 }
 
 void Game::CheckIfExit()
@@ -210,30 +227,91 @@ void Game::CheckIfNoClip()
 
 void Game::Render() const
 {
-	//m_world->Render(); past code
-	Rgba8 tempColor = Rgba8::GRAY;
-	m_gameCamera->m_clearColor = tempColor;
-	g_theRenderer->BeginCamera( *m_gameCamera );
-	g_theRenderer->DrawAABB2D( AABB2( Vec2( -5, -5 ),Vec2::ZERO  ), Rgba8::RED );
-	//g_theRenderer->BindShader( "data/Shader/Reverse.hlsl" );
-	//g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
-	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
-	g_theRenderer->BindTexture( temp );
-	g_theRenderer->SetModelMatrix( m_meshCube->GetModelMatrix() );
-	g_theRenderer->DrawMesh( m_meshCube );
+ 	Rgba8 tempColor = Rgba8::DARK_GRAY;
+ 	m_gameCamera->m_clearColor = tempColor;
+ 	g_theRenderer->BeginCamera( m_gameCamera );
+ 	g_theRenderer->DrawAABB2D( AABB2( Vec2( -5, -5 ),Vec2::ZERO  ), Rgba8::RED );
+ 	//g_theRenderer->BindShader( "data/Shader/Reverse.hlsl" );
+ 	//g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
+ 	g_theRenderer->SetModelMatrix( m_cubeMesh->GetModelMatrix() );
+ 	g_theRenderer->DrawMesh( m_cubeMesh );
 
-	RenderSpheres();
+ 	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
+ 	g_theRenderer->BindTexture( temp );
+	//RenderSpheres();
+	//RenderCubeSphere();
+	//RenderTesSpheres();
 	g_theRenderer->EndCamera( );
 
-	
+	DebugRenderWorldToCamera( m_gameCamera );
+	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
 }
 
 void Game::RenderSpheres() const
 {
-	for( int i = 0; i <m_meshSpheres.size(); i++ ) {
-		g_theRenderer->DrawMesh( m_meshSpheres[i] );
+	for( int i = 0; i <m_sphereObjects.size(); i++ ) {
+		m_sphereObjects[i]->Render();
 	}
 }
+
+void Game::RenderTesSpheres() const
+{
+	m_tesselationObject->Render();
+	
+}
+
+void Game::RenderCubeSphere() const
+{
+	m_cubeSphereObject->Render();
+}
+
+void Game::CreateDebugRenderObjects()
+{
+	// world
+	//DebugAddWorldPoint( Vec3( 0, 0, -10.f ), Rgba8::RED, 20.f, DEBUG_RENDER_ALWAYS );
+	//DebugAddWorldLine( Vec3( 0.f, 0.f, -10.f ), Rgba8::RED, Rgba8::RED,  Vec3( -5.f, 0.f, -10.f ), Rgba8::BLUE, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
+	//DebugAddWorldArrow( Vec3( 0.f, 0.f, -10.f ), Rgba8::RED, Rgba8::RED,  Vec3( 0.f, 3.f, -10.f ), Rgba8::BLUE, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
+	//DebugAddWorldLine( Vec3( 0.f, 0.f, -10.f ), Rgba8::RED, Rgba8::RED,  Vec3( 0.f, 10.f, -10.f ), Rgba8::BLUE, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
+	
+	// basis
+// 	Mat44 basisMat = Mat44();
+// 	basisMat.SetTranslation3D( Vec3( 0.f, 0.f, -3.f ) );
+// 	DebugAddWorldBasis( basisMat, Rgba8::RED, Rgba8::BLUE, 5.f, DEBUG_RENDER_ALWAYS );
+
+	//DebugAddWorldQuad( Vec3( 0.f, 0.f, -5.f), Vec3( 3.f, 0.f, -5.f ), Vec3( 3.f, 5.f, -5.f ), Vec3( 0.f, 5.f, -5.f ), Rgba8::BLUE, Rgba8::BLACK, 3.f, DEBUG_RENDER_ALWAYS );
+
+	// box
+	//AABB3 box = AABB3( Vec3( -1.5f, -3.f, -5.5f ), Vec3( 1.5f, 3.f, -14.5f ));
+	//DebugAddWorldWireBounds( box, Vec3( 0.f, 1.f, 0.f), Rgba8::RED, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
+	//DebugAddWorldWireSphere( Vec3( 0.f, 0.f, -10.f), 10.f, Rgba8::RED, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
+
+	Transform textTrans;
+	textTrans.SetPosition( Vec3 ( 0.f, 0.f, -10.f) );
+	textTrans.SetRotationFromPitchRollYawDegrees( Vec3( 0.f, 0.f, 0.f ) );
+	textTrans.SetScale( Vec3::ONE );
+	std::string textString = std::string( "testing!!!" ); 
+	Transform textTrans1 = textTrans;
+	textTrans1.SetPosition( Vec3 ( 0.f, 0.3f, -11.f ) );
+	//DebugAddWorldText( textTrans, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::BLACK, 20.f, DEBUG_RENDER_USE_DEPTH, textString );
+	//DebugAddWorldText( textTrans1, Vec2( 0.5f, 0.5f ), Rgba8::GREEN, Rgba8::BLACK, 20.f, DEBUG_RENDER_XRAY, textString );
+	//DebugAddWorldBillboardText( Vec3( 0.f, 1.f, -10.f ), Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::GREEN, 20.f, DEBUG_RENDER_USE_DEPTH, textString );
+
+
+	// UI
+	DebugAddScreenPoint( Vec2( 10.f, 10.f ), 20.f, Rgba8::RED, 20.f );
+	DebugAddScreenQuad( AABB2( Vec2( 1.f, 1.f ), Vec2( 20.f, 20.f ) ), Rgba8::RED, 20.f );
+	DebugAddScreenLine( Vec2( 15.f, 15.f ), Vec2( 40.f, 40.f ), Rgba8::BLUE, 10.f );
+	//DebugAddScreenArrow( Vec2( 50.f, 50.f), Vec2( 40.f, 40.f ), Rgba8::YELLOW, 20.f );
+	//Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
+
+	//DebugAddScreenTexturedQuad( AABB2( Vec2( 60.f, 60.f ), Vec2( 80.f, 80.f	) ), temp, Rgba8::GREEN, 10.f ); 
+	//DebugAddScreenText( Vec4( 0.5f, 0.5f, -10.f, -20.f), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::GREEN, 10.f, "shit!!!!!" );
+
+
+	Mat44 basisMat2D = Mat44();
+	basisMat2D.SetTranslation3D( Vec3( 0.f, 0.f, -3.f ) );
+	//DebugAddScreenBasis( Vec2( 30.f, 30.f ), basisMat2D, Rgba8::WHITE, 20.f ); 
+} 
 
 void Game::RenderUI() const
 {
@@ -247,38 +325,67 @@ void Game::LoadAssets()
 	//g_theAudioSystem->CreateOrGetSound("FilePath");
 }
 
-void Game::CreateTestMesh()
+void Game::CreateTestObjects()
 {
-	m_meshCube = new GPUMesh();
-	m_meshCube->m_owner = g_theRenderer;
+	m_cubeMesh = new GPUMesh();
+	m_cubeMesh->m_owner = g_theRenderer;
 	std::vector<Vertex_PCU> vertices;
 	std::vector<uint> indices;
 	AABB2 testAABB = AABB2( Vec2::ZERO, Vec2::ONE * 10 );
 	AABB3 testAABB3 = AABB3( Vec3::ZERO, Vec3::ONE );
-	m_meshCube->SetPosition( Vec3( 1.f, 0.5f, -12.f ) );
-	//m_meshCube->SetPosition( Vec3( 5, 5, 5 ) );
-	//AppendIndexedVertsForAABB2D( vertices, indices, testAABB, Rgba8::WHITE, Vec2::ZERO, Vec2::ONE );
-	AppendIndexedVertsForAABB3D( vertices, indices, testAABB3, Rgba8::RED );
-	//AppendVertsForSphere3D( vertices, Vec3( 0.f, 0.f, -10.f ), 3.f, 16, 32, Rgba8::RED );
-	//AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, -10.f ), 3.f, 3, 2, Rgba8::RED );
-	m_meshCube->UpdateVerticesInCPU( vertices );
-	m_meshCube->UpdateIndicesInCPU( indices );
+	m_cubeMesh->SetPosition( Vec3( 1.f, 0.5f, -12.f ) );
+	AppendIndexedVertsForAABB3D( vertices, indices, testAABB3, Rgba8::BLUE );
+	m_cubeMesh->UpdateVerticesInCPU( vertices );
+	m_cubeMesh->UpdateIndicesInCPU( indices );
 
-	CreateSphereMesh();
+	CreateCubeSphereObjects();
+	CreateSphereObjects();
+
+	// tesselation object
+	m_tesselationObject = new GameObject();
+	m_tesMesh = new GPUMesh();
+	m_tesMesh->m_owner = g_theRenderer;
+	std::vector<Vertex_PCU> sphereVertices;
+	std::vector<Vertex_PCU> tesIndexedVertices;
+	std::vector<uint> tesIndices;
+	AppendVertsForSphere3D( sphereVertices, Vec3::ZERO, 5.f, 4, 6, Rgba8::BLUE );
+	AppendTesselateIndexedVerts( tesIndexedVertices, tesIndices, sphereVertices );
+	m_tesMesh->UpdateVerticesInCPU( tesIndexedVertices );
+	m_tesMesh->UpdateIndicesInCPU( tesIndices );
+	m_tesselationObject->m_mesh = m_tesMesh;
 }
 
-void Game::CreateSphereMesh()
+void Game::CreateSphereObjects()
 {
+	m_sphereMesh = new GPUMesh();
+	m_sphereMesh->m_owner = g_theRenderer;
+	std::vector<Vertex_PCU> vertices;
+	std::vector<uint> indices;
+	AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, 0.f ), 3.f, 32, 16, Rgba8::RED );
+	m_sphereMesh->UpdateVerticesInCPU( vertices );
+	m_sphereMesh->UpdateIndicesInCPU( indices );
 	
 	for( int i = 0; i < 8; i++ ){
-		GPUMesh* meshSphere = new GPUMesh();
-		meshSphere->m_owner = g_theRenderer;
-		std::vector<Vertex_PCU> vertices;
-		std::vector<uint> indices;
-		AppendIndexedVertsForSphere3D( vertices, indices, Vec3( 0.f, 0.f, 0.f ), 3.f, 32, 16, Rgba8::RED );
-		meshSphere->UpdateVerticesInCPU( vertices );
-		meshSphere->UpdateIndicesInCPU( indices );
-		m_meshSpheres.push_back( meshSphere );
+		GameObject* meshObjects = new GameObject();
+		meshObjects->m_mesh = m_sphereMesh;
+		m_sphereObjects.push_back( meshObjects );
 	}
+}
+
+void Game::CreateCubeSphereObjects()
+{
+	AABB3 cube = AABB3( Vec3::ZERO, Vec3::ONE );
+	std::vector<Vertex_PCU> vertices;
+	std::vector<uint> indices;
+	AppendIndexedVertsForCubeSphere3D( vertices, indices, cube, 1 );
+	m_cubeSphereMesh = new GPUMesh();
+	m_cubeSphereMesh->m_owner = g_theRenderer;
+	m_cubeSphereMesh->UpdateVerticesInCPU( vertices );
+	m_cubeSphereMesh->UpdateIndicesInCPU( indices );
+
+	m_cubeSphereObject = new GameObject();
+	m_cubeSphereObject->m_mesh = m_cubeSphereMesh;
+
+
 }
 

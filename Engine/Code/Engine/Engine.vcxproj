@@ -192,6 +192,8 @@
     <ClCompile Include="Math\AABB2.cpp" />
     <ClCompile Include="Math\AABB3.cpp" />
     <ClCompile Include="Math\Capsule2.cpp" />
+    <ClCompile Include="Math\Cone3.cpp" />
+    <ClCompile Include="Math\Cylinder3.cpp" />
     <ClCompile Include="Math\Disc2.cpp" />
     <ClCompile Include="Math\FloatRange.cpp" />
     <ClCompile Include="Math\IntRange.cpp" />
@@ -200,6 +202,7 @@
     <ClCompile Include="Math\Mat44.cpp" />
     <ClCompile Include="Math\MathUtils.cpp" />
     <ClCompile Include="Math\OBB2.cpp" />
+    <ClCompile Include="Math\OBB3.cpp" />
     <ClCompile Include="Math\Plane2.cpp" />
     <ClCompile Include="Math\Polygon2.cpp" />
     <ClCompile Include="Math\RandomNumberGenerator.cpp" />
@@ -219,6 +222,8 @@
     <ClCompile Include="Platform\Window.cpp" />
     <ClCompile Include="Renderer\BitmapFont.cpp" />
     <ClCompile Include="Renderer\Camera.cpp" />
+    <ClCompile Include="Renderer\DebugRender.cpp" />
+    <ClCompile Include="Renderer\DebugRenderObject.cpp" />
     <ClCompile Include="Renderer\GPUMesh.cpp" />
     <ClCompile Include="Renderer\IndexBuffer.cpp" />
     <ClCompile Include="Renderer\MeshUtils.cpp" />
@@ -268,6 +273,8 @@
     <ClInclude Include="Math\AABB2.hpp" />
     <ClInclude Include="Math\AABB3.hpp" />
     <ClInclude Include="Math\Capsule2.hpp" />
+    <ClInclude Include="Math\Cone3.hpp" />
+    <ClInclude Include="Math\Cylinder3.hpp" />
     <ClInclude Include="Math\Disc2.hpp" />
     <ClInclude Include="Math\FloatRange.hpp" />
     <ClInclude Include="Math\IntRange.hpp" />
@@ -276,6 +283,7 @@
     <ClInclude Include="Math\Mat44.hpp" />
     <ClInclude Include="Math\MathUtils.hpp" />
     <ClInclude Include="Math\OBB2.hpp" />
+    <ClInclude Include="Math\OBB3.hpp" />
     <ClInclude Include="Math\Plane2.hpp" />
     <ClInclude Include="Math\Polygon2.hpp" />
     <ClInclude Include="Math\RandomNumberGenerator.hpp" />
@@ -296,6 +304,8 @@
     <ClInclude Include="Renderer\BitmapFont.hpp" />
     <ClInclude Include="Renderer\Camera.hpp" />
     <ClInclude Include="Renderer\D3D11Common.hpp" />
+    <ClInclude Include="Renderer\DebugRender.hpp" />
+    <ClInclude Include="Renderer\DebugRenderObject.hpp" />
     <ClInclude Include="Renderer\GPUMesh.hpp" />
     <ClInclude Include="Renderer\IndexBuffer.hpp" />
     <ClInclude Include="Renderer\MeshUtils.hpp" />

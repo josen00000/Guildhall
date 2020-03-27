@@ -48,7 +48,6 @@ void BitmapFont::AddVertsForText2D( std::vector<Vertex_PCU>& vertexArray, const 
 		vertexArray.push_back(leftDown);
 		vertexArray.push_back(rightDown);
 		vertexArray.push_back(rightUp);
-
 	}
 }
 
@@ -93,7 +92,7 @@ Vec2 BitmapFont::GetDimensionsForText2D( float cellHeight, const std::string& te
 	float glyphAspect = GetGlyphAspect(1);
 	float cellWidth = cellHeight * glyphAspect * cellAspect;
 	float textWidth = cellWidth * text.size();
-	Vec2 result = Vec2( cellHeight, textWidth );
+	Vec2 result = Vec2( textWidth, cellHeight );
 	return result;
 }
 

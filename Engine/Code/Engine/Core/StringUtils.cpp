@@ -42,35 +42,50 @@ const std::string Stringf( const int maxLength, const char* format, ... )
 	return returnValue;
 }
 
-Strings SplitStringOnDelimiter( const std::string& originalString, const std::string& delimiterToSplitOn )
+Strings SplitStringOnDelimiter( const std::string& originalString, const std::string& delimiterToSplitOn, int splitNum )
 {
 	Strings resultStrings;
 	size_t splitStartIndex = 0;
+	int resultStringsNumber = 0;
 
 	while(true){
 		size_t splitEndIndex = originalString.find(delimiterToSplitOn, splitStartIndex);
 		size_t splitLength = splitEndIndex - splitStartIndex; 
 		std::string subString = std::string(originalString, splitStartIndex, splitLength);
 		resultStrings.push_back(subString);
+		resultStringsNumber++;
+
+		if( resultStringsNumber == splitNum ) {
+			std::string subString1 = std::string( originalString, splitEndIndex + delimiterToSplitOn.size(), std::string::npos );
+			resultStrings.push_back( subString1 );
+			break;
+		}
 
 		if( splitEndIndex == std::string::npos){ break;}
 		splitStartIndex = splitEndIndex + delimiterToSplitOn.size();
 	}
 	return resultStrings;
-
 }
 
 
-Strings SplitStringOnDelimiter( const std::string& originalString, const char delimiterToSplitOn )
+Strings SplitStringOnDelimiter( const std::string& originalString, const char delimiterToSplitOn, int splitNum )
 {
 	Strings resultStrings;
 	size_t splitStartIndex = 0;
+	int resultStringsNumber = 0;
 
 	while( true ) {
 		size_t splitEndIndex = originalString.find( delimiterToSplitOn, splitStartIndex );
 		size_t splitLength = splitEndIndex - splitStartIndex;
 		std::string subString = std::string( originalString, splitStartIndex, splitLength );
 		resultStrings.push_back( subString );
+		resultStringsNumber++;
+
+		if( resultStringsNumber == splitNum ) {
+			std::string subString1 = std::string( originalString, splitEndIndex+1, std::string::npos );
+			resultStrings.push_back( subString1 );
+			break;
+		}
 
 		if( splitEndIndex == std::string::npos ) { break; }
 		splitStartIndex = splitEndIndex + 1;
@@ -97,6 +112,12 @@ std::string GetStringWithoutSpace( const char* originalString )
 	}
 	size_t stringLength = endIndex - startIndex;
 	std::string result = std::string(originalString, startIndex, stringLength );
+	return result;
+}
+
+std::string GetStringWithoutSpace( std::string originalString )
+{
+	std::string result = GetStringWithoutSpace( originalString.c_str() );
 	return result;
 }
 

@@ -5,8 +5,10 @@
 
 
 class Camera;
-class InputSystem;
+class GameObject;
+class CubeSphere;
 class GPUMesh;
+class InputSystem;
 class RenderContext;
 class RandomNumberGenerator;
 
@@ -34,7 +36,6 @@ public:
 	void RunFrame( float deltaSeclnds );
 	void Reset();
 	void Render() const;
-	void RenderSpheres() const;
 	void RenderUI() const;
 
 	
@@ -42,12 +43,11 @@ private:
 	void Update( float deltaSeconds );
 	void UpdateUI( float deltaSeconds );
 	void UpdateCamera(float deltaSeconds );
-	void UpdateMeshes( float deltaSeconds );
-	void UpdateSphereMeshes( float deltaSeconds );
 
-	void HandleKeyboardInput();
+
+	void HandleKeyboardInput( float deltaSeconds );
 	void HandleMouseInput();
-	void HandleCameraMovement();
+	void HandleCameraMovement( float deltaSeconds );
 		 
 	//Game State Check
 	void CheckIfExit();
@@ -59,9 +59,18 @@ private:
 	//Load
 	void LoadAssets();
 
-	// Test
-	void CreateTestMesh();
-	void CreateSphereMesh();
+	// Mesh
+	void CreateTestObjects();
+	void UpdateMeshes( float deltaSeconds );
+	void UpdateSphereMeshes( float deltaSeconds );
+	void CreateSphereObjects();
+	void CreateCubeSphereObjects();
+	void RenderSpheres() const;
+	void RenderTesSpheres() const;
+	void RenderCubeSphere() const;
+
+	// DebugRender
+	void CreateDebugRenderObjects();
 
 public:
 	bool m_developMode		= false;
@@ -76,9 +85,15 @@ public:
 	Camera* m_UICamera		= nullptr;
 	RandomNumberGenerator* m_rng = nullptr;
 	
-	std::vector<Vertex_PCU> m_vertices;
-	GPUMesh* m_meshCube = nullptr;
-	std::vector<GPUMesh*> m_meshSpheres;
+	GPUMesh* m_cubeMesh			= nullptr;
+	GPUMesh* m_sphereMesh		= nullptr;
+	GPUMesh* m_tesMesh			= nullptr;
+	GPUMesh* m_cubeSphereMesh	= nullptr;
 
+	GameObject* m_tesselationObject = nullptr;
+	GameObject* m_cubeSphereObject = nullptr;
+
+	std::vector<Vertex_PCU> m_vertices;
 	std::vector<Vertex_PCU> m_UIVertices;
+	std::vector<GameObject*> m_sphereObjects;
 };

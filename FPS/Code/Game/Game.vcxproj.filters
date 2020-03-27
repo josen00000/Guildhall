@@ -22,6 +22,12 @@
     <ClCompile Include="Main_Windows.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="CubeSphere.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp">
@@ -34,6 +40,12 @@
       <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="EngineBuildPreferences.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="CubeSphere.hpp">
       <Filter>General</Filter>
     </ClInclude>
   </ItemGroup>

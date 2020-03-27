@@ -81,7 +81,6 @@ TextureView* Texture::GetOrCreateRenderTargetView()
 		m_renderTargetView->SetRTVHandle( rtv );
 	}
 
-	
 	return m_renderTargetView;
 }
 

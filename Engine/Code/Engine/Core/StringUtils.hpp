@@ -8,9 +8,10 @@ typedef std::vector<std::string> Strings;
 //-----------------------------------------------------------------------------------------------
 const std::string Stringf( const char* format, ... );
 const std::string Stringf( const int maxLength, const char* format, ... );
-Strings SplitStringOnDelimiter( const std::string& originalString, const char delimiterToSplitOn );
-Strings SplitStringOnDelimiter( const std::string& originalString, const std::string& delimiterToSplitOn );
-std::string GetStringWithoutSpace(const char* originalString);
+Strings SplitStringOnDelimiter( const std::string& originalString, const char delimiterToSplitOn, int splitNum = 0 );
+Strings SplitStringOnDelimiter( const std::string& originalString, const std::string& delimiterToSplitOn, int splitNum = 0 );
+std::string GetStringWithoutSpace( const char* originalString );
+std::string GetStringWithoutSpace( std::string originalString );
 bool GetBoolFromText( const char* text );
 std::string GetStringFromBool( bool input ); 
 

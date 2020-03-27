@@ -27,6 +27,13 @@ Camera::Camera( float fov/*=60.f*/, float nearZ/*=-0.1*/, float farZ/*=-100*/, V
 	m_projectionType = PROJECTION_PERSPECTIVE;
 }
 
+Camera::Camera( float nZ, float fZ, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
+{
+	m_transform = Transform();
+	SetOrthoView( bottomLeft, topRight, nZ, fZ, aspectRatio );
+	m_projectionType = PROJECTION_ORTHOGRAPHIC;
+}
+
 Camera* Camera::CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& topRight )
 {
 	Camera* result = new Camera( bottomLeft, topRight );
@@ -71,9 +78,21 @@ void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float a
 	m_projection = Mat44::CreateOrthographicProjectionMatrix( Vec3( bottomLeft, 0.f ), Vec3( topRight, -1.f ), aspectRatio );
 }
 
+void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float nearZ, float farZ, float aspectRatio )
+{
+	m_dimension.x = topRight.x - bottomLeft.x;
+	m_dimension.y = topRight.y - bottomLeft.y;
+	m_projection = Mat44::CreateOrthographicProjectionMatrix( Vec3( bottomLeft, nearZ ), Vec3( topRight, farZ ), aspectRatio );
+}
+
 Vec3 Camera::GetPosition() const
 {
 	return m_transform.GetPosition();
+}
+
+RenderContext* Camera::GetRenderContext() const
+{
+	return m_rctx;
 }
 
 float Camera::GetOutputAspectRatio()
@@ -114,6 +133,11 @@ void Camera::SetPosition( const Vec3& position )
 	m_transform.SetPosition( position );
 }
 
+void Camera::SetRenderContext( RenderContext* ctx )
+{
+	m_rctx = ctx;
+}
+
 void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f */ )
 {
 	float aspectRatio = GetOutputAspectRatio();
@@ -121,6 +145,11 @@ void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, f
 	Vec3 min = Vec3( -extents, nearZ );
 	Vec3 max = Vec3( extents, farZ );
 	//m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max );
+}
+
+void Camera::SetUseDepth( bool useDepth )
+{
+	m_useDepth = useDepth;
 }
 
 void Camera::SetClearMode( uint clearFlags, Rgba8 color, float depth /*= 0.0f */, unsigned int stencil /*= 0 */ )
@@ -139,6 +168,7 @@ void Camera::EnableClearColor( Rgba8 color )
 
 void Camera::EnableClearDepth( float depth )
 {
+	m_useDepth = true;
 	m_clearDepth = depth;
 	m_clearState = m_clearState | CLEAR_DEPTH_BIT;
 }

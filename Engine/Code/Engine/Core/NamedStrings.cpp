@@ -1,6 +1,7 @@
 #include "NamedStrings.hpp"
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Math/vec2.hpp"
+#include "Engine/Math/Vec3.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/MathUtils.hpp"
 
@@ -114,6 +115,17 @@ Vec2 NamedStrings::GetValue( const std::string& keyName, const Vec2& defaultValu
 	return result;
 }
 
+Vec3 NamedStrings::GetValue( const std::string& keyName, const Vec3& defaultValue ) const
+{
+	Vec3 result = defaultValue;
+	auto it = m_keyValuePairs.find( keyName );
+	if( it != m_keyValuePairs.end() ) {
+		std::string temResult = it->second;
+		result.SetFromText( temResult.c_str() );
+	}
+	return result;
+}
+
 IntVec2 NamedStrings::GetValue( const std::string& keyName, const IntVec2& defaultValue ) const
 {
 	IntVec2 result = defaultValue;
@@ -124,4 +136,5 @@ IntVec2 NamedStrings::GetValue( const std::string& keyName, const IntVec2& defau
 	}
 	return result;
 }
+
 

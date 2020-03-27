@@ -19,6 +19,16 @@ Rgba8::Rgba8(unsigned char ini_r, unsigned char ini_g, unsigned char ini_b, unsi
 {	
 }
 
+Rgba8 Rgba8::GetLerpColor( Rgba8 a, Rgba8 b, float value )
+{
+	Rgba8 result;
+	result.r = (unsigned char)(a.r + (b.r - a.r) * value);
+	result.g = (unsigned char)(a.g + (b.g - a.g) * value);
+	result.b = (unsigned char)(a.b + (b.b - a.b) * value);
+	result.a = (unsigned char)(a.a + (b.a - a.a) * value);
+	return result;
+}
+
 void Rgba8::SetFromText( const char* text )
 {
 	Strings dimensions = SplitStringOnDelimiter( text, "," );

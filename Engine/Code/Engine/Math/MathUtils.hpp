@@ -71,10 +71,10 @@ void PushDiscsOutOfEachOther2D(Vec2& center1, float radiu1, Vec2& center2, float
 void PushDiscOutOfPoint2D(Vec2& center, float radiu, const Vec2& point);
 void PushDiscOutOfAABB2D(Vec2& center, float radiu,const AABB2& square );
 
-float GetProjectedLength2D(const Vec2& sourceVector, const Vec2& ontoVector);
-const Vec2 GetProjectedOnto2D(const Vec2& sourceVector, const Vec2& ontoVector);
-bool IsPointInForwardSector2D(const Vec2& point, const Vec2& observerPos, float forwardDegrees, float apertureDegrees, float maxDist);
-float GetAngleDegreesBetweenVectors2D(const Vec2& vectorA, const Vec2& vectorB);
+float GetProjectedLength2D( const Vec2& sourceVector, const Vec2& ontoVector );
+const Vec2 GetProjectedOnto2D( const Vec2& sourceVector, const Vec2& ontoVector );
+bool IsPointInForwardSector2D( const Vec2& point, const Vec2& observerPos, float forwardDegrees, float apertureDegrees, float maxDist );
+float GetAngleDegreesBetweenVectors2D( const Vec2& vectorA, const Vec2& vectorB );
 
 
 //
@@ -94,12 +94,12 @@ int GetIntFromText(const char* text);
 float GetFloatFromText(const char* text);
 
 //
-// Dot product
+// product
 // 
 float DotProduct2D(const Vec2 a, const Vec2 b);
 float CrossProduct2D( const Vec2& a, const Vec2& b );
 float CrossProduct2D( const Vec2& commonPoint, const Vec2& point1, const Vec2& point2 );
-
+Vec3 CrossProduct3D( const Vec3& a, const Vec3& b );
 
 //
 //Geometric query utilities
@@ -126,6 +126,7 @@ IntVec2 TransformFromWorldPosToTilePos(const Vec2 worldPos);
 // 
 bool IsFloatMostlyEqual( float a, float b, float epsilon=0.001f );
 bool IsVec2MostlyEqual( Vec2 a, Vec2 b, float epsilon=0.001f );
+bool IsVec3MostlyEqual( Vec3 a, Vec3 b, float epsilon=0.001f );
 bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon=0.001f );
 
 // Area

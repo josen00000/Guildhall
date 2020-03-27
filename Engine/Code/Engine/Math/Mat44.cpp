@@ -606,6 +606,32 @@ const Mat44 Mat44::CreateNonUniformScale3D( const Vec3& scaleFactorsXYZ )
 	return temResult;
 }
 
+Mat44 Mat44::GetLookAtMatrix( Vec3 pos, Vec3 target, Vec3 worldUp )
+{
+	Vec3 forward = target - pos;
+	forward.Normalize();
+	Vec3 i = CrossProduct3D( forward, worldUp );
+	float iLength = i.GetLength();
+
+	if( IsFloatMostlyEqual( iLength, 0.f ) ) {
+		if( IsVec3MostlyEqual( worldUp, Vec3( 0.f, 1.f, 0.f ) ) ) {
+			worldUp = Vec3( 0.f, 0.f, 1.f );
+		}
+		else {
+			worldUp = Vec3( 0.f, 1.f, 0.f );
+		}
+		i = CrossProduct3D( forward, worldUp );
+	}
+	i.Normalize();
+
+	Vec3 j = CrossProduct3D( i, forward );
+
+	Mat44 lookAtRotMatrix = Mat44( i, j, -forward, Vec3::ZERO );
+	Mat44 lookAtPosMatrix = Mat44::CreateTranslation3D( pos );
+	lookAtPosMatrix.Multiply( lookAtRotMatrix );
+	return lookAtPosMatrix;
+}
+
 void Mat44::TransposeMatrix()
 {
 	Mat44 temp = *this;

@@ -32,7 +32,12 @@ Vec3::Vec3( const Vec2& copyFrom, float initialZ )
 {
 }
 
-
+Vec3::Vec3( float initialValue )
+	:x(initialValue)
+	,y(initialValue)
+	,z(initialValue)
+{
+}
 
 float Vec3::GetLength() const{
 	return sqrtf(x*x+y*y+z*z);
@@ -46,6 +51,23 @@ float Vec3::GetLengthSquared() const{
 float Vec3::GetLengthXYSquared() const{
 	return x*x+y*y;
 }
+
+float Vec3::GetThetaDegrees() const
+{
+	float theta = atan2f( z, x );
+	theta = ConvertRadiansToDegrees( theta );
+	return theta;
+}
+
+float Vec3::GetPhiDegrees() const
+{
+	float temY = y;
+	float temX = sqrtf( x * x + z * z );
+	float phi = atan2f( temY , temX );
+	phi = ConvertRadiansToDegrees( phi );
+	return phi;
+}
+
 float Vec3::GetAngleAboutZRadians() const{
 	return (atan2f(y,x));
 }
@@ -85,14 +107,22 @@ const Vec3 Vec3::GetClamped( float maxLength )const{
 }
 const Vec3 Vec3::GetNormalized() const{
 	Vec3 tem_Vec3;
-	const float tem_Radius=GetLength();
-	tem_Vec3= Vec3(x/tem_Radius,y/tem_Radius,z/tem_Radius);
+	const float tem_Radius = GetLength();
+	tem_Vec3 = Vec3( x / tem_Radius, y / tem_Radius, z / tem_Radius );
 	return tem_Vec3;
 }
 
-void Vec3::SetText( const char* text )
+void Vec3::Normalize()
 {
-	Strings dimensions = SplitStringOnDelimiter( text, "," );
+	float length = GetLength();
+	x = x / length;
+	y = y / length;
+	z = z / length;
+}
+
+void Vec3::SetFromText( const char* text )
+{
+	Strings dimensions = SplitStringOnDelimiter( text, "," ); 
 	std::string dimensionX = GetStringWithoutSpace( dimensions[0].c_str() );
 	std::string dimensionY = GetStringWithoutSpace( dimensions[1].c_str() );
 	std::string dimensionZ = GetStringWithoutSpace( dimensions[2].c_str() );

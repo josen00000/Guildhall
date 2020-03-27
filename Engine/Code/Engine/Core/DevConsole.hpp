@@ -60,7 +60,7 @@ public:
 
 	// Command
 	void SubmitCommand();
-	void ExecuteCommand( std::string comd );
+	void ExecuteCommand( std::string comd, EventArgs& args );
 	static bool CheckIfCommandExist( std::string comd );
 	static void AddCommandToCommandList( std::string comd, std::string desc, EventCallbackFunctionPtr funcPtr );
 	void ExecuteQuitFunction();

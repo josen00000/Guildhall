@@ -100,7 +100,9 @@ void DevConsole::EndDevConcole()
 void DevConsole::Render( RenderContext& renderer ) const
 {
 	if( !m_isOpen ) { return; }
-	g_theRenderer->BeginCamera( *m_camera );
+	m_camera->EnableClearColor( Rgba8::BLACK );
+	m_camera->SetUseDepth( false );
+	g_theRenderer->BeginCamera( m_camera );
 
 	// render input
 	// render content
@@ -124,6 +126,7 @@ void DevConsole::Render( RenderContext& renderer ) const
 		RenderSelectArea();
 	}
 
+	g_theRenderer->EndCamera();
 
 }
 
@@ -355,38 +358,34 @@ bool DevConsole::HasInput()
 
 void DevConsole::SubmitCommand()
 {
-	std::string command = m_inputs;
+	//std::string inputWithoutSpace = GetStringWithoutSpace( m_inputs );
+	Strings inputs = SplitStringOnDelimiter( m_inputs, ":", 1 );
+	std::string command = inputs[0];
 	ClearInput();
 	EndSelect();
 	if ( CheckIfCommandExist( command ) ){
 		RecordCommandInHistory( command );
 	}
-	ExecuteCommand( command	);
+
+	EventArgs args;
+	if( inputs.size() > 1 ){
+		Strings parameters = SplitStringOnDelimiter( inputs[1], "|" );
+		for( int i = 0; i < parameters.size(); i++ ){
+			std::string parameter = GetStringWithoutSpace( parameters[i] );
+			args.SetValue( std::to_string( i ), parameter );
+		}
+	}
+	ExecuteCommand( command, args );
 }
 
-void DevConsole::ExecuteCommand( std::string comd )
+void DevConsole::ExecuteCommand( std::string comd, EventArgs& args )
 {
-	EventArgs tempEventArgs;
-// 	if( command == "help" ){
-// 		ExecuteHelpFunction();
-// 	}
-// 	else if( command == "quit" ) {
-// 		ExecuteQuitFunction();
-// 	}
-// 	else if( command == "test" ) {
-// 		PrintString( Rgba8::WHITE, "test.");
-// 	}
-// 	else {
-// 		PrintString( Rgba8::RED, "Wrong Command!" );
-// 	}
-// 	
-// 	
 	if( comd == "test" || comd == "test1" || comd == "test2" ){
 		PrintString( m_defaultColor, comd + "test for history" );
 		return;
 	}
 	if( CheckIfCommandExist( comd ) ) {
-		g_theEventSystem->FireTheEvent( comd, tempEventArgs );
+		g_theEventSystem->FireTheEvent( comd, args );
 	}
 	else{
 		LogErrorMessage();

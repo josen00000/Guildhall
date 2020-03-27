@@ -11,7 +11,7 @@ public:
 	Rgba8(){}
 	~Rgba8(){}
 	explicit Rgba8(unsigned char ini_r, unsigned char ini_g, unsigned char ini_b, unsigned char ini_a = 255);
-
+	static Rgba8 GetLerpColor( Rgba8 a, Rgba8 b, float value );
 	//Mutators
 	void SetFromText(const char* text);
 

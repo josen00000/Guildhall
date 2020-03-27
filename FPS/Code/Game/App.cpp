@@ -11,6 +11,7 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
 
 
 App*			g_theApp			= nullptr;
@@ -39,6 +40,10 @@ void App::Startup()
 	g_theInputSystem->Startup();
 
 	g_camera			= Camera::CreatePerspectiveCamera( 60, -0.1f, -100.f );
+	g_camera->SetClearMode( CLEAR_NONE, Rgba8::DARK_GRAY );
+	g_camera->EnableClearColor( Rgba8::DARK_GRAY );
+	g_camera->EnableClearDepth( 1 );
+	g_camera->SetRenderContext( g_theRenderer );
 	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
 	g_devCamera			= new Camera( Vec2( -32, -18 ), Vec2( 32, 18 ) );
 	g_theGame			= new Game( g_camera, g_UICamera );
@@ -149,11 +154,13 @@ void App::ResetGame()
 void App::BeginFrame()
 {
 	g_theInputSystem->BeginFrame();
+	g_theRenderer->BeginFrame();
+
 }
 
 void App::Update( float deltaSeconds )
 {
-	g_theRenderer->UpdateFrameTime( deltaSeconds );
+	//g_theRenderer->UpdateFrameTime( deltaSeconds );
 	g_theGame->RunFrame( deltaSeconds );
 	CheckGameQuit();
 	g_theInputSystem->Update();
@@ -171,16 +178,12 @@ void App::UpdateDevConsole( float deltaSeconds )
 
 const void App::Render() const
 {
-
-
 	g_theGame->Render();
 	
 	//g_theRenderer->BeginCamera(*g_UICamera);
 	//g_theGame->RenderUI();
 	
 	g_theConsole->Render( *g_theRenderer );
-
-	
 }
 
 void App::EndFrame()

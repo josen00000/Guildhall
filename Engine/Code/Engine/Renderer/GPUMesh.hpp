@@ -51,5 +51,4 @@ private:
 	uint m_vertexStride;
 	buffer_attribute_t const* m_layout;
 	bool m_verticesDirty = false;
-
 };
