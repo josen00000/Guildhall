@@ -49,6 +49,7 @@ void App::Startup()
 	g_theGame			= new Game( g_camera, g_UICamera );
 
 	g_theGame->Startup();
+	EnableDebugRendering();
 	g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
 	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
@@ -184,6 +185,8 @@ const void App::Render() const
 	//g_theGame->RenderUI();
 	
 	g_theConsole->Render( *g_theRenderer );
+
+	DebugRenderScreenTo( g_camera->GetColorTarget() );
 }
 
 void App::EndFrame()

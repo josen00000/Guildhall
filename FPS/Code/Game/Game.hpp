@@ -45,8 +45,9 @@ private:
 	void UpdateCamera(float deltaSeconds );
 
 
-	void HandleKeyboardInput( float deltaSeconds );
-	void HandleMouseInput();
+	void HandleDevKeyboardInput( float deltaSeconds );
+	void HandleDebugKeyboardInput( float deltaSeconds );
+	void HandleMouseInput( float deltaSeconds );
 	void HandleCameraMovement( float deltaSeconds );
 		 
 	//Game State Check

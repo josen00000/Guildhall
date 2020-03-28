@@ -42,6 +42,13 @@ const std::string Stringf( const int maxLength, const char* format, ... )
 	return returnValue;
 }
 
+std::string Stringv( const char* format, va_list args )
+{
+	char buffer[1024];
+	vsnprintf_s( buffer, 1024, format, args );
+	return buffer;
+}
+
 Strings SplitStringOnDelimiter( const std::string& originalString, const std::string& delimiterToSplitOn, int splitNum )
 {
 	Strings resultStrings;

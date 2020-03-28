@@ -43,6 +43,7 @@ void Game::Startup()
 	DebugRenderSystemStartup( g_theRenderer );
 	CreateTestObjects();
 	CreateDebugRenderObjects();
+	//DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, 20.f );
 }
 
 void Game::Shutdown()
@@ -73,9 +74,9 @@ void Game::Reset()
 
 void Game::Update( float deltaSeconds )
 {
-	UNUSED(deltaSeconds);
 	if( !g_theConsole->IsOpen() ) {
-		HandleKeyboardInput( deltaSeconds );
+		HandleDevKeyboardInput( deltaSeconds );
+		HandleDebugKeyboardInput( deltaSeconds );
 	}
 	UpdateMeshes( deltaSeconds );
 }
@@ -120,7 +121,7 @@ void Game::UpdateSphereMeshes( float deltaSeconds )
 	}
 }
 
-void Game::HandleKeyboardInput( float deltaSeconds )
+void Game::HandleDevKeyboardInput( float deltaSeconds )
 {
 	CheckIfExit();
 	HandleCameraMovement( deltaSeconds );
@@ -138,9 +139,46 @@ void Game::HandleKeyboardInput( float deltaSeconds )
 	}
 }
 
-void Game::HandleMouseInput()
+void Game::HandleDebugKeyboardInput( float deltaSeconds )
 {
+	UNUSED(deltaSeconds);
+	Transform trans = m_gameCamera->m_transform;
+	Mat44 transMat = trans.ToMatrix();
+	float debugTime = 10.f;
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ){
+		DebugAddWorldPoint( trans.m_pos, 1.f, Rgba8::RED, Rgba8::BLUE, debugTime, DEBUG_RENDER_USE_DEPTH );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
+		DebugAddWorldLine( trans.m_pos, Rgba8::RED, Rgba8::RED,  trans.m_pos - transMat.GetKBasis3D() * 3.f, Rgba8::BLUE, Rgba8::BLUE, debugTime, DEBUG_RENDER_USE_DEPTH );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_3 ) ) {
+		DebugAddWorldArrow( trans.m_pos, Rgba8::RED, Rgba8::RED,  trans.m_pos - transMat.GetKBasis3D() * 3.f, Rgba8::BLUE, Rgba8::BLUE, debugTime, DEBUG_RENDER_USE_DEPTH );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_4 ) ) {
+		DebugAddWorldQuad( Vec3( 0.f, 0.f, -5.f), Vec3( 3.f, 0.f, -5.f ), Vec3( 3.f, 5.f, -5.f ), Vec3( 0.f, 5.f, -5.f ), Rgba8::BLUE, Rgba8::BLACK, debugTime, DEBUG_RENDER_ALWAYS );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_5 ) ) {
+		AABB3 box = AABB3( trans.m_pos - Vec3( 10.f, 10.f, 10.f ),trans.m_pos + Vec3( 10.f ) );
+		DebugAddWorldWireBounds( box, Vec3( 0.f, 1.f, 0.f), Rgba8::RED, Rgba8::BLUE, debugTime, DEBUG_RENDER_ALWAYS );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_6 ) ) {
+		DebugAddWorldWireSphere( trans.m_pos, 10.f, Rgba8::RED, Rgba8::BLUE, debugTime, DEBUG_RENDER_ALWAYS );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_7 ) ) {
+		DebugAddWorldBasis( transMat, Rgba8::WHITE, Rgba8::WHITE, debugTime, DEBUG_RENDER_ALWAYS );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_8 ) ) {
+		DebugAddWorldText( trans, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::BLACK, -debugTime * 2, DEBUG_RENDER_XRAY, "testing" );
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_9 ) ) {
+		DebugAddWorldBillboardText( trans.m_pos, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::GREEN, debugTime * 2, DEBUG_RENDER_XRAY, "test" );
+	}
 	
+}
+
+void Game::HandleMouseInput( float deltaSeconds )
+{
+	UNUSED(deltaSeconds);
 }
 
 void Game::HandleCameraMovement( float deltaSeconds )
@@ -244,7 +282,6 @@ void Game::Render() const
 	g_theRenderer->EndCamera( );
 
 	DebugRenderWorldToCamera( m_gameCamera );
-	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
 }
 
 void Game::RenderSpheres() const
@@ -267,50 +304,22 @@ void Game::RenderCubeSphere() const
 
 void Game::CreateDebugRenderObjects()
 {
-	// world
-	//DebugAddWorldPoint( Vec3( 0, 0, -10.f ), Rgba8::RED, 20.f, DEBUG_RENDER_ALWAYS );
-	//DebugAddWorldLine( Vec3( 0.f, 0.f, -10.f ), Rgba8::RED, Rgba8::RED,  Vec3( -5.f, 0.f, -10.f ), Rgba8::BLUE, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
-	//DebugAddWorldArrow( Vec3( 0.f, 0.f, -10.f ), Rgba8::RED, Rgba8::RED,  Vec3( 0.f, 3.f, -10.f ), Rgba8::BLUE, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
-	//DebugAddWorldLine( Vec3( 0.f, 0.f, -10.f ), Rgba8::RED, Rgba8::RED,  Vec3( 0.f, 10.f, -10.f ), Rgba8::BLUE, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
-	
-	// basis
-// 	Mat44 basisMat = Mat44();
-// 	basisMat.SetTranslation3D( Vec3( 0.f, 0.f, -3.f ) );
-// 	DebugAddWorldBasis( basisMat, Rgba8::RED, Rgba8::BLUE, 5.f, DEBUG_RENDER_ALWAYS );
-
-	//DebugAddWorldQuad( Vec3( 0.f, 0.f, -5.f), Vec3( 3.f, 0.f, -5.f ), Vec3( 3.f, 5.f, -5.f ), Vec3( 0.f, 5.f, -5.f ), Rgba8::BLUE, Rgba8::BLACK, 3.f, DEBUG_RENDER_ALWAYS );
-
-	// box
-	//AABB3 box = AABB3( Vec3( -1.5f, -3.f, -5.5f ), Vec3( 1.5f, 3.f, -14.5f ));
-	//DebugAddWorldWireBounds( box, Vec3( 0.f, 1.f, 0.f), Rgba8::RED, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
-	//DebugAddWorldWireSphere( Vec3( 0.f, 0.f, -10.f), 10.f, Rgba8::RED, Rgba8::BLUE, 3.f, DEBUG_RENDER_ALWAYS );
-
-	Transform textTrans;
-	textTrans.SetPosition( Vec3 ( 0.f, 0.f, -10.f) );
-	textTrans.SetRotationFromPitchRollYawDegrees( Vec3( 0.f, 0.f, 0.f ) );
-	textTrans.SetScale( Vec3::ONE );
-	std::string textString = std::string( "testing!!!" ); 
-	Transform textTrans1 = textTrans;
-	textTrans1.SetPosition( Vec3 ( 0.f, 0.3f, -11.f ) );
-	//DebugAddWorldText( textTrans, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::BLACK, 20.f, DEBUG_RENDER_USE_DEPTH, textString );
-	//DebugAddWorldText( textTrans1, Vec2( 0.5f, 0.5f ), Rgba8::GREEN, Rgba8::BLACK, 20.f, DEBUG_RENDER_XRAY, textString );
-	//DebugAddWorldBillboardText( Vec3( 0.f, 1.f, -10.f ), Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::GREEN, 20.f, DEBUG_RENDER_USE_DEPTH, textString );
-
-
+	//add
+	// only test for ui
+	float debugTime = 10.f;
 	// UI
-	DebugAddScreenPoint( Vec2( 10.f, 10.f ), 20.f, Rgba8::RED, 20.f );
-	DebugAddScreenQuad( AABB2( Vec2( 1.f, 1.f ), Vec2( 20.f, 20.f ) ), Rgba8::RED, 20.f );
-	DebugAddScreenLine( Vec2( 15.f, 15.f ), Vec2( 40.f, 40.f ), Rgba8::BLUE, 10.f );
-	//DebugAddScreenArrow( Vec2( 50.f, 50.f), Vec2( 40.f, 40.f ), Rgba8::YELLOW, 20.f );
-	//Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
-
-	//DebugAddScreenTexturedQuad( AABB2( Vec2( 60.f, 60.f ), Vec2( 80.f, 80.f	) ), temp, Rgba8::GREEN, 10.f ); 
-	//DebugAddScreenText( Vec4( 0.5f, 0.5f, -10.f, -20.f), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::GREEN, 10.f, "shit!!!!!" );
+	DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, debugTime );
+	DebugAddScreenText( Vec4( 0.5f, 0.5f, -10.f, -20.f), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::GREEN, debugTime, "test" );
+	DebugAddScreenQuad( AABB2( Vec2( 1.f, 1.f ), Vec2( 20.f, 20.f ) ), Rgba8::RED, debugTime );
+	DebugAddScreenLine( Vec2( 15.f, 15.f ), Vec2( 40.f, 40.f ), Rgba8::BLUE, debugTime );
+	DebugAddScreenArrow( Vec2( 50.f, 50.f), Vec2( 50.f, 30.f ), Rgba8::YELLOW, debugTime );
+	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
+	DebugAddScreenTexturedQuad( AABB2( Vec2( 60.f, 60.f ), Vec2( 80.f, 80.f	) ), temp, Rgba8::GREEN, debugTime ); 
 
 
 	Mat44 basisMat2D = Mat44();
 	basisMat2D.SetTranslation3D( Vec3( 0.f, 0.f, -3.f ) );
-	//DebugAddScreenBasis( Vec2( 30.f, 30.f ), basisMat2D, Rgba8::WHITE, 20.f ); 
+	DebugAddScreenBasis( Vec2( 30.f, 30.f ), basisMat2D, Rgba8::WHITE, debugTime ); 
 } 
 
 void Game::RenderUI() const
@@ -333,7 +342,7 @@ void Game::CreateTestObjects()
 	std::vector<uint> indices;
 	AABB2 testAABB = AABB2( Vec2::ZERO, Vec2::ONE * 10 );
 	AABB3 testAABB3 = AABB3( Vec3::ZERO, Vec3::ONE );
-	m_cubeMesh->SetPosition( Vec3( 1.f, 0.5f, -12.f ) );
+	m_cubeMesh->SetPosition( Vec3( 1.f, 0.5f, -8.f ) );
 	AppendIndexedVertsForAABB3D( vertices, indices, testAABB3, Rgba8::BLUE );
 	m_cubeMesh->UpdateVerticesInCPU( vertices );
 	m_cubeMesh->UpdateIndicesInCPU( indices );

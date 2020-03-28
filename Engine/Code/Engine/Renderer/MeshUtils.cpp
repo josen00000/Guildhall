@@ -161,10 +161,10 @@ void AppendVertsForOBB2D( std::vector<Vertex_PCU>& vertices, const OBB2& bound, 
 	vertices.push_back( rightUp );
 }
 
-void AppendVertsForOBB3D( std::vector<Vertex_PCU>& vertices, const OBB3& bound, const Rgba8& tintColor )
-{
-
-}
+// void AppendVertsForOBB3D( std::vector<Vertex_PCU>& vertices, const OBB3& bound, const Rgba8& tintColor )
+// {
+// 
+// }
 
 void AppendVertsForCircle2D( std::vector<Vertex_PCU>& vertices, const Vec2& center, float radius, const Rgba8& tintColor )
 {

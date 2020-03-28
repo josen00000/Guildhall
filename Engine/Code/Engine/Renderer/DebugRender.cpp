@@ -1,5 +1,7 @@
 ﻿#include "DebugRender.hpp"
 #include <vector>
+#include <stdarg.h>
+#include <string>
 #include "Engine/Core/Transform.hpp"
 #include "Engine/Core/Time/Timer.hpp"
 #include "Engine/Core/Time/Clock.hpp"
@@ -19,7 +21,8 @@ extern DevConsole* g_theConsole;
 
 // static variable
 static bool ableDebug = false;
-static float g_sizeScale = 0.5f;
+static float g_sizeScale = 0.1f;
+static float g_uiSizeCoe = 5.f;
 static float g_2dZ = -10.f;
 static Vec2 g_screenMax = Vec2( 1.f, 1.f );
 static Vec2 g_screenMin = Vec2::ZERO;
@@ -142,7 +145,7 @@ void CreateGPUMeshes()
 	// arrow
 	std::vector<Vertex_PCU> arrowVertices;
 	std::vector<uint> arrowIndices;
-	Cone3 cone = Cone3(  Vec3( 0.f, 0.f, -1.f ), Vec3( 0.f, 0.f, -1.5f ), 0.3f );
+	Cone3 cone = Cone3(  Vec3( 0.f, 0.f, -1.f ), Vec3( 0.f, 0.f, -1.5f ), 0.5f );
 	AppendIndexedVertsForCylinder3D( arrowVertices, arrowIndices, cylinder, 12, Rgba8::RED, Rgba8::BLUE );
 	AppendIndexedVertsForCone3D( arrowVertices, arrowIndices, cone, 12, Rgba8::RED );
 
@@ -152,9 +155,9 @@ void CreateGPUMeshes()
 	// basis
 	std::vector<Vertex_PCU> basisVertices;
 	std::vector<uint> basisIndices;
-	Cone3 coneX = Cone3( Vec3( 1.f, 0.f, 0.f ), Vec3( 1.5f, 0.f, 0.f ), 0.3f );
-	Cone3 coneY = Cone3( Vec3( 0.f, 1.f, 0.f ), Vec3( 0.f, 1.5f, 0.f ), 0.3f );
-	Cone3 coneZ = Cone3( Vec3( 0.f, 0.f, 1.f ), Vec3( 0.f, 0.f, 1.5f ), 0.3f );
+	Cone3 coneX = Cone3( Vec3( 1.f, 0.f, 0.f ), Vec3( 1.5f, 0.f, 0.f ), 0.5f );
+	Cone3 coneY = Cone3( Vec3( 0.f, 1.f, 0.f ), Vec3( 0.f, 1.5f, 0.f ), 0.5f );
+	Cone3 coneZ = Cone3( Vec3( 0.f, 0.f, 1.f ), Vec3( 0.f, 0.f, 1.5f ), 0.5f );
 	Cylinder3 cylinderX = Cylinder3( Vec3::ZERO, Vec3( 1.f, 0.f, 0.f), 0.1f );
 	Cylinder3 cylinderY = Cylinder3( Vec3::ZERO, Vec3( 0.f, 1.f, 0.f ), 0.1f );
 	Cylinder3 cylinderZ = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.1f );
@@ -201,6 +204,8 @@ void DebugRenderBeginFrame()
 
 void DebugRenderWorldToCamera( Camera* camera )
 {
+	if( !ableDebug ){ return; }
+
 	g_camera = camera;
 	uint clearState = g_camera->m_clearState;
 	g_camera->SetClearMode( CLEAR_NONE );
@@ -221,6 +226,8 @@ void DebugRenderWorldToCamera( Camera* camera )
 
 void DebugRenderScreenTo( Texture* output )
 {
+	if( !ableDebug ){ return; }
+
 	g_camera->ClientToWorld( Vec2::ZERO, 0.f ); // testing
 	Camera* screenCamera = new Camera( 0.f, -100.f, g_screenMin, g_screenMax, g_aspectRatio );
 	screenCamera->SetColorTarget( output );
@@ -297,8 +304,10 @@ void DebugRenderOneOBject( DebugRenderObject* object, float xrayTint )
 	if( object->m_type == OBJECT_BOARD_TEXT ) {
 		Texture* textTex = g_defaultDebugFont->GetTexture();
 		g_ctx->BindTexture( textTex );
-		Vec3 cameraPos = g_camera->GetPosition();
-		object->m_transform.LookAtStable( cameraPos );
+		//object->m_transform.SetPosition( g_camera->GetPosition() );
+		object->m_transform.SetRotationFromPitchRollYawDegrees( g_camera->m_transform.GetRotationPRYDegrees() );
+		//Vec3 cameraPos = g_camera->GetPosition();
+		//object->m_transform.LookAtStable( cameraPos );
 	}
 	if( object->m_type == OBJECT_QUAD && object->m_texture != nullptr ){
 		g_ctx->BindTexture( object->m_texture );
@@ -496,6 +505,24 @@ void DebugAddWorldText( Transform trans, Vec2 pivot, Rgba8 startColor, Rgba8 end
 	AddObjectToVector( textObject, mode );
 }
 
+void DebugAddWorldTextf( Mat44 basis, Vec2 pivot, Rgba8 color, float duration, DebugRenderMode mode, char const* text, ... )
+{
+	va_list args;
+	va_start( args, text );
+	std::string result = Stringv( text, args );
+	va_end(args);
+	DebugAddWorldText( basis, pivot, color, color, duration, mode, result );
+}
+
+void DebugAddWorldTextf( Mat44 basis, Vec2 pivot, Rgba8 color, float duration, char const* text, ... )
+{
+	va_list args;
+	va_start( args, text );
+	std::string result = Stringv( text, args );
+	va_end( args );
+	DebugAddWorldText( basis, pivot, color, color, duration, DEBUG_RENDER_USE_DEPTH, result ); 
+}
+
 void DebugAddWorldBillboardText( Vec3 origin, Vec2 pivot, Rgba8 startColor, Rgba8 endColor, float duration, DebugRenderMode mode, char const* text )
 {
 	std::string str = std::string( text );
@@ -511,11 +538,12 @@ void DebugAddWorldBillboardText( Vec3 origin, Vec2 pivot, Rgba8 startColor, Rgba
 	Vec2 offset = textBox.GetPointAtUV( pivot );
 	g_defaultDebugFont->AddVertsForText2D( vertices, -offset, textHeight, text, Rgba8::WHITE );
 
-	Vec3 cameraPos = Vec3::ZERO;
+	
 
 	DebugRenderObject* textObject = DebugRenderObject::CreateObject( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
 	textObject->m_type = OBJECT_BOARD_TEXT;
-	textObject->m_transform.LookAt( origin, cameraPos );
+	textObject->m_transform.SetPosition( origin );
+	//textObject->m_transform.SetRotationFromPitchRollYawDegrees( g_camera->m_transform.GetRotationPRYDegrees() );
 	textObject->m_useMesh = false;
 	AddObjectToVector( textObject, mode );
 
@@ -577,7 +605,7 @@ void DebugAddScreenPoint( Vec2 pos, Rgba8 color )
 void DebugAddScreenLine( Vec2 p0, Rgba8 p0_startColor, Rgba8 p0_endColor, Vec2 p1, Rgba8 p1_startColor, Rgba8 p1_endColor, float duration )
 {
 	Cylinder3 cylinder = Cylinder3( p0, p1, -10.f );
-	Vec3 size = Vec3( 1.f ) * g_sizeScale;
+	Vec3 size = Vec3( 1.f ) * g_sizeScale * g_uiSizeCoe;
 	size.z = cylinder.GetLength();
 
 	DebugRenderObject* lineObject = DebugRenderObject::CreateObject( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_lineMesh, g_clock, duration );
@@ -598,7 +626,7 @@ void DebugAddScreenArrow( Vec2 p0, Rgba8 p0_startColor, Rgba8 p0_endColor, Vec2 
 	Vec3 v_p1 = Vec3( p1, g_2dZ );
 	Vec3 disp = p1 - p0;
 	float dist = disp.GetLength();
-	Vec3 size = Vec3( 1.f ) * g_sizeScale;
+	Vec3 size = Vec3( 1.f ) * g_sizeScale * g_uiSizeCoe;
 	size.z = dist;
 	DebugRenderObject* arrowObject = DebugRenderObject::CreateObject( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_arrowMesh, g_clock, duration );
 	arrowObject->m_transform.LookAt( p0, p1 );
@@ -698,25 +726,45 @@ void DebugAddScreenText( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rgb
 	DebugAddScreenText( pos, pivot, size, startColor, endColor, duration, text.c_str() );
 }
 
-// void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rgba8 endColor, float duration, const char* format, ... )
-// {
-// 
-// }
-// 
-// void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 color, float duration, const char* format, ... )
-// {
-// 
-// }
-// 
-// void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 color, const char* format, ... )
-// {
-// 
-// }
-// 
-// void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, Rgba8 color, const char* format, ... )
-// {
-// 
-// }
+void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rgba8 endColor, float duration, const char* format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	std::string result = Stringv( format, args );
+	va_end( args );
+
+	DebugAddScreenText( pos, pivot, size, startColor, endColor, duration, result );
+}
+
+void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 color, float duration, const char* format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	std::string result = Stringv( format, args );
+	va_end( args );
+
+	DebugAddScreenText( pos, pivot, size, color, color, duration, result );
+}
+
+void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 color, const char* format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	std::string result = Stringv( format, args );
+	va_end( args );
+
+	DebugAddScreenText( pos, pivot, size, color, color, 1.f, result );
+}
+
+void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, Rgba8 color, const char* format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	std::string result = Stringv( format, args );
+	va_end( args );
+
+	DebugAddScreenText( pos, pivot, 5.f, color, color, 1.f, result );
+}
 
 void DebugAddScreenBasis( Vec2 screenOriginLocation, Mat44 basisToRender, Rgba8 startTint, Rgba8 endTint, float duration )
 {
@@ -791,7 +839,7 @@ bool DebugRenderCommandAddScreenPointEvent( EventArgs& args )
 	Vec2 pos		= args.GetValue( std::to_string( 0 ), Vec2( 10.f, 10.f ) );
 	float duration	= args.GetValue( std::to_string( 1 ), 5.f );
 
-	DebugAddScreenPoint( pos, 1.f, g_defaultColor, duration );
+	DebugAddScreenPoint( pos, 10.f, g_defaultColor, duration );
 	return true;
 }
 

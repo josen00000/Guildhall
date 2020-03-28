@@ -97,6 +97,7 @@ void DebugRenderObject::RenderObject( RenderContext* ctx )
 	if( m_useWire ) {
 		ctx->SetFillMode( RASTER_FILL_WIREFRAME );
 	}
+	ctx->SetModelMatrix( Mat44() );
 
 	switch( m_type )
 	{
@@ -139,7 +140,7 @@ void DebugRenderObject::RenderObject( RenderContext* ctx )
 		ctx->DrawVertexVector( m_vertices );
 		break;
 	case OBJECT_BOARD_TEXT:
-		ctx->SetModelMatrix( m_transform.GetMatrix() );
+		ctx->SetModelMatrix( m_transform.ToMatrix() );
 		ctx->DrawVertexVector( m_vertices );
 		break;
 	case OBJECT_SCREEN_TEXT:
