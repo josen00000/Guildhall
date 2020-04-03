@@ -85,8 +85,8 @@ bool Collider2D::IntersectsAndGetManifold( const Collider2D* other, Manifold2D& 
 		int mIndex = myType * NUM_COLLIDER + otherType;
 		calculate_manifold getManifold = ManifoldMatrix[mIndex];
 		manifold = getManifold( this, other );
-		DebugAddWorldPoint( Vec3( manifold.contact.GetStartPos(), 0.f ), 100.f, Rgba8::GREEN, Rgba8::GREEN, 0.000001f, DEBUG_RENDER_ALWAYS );
-		DebugAddWorldPoint( Vec3( manifold.contact.GetEndPos(), 0.f ), 100.f, Rgba8::GREEN, Rgba8::GREEN, 0.000001f, DEBUG_RENDER_ALWAYS );
+		DebugAddWorldPoint( Vec3( manifold.contact.GetStartPos(), 0.f ), 100.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, DEBUG_RENDER_ALWAYS );
+		DebugAddWorldPoint( Vec3( manifold.contact.GetEndPos(), 0.f ), 100.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, DEBUG_RENDER_ALWAYS );
 		return true;
 	}
 	else {
