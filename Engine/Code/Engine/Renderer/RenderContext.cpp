@@ -102,7 +102,8 @@ void RenderContext::BeginFrame()
 {
 	// update frame time here
 	m_clock->SelfBeginFrame();
-	double deltaTime = m_clock->GetLastDeltaSeconds();
+	//float currentTime = (float)m_clock->GetTotalSeconds();
+	double deltaTime = (float)m_clock->GetLastDeltaSeconds();
 	UpdateFrameTime( (float)deltaTime );
 }
 

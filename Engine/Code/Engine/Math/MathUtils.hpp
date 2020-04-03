@@ -83,6 +83,7 @@ float GetAngleDegreesBetweenVectors2D( const Vec2& vectorA, const Vec2& vectorB 
 float Interpolate(float a,float b,float fractionOfB);
 float RangeMapFloat(const float inStart,const float inEnd,const float outStart,const float outEnd, const float inValue);
 Vec3 RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 inValue );
+Vec2 RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue );
 float ClampFloat(float inMin,float inMax,float inValue);
 float temClampFloat(float inValue, float inMin, float inMax);
 float ClampZeroToOne(float value);
@@ -100,6 +101,7 @@ float DotProduct2D(const Vec2 a, const Vec2 b);
 float CrossProduct2D( const Vec2& a, const Vec2& b );
 float CrossProduct2D( const Vec2& commonPoint, const Vec2& point1, const Vec2& point2 );
 Vec3 CrossProduct3D( const Vec3& a, const Vec3& b );
+Vec3 CrossProduct3D( const Vec2& a, const Vec2& b );
 
 //
 //Geometric query utilities

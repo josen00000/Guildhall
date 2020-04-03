@@ -24,6 +24,25 @@ FloatRange::FloatRange( const char* asText )
 	}
 }
 
+FloatRange FloatRange::GetIntersectRange( FloatRange a, FloatRange b )
+{
+	FloatRange result;
+	if( a.maximum < b.maximum ) {
+		result.maximum = a.maximum;
+	}
+	else {
+		result.maximum = b.maximum;
+	}
+
+	if( a.minimum > b.minimum ) {
+		result.minimum = a.minimum;
+	}
+	else {
+		result.minimum = b.minimum;
+	}
+	return result;
+}
+
 bool FloatRange::IsFloatInRange( float value ) const
 {
 	if( value <= minimum || value >= maximum){
@@ -32,6 +51,11 @@ bool FloatRange::IsFloatInRange( float value ) const
 	else{
 		return true;
 	}
+}
+
+bool FloatRange::IsInRange( FloatRange range ) const
+{
+	 return ( minimum >= range.minimum && maximum <= range.maximum );
 }
 
 bool FloatRange::DoesOverlap( const FloatRange& otherRange ) const

@@ -15,8 +15,11 @@ public:
 	explicit FloatRange( float min, float max );
 	explicit FloatRange( const char* asText );
 
+	static FloatRange GetIntersectRange( FloatRange a, FloatRange b );
+
 	//Accessors
 	bool		IsFloatInRange( float value ) const;
+	bool		IsInRange( FloatRange range ) const;
 	bool		DoesOverlap( const FloatRange& otherRange ) const;
 	std::string	GetAsString() const;
 	float		GetRandomInRange( RandomNumberGenerator& rng ) const;

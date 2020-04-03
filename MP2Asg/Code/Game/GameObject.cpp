@@ -77,8 +77,9 @@ void GameObject::CheckIfMouseIn( Vec2 mousePos )
 	}
 }
 
-void GameObject::CheckIfOutCameraVertical( Camera* camera )
+void GameObject::CheckIfOutWorldBoundVertical( Camera* camera )
 {
+	UNUSED(camera);
 	Vec2 pos = GetPosition();
 	Collider2D* col = m_rb->GetCollider();
 	switch( col->m_type )
@@ -96,12 +97,8 @@ void GameObject::CheckIfOutCameraVertical( Camera* camera )
 		default:
 			break;
 	}
-	if( pos.y < camera->GetOrthoMin().y ) {
-		Vec2 vel = m_rb->GetVelocity();
-		if( vel.y < 0 ){
-			vel.y = - vel.y;
-			m_rb->SetVelocity( vel );
-		}
+	if( pos.y < -1.f ) {
+		m_isDestroyed = true;
 	}
 
 }
@@ -127,12 +124,11 @@ void GameObject::CheckIfOutCameraHorizontal( Camera* camera )
 			break;
 	}
 	if( pos.x < camera->GetOrthoMin().x - dist ) {
-		pos.x = camera->GetOrthoMax().x + dist;
+		m_isDestroyed = true;
 	}
 	else if( pos.x > camera->GetOrthoMax().x + dist ) {
-		pos.x = camera->GetOrthoMin().x - dist;
+		m_isDestroyed = true;
 	}
-	SetPosition( pos );
 }
 
 void GameObject::UpdateColliderShape()
@@ -144,9 +140,9 @@ void GameObject::Update( float deltaSeconds )
 {
 	UNUSED( deltaSeconds );
 	CheckIfMouseIn( g_theGame->m_mousePos );
-	CheckIfOutCameraVertical( g_gameCamera );
-	CheckIfOutCameraHorizontal( g_gameCamera );
 	UpdateColliderShape();
+	CheckIfOutCameraHorizontal( g_gameCamera );
+	CheckIfOutWorldBoundVertical( g_gameCamera );
 }
 
 void GameObject::UpdateAngular( float deltaSeconds )

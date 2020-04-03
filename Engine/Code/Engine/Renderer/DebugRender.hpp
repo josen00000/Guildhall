@@ -30,7 +30,7 @@ enum DebugRenderMode {
 //----------------------------------
 
 // setup
-void DebugRenderSystemStartup( RenderContext* ctx );
+void DebugRenderSystemStartup( RenderContext* ctx, Camera* camera );
 void DebugRenderSystemShutdown();
 void CreateGPUMeshes();
 void CreateBitmapFont();

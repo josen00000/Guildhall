@@ -24,14 +24,18 @@ public:
 	// Accessor
 	float	GetDistance( Vec2 point ) const;
 	float	GetLongestDistance() const;
-	Vec2	GetLowestPoint() const;
 	int		GetVertexCount() const;
 	int		GetEdgeCount() const;
+
+	Vec2	GetLowestPoint() const;
 	Vec2	GetClosestPoint( Vec2 point ) const;
 	Vec2	GetClosestPointOnEdges( Vec2 point ) const;
 	Vec2	GetMassCenter( std::vector<Vec2> rawPoints ) const;
 	Vec2	GetMassCenter() const { return m_center; }
+
 	LineSegment2 GetEdge( int index ) const;
+	LineSegment2 GetEdgeInWorld( int index ) const;
+	void	GetAllVertices( std::vector<Vec2>& vertices ) const;
 
 	// Mutator
 	void	SetEdgesFromPoints( std::vector<Vec2> points );

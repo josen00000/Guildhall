@@ -47,7 +47,7 @@ static std::vector<DebugRenderObject*> g_debugDepthObject;
 static std::vector<DebugRenderObject*> g_debugXrayObject;
 static std::vector<DebugRenderObject*> g_debugScreenObject;
 
-void DebugRenderSystemStartup( RenderContext* ctx )
+void DebugRenderSystemStartup( RenderContext* ctx, Camera* camera )
 {
 	CreateGPUMeshes();
 	g_ctx = ctx;
@@ -55,6 +55,7 @@ void DebugRenderSystemStartup( RenderContext* ctx )
 	CreateBitmapFont();
 	g_screenMax = Vec2( 160.f, 90.f );
 	g_aspectRatio = 0.9f;
+	g_camera = camera;
 
 	// add command
 	std::string enableRenderComd			= std::string( "debug_render" );

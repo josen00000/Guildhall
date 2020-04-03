@@ -7,13 +7,15 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Math/Vec4.hpp"
 #include "Engine/Physics/Collider2D.hpp"
 #include "Engine/Physics/Physics2D.hpp"
 #include "Engine/Physics/PolygonCollider2D.hpp"
 #include "Engine/Physics/RigidBody2D.hpp"
-#include "Engine/Renderer/Camera.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Renderer/Camera.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Platform/Window.hpp"
 
 extern App*				g_theApp;
@@ -44,6 +46,18 @@ void Game::Startup()
 	//Polygon2 tempPoly = Polygon2::MakeConvexFromPointCloud( m_tempPoints );
 	//GameObject* polyTest = new GameObject( tempPoly );
 	//m_gameObjects.push_back( polyTest );
+
+	// test debug render
+	//DebugAddScreenText( Vec4( 0.f, 1.f, 20.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, -1.f, "teststring" );
+	DebugAddWorldPoint( Vec3( 50.f, 50.f, 0.f ), 50.f, Rgba8::RED, 1.f, DEBUG_RENDER_ALWAYS );
+	//DebugAddWorldPoint( Vec3( 0.f, 0.f, -50.f ), Rgba8::RED, -1.f, DEBUG_RENDER_ALWAYS );
+
+	// test contact
+	CreateContactTestObjects();
+
+	// CreateFloor
+	CreateWorldFloor();
+
 }
 
 void Game::Shutdown()
@@ -67,6 +81,8 @@ void Game::Update( float deltaSeconds )
 	UpdateGameObjects( deltaSeconds );
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 	IsMouseOverObject();
+
+	CleanDestroyedObjects();
 }
 
 void Game::UpdatePhysics( float deltaSeconds )
@@ -157,7 +173,8 @@ void Game::UpdateCameraHeight( float deltaSeconds )
 	UNUSED(deltaSeconds);
 	float clampedScroll = ClampFloat( 0.f, 100.f, m_mouseScroll );
 	float height = RangeMapFloat( 0.f, 100.f, 100.f, 50.f, clampedScroll );
-
+	std::string heightText = "height text :" + std::to_string( height );
+	DebugAddScreenText( Vec4( 0.f, 1.f, 10.f, -10.f), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.1f, heightText );
 	m_gameCamera->SetProjectionOrthographic( height );
 }
 
@@ -561,6 +578,36 @@ void Game::GenerateTestPoints()
 	}
 }
 
+void Game::CreateContactTestObjects()
+{
+	std::vector<Vec2> cubePoints;
+	cubePoints.push_back( Vec2( 10.f, 10.f ) );
+	cubePoints.push_back( Vec2( 30.f, 10.f ) );
+	cubePoints.push_back( Vec2( 30.f, 30.f ) );
+	cubePoints.push_back( Vec2( 10.f, 30.f ) );
+
+	std::vector<Vec2> triPoints;
+	triPoints.push_back( Vec2( 40.f, 40.f ) );
+	triPoints.push_back( Vec2( 60.f, 40.f ) );
+	triPoints.push_back( Vec2( 50.f, 50.f ) );
+
+	GameObject* testCubeObject = new GameObject( cubePoints );
+	GameObject* testTriObject = new GameObject( triPoints );
+	m_gameObjects.push_back( testCubeObject );
+	m_gameObjects.push_back( testTriObject );
+}
+
+void Game::CreateWorldFloor()
+{
+	std::vector<Vec2> floorPoints;
+	floorPoints.push_back( Vec2( 0.f, -0.5f ) );
+	floorPoints.push_back( Vec2( 160.f, -0.5f ) );
+	floorPoints.push_back( Vec2( 160.f, 0.5f ) );
+	floorPoints.push_back( Vec2( 0.f, 0.5f ) );
+	GameObject* floorObject = new GameObject( floorPoints );
+	m_gameObjects.push_back( floorObject );
+}
+
 void Game::AddPointToDrawPolygon( Vec2 point )
 {
 	// Check if point valid
@@ -645,6 +692,16 @@ void Game::DeleteGameObject( GameObject* obj )
 		if( m_gameObjects[objIndex] == obj ) {
 			delete m_gameObjects[objIndex];
 			m_gameObjects[objIndex] = nullptr;
+		}
+	}
+}
+
+void Game::CleanDestroyedObjects()
+{
+	for( int i = 0; i < m_gameObjects.size(); i++ ) {
+		if( m_gameObjects[i] == nullptr ){ continue; }
+		if( m_gameObjects[i]->IsDestroyed() ) {
+			DeleteGameObject( m_gameObjects[i] );
 		}
 	}
 }

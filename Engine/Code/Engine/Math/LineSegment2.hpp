@@ -11,6 +11,9 @@ public:
 	~LineSegment2()=default;
 	explicit LineSegment2( const Vec2& start, const Vec2& end );
 
+	static LineSegment2 ClipSegmentToSegment( LineSegment2 toClip, LineSegment2 refSeg );
+	static LineSegment2 ClipSegmentToSegmentAlongDirection( LineSegment2 toClip, Vec2 start, Vec2 direction );
+
 	//Accessor
 	Vec2	GetStartPos() const;
 	Vec2	GetEndPos() const;

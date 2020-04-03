@@ -1,10 +1,73 @@
 #include "LineSegment2.hpp"
 #include "Engine/Math/MathUtils.hpp"
+#include "Engine/Math/FloatRange.hpp"
+
 
 LineSegment2::LineSegment2( const Vec2& start, const Vec2& end )
 	:m_start(start)
 	,m_end(end)
 {
+}
+
+LineSegment2 LineSegment2::ClipSegmentToSegment( LineSegment2 toClip, LineSegment2 refSeg )
+{
+	Vec2 onto = refSeg.GetEndPos() - refSeg.GetStartPos();
+	Vec2 source1 = toClip.GetStartPos() - refSeg.GetStartPos();
+	Vec2 source2 = toClip.GetEndPos() - refSeg.GetStartPos();
+
+	float refLength		= refSeg.GetLength();
+	float startLength	=  GetProjectedLength2D( source1, onto );
+	float endLength		=  GetProjectedLength2D( source2, onto );
+
+	if( startLength > endLength ){
+		Vec2 temp = toClip.GetStartPos();
+		toClip.SetStartPos( toClip.GetEndPos() );
+		toClip.SetEndPos( temp );
+		
+		float tempf = startLength;
+		startLength = endLength;
+		endLength = tempf;
+	}
+	
+	FloatRange toClipRange = FloatRange( startLength, endLength );
+	
+	FloatRange refRange		= FloatRange( 0.f, refLength );
+
+	FloatRange clippedRange = FloatRange::GetIntersectRange( toClipRange, refRange );
+
+	if( !clippedRange.IsInRange( refRange ) ) {
+		return LineSegment2( Vec2::ZERO, Vec2::ZERO );
+	}
+
+	if( clippedRange.minimum == clippedRange.maximum ) {
+		return toClip;
+	}
+
+	Vec2 clippedStart	= RangeMapFromFloatToVec2( toClipRange.minimum, toClipRange.maximum, toClip.m_start, toClip.m_end, clippedRange.minimum );
+	Vec2 clippedEnd		= RangeMapFromFloatToVec2( toClipRange.minimum, toClipRange.maximum, toClip.m_start, toClip.m_end, clippedRange.maximum );
+
+	return LineSegment2( clippedStart, clippedEnd );
+}
+
+LineSegment2 LineSegment2::ClipSegmentToSegmentAlongDirection( LineSegment2 toClip, Vec2 start, Vec2 direction )
+{
+	Vec2 onto = start + direction;
+	Vec2 source1 = toClip.GetStartPos() - start;
+	Vec2 source2 = toClip.GetEndPos() - start;
+
+	float startLength	= GetProjectedLength2D( source1, onto );
+	float endLength		= GetProjectedLength2D( source2, onto );
+
+	FloatRange toClipRange = FloatRange( startLength, endLength );
+	FloatRange refRange = FloatRange( 0.f, (float)INT_MAX );
+
+	FloatRange clippedRange = FloatRange::GetIntersectRange( toClipRange, refRange );
+
+	Vec2 clippedStart	= RangeMapFromFloatToVec2( toClipRange.minimum, toClipRange.maximum, toClip.m_start, toClip.m_end, clippedRange.minimum );
+	Vec2 clippedEnd		= RangeMapFromFloatToVec2( toClipRange.minimum, toClipRange.maximum, toClip.m_start, toClip.m_end, clippedRange.maximum );
+
+	return LineSegment2( clippedStart, clippedEnd );
+
 }
 
 Vec2 LineSegment2::GetStartPos() const

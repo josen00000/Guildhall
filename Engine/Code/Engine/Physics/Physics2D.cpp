@@ -111,6 +111,8 @@ void Physics2D::DetectCollisions()
 			Manifold2D manifold;
 			if( col1->IntersectsAndGetManifold( col2, manifold ) ){
 				CreateCollision( col1, col2, manifold );
+				//DebugAddWorldPoint( Vec3( manifold.contact.GetStartPos(), -50.f ), Rgba8::RED, -1.f, DEBUG_RENDER_ALWAYS );
+				//DebugAddWorldPoint( Vec3( manifold.contact.GetEndPos(), -50.f ), Rgba8::RED, -1.f, DEBUG_RENDER_ALWAYS );
 			}
 		}
 	}
@@ -179,11 +181,11 @@ float Physics2D::CalculateCollisionNormalImpulse( const Collision2D& collision )
 	Rigidbody2D* rbOther = collision.other->m_rigidbody;
 	float result = 0;
 	float res = PhysicsMaterial::GetRestitutionBetweenTwoMaterial( collision.me->m_material, collision.other->m_material );
-	Vec2 velMe = rbMe->GetImpactVelocity( collision.GetContact() );
-	Vec2 velOther = rbOther->GetImpactVelocity( collision.GetContact() );
+	Vec2 velMe = rbMe->GetImpactVelocity( collision.GetContactCenter() );
+	Vec2 velOther = rbOther->GetImpactVelocity( collision.GetContactCenter() );
 	Vec2 normal = collision.GetNormal();
 	Vec2 vAB = velOther - velMe;
-	Vec2 contact = collision.GetContact();
+	Vec2 contact = collision.GetContactCenter();
 	Vec2 rAPTangent = contact - collision.me->GetCentroid();
 	Vec2 rBPTangent = contact - collision.other->GetCentroid();
 	rAPTangent.Rotate90Degrees();
@@ -214,12 +216,12 @@ float Physics2D::CalculateCollisionTangentImpulse( const Collision2D& collision,
 	Rigidbody2D* rbOther = collision.other->m_rigidbody;
 	float result = 0;
 	float res = PhysicsMaterial::GetRestitutionBetweenTwoMaterial( collision.me->m_material, collision.other->m_material );
-	Vec2 velMe = rbMe->GetImpactVelocity( collision.GetContact() );
-	Vec2 velOther = rbOther->GetImpactVelocity( collision.GetContact() );
+	Vec2 velMe = rbMe->GetImpactVelocity( collision.GetContactCenter() );
+	Vec2 velOther = rbOther->GetImpactVelocity( collision.GetContactCenter() );
 	Vec2 normal = collision.GetNormal();
 	normal.Rotate90Degrees();
 	Vec2 vAB = velOther - velMe;
-	Vec2 contact = collision.GetContact();
+	Vec2 contact = collision.GetContactCenter();
 	Vec2 rAPTangent = contact - collision.me->GetCentroid();
 	Vec2 rBPTangent = contact - collision.other->GetCentroid();
 	rAPTangent.Rotate90Degrees();
@@ -253,14 +255,14 @@ void Physics2D::ApplyImpulseInCollision( const Collision2D& collision, Vec2 impu
 	Collider2D* other = collision.other;
 	
 	if( me->m_rigidbody->GetSimulationMode() == other->m_rigidbody->GetSimulationMode()	&& me->m_rigidbody->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		collision.me->m_rigidbody->ApplyImpulse( impulse, collision.GetContact() );
-		collision.other->m_rigidbody->ApplyImpulse( -impulse, collision.GetContact() );
+		collision.me->m_rigidbody->ApplyImpulse( impulse, collision.GetContactCenter() );
+		collision.other->m_rigidbody->ApplyImpulse( -impulse, collision.GetContactCenter() );
 	}
 	else if( other->m_rigidbody->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		other->m_rigidbody->ApplyImpulse( -impulse, collision.GetContact() );
+		other->m_rigidbody->ApplyImpulse( -impulse, collision.GetContactCenter() );
 	}
 	else if(  me->m_rigidbody->GetSimulationMode() == RIGIDBODY_DYNAMIC ){
-		me->m_rigidbody->ApplyImpulse( impulse, collision.GetContact() );
+		me->m_rigidbody->ApplyImpulse( impulse, collision.GetContactCenter() );
 	}
 }
 

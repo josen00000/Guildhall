@@ -258,6 +258,9 @@
     <ClCompile Include="Physics\RigidBody2D.cpp">
       <Filter>physics</Filter>
     </ClCompile>
+    <ClCompile Include="Math\Algorithm.cpp">
+      <Filter>Math\basic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
@@ -502,6 +505,9 @@
     </ClInclude>
     <ClInclude Include="Physics\RigidBody2D.hpp">
       <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\Algorithm.hpp">
+      <Filter>Math\basic</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

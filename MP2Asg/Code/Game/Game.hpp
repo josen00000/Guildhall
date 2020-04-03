@@ -32,6 +32,12 @@ public:
 	void RenderTime() const;
 	void GenerateTempPoints();
 	void GenerateTestPoints();
+	void CreateContactTestObjects();
+	void CreateWorldFloor();
+
+	// game object
+	void DeleteGameObject( GameObject* obj );
+	void CleanDestroyedObjects();
 
 private:
 	void Update( float deltaSeconds );
@@ -69,7 +75,6 @@ private:
 	bool SelectGameObject();
 	void CreateDiscGameObject();
 	void UpdateGameObjects( float deltaSeconds );
-	void DeleteGameObject( GameObject* obj );
 	bool IsMouseOverObject();
 
 	//Load

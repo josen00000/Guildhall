@@ -22,7 +22,7 @@ public:
 
 private:
 	void CheckIfMouseIn( Vec2 mousePos );
-	void CheckIfOutCameraVertical( Camera* camera );
+	void CheckIfOutWorldBoundVertical( Camera* camera );
 	void CheckIfOutCameraHorizontal( Camera* camera );
 	void UpdateColliderShape();
 

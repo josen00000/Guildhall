@@ -60,6 +60,13 @@ Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 		result.push_back( next );
 		current = next;
 	}
+	for( int i = 0; i < result.size(); i++ ) {
+		for( int j = i; j < result.size(); j++ ) {
+			if( IsVec2MostlyEqual( result[i], result[j] ) && i != j ) {
+				result.erase( result.begin() + j );
+			}
+		}
+	}
 	Polygon2 tempPoly = Polygon2( result ); // doesn't work after delete empty constructor
 	return tempPoly;
 }
@@ -212,6 +219,22 @@ Vec2 Polygon2::GetMassCenter( std::vector<Vec2> rawPoints ) const
 LineSegment2 Polygon2::GetEdge( int index ) const
 {
 	return m_edges[index];
+}
+
+LineSegment2 Polygon2::GetEdgeInWorld( int index ) const
+{
+	LineSegment2 result = GetEdge( index );
+	result.SetStartPos( m_center + result.GetStartPos() );
+	result.SetEndPos( m_center + result.GetEndPos() );
+	return result;
+}
+
+void Polygon2::GetAllVertices( std::vector<Vec2>& vertices ) const
+{
+	for( int i = 0; i < m_edges.size(); i++ ){
+		Vec2 point = m_edges[i].GetStartPos() + m_center;
+		vertices.push_back( point );
+	}
 }
 
 void Polygon2::SetEdgesFromPoints( std::vector<Vec2> points )

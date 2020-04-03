@@ -92,6 +92,14 @@ Vec3 RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 in
 	return result;
 }
 
+Vec2 RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue )
+{
+	Vec2 result;
+	result.x = RangeMapFloat( inStart, inEnd, outStart.x, outEnd.x, inValue );
+	result.y = RangeMapFloat( inStart, inEnd, outStart.y, outEnd.y, inValue );
+	return result;
+}
+
 float ClampFloat( float inMin, float inMax, float inValue )
 {
 	if(inValue<=inMin){
@@ -189,6 +197,13 @@ Vec3 CrossProduct3D( const Vec3& a, const Vec3& b )
 
 	Vec3 result = ( detI * i ) - ( detJ * j ) + ( detK * k );
 	return result;
+}
+
+Vec3 CrossProduct3D( const Vec2& a, const Vec2& b )
+{
+	Vec3 v3_a = Vec3( a );
+	Vec3 v3_b = Vec3( b );
+	return CrossProduct3D( v3_a, v3_b );
 }
 
 //

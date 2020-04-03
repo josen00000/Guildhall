@@ -72,11 +72,11 @@ public:
 
 public:
 	Vec2 m_gravityAccel = Vec2( 0.f, -2.f );
+	Clock* m_clock = nullptr;
 
 private:
 	std::vector<Collider2D*> m_colliders;
 	std::vector<Rigidbody2D*> m_rigidbodies;
 	std::vector<Collision2D> m_collisions;
-	Clock* m_clock = nullptr;
 	Timer* m_timer = nullptr;
 };
