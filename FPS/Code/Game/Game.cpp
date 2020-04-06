@@ -40,7 +40,7 @@ void Game::Startup()
 	m_isAttractMode	= false;
 
 	// debug render system
-	DebugRenderSystemStartup( g_theRenderer );
+	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
 	CreateTestObjects();
 	CreateDebugRenderObjects();
 	//DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, 20.f );
@@ -144,7 +144,7 @@ void Game::HandleDebugKeyboardInput( float deltaSeconds )
 	UNUSED(deltaSeconds);
 	Transform trans = m_gameCamera->m_transform;
 	Mat44 transMat = trans.ToMatrix();
-	float debugTime = 10.f;
+	float debugTime = -1.f;
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ){
 		DebugAddWorldPoint( trans.m_pos, 1.f, Rgba8::RED, Rgba8::BLUE, debugTime, DEBUG_RENDER_USE_DEPTH );
 	}
@@ -304,14 +304,16 @@ void Game::RenderCubeSphere() const
 
 void Game::CreateDebugRenderObjects()
 {
+
+	DebugAddWorldPoint( Vec3( 10.f, 10.f, -10.f ), Rgba8::RED, 01.f, DEBUG_RENDER_USE_DEPTH );
 	//add
 	// only test for ui
 	float debugTime = 10.f;
 	// UI
-	DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, debugTime );
-	DebugAddScreenText( Vec4( 0.5f, 0.5f, -10.f, -20.f), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::GREEN, debugTime, "test" );
-	DebugAddScreenQuad( AABB2( Vec2( 1.f, 1.f ), Vec2( 20.f, 20.f ) ), Rgba8::RED, debugTime );
-	DebugAddScreenLine( Vec2( 15.f, 15.f ), Vec2( 40.f, 40.f ), Rgba8::BLUE, debugTime );
+	//DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, debugTime );
+	//DebugAddScreenText( Vec4( 0.5f, 0.5f, -10.f, -20.f), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::GREEN, debugTime, "test" );
+	//DebugAddScreenQuad( AABB2( Vec2( 1.f, 1.f ), Vec2( 20.f, 20.f ) ), Rgba8::RED, debugTime );
+	//DebugAddScreenLine( Vec2( 15.f, 15.f ), Vec2( 40.f, 40.f ), Rgba8::BLUE, debugTime );
 	DebugAddScreenArrow( Vec2( 50.f, 50.f), Vec2( 50.f, 30.f ), Rgba8::YELLOW, debugTime );
 	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
 	DebugAddScreenTexturedQuad( AABB2( Vec2( 60.f, 60.f ), Vec2( 80.f, 80.f	) ), temp, Rgba8::GREEN, debugTime ); 

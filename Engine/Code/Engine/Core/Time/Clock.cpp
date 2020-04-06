@@ -2,11 +2,12 @@
 #include "Engine/Core/Time/Time.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 
-static Clock g_masterClock = Clock( nullptr );
+static Clock* g_masterClock;
 
 Clock::Clock()
 {
-	m_parent = &g_masterClock;
+	SetParent( g_masterClock );
+	g_masterClock->AddChild( this );
 }
 
 Clock::Clock( Clock* parent )
@@ -94,12 +95,13 @@ void Clock::AddChild( Clock* child )
 
 void Clock::SystemStartUp()
 {
-	g_masterClock.Reset();
+	g_masterClock = new Clock( nullptr );
+	g_masterClock->Reset();
 }
 
 void Clock::SystemShutDown()
 {
-	//delete g_masterClock;
+	delete g_masterClock;
 }
 
 void Clock::BeginFrame()
@@ -109,10 +111,10 @@ void Clock::BeginFrame()
 
 	double dt = timeThisFrame - timePreviousFrame;
 	timePreviousFrame = timeThisFrame;
-	g_masterClock.Update( dt );
+	g_masterClock->Update( dt );
 }
 
 Clock* Clock::GetMaster()
 {
-	return &g_masterClock;
+	return g_masterClock;
 }

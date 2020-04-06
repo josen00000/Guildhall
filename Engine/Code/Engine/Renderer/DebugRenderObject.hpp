@@ -21,7 +21,7 @@ enum RenderObjectType {
 	OBJECT_QUAD,
 	OBJECT_TEXT,
 	OBJECT_SCREEN_TEXT,
-	OBJECT_BOARD_TEXT,
+	OBJECT_BILLBOARD_TEXT,
 };
 
 
@@ -29,19 +29,20 @@ class DebugRenderObject {
 public:
 	DebugRenderObject(){}
 	~DebugRenderObject();
-	static DebugRenderObject* CreateObject( Vec3 pos, Vec3 size, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration );
-	static DebugRenderObject* CreateObject( Mat44 mat, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration );
-	static DebugRenderObject* CreateObject( Vec3 pos, Vec3 size, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, GPUMesh* mesh, Clock* clock, float duration );
-	static DebugRenderObject* CreateObject( std::vector<Vertex_PCU> vertices, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration );
-	static DebugRenderObject* CreateObject( std::vector<Vertex_PCU> vertices, Transform trans, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration );
+	
+	static DebugRenderObject* CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration );
+	static DebugRenderObject* CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, GPUMesh* mesh, Clock* clock, float duration );
+	static DebugRenderObject* CreateObjectWithMatrix( Mat44 mat, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration );
+	static DebugRenderObject* CreateObjectWithVertices( std::vector<Vertex_PCU> vertices, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration );
+	static DebugRenderObject* CreateObjectWithVerticesAndTrans( std::vector<Vertex_PCU> vertices, Transform trans, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration );
+	
 	bool IsReadyToBeCulled() const;
 	bool CheckIfOld();
 	void RenderObject( RenderContext* ctx );
 	Rgba8 GetTintColor( float time );
 
+	// has method to get or set all attributes/member
 public:
-	bool m_useMesh = true;
-	bool m_isOld = false;
 	bool m_useWire = false;
 	
 	Transform m_transform;

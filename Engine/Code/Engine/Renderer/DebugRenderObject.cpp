@@ -10,7 +10,7 @@ DebugRenderObject::~DebugRenderObject()
 	SELF_SAFE_RELEASE(m_timer);
 }
 
-DebugRenderObject* DebugRenderObject::CreateObject( Vec3 pos, Vec3 size, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_timer = new Timer();
@@ -25,7 +25,7 @@ DebugRenderObject* DebugRenderObject::CreateObject( Vec3 pos, Vec3 size, Rgba8 s
 	return object;
 }
 
-DebugRenderObject* DebugRenderObject::CreateObject( Vec3 pos, Vec3 size, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, GPUMesh* mesh, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, GPUMesh* mesh, Clock* clock, float duration )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_timer = new Timer();
@@ -40,7 +40,7 @@ DebugRenderObject* DebugRenderObject::CreateObject( Vec3 pos, Vec3 size, Rgba8 s
 	return object;
 }
 
-DebugRenderObject* DebugRenderObject::CreateObject( Mat44 mat, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithMatrix( Mat44 mat, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_timer = new Timer();
@@ -54,7 +54,7 @@ DebugRenderObject* DebugRenderObject::CreateObject( Mat44 mat, Rgba8 startColor,
 	return object;
 }
 
-DebugRenderObject* DebugRenderObject::CreateObject( std::vector<Vertex_PCU> vertices, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithVertices( std::vector<Vertex_PCU> vertices, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_vertices = vertices;
@@ -67,7 +67,7 @@ DebugRenderObject* DebugRenderObject::CreateObject( std::vector<Vertex_PCU> vert
 	return object;
 }
 
-DebugRenderObject* DebugRenderObject::CreateObject( std::vector<Vertex_PCU> vertices, Transform trans, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithVerticesAndTrans( std::vector<Vertex_PCU> vertices, Transform trans, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_vertices = vertices;
@@ -88,8 +88,7 @@ bool DebugRenderObject::IsReadyToBeCulled() const
 
 bool DebugRenderObject::CheckIfOld()
 {
-	m_isOld = m_timer->HasElapsed();
-	return m_isOld;
+	return m_timer->HasElapsed();
 }
 
 void DebugRenderObject::RenderObject( RenderContext* ctx )
@@ -98,6 +97,8 @@ void DebugRenderObject::RenderObject( RenderContext* ctx )
 		ctx->SetFillMode( RASTER_FILL_WIREFRAME );
 	}
 	ctx->SetModelMatrix( Mat44() );
+
+	// sunk cost fallacy
 
 	switch( m_type )
 	{
@@ -139,35 +140,16 @@ void DebugRenderObject::RenderObject( RenderContext* ctx )
 		ctx->SetModelMatrix( m_transform.ToMatrix() );
 		ctx->DrawVertexVector( m_vertices );
 		break;
-	case OBJECT_BOARD_TEXT:
+	case OBJECT_BILLBOARD_TEXT:
 		ctx->SetModelMatrix( m_transform.ToMatrix() );
 		ctx->DrawVertexVector( m_vertices );
 		break;
 	case OBJECT_SCREEN_TEXT:
 		ctx->DrawVertexVector( m_vertices );
+		break;
 	default:
 		break;
 	}
-
-// 	if( m_useMesh ){
-// 		m_mesh->m_owner = ctx;
-// 		if( m_type == OBJECT_CYLINDER || m_type == OBJECT_ARROW || m_type == OBJECT_BASIS || m_type == OBJECT_DEFAULT ) {
-// 			//ctx->SetModelMatrix( Mat44() );
-// 			ctx->SetModelMatrix( m_transform.GetMatrix() );
-// 		}
-// 		else {
-// 			ctx->SetModelMatrix( m_transform.ToMatrix() );
-// 		}
-// 		ctx->DrawMesh( m_mesh );
-// 	}
-// 	else{
-// 		if( m_type == OBJECT_TEXT ) {
-// 
-// 		}
-// 		ctx->SetModelMatrix( Mat44() );
-// 		ctx->DrawVertexVector( m_vertices );
-// 	}
-
 	ctx->SetFillMode( RASTER_FILL_SOLID );
 }
 

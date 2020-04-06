@@ -2,9 +2,9 @@ test1
 test2
 quit
 debug_render
-help
 debug_add_screen_text
-test
-debug_add_screen_point
 debug_add_world_point
 debug_add_world_wire_sphere
+test
+help
+debug_add_screen_point

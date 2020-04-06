@@ -194,6 +194,7 @@ void App::EndFrame()
 	g_theInputSystem->EndFrame();
 	g_theRenderer->EndFrame();
 	g_theConsole->EndFrame();
+	DebugRenderEndFrame();
 }
 
 

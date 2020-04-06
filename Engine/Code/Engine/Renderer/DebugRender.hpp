@@ -32,8 +32,6 @@ enum DebugRenderMode {
 // setup
 void DebugRenderSystemStartup( RenderContext* ctx, Camera* camera );
 void DebugRenderSystemShutdown();
-void CreateGPUMeshes();
-void CreateBitmapFont();
 
 // control
 void EnableDebugRendering();
@@ -45,16 +43,6 @@ void DebugRenderBeginFrame();
 void DebugRenderWorldToCamera( Camera* camera );
 void DebugRenderScreenTo( Texture* output );
 void DebugRenderEndFrame();
-void DebugRenderAlwaysObjects();
-void DebugRenderDepthObjects();
-void DebugRenderXraysObjects();
-void DebugRenderScreenObjects();
-void DebugRenderOneOBject( DebugRenderObject* object, float xrayTint = 1 );
-
-// Object
-void AddObjectToVector( DebugRenderObject* object, DebugRenderMode mode );
-void CleanOldObjects();
-
 
 //----------------------------------
 // World Rendering

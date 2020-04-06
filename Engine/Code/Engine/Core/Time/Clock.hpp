@@ -7,6 +7,7 @@ public:
 	Clock( Clock* parent );
 	~Clock();
 
+	
 	void Update( double deltaSeconds );
 	void Reset();
 	void SelfBeginFrame();

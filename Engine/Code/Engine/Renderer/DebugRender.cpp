@@ -20,15 +20,15 @@
 extern DevConsole* g_theConsole;
 
 // static variable
-static bool ableDebug = false;
+static bool g_ableDebug = false;
 static float g_sizeScale = 0.1f;
 static float g_uiSizeCoe = 5.f;
 static float g_2dZ = -10.f;
+static float g_aspectRatio = 1.f;
 static Vec2 g_screenMax = Vec2( 1.f, 1.f );
 static Vec2 g_screenMin = Vec2::ZERO;
-static float g_aspectRatio = 1.f;
 
-static Rgba8 g_defaultColor = Rgba8::RED;
+static Rgba8 g_defaultColor;
 static Clock* g_clock;
 static BitmapFont* g_defaultDebugFont = nullptr;
 
@@ -37,6 +37,7 @@ static GPUMesh* g_lineMesh;
 static GPUMesh* g_cubeMesh;
 static GPUMesh* g_arrowMesh;
 static GPUMesh* g_basisMesh;
+static GPUMesh* g_basisMesh2D;
 
 static Camera* g_camera = nullptr;
 static RenderContext* g_ctx = nullptr;
@@ -47,6 +48,191 @@ static std::vector<DebugRenderObject*> g_debugDepthObject;
 static std::vector<DebugRenderObject*> g_debugXrayObject;
 static std::vector<DebugRenderObject*> g_debugScreenObject;
 
+// Decleration
+void CreateGPUMeshes();
+void CreateBitmapFont();
+void DebugRenderAlwaysObjects();
+void DebugRenderDepthObjects();
+void DebugRenderXraysObjects();
+void DebugRenderScreenObjects();
+void DebugRenderOneObject( DebugRenderObject* object, float xrayTint = 1 );
+void AddObjectToVectors( DebugRenderObject* object, DebugRenderMode mode ); 
+void CleanOldObjects();
+void CleanOldObjectsInVector( std::vector<DebugRenderObject*>& vec );
+
+// private
+void CreateGPUMeshes()
+{
+	g_sphereMesh	= new GPUMesh();
+	g_lineMesh		= new GPUMesh();
+	g_cubeMesh		= new GPUMesh();
+	g_arrowMesh		= new GPUMesh();
+	g_basisMesh		= new GPUMesh();
+	g_basisMesh2D	= new GPUMesh();
+
+	// sphere
+	std::vector<Vertex_PCU> sphereVertices;
+	std::vector<uint> sphereIndices;
+	AppendIndexedVertsForSphere3D( sphereVertices, sphereIndices, Vec3( 0.f ), 1.f, 32, 16, Rgba8::WHITE );
+	g_sphereMesh->UpdateVerticesInCPU( sphereVertices );
+	g_sphereMesh->UpdateIndicesInCPU( sphereIndices );
+
+	// cube
+	AABB3 cube = AABB3( Vec3( -0.5f, -0.5f, -0.5f ), Vec3( 0.5f, 0.5f, 0.5f ) );
+	std::vector<Vertex_PCU> cubeVertices;
+	std::vector<uint> cubeIndices;
+	AppendIndexedVertsForAABB3D( cubeVertices, cubeIndices, cube, Rgba8::WHITE );
+	g_cubeMesh->UpdateVerticesInCPU( cubeVertices );
+	g_cubeMesh->UpdateIndicesInCPU( cubeIndices );
+
+	// line
+	std::vector<Vertex_PCU> lineVertices;
+	std::vector<uint> lineIndices;
+	Cylinder3 cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, -1.f ), 1.f );
+	AppendIndexedVertsForCylinder3D( lineVertices, lineIndices, cylinder, 12, Rgba8::WHITE, Rgba8::WHITE );
+
+	g_lineMesh->UpdateVerticesInCPU( lineVertices );
+	g_lineMesh->UpdateIndicesInCPU( lineIndices );
+
+	// arrow
+	std::vector<Vertex_PCU> arrowVertices;
+	std::vector<uint> arrowIndices;
+	Cone3 cone = Cone3( Vec3( 0.f, 0.f, -1.f ), Vec3( 0.f, 0.f, -1.5f ), 2.f );
+	AppendIndexedVertsForCylinder3D( arrowVertices, arrowIndices, cylinder, 12, Rgba8::WHITE, Rgba8::WHITE );
+	AppendIndexedVertsForCone3D( arrowVertices, arrowIndices, cone, 12, Rgba8::WHITE );
+
+	g_arrowMesh->UpdateVerticesInCPU( arrowVertices );
+	g_arrowMesh->UpdateIndicesInCPU( arrowIndices );
+
+	// basis
+	std::vector<Vertex_PCU> basisVertices;
+	std::vector<uint> basisIndices;
+	Cone3 coneX = Cone3( Vec3( 5.f, 0.f, 0.f ), Vec3( 6.f, 0.f, 0.f ), 2.f );
+	Cone3 coneY = Cone3( Vec3( 0.f, 5.f, 0.f ), Vec3( 0.f, 6.f, 0.f ), 2.f );
+	Cone3 coneZ = Cone3( Vec3( 0.f, 0.f, 5.f ), Vec3( 0.f, 0.f, 5.5f ), 2.f );
+	Cylinder3 cylinderX = Cylinder3( Vec3::ZERO, Vec3( 5.f, 0.f, 0.f ), 1.f );
+	Cylinder3 cylinderY = Cylinder3( Vec3::ZERO, Vec3( 0.f, 5.f, 0.f ), 1.f );
+	Cylinder3 cylinderZ = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 5.f ), 1.f );
+
+	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderX, 12, Rgba8::RED, Rgba8::RED );
+	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderY, 12, Rgba8::GREEN, Rgba8::GREEN );
+	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderZ, 12, Rgba8::BLUE, Rgba8::BLUE );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneX, 12, Rgba8::RED );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneY, 12, Rgba8::GREEN );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneZ, 12, Rgba8::BLUE );
+
+	g_basisMesh->UpdateVerticesInCPU( basisVertices );
+	g_basisMesh->UpdateIndicesInCPU( basisIndices );
+
+	// basis 2D
+	std::vector<Vertex_PCU> basis2DVertices;
+	std::vector<uint> basis2DIndices;
+
+	AppendIndexedVertsForCylinder3D( basis2DVertices, basis2DIndices, cylinderX, 12, Rgba8::RED, Rgba8::RED );
+	AppendIndexedVertsForCylinder3D( basis2DVertices, basis2DIndices, cylinderY, 12, Rgba8::GREEN, Rgba8::GREEN );
+	AppendIndexedVertsForCone3D( basis2DVertices, basis2DIndices, coneX, 12, Rgba8::RED );
+	AppendIndexedVertsForCone3D( basis2DVertices, basis2DIndices, coneY, 12, Rgba8::GREEN );
+
+	g_basisMesh2D->UpdateVerticesInCPU( basis2DVertices );
+	g_basisMesh2D->UpdateIndicesInCPU( basis2DIndices );
+}
+
+void CreateBitmapFont()
+{
+	g_defaultDebugFont = g_ctx->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+}
+
+void DebugRenderAlwaysObjects()
+{
+	g_ctx->DisableDepth();
+	for( int i = 0; i < g_debugAlwaysObject.size(); i++ ) {
+		DebugRenderObject* object = g_debugAlwaysObject[i];
+		if( object == nullptr ) { continue; }
+		DebugRenderOneObject( object );
+	}
+}
+
+void DebugRenderDepthObjects()
+{
+	g_ctx->EnableDepth( COMPARE_DEPTH_LESS, true );
+	for( int i = 0; i < g_debugDepthObject.size(); i++ ) {
+		DebugRenderObject* object = g_debugDepthObject[i];
+		if( object == nullptr ) { continue; }
+		DebugRenderOneObject( object );
+	}
+}
+
+void DebugRenderXraysObjects()
+{
+	g_ctx->EnableDepth( COMPARE_DEPTH_GREATER_EQUAL, false );
+	for( int i = 0; i < g_debugXrayObject.size(); i++ ) {
+		DebugRenderObject* object = g_debugXrayObject[i];
+		if( object == nullptr ) { continue; }
+		DebugRenderOneObject( object, 0.5f );
+	}
+	g_ctx->EnableDepth( COMPARE_DEPTH_LESS, true );
+	for( int i = 0; i < g_debugXrayObject.size(); i++ ) {
+		DebugRenderObject* object = g_debugXrayObject[i];
+		if( object == nullptr ) { continue; }
+		DebugRenderOneObject( object );
+	}
+}
+
+void DebugRenderScreenObjects()
+{
+	for( int i = 0; i < g_debugScreenObject.size(); i++ ) {
+		DebugRenderObject* object = g_debugScreenObject[i];
+		if( object == nullptr ) { continue; }
+		DebugRenderOneObject( object );
+	}
+}
+
+void DebugRenderOneObject( DebugRenderObject* object, float xrayTint )
+{
+	if( object->m_type == OBJECT_TEXT ) {
+		Texture* textTex = g_defaultDebugFont->GetTexture();
+		g_ctx->BindTexture( textTex );
+	}
+	if( object->m_type == OBJECT_BILLBOARD_TEXT ) {
+		Texture* textTex = g_defaultDebugFont->GetTexture();
+		g_ctx->BindTexture( textTex );
+		object->m_transform.SetRotationFromPitchRollYawDegrees( g_camera->m_transform.GetRotationPRYDegrees() );
+	}
+	if( object->m_type == OBJECT_QUAD && object->m_texture != nullptr ) {
+		g_ctx->BindTexture( object->m_texture );
+	}
+	if( object->m_type == OBJECT_SCREEN_TEXT ) {
+		Texture* textTex = g_defaultDebugFont->GetTexture();
+		g_ctx->BindTexture( textTex );
+	}
+	
+	Rgba8 tintColor = object->GetTintColor( (float)g_clock->GetTotalSeconds() );
+	tintColor.a = (unsigned char)(tintColor.a * xrayTint);
+	g_ctx->SetTintColor( tintColor );
+	
+	object->RenderObject( g_ctx );
+	g_ctx->BindTexture( nullptr );
+}
+
+void AddObjectToVectors( DebugRenderObject* object, DebugRenderMode mode )
+{
+	switch( mode )
+	{
+	case DEBUG_RENDER_ALWAYS:
+		g_debugAlwaysObject.push_back( object );
+		break;
+	case DEBUG_RENDER_USE_DEPTH:
+		g_debugDepthObject.push_back( object );
+		break;
+	case DEBUG_RENDER_XRAY:
+		g_debugXrayObject.push_back( object );
+		break;
+	case DEBUG_RENDER_SCREEN:
+		g_debugScreenObject.push_back( object );
+		break;
+	}
+}
+
 void DebugRenderSystemStartup( RenderContext* ctx, Camera* camera )
 {
 	CreateGPUMeshes();
@@ -55,9 +241,11 @@ void DebugRenderSystemStartup( RenderContext* ctx, Camera* camera )
 	CreateBitmapFont();
 	g_screenMax = Vec2( 160.f, 90.f );
 	g_aspectRatio = 0.9f;
-	g_camera = camera;
+	g_defaultColor = Rgba8::WHITE;
+	g_camera = camera; // new camera
 
 	// add command
+	// hard to maintain
 	std::string enableRenderComd			= std::string( "debug_render" );
 	std::string AddWorldPointComd			= std::string( "debug_add_world_point" );
 	std::string AddWorldWireSphereComd		= std::string( "debug_add_world_wire_sphere" );
@@ -66,8 +254,6 @@ void DebugRenderSystemStartup( RenderContext* ctx, Camera* camera )
 	std::string AddScreenPointComd			= std::string( "debug_add_screen_point" );
 	std::string AddScreenQuadComd			= std::string( "debug_add_screen_quad" );
 	std::string AddScreenTextComd			= std::string( "debug_add_screen_text" );
-	
-
 
 	std::string enableRenderComdDesc			= std::string( "enable debug render.(enabled=bool)" );
 	std::string AddWorldPointComdDesc			= std::string( "point(position=vec3 duration=float)" );
@@ -104,6 +290,7 @@ void DebugRenderSystemShutdown()
 	SELF_SAFE_RELEASE(g_cubeMesh);
 	SELF_SAFE_RELEASE(g_arrowMesh);
 	SELF_SAFE_RELEASE(g_basisMesh);
+	SELF_SAFE_RELEASE(g_basisMesh2D);
 
 	g_camera = nullptr;
 	g_ctx	 = nullptr;
@@ -111,83 +298,15 @@ void DebugRenderSystemShutdown()
 }
 
 
-void CreateGPUMeshes()
-{
-	g_sphereMesh	= new GPUMesh();
-	g_lineMesh		= new GPUMesh();
-	g_cubeMesh		= new GPUMesh();
-	g_arrowMesh		= new GPUMesh();
-	g_basisMesh		= new GPUMesh();
-
-	// sphere
-	std::vector<Vertex_PCU> sphereVertices;
-	std::vector<uint> sphereIndices;
-	AppendIndexedVertsForSphere3D( sphereVertices, sphereIndices, Vec3( 0.f ), 0.1f, 32, 16, Rgba8::RED );
-	g_sphereMesh->UpdateVerticesInCPU( sphereVertices );
-	g_sphereMesh->UpdateIndicesInCPU( sphereIndices );
-
-	// cube
-	AABB3 cube = AABB3( Vec3( -0.5f, -0.5f, -0.5f ), Vec3( 0.5f, 0.5f, 0.5f ) );
-	std::vector<Vertex_PCU> cubeVertices;
-	std::vector<uint> cubeIndices;
-	AppendIndexedVertsForAABB3D( cubeVertices, cubeIndices, cube, Rgba8::RED );
-	g_cubeMesh->UpdateVerticesInCPU( cubeVertices );
-	g_cubeMesh->UpdateIndicesInCPU( cubeIndices );
-
-	// line
-	std::vector<Vertex_PCU> lineVertices;
-	std::vector<uint> lineIndices;
-	Cylinder3 cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, -1.f), 0.1f );
-	AppendIndexedVertsForCylinder3D( lineVertices, lineIndices, cylinder, 12, Rgba8::RED, Rgba8::BLUE );
-	
-	g_lineMesh->UpdateVerticesInCPU( lineVertices );
-	g_lineMesh->UpdateIndicesInCPU( lineIndices );
-
-	// arrow
-	std::vector<Vertex_PCU> arrowVertices;
-	std::vector<uint> arrowIndices;
-	Cone3 cone = Cone3(  Vec3( 0.f, 0.f, -1.f ), Vec3( 0.f, 0.f, -1.5f ), 0.5f );
-	AppendIndexedVertsForCylinder3D( arrowVertices, arrowIndices, cylinder, 12, Rgba8::RED, Rgba8::BLUE );
-	AppendIndexedVertsForCone3D( arrowVertices, arrowIndices, cone, 12, Rgba8::RED );
-
-	g_arrowMesh->UpdateVerticesInCPU( arrowVertices );
-	g_arrowMesh->UpdateIndicesInCPU( arrowIndices );
-
-	// basis
-	std::vector<Vertex_PCU> basisVertices;
-	std::vector<uint> basisIndices;
-	Cone3 coneX = Cone3( Vec3( 1.f, 0.f, 0.f ), Vec3( 1.5f, 0.f, 0.f ), 0.5f );
-	Cone3 coneY = Cone3( Vec3( 0.f, 1.f, 0.f ), Vec3( 0.f, 1.5f, 0.f ), 0.5f );
-	Cone3 coneZ = Cone3( Vec3( 0.f, 0.f, 1.f ), Vec3( 0.f, 0.f, 1.5f ), 0.5f );
-	Cylinder3 cylinderX = Cylinder3( Vec3::ZERO, Vec3( 1.f, 0.f, 0.f), 0.1f );
-	Cylinder3 cylinderY = Cylinder3( Vec3::ZERO, Vec3( 0.f, 1.f, 0.f ), 0.1f );
-	Cylinder3 cylinderZ = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.1f );
-
-	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderX, 12, Rgba8::RED, Rgba8::RED );
-	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderY, 12, Rgba8::GREEN, Rgba8::GREEN );
-	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderZ, 12, Rgba8::BLUE, Rgba8::BLUE );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneX, 12, Rgba8::RED );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneY, 12, Rgba8::GREEN );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneZ, 12, Rgba8::BLUE );
-
-	g_basisMesh->UpdateVerticesInCPU( basisVertices );
-	g_basisMesh->UpdateIndicesInCPU( basisIndices );
-	
-}
-
-void CreateBitmapFont()
-{
-	g_defaultDebugFont = g_ctx->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
-}
 
 void EnableDebugRendering()
 {
-	ableDebug = true;
+	g_ableDebug = true;
 }
 
 void DisableDebugRendering()
 {
-	ableDebug = false;
+	g_ableDebug = false;
 }
 
 void ClearDebugRendering()
@@ -205,34 +324,29 @@ void DebugRenderBeginFrame()
 
 void DebugRenderWorldToCamera( Camera* camera )
 {
-	if( !ableDebug ){ return; }
+	if( !g_ableDebug ) { return; }
 
 	g_camera = camera;
 	uint clearState = g_camera->m_clearState;
 	g_camera->SetClearMode( CLEAR_NONE );
-	//g_camera->EnableClearColor( Rgba8::DARK_GRAY );
-	//g_camera->EnableClearDepth( 1 );
 	g_ctx->BeginCamera( g_camera );
-	
-	
 
-	// render use depth objects
-	
 	DebugRenderDepthObjects();
 	DebugRenderXraysObjects();
 	DebugRenderAlwaysObjects(); 	
+
 	g_ctx->EndCamera();
 	camera->SetClearMode( clearState );
 }
 
 void DebugRenderScreenTo( Texture* output )
 {
-	if( !ableDebug ){ return; }
+	if( !g_ableDebug ){ return; }
 
-	g_camera->ClientToWorld( Vec2::ZERO, 0.f ); // testing
+	// !!! not create every frame. create a new at start up.
 	Camera* screenCamera = new Camera( 0.f, -100.f, g_screenMin, g_screenMax, g_aspectRatio );
 	screenCamera->SetColorTarget( output );
-	screenCamera->SetDepthStencilTarget( g_camera->GetDepthStencilTarget() );
+	screenCamera->SetDepthStencilTarget( nullptr ); // don't need depth stencil target set target to nullptr
 	screenCamera->SetClearMode( CLEAR_NONE );
 	screenCamera->m_transform = Transform();
 	screenCamera->SetUseDepth( false );
@@ -245,117 +359,40 @@ void DebugRenderScreenTo( Texture* output )
 
 void DebugRenderEndFrame()
 {
-	// what to do when end frame
-
-}
-
-void DebugRenderAlwaysObjects()
-{
-	g_ctx->DisableDepth();
-	for( int i = 0; i < g_debugAlwaysObject.size(); i++ ) {
-		DebugRenderObject* object = g_debugAlwaysObject[i];
-		if( object == nullptr ) { continue; }
-		DebugRenderOneOBject( object );
-	}
-
-}
-
-void DebugRenderDepthObjects()
-{
-	g_ctx->EnableDepth( COMPARE_DEPTH_LESS, true );
-	for( int i = 0; i < g_debugDepthObject.size(); i++ ) {
-		DebugRenderObject* object = g_debugDepthObject[i];
-		if( object == nullptr ) { continue; }
-		DebugRenderOneOBject( object );
-	}
-}
-
-void DebugRenderXraysObjects()
-{
-	g_ctx->EnableDepth( COMPARE_DEPTH_GREATER_EQUAL, false );
-	for( int i = 0; i < g_debugXrayObject.size(); i++ ) {
-		DebugRenderObject* object = g_debugXrayObject[i];
-		if( object == nullptr ) { continue; }
-		DebugRenderOneOBject( object, 0.5f );
-	}
-	g_ctx->EnableDepth( COMPARE_DEPTH_LESS, true );
-	for( int i = 0; i < g_debugXrayObject.size(); i++ ) {
-		DebugRenderObject* object = g_debugXrayObject[i];
-		if( object == nullptr ) { continue; }
-		DebugRenderOneOBject( object );
-	}
-}
-
-void DebugRenderScreenObjects()
-{
-	for( int i = 0; i < g_debugScreenObject.size(); i++ ){
-		DebugRenderObject* object = g_debugScreenObject[i];
-		if( object == nullptr ){ continue; }
-
-		DebugRenderOneOBject( object );
-	}
-}
-
-void DebugRenderOneOBject( DebugRenderObject* object, float xrayTint )
-{
-	if( object->m_type == OBJECT_TEXT ) {
-		Texture* textTex = g_defaultDebugFont->GetTexture();
-		g_ctx->BindTexture( textTex );
-	}
-	if( object->m_type == OBJECT_BOARD_TEXT ) {
-		Texture* textTex = g_defaultDebugFont->GetTexture();
-		g_ctx->BindTexture( textTex );
-		//object->m_transform.SetPosition( g_camera->GetPosition() );
-		object->m_transform.SetRotationFromPitchRollYawDegrees( g_camera->m_transform.GetRotationPRYDegrees() );
-		//Vec3 cameraPos = g_camera->GetPosition();
-		//object->m_transform.LookAtStable( cameraPos );
-	}
-	if( object->m_type == OBJECT_QUAD && object->m_texture != nullptr ){
-		g_ctx->BindTexture( object->m_texture );
-	}
-	if( object->m_type == OBJECT_SCREEN_TEXT ){
-		Texture* textTex = g_defaultDebugFont->GetTexture();
-		g_ctx->BindTexture( textTex );
-	}
-	if( !object->m_isOld ) {
-		Rgba8 tintColor = object->GetTintColor( (float)g_clock->GetTotalSeconds() );
-		tintColor.a = (unsigned char)( tintColor.a * xrayTint );
-		g_ctx->SetTintColor( tintColor );
-		object->RenderObject( g_ctx );
-	}
-	object->CheckIfOld();
-	g_ctx->BindTexture( nullptr );
-}
-
-void AddObjectToVector( DebugRenderObject* object, DebugRenderMode mode )
-{
-	switch( mode )
-	{
-		case DEBUG_RENDER_ALWAYS:
-			g_debugAlwaysObject.push_back( object );
-			break;
-		case DEBUG_RENDER_USE_DEPTH:
-			g_debugDepthObject.push_back( object );
-			break;
-		case DEBUG_RENDER_XRAY:
-			g_debugXrayObject.push_back( object );
-			break;
-		case DEBUG_RENDER_SCREEN:
-			g_debugScreenObject.push_back( object );
-			break;
-	}
+	CleanOldObjects();
 }
 
 void CleanOldObjects()
 {
-	// nothing to do
+	CleanOldObjectsInVector( g_debugAlwaysObject );	
+	CleanOldObjectsInVector( g_debugDepthObject );	
+	CleanOldObjectsInVector( g_debugXrayObject );	
+	CleanOldObjectsInVector( g_debugScreenObject );	
+}
+
+void CleanOldObjectsInVector( std::vector<DebugRenderObject*>& vec )
+{
+	if( vec.size() == 1 && vec[0]->CheckIfOld() ){ 
+		vec.clear();
+		return;
+	}
+
+	for( int i = 0; i < vec.size(); i++ ) {
+		DebugRenderObject* obj = vec[i];
+		if( obj->CheckIfOld() ) {
+			delete obj;
+			vec[i] = vec.back();
+			vec.pop_back();
+			i--;
+		}
+	}
 }
 
 void DebugAddWorldPoint( Vec3 pos, float size, Rgba8 startColor, Rgba8 endColor, float duration, DebugRenderMode mode /*= DEBUG_RENDER_USE_DEPTH */ )
 {
-	DebugRenderObject* pointObject = DebugRenderObject::CreateObject( pos, Vec3( size * g_sizeScale	 ), startColor, endColor, g_sphereMesh, g_clock, duration );
+	DebugRenderObject* pointObject = DebugRenderObject::CreateObjectWithPosAndSize( pos, Vec3( size * g_sizeScale	 ), startColor, endColor, g_sphereMesh, g_clock, duration );
 	pointObject->m_type = OBJECT_SPHERE;
-	AddObjectToVector( pointObject, mode );
+	AddObjectToVectors( pointObject, mode );
 }
 
 void DebugAddWorldPoint( Vec3 pos, float size, Rgba8 color, float duration /*= 0.0f*/, DebugRenderMode mode /*= DEBUG_RENDER_USE_DEPTH */ )
@@ -375,11 +412,11 @@ void DebugAddWorldLine( Vec3 p0, Rgba8 p0_startColor, Rgba8 p0_endColor, Vec3 p1
 	size.z = cylinder.GetLength();
 	//Mat44 lookAtMat = Mat44::GetLookAtMatrix( p0, p1 );
 
-	DebugRenderObject* lineObject = DebugRenderObject::CreateObject( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_lineMesh, g_clock, duration );
+	DebugRenderObject* lineObject = DebugRenderObject::CreateObjectWithPosAndSize( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_lineMesh, g_clock, duration );
 	lineObject->m_transform.LookAt( p0, p1 );
 	lineObject->m_type = OBJECT_CYLINDER;
 
-	AddObjectToVector( lineObject, mode );
+	AddObjectToVectors( lineObject, mode );
 }
 
 void DebugAddWorldLine( Vec3 start, Vec3 end, Rgba8 color, float duration /*= 0.0f*/, DebugRenderMode mode /*= DEBUG_RENDER_USE_DEPTH */ )
@@ -393,11 +430,11 @@ void DebugAddWorldArrow( Vec3 p0, Rgba8 p0_startColor, Rgba8 p0_endColor, Vec3 p
 	float dist = disp.GetLength();
 	Vec3 size = Vec3( 1.f ) * g_sizeScale;
 	size.z = dist;
-	DebugRenderObject* arrowObject = DebugRenderObject::CreateObject( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_arrowMesh, g_clock, duration );
+	DebugRenderObject* arrowObject = DebugRenderObject::CreateObjectWithPosAndSize( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_arrowMesh, g_clock, duration );
 	arrowObject->m_transform.LookAt( p0, p1 );
 	arrowObject->m_type = OBJECT_ARROW;
 
-	AddObjectToVector( arrowObject, mode );
+	AddObjectToVectors( arrowObject, mode );
 }
 
 void DebugAddWorldArrow( Vec3 start, Vec3 end, Rgba8 color, float duration, DebugRenderMode mode )
@@ -421,10 +458,9 @@ void DebugAddWorldQuad( Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, Rgba8 startColor, Rg
 	vertices.push_back( v_p2 );
 	vertices.push_back( v_p3 );
 
-	DebugRenderObject* quadObject = DebugRenderObject::CreateObject( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
-	quadObject->m_useMesh = false;
+	DebugRenderObject* quadObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
 	quadObject->m_type = OBJECT_QUAD;
-	AddObjectToVector( quadObject, mode );
+	AddObjectToVectors( quadObject, mode );
 }
 
 void DebugAddWorldWireBounds( AABB3 bounds, Vec3 direction, Rgba8 startColor, Rgba8 endColor, float duration, DebugRenderMode mode /*= DEBUG_RENDER_USE_DEPTH */ )
@@ -459,10 +495,10 @@ void DebugAddWorldWireSphere( Vec3 pos, float radius, Rgba8 color, float duratio
 
 void DebugAddWorldBasis( Mat44 basis, Rgba8 startTint, Rgba8 endTint, float duration, DebugRenderMode mode /*= DEBUG_RENDER_USE_DEPTH */ )
 {
-	DebugRenderObject* basisObject = DebugRenderObject::CreateObject( basis, startTint, endTint, g_basisMesh, g_clock, duration );
+	DebugRenderObject* basisObject = DebugRenderObject::CreateObjectWithMatrix( basis, startTint, endTint, g_basisMesh, g_clock, duration );
 	basisObject->m_type = OBJECT_BASIS;
 
-	AddObjectToVector( basisObject, mode );
+	AddObjectToVectors( basisObject, mode );
 }
 
 void DebugAddWorldText( Mat44 basis, Vec2 pivot, Rgba8 startColor, Rgba8 endColor, float duration, DebugRenderMode mode, char const* text )
@@ -481,11 +517,10 @@ void DebugAddWorldText( Mat44 basis, Vec2 pivot, Rgba8 startColor, Rgba8 endColo
 	g_defaultDebugFont->AddVertsForText2D( vertices, -offset, textHeight, text, Rgba8::WHITE );
 	
 
-	DebugRenderObject* textObject = DebugRenderObject::CreateObject( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
+	DebugRenderObject* textObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
 	textObject->m_type = OBJECT_TEXT;
 	textObject->m_transform.SetMatrix( basis );
-	textObject->m_useMesh = false;
-	AddObjectToVector( textObject, mode );
+	AddObjectToVectors( textObject, mode );
 }
 
 void DebugAddWorldText( Transform trans, Vec2 pivot, Rgba8 startColor, Rgba8 endColor, float duration, DebugRenderMode mode, std::string text )
@@ -498,12 +533,11 @@ void DebugAddWorldText( Transform trans, Vec2 pivot, Rgba8 startColor, Rgba8 end
 	g_defaultDebugFont->AddVertsForText2D( vertices, -offset, textHeight, text, Rgba8::WHITE );
 
 
-	DebugRenderObject* textObject = DebugRenderObject::CreateObject( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
+	DebugRenderObject* textObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
 	textObject->m_type = OBJECT_TEXT;
 	textObject->m_transform = trans;
 	textObject->m_transform.UpdateMatrix();
-	textObject->m_useMesh = false;
-	AddObjectToVector( textObject, mode );
+	AddObjectToVectors( textObject, mode );
 }
 
 void DebugAddWorldTextf( Mat44 basis, Vec2 pivot, Rgba8 color, float duration, DebugRenderMode mode, char const* text, ... )
@@ -539,35 +573,39 @@ void DebugAddWorldBillboardText( Vec3 origin, Vec2 pivot, Rgba8 startColor, Rgba
 	Vec2 offset = textBox.GetPointAtUV( pivot );
 	g_defaultDebugFont->AddVertsForText2D( vertices, -offset, textHeight, text, Rgba8::WHITE );
 
-	
-
-	DebugRenderObject* textObject = DebugRenderObject::CreateObject( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
-	textObject->m_type = OBJECT_BOARD_TEXT;
+	DebugRenderObject* textObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
+	textObject->m_type = OBJECT_BILLBOARD_TEXT;
 	textObject->m_transform.SetPosition( origin );
-	//textObject->m_transform.SetRotationFromPitchRollYawDegrees( g_camera->m_transform.GetRotationPRYDegrees() );
-	textObject->m_useMesh = false;
-	AddObjectToVector( textObject, mode );
-
+	AddObjectToVectors( textObject, mode );
 }
 
-// void DebugAddWorldBillboardText( Vec3 origin, Vec2 pivot, Rgba8 color, float duration, DebugRenderMode mode, char const* format, ... )
-// {
-// 	UNUSED(format);
-// 	//DebugAddWorldBillboardText( origin, pivot, color, color, duration, mode,  )
-// }
+void DebugAddWorldBillboardText( Vec3 origin, Vec2 pivot, Rgba8 color, float duration, DebugRenderMode mode, char const* format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	std::string result = Stringv( format, args );
+	va_end(args);
 
-// void DebugAddWorldBillboardText( Vec3 origin, Vec2 pivot, Rgba8 color, DebugRenderMode mode, char const* format, ... )
-// {
-// 
-// }
+	DebugAddWorldBillboardText( origin, pivot, color, color, duration, mode, result );
+}
+
+void DebugAddWorldBillboardText( Vec3 origin, Vec2 pivot, Rgba8 color, DebugRenderMode mode, char const* format, ... )
+{
+	va_list args;
+	va_start( args, format );
+	std::string result = Stringv( format, args );
+	va_end( args );
+
+	DebugAddWorldBillboardText( origin, pivot, color, color, 0.f, mode, result );
+}
 
 void DebugAddWireMeshToWorld( Mat44 transform, GPUMesh* mesh, Rgba8 startTint, Rgba8 endTint, float duration, DebugRenderMode mode /*= DEBUG_RENDER_USE_DEPTH */ )
 {
-	DebugRenderObject* object = DebugRenderObject::CreateObject( transform, startTint, endTint, mesh, g_clock, duration );
+	DebugRenderObject* object = DebugRenderObject::CreateObjectWithMatrix( transform, startTint, endTint, mesh, g_clock, duration );
 	object->m_type = OBJECT_DEFAULT;
 	object->m_useWire = true;
 
-	AddObjectToVector( object, mode );
+	AddObjectToVectors( object, mode );
 }
 
 void DebugAddWireMeshToWorld( Mat44 transform, GPUMesh* mesh, Rgba8 color, float duration, DebugRenderMode mode /*= DEBUG_RENDER_USE_DEPTH */ )
@@ -588,9 +626,9 @@ AABB2 DebugGetScreenBounds()
 void DebugAddScreenPoint( Vec2 pos, float size, Rgba8 startColor, Rgba8 endColor, float duration )
 {
 	Vec3 pos3 = Vec3( pos, -10.f );
-	DebugRenderObject* pointObject = DebugRenderObject::CreateObject( pos3, Vec3( size * g_sizeScale ), startColor, endColor, g_sphereMesh, g_clock, duration );
+	DebugRenderObject* pointObject = DebugRenderObject::CreateObjectWithPosAndSize( pos3, Vec3( size * g_sizeScale ), startColor, endColor, g_sphereMesh, g_clock, duration );
 	pointObject->m_type = OBJECT_SPHERE;
-	AddObjectToVector( pointObject, DEBUG_RENDER_SCREEN );
+	AddObjectToVectors( pointObject, DEBUG_RENDER_SCREEN );
 }
 
 void DebugAddScreenPoint( Vec2 pos, float size, Rgba8 color, float duration /*= 0.0f */ )
@@ -609,11 +647,11 @@ void DebugAddScreenLine( Vec2 p0, Rgba8 p0_startColor, Rgba8 p0_endColor, Vec2 p
 	Vec3 size = Vec3( 1.f ) * g_sizeScale * g_uiSizeCoe;
 	size.z = cylinder.GetLength();
 
-	DebugRenderObject* lineObject = DebugRenderObject::CreateObject( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_lineMesh, g_clock, duration );
+	DebugRenderObject* lineObject = DebugRenderObject::CreateObjectWithPosAndSize( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_lineMesh, g_clock, duration );
 	lineObject->m_transform.LookAt( p0, p1 );
 	lineObject->m_type = OBJECT_CYLINDER;
 
-	AddObjectToVector( lineObject, DEBUG_RENDER_SCREEN );
+	AddObjectToVectors( lineObject, DEBUG_RENDER_SCREEN );
 }
 
 void DebugAddScreenLine( Vec2 p0, Vec2 p1, Rgba8 color, float duration /*= 0.0f */ )
@@ -629,11 +667,11 @@ void DebugAddScreenArrow( Vec2 p0, Rgba8 p0_startColor, Rgba8 p0_endColor, Vec2 
 	float dist = disp.GetLength();
 	Vec3 size = Vec3( 1.f ) * g_sizeScale * g_uiSizeCoe;
 	size.z = dist;
-	DebugRenderObject* arrowObject = DebugRenderObject::CreateObject( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_arrowMesh, g_clock, duration );
+	DebugRenderObject* arrowObject = DebugRenderObject::CreateObjectWithPosAndSize( p0, size, p0_startColor, p1_startColor, p0_endColor, p1_endColor, g_arrowMesh, g_clock, duration );
 	arrowObject->m_transform.LookAt( p0, p1 );
 	arrowObject->m_type = OBJECT_ARROW;
 
-	AddObjectToVector( arrowObject, DEBUG_RENDER_SCREEN );
+	AddObjectToVectors( arrowObject, DEBUG_RENDER_SCREEN );
 }
 
 void DebugAddScreenArrow( Vec2 p0, Vec2 p1, Rgba8 color, float duration /*= 0.0f */ )
@@ -657,11 +695,10 @@ void DebugAddScreenQuad( AABB2 bounds, Rgba8 startColor, Rgba8 endColor, float d
 	vertices.push_back( v_p2 );
 	vertices.push_back( v_p3 );
 
-	DebugRenderObject* quadObject = DebugRenderObject::CreateObject( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
-	quadObject->m_useMesh = false;
+	DebugRenderObject* quadObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
 	quadObject->m_type = OBJECT_QUAD;
 
-	AddObjectToVector( quadObject, DEBUG_RENDER_SCREEN );
+	AddObjectToVectors( quadObject, DEBUG_RENDER_SCREEN );
 }
 
 void DebugAddScreenQuad( AABB2 bounds, Rgba8 color, float duration /*= 0.0f */ )
@@ -685,12 +722,11 @@ void DebugAddScreenTexturedQuad( AABB2 bounds, Texture* tex, AABB2 uvs, Rgba8 st
 	vertices.push_back( v_p2 );
 	vertices.push_back( v_p3 );
 
-	DebugRenderObject* quadObject = DebugRenderObject::CreateObject( vertices, startTint, startTint, endTint, endTint, g_clock, duration );
-	quadObject->m_useMesh = false;
+	DebugRenderObject* quadObject = DebugRenderObject::CreateObjectWithVertices( vertices, startTint, startTint, endTint, endTint, g_clock, duration );
 	quadObject->m_type = OBJECT_QUAD;
 	quadObject->m_texture = tex;
 
-	AddObjectToVector( quadObject, DEBUG_RENDER_SCREEN );
+	AddObjectToVectors( quadObject, DEBUG_RENDER_SCREEN );
 }
 
 void DebugAddScreenTexturedQuad( AABB2 bounds, Texture* tex, AABB2 uvs, Rgba8 tint, float duration /*= 0.0f */ )
@@ -715,10 +751,9 @@ void DebugAddScreenText( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rgb
 	g_defaultDebugFont->AddVertsForTextInBox2D( vertices, textBox, textHeight, text, Rgba8::WHITE );
 
 
-	DebugRenderObject* textObject = DebugRenderObject::CreateObject( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
+	DebugRenderObject* textObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
 	textObject->m_type = OBJECT_SCREEN_TEXT;
-	textObject->m_useMesh = false;
-	AddObjectToVector( textObject, DEBUG_RENDER_SCREEN );
+	AddObjectToVectors( textObject, DEBUG_RENDER_SCREEN );
 
 }
 
@@ -771,11 +806,10 @@ void DebugAddScreenBasis( Vec2 screenOriginLocation, Mat44 basisToRender, Rgba8 
 {
 	Mat44 basis = basisToRender;
 	basis.SetTranslation3D( Vec3( screenOriginLocation, g_2dZ ) );
-	basis.ScaleNonUniform2D( Vec2( 10.f, 10.f ) );
-	DebugRenderObject* basisObject = DebugRenderObject::CreateObject( basis, startTint, endTint, g_basisMesh, g_clock, duration );
+	DebugRenderObject* basisObject = DebugRenderObject::CreateObjectWithMatrix( basis, startTint, endTint, g_basisMesh2D, g_clock, duration );
 	basisObject->m_type = OBJECT_BASIS;
 
-	AddObjectToVector( basisObject, DEBUG_RENDER_SCREEN );
+	AddObjectToVectors( basisObject, DEBUG_RENDER_SCREEN );
 }
 
 void DebugAddScreenBasis( Vec2 screenOriginLocation, Mat44 basisToRender, Rgba8 tint /*= Rgba8::WHITE*/, float duration /*= 0.0f */ )
