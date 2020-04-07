@@ -124,7 +124,15 @@ Vec2 GetGJK2DManifold( std::vector<Vec2>& simplex, const std::vector<Vec2>& shap
 		Polygon2 polySimplex = Polygon2::MakeConvexFromPointCloud( simplex );
 
 		Vec2 closestPoint = polySimplex.GetClosestPointOnEdges( Vec2::ZERO );
-		Vec2 direction = closestPoint;
+		Vec2 direction;
+		if( IsVec2MostlyEqual( closestPoint, Vec2::ZERO ) ){
+			int edgeIndex = polySimplex.GetEdgeIndexWithPoint( closestPoint );	
+			direction = polySimplex.GetEdgeNormal( edgeIndex );
+		}
+		else {
+			direction = closestPoint; 
+
+		}
 		Vec2 supportPoint = GetGJK2DSupportPointOfSum( direction, shapeA, shapeB );
 		for( int i = 0; i < simplex.size(); i++ ) {
 			if( IsVec2MostlyEqual( supportPoint, simplex[i] ) ) {
@@ -141,5 +149,13 @@ Vec2 GetGJK2DManifold( std::vector<Vec2>& simplex, const std::vector<Vec2>& shap
 	Polygon2 polyFinalSimplex = Polygon2::MakeConvexFromPointCloud( simplex );
 	Vec2 closestPoint = polyFinalSimplex.GetClosestPointOnEdges( Vec2::ZERO );
 	Vec2 direction = closestPoint;
+	if( IsVec2MostlyEqual( closestPoint, Vec2::ZERO ) ) {
+		int edgeIndex = polyFinalSimplex.GetEdgeIndexWithPoint( closestPoint );
+		direction = -polyFinalSimplex.GetEdgeNormal( edgeIndex );
+	}
+	else {
+		direction = closestPoint;
+
+	}
 	return direction;
 }

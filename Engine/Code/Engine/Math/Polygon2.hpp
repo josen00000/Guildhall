@@ -22,8 +22,9 @@ public:
 	bool Contains( Vec2 point ) const;
 
 	// Accessor
-	float	GetDistance( Vec2 point ) const;
+	float	GetDistanceToCenter( Vec2 point ) const;
 	float	GetLongestDistance() const;
+	float	GetDistanceToEdge( Vec2 point ) const;
 	int		GetVertexCount() const;
 	int		GetEdgeCount() const;
 
@@ -32,9 +33,13 @@ public:
 	Vec2	GetClosestPointOnEdges( Vec2 point ) const;
 	Vec2	GetMassCenter( std::vector<Vec2> rawPoints ) const;
 	Vec2	GetMassCenter() const { return m_center; }
+	Vec2	GetEdgeNormal( int edgeIndex ) const;
 
+	bool GetEdgeInWorldWithPoint( Vec2 point,  LineSegment2& seg ) const;
 	LineSegment2 GetEdge( int index ) const;
 	LineSegment2 GetEdgeInWorld( int index ) const;
+	LineSegment2 GetEdgeInWorldWithPoint( Vec2 point ) const;
+	int		GetEdgeIndexWithPoint( Vec2 point ) const;
 	void	GetAllVertices( std::vector<Vec2>& vertices ) const;
 
 	// Mutator

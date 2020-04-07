@@ -114,7 +114,7 @@ bool Polygon2::Contains( Vec2 point ) const
 	return true;
 }
 
-float Polygon2::GetDistance( Vec2 point ) const
+float Polygon2::GetDistanceToCenter( Vec2 point ) const
 {
 	Vec2 badCenter = m_center;
 	Vec2 disp = point - badCenter;
@@ -134,6 +134,12 @@ float Polygon2::GetLongestDistance() const
 }
 
 
+
+float Polygon2::GetDistanceToEdge( Vec2 point ) const
+{
+	Vec2 pointOnEdge = GetClosestPointOnEdges( point );
+	return ( pointOnEdge - point).GetLength(); 
+}
 
 Vec2 Polygon2::GetLowestPoint() const
 {
@@ -183,12 +189,12 @@ Vec2 Polygon2::GetClosestPointOnEdges( Vec2 point ) const
 	point = point - m_center;
 
 	LineSegment2 closestEdge;
-	float shortestDist = 0;
+	float shortestDist = -1.f;
 	Vec2 closestPoint;
 	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
 		LineSegment2 edge = m_edges[edgeIndex];
 		float length = edge.GetLengthOfPointToLineSegment( point );
-		if( shortestDist == 0 || length < shortestDist ) {
+		if( shortestDist < 0.f || length < shortestDist ) {
 			shortestDist = length;
 			closestEdge = edge;
 		}
@@ -216,6 +222,13 @@ Vec2 Polygon2::GetMassCenter( std::vector<Vec2> rawPoints ) const
 	return result;
 }
 
+Vec2 Polygon2::GetEdgeNormal( int edgeIndex ) const
+{
+	LineSegment2 edge = GetEdge( edgeIndex );
+	Vec2 direction = edge.GetNormalizedDirection();
+	return direction.GetRotatedMinus90Degrees();
+}
+
 LineSegment2 Polygon2::GetEdge( int index ) const
 {
 	return m_edges[index];
@@ -227,6 +240,40 @@ LineSegment2 Polygon2::GetEdgeInWorld( int index ) const
 	result.SetStartPos( m_center + result.GetStartPos() );
 	result.SetEndPos( m_center + result.GetEndPos() );
 	return result;
+}
+
+bool Polygon2::GetEdgeInWorldWithPoint( Vec2 point, LineSegment2& seg ) const
+{
+	for( int i = 0; i < m_edges.size(); i++ ) {
+		LineSegment2 edge = m_edges[i];
+		if( edge.IsPointMostlyInEdge( point ) ){
+			seg = edge;
+			return true;
+		}
+	}
+	return false;
+}
+
+LineSegment2 Polygon2::GetEdgeInWorldWithPoint( Vec2 point ) const
+{
+	for( int i = 0; i < m_edges.size(); i++ ) {
+		LineSegment2 edge = m_edges[i];
+		if( edge.IsPointMostlyInEdge( point ) ) {
+			return edge;
+		}
+	}
+	return LineSegment2();
+}
+
+int Polygon2::GetEdgeIndexWithPoint( Vec2 point ) const
+{
+	for( int i = 0; i < m_edges.size(); i++ ) {
+		LineSegment2 edge = m_edges[i];
+		if( edge.IsPointMostlyInEdge( point ) ) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 void Polygon2::GetAllVertices( std::vector<Vec2>& vertices ) const

@@ -131,7 +131,7 @@ void PolygonCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColo
 	}
 	ctx->DrawVertexVector( tempVertices );
 	Disc2 worldBound = GetWorldBounds();
-	ctx->DrawCircle( worldBound.m_center, worldBound.m_radius, 0.5f, Rgba8::RED );
+	//ctx->DrawCircle( worldBound.m_center, worldBound.m_radius, 0.5f, Rgba8::RED );
 
 	// test draw
 	//testRenderLocal( ctx );

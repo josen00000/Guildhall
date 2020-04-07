@@ -70,6 +70,12 @@ LineSegment2 LineSegment2::ClipSegmentToSegmentAlongDirection( LineSegment2 toCl
 
 }
 
+bool LineSegment2::IsPointMostlyInEdge( Vec2 point ) const
+{
+	Vec2 pointInEdge = GetNearestPoint( point );
+	return ( point - pointInEdge ).GetLength();
+}
+
 Vec2 LineSegment2::GetStartPos() const
 {
 	return m_start;

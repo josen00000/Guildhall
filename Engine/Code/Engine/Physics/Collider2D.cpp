@@ -90,12 +90,12 @@ bool Collider2D::IntersectsAndGetManifold( const Collider2D* other, Manifold2D& 
 		else {
 			debugString = std::string( "polygon Intersect" + std::to_string( result ) + " 222222 ");
 		}
-		//DebugAddScreenText( Vec4( 0.f, 1.f, 10.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.f, debugString ); 
-		//DebugAddWorldPoint( Vec3( manifold.contact.GetStartPos(), 0.f ), 10.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, DEBUG_RENDER_ALWAYS );
-		//DebugAddWorldPoint( Vec3( manifold.contact.GetEndPos(), 0.f ), 10.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, DEBUG_RENDER_ALWAYS );
+		DebugAddScreenText( Vec4( 0.f, 1.f, 10.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.f, debugString ); 
+		DebugAddWorldPoint( Vec3( manifold.contact.GetStartPos(), 0.f ), 10.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, DEBUG_RENDER_ALWAYS );
+		DebugAddWorldPoint( Vec3( manifold.contact.GetEndPos(), 0.f ), 10.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, DEBUG_RENDER_ALWAYS );
 		Vec3 arrowStart = ( manifold.contact.GetStartPos() + manifold.contact.GetEndPos() ) / 2.f;
 
-		//DebugAddWorldArrow( arrowStart, arrowStart + manifold.normal * 10.f, Rgba8::RED, 0.f, DEBUG_RENDER_ALWAYS );
+		DebugAddWorldArrow( arrowStart, arrowStart + manifold.normal * 10.f, Rgba8::RED, 0.f, DEBUG_RENDER_ALWAYS );
 		return true;
 	}
 	else {
@@ -294,21 +294,14 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 	Vec2 tangentMin = contacts[0];
 	Vec2 tangentMax = contacts[0];
 
-	if( contacts.size() == 1 ) {
-		DebugAddWorldPoint( Vec3( tangentMin, 0.f ), 10.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, DEBUG_RENDER_ALWAYS );
-		Vec3 arrowStart = tangentMin;
-
-		DebugAddWorldArrow( arrowStart, arrowStart + result.normal * 10.f, Rgba8::BLACK, 0.f, DEBUG_RENDER_ALWAYS );
+ 	if( contacts.size() == 1 ) {
 		result.contact.m_start = tangentMin;
-		result.contact.m_end = tangentMin;
-		//Vec2 test_penetration = GetGJK2DManifold( simplex, shapeA, shapeB );
-		std::vector<Vec2> testing;
-		for( int i = 0; i < shapeB.size(); i++ ) {
-			Vec2 point = shapeB[i];
-			float dist = rPlane.GetDistanceFromPlane( point );
+ 		result.contact.m_end = tangentMin;
+		if( polyColA->m_worldPolygon.GetDistanceToEdge( tangentMin ) >= 0.2f ) {
+			int test = 1;
 		}
-		return result;
-	}
+ 		return result;
+  	}
 	FloatRange referenceRange = FloatRange(); 
 	Vec2 planeOriginal = rPlane.GetplaneOriginalPoint();
 
@@ -319,6 +312,8 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 		float length = GetProjectedLength2D( OP, tangent );
 		if( i == 0 ) {
 			referenceRange.Set( length, length );
+			tangentMin = point;
+			tangentMax = point;
 		}
 		if( length > referenceRange.maximum ){
 			tangentMax = point;
@@ -382,6 +377,10 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 	}
 	result.contact.m_start = contactMin;
 	result.contact.m_end = contactMax;
+
+	if( polyColA->m_worldPolygon.GetDistanceToEdge( contactMin ) >= 0.2f || polyColA->m_worldPolygon.GetDistanceToEdge( contactMax ) >= 0.2f ){
+		int test = 1;
+	}
 
 	return  result;
 }
