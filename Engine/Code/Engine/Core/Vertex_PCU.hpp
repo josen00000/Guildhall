@@ -16,7 +16,7 @@ public:
 public:
 	Vertex_PCU(){}
 	~Vertex_PCU(){}
-	Vertex_PCU(const Vertex_PCU& copyFrom);
+	Vertex_PCU( const Vertex_PCU& copyFrom );
 	explicit Vertex_PCU( const Vec3& position, const Rgba8& tint, const Vec2& uvTexCoords );
 	void UpdatePos(Vec3 pos);
 

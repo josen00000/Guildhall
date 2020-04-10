@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/Vertex_PCUTBN.hpp"
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Math/OBB2.hpp"
 #include "Engine/Math/AABB2.hpp"
@@ -7,11 +9,10 @@
 #include "Engine/Math/Capsule2.hpp"
 #include "Engine/Math/Cone3.hpp"
 #include "Engine/Math/Cylinder3.hpp"
-#include "Engine/Core/EngineCommon.hpp"
 
 struct OBB3;
 
-//Append Vertices
+//Append Vertices for Vertex_PCU
 void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs );
 void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor );
 void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs );
@@ -24,6 +25,11 @@ void AppendVertsForCubeSPhere3D( std::vector<Vertex_PCU>& vertices, const AABB3&
 void AppendVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, Cylinder3 cylinder, int level, Rgba8& tintColor );
 void AppendVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, Cylinder3 cylinder, int level, Rgba8& startTintColor, Rgba8& endTintColor );
 void AppendVertsForCone3D( std::vector<Vertex_PCU>& vertices, Cone3 cone, int level, Rgba8& tintColor );
+
+// Append Vertices for Vertex_PCUTBN
+void AppendTBNVertsForAABB2D( std::vector<Vertex_PCUTBN>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs );
+void AppendTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, AABB3 box, Rgba8& tintColor );
+void AppendTBNVertsForSphere3D( std::vector<Vertex_PCUTBN>& vertices, Vec3 center, float radius, int hCut, int vCut, Rgba8& tintColor );
 
 // Append Indice Vertices
 void AppendIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index, const std::vector<Vertex_PCU> source );
@@ -39,8 +45,23 @@ void AppendIndexedVertsForCone3D( std::vector<Vertex_PCU>& vertices, std::vector
 // void AppendIndexedVertsForCircle2D( std::vector<Vertex_PCU>& vertices, const Vec2& center, float radius, const Rgba8& tintColor );
 // void AppendIndexedVertsForHalfCircle2D( std::vector<Vertex_PCU>& vertices, const Vec2& center, float orientationDegrees, float radius, const Rgba8& tintColor );
 
+// Append indice Vertices for Vertex_PCUTBN
+void AppendIndexedTBNVerts( std::vector<Vertex_PCUTBN>& dest, std::vector<uint>& index, const std::vector<Vertex_PCUTBN> source );
+void AppendIndexedTBNVertsForAABB2D( std::vector<Vertex_PCUTBN>& vertices, std::vector<uint>& index, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs );
+void AppendIndexedTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, std::vector<uint>& index, AABB3 box, Rgba8& tintColor );
+void AppendIndexedTBNVertsForSphere3D( std::vector<Vertex_PCUTBN>& vertices, std::vector<uint>& index, Vec3 center, float radius, int hCut, int vCut, Rgba8& tintColor );
+
+
+
+
+
+
+
+
+// help function
 bool IsPointInsideDest( const Vertex_PCU point, const std::vector<Vertex_PCU> dest, uint& index );
-
-Vec2 MakeSphereUVFromPolayDegrees( float theta, float phi );
-
+bool IsTBNPointInsideDest( const Vertex_PCUTBN& point, const std::vector<Vertex_PCUTBN> & dest, int& index );
+Vec2 MakeSphereUVFromPolarDegrees( float theta, float phi );
+Vec3 MakeSphereTangentFromPolarDegrees( float theta );
+Vec3 MakeSphereBitangentFromPolarDegrees( float theta, float phi );
 void AppendTesselateIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index, const std::vector<Vertex_PCU> source );

@@ -5,6 +5,7 @@
 #include "Engine/Math/OBB3.hpp"
 
 
+// Append PCU Verts
 void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
 {
 	Vertex_PCU leftdown		= Vertex_PCU( Vec3( bound.mins, -5.f ) , tintColor, uvAtMins );
@@ -230,10 +231,10 @@ void AppendVertsForSphere3D( std::vector<Vertex_PCU>& vertices, Vec3 center, flo
 			Vec3 posLeftUp		= Vec3::MakeFromPolarDegrees( theta, ( phi + deltaPhi ), radius );	
 			Vec3 posRightUp		= Vec3::MakeFromPolarDegrees( ( theta + deltaTheta ), ( phi + deltaPhi ), radius );
 
-			Vec2 uvLeftDown		= MakeSphereUVFromPolayDegrees( theta, phi );
-			Vec2 uvRightDown	= MakeSphereUVFromPolayDegrees( ( theta + deltaTheta ), phi );
-			Vec2 uvLeftUp		= MakeSphereUVFromPolayDegrees( theta, ( phi + deltaPhi ) );
-			Vec2 uvRightup		= MakeSphereUVFromPolayDegrees( ( theta + deltaTheta ), ( phi + deltaPhi ) );
+			Vec2 uvLeftDown		= MakeSphereUVFromPolarDegrees( theta, phi );
+			Vec2 uvRightDown	= MakeSphereUVFromPolarDegrees( ( theta + deltaTheta ), phi );
+			Vec2 uvLeftUp		= MakeSphereUVFromPolarDegrees( theta, ( phi + deltaPhi ) );
+			Vec2 uvRightup		= MakeSphereUVFromPolarDegrees( ( theta + deltaTheta ), ( phi + deltaPhi ) );
 
 			vertices.push_back( Vertex_PCU( ( posLeftDown + center ),	tintColor, uvLeftDown ) );
 			vertices.push_back( Vertex_PCU( ( posRightDown + center ),	tintColor, uvRightDown ) );
@@ -508,6 +509,214 @@ void AppendVertsForCone3D( std::vector<Vertex_PCU>& vertices, Cone3 cone, int le
 	}
 }
 
+
+// Append TBN Verts 
+void AppendTBNVertsForAABB2D( std::vector<Vertex_PCUTBN>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
+{ 
+	Vec3 normal = Vec3( 0.f, 0.f, 1.f );
+	Vec3 tangent = Vec3( 1.f, 0.f, 0.f );
+	Vec3 bitangent = Vec3( 0.f, 1.f, 0.f );
+
+	Vertex_PCUTBN leftdown		= Vertex_PCUTBN( Vertex_PCU( Vec3( bound.mins, -5.f ), tintColor, uvAtMins ), tangent, bitangent, normal );
+	Vertex_PCUTBN rightup		= Vertex_PCUTBN( Vertex_PCU( Vec3( bound.maxs, -5.f ), tintColor, uvAtMaxs ), tangent,bitangent, normal );
+	Vertex_PCUTBN leftup		= Vertex_PCUTBN( Vertex_PCU( Vec3( bound.mins.x, bound.maxs.y, -5.f ), tintColor, Vec2( uvAtMins.x, uvAtMaxs.y ) ), tangent, bitangent, normal );
+	Vertex_PCUTBN rightdown		= Vertex_PCUTBN( Vertex_PCU( Vec3( bound.maxs.x, bound.mins.y, -5.f ), tintColor, Vec2( uvAtMaxs.x, uvAtMins.y ) ), tangent, bitangent, normal );
+
+	// left up triangle
+	vertices.push_back( leftdown );
+	vertices.push_back( rightup );
+	vertices.push_back( leftup );
+
+	// right down triangle
+	vertices.push_back( leftdown );
+	vertices.push_back( rightup );
+	vertices.push_back( rightdown );
+}
+
+
+void AppendTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, AABB3 box, Rgba8& tintColor )
+{
+	Vec3 BLDPos	= Vec3( box.max.x, box.min.y, box.min.z );
+	Vec3 BRUPos	= Vec3( box.min.x, box.max.y, box.min.z );
+	Vec3 BLUPos	= Vec3( box.max.x, box.max.y, box.min.z );
+	Vec3 BRDPos	= box.min;
+
+	Vec3 FLDPos	= Vec3( box.min.x, box.min.y, box.max.z );
+	Vec3 FRUPos	= box.max;
+	Vec3 FLUPos	= Vec3( box.min.x, box.max.y, box.max.z );
+	Vec3 FRDPos	= Vec3( box.max.x, box.min.y, box.max.z );
+
+	// front face
+	Vec3 frontTangent = FRDPos - FLDPos;
+	Vec3 frontBitangent = FLUPos - FLDPos;
+	Vec3 frontNormal = CrossProduct3D ( frontTangent, frontBitangent );
+
+	Vertex_PCUTBN FLD = Vertex_PCUTBN( Vertex_PCU( FLDPos, tintColor, Vec2::ZERO ), frontTangent, frontBitangent, frontNormal );
+	Vertex_PCUTBN FRU = Vertex_PCUTBN( Vertex_PCU( FRUPos, tintColor, Vec2::ONE ), frontTangent, frontBitangent, frontNormal );
+	Vertex_PCUTBN FLU = Vertex_PCUTBN( Vertex_PCU( FLUPos, tintColor, Vec2::ZERO_ONE ), frontTangent, frontBitangent, frontNormal );
+	Vertex_PCUTBN FRD = Vertex_PCUTBN( Vertex_PCU( FRDPos, tintColor, Vec2::ONE_ZERO ), frontTangent, frontBitangent, frontNormal );
+
+	// back face
+	Vec3 backTangent = BRDPos - BLDPos;
+	Vec3 backBitangent = BLUPos - BLDPos;
+	Vec3 backNormal = CrossProduct3D( backTangent, backBitangent );
+	Vertex_PCUTBN BLD = Vertex_PCUTBN( Vertex_PCU( BLDPos, tintColor, Vec2::ZERO ), backTangent, backBitangent, backNormal );
+	Vertex_PCUTBN BRU = Vertex_PCUTBN( Vertex_PCU( BRUPos, tintColor, Vec2::ONE ), backTangent, backBitangent, backNormal );
+	Vertex_PCUTBN BLU = Vertex_PCUTBN( Vertex_PCU( BLUPos, tintColor, Vec2::ZERO_ONE ), backTangent, backBitangent, backNormal );
+	Vertex_PCUTBN BRD = Vertex_PCUTBN( Vertex_PCU( BRDPos, tintColor, Vec2::ONE_ZERO ), backTangent, backBitangent, backNormal );
+
+	// left face
+	// LLD = BRD, LRD = FLD, LLU = BRU, LRU = FLU
+	Vec3 LLDPos = BRDPos;
+	Vec3 LRUPos = FLUPos;
+	Vec3 LLUPos = BRUPos;
+	Vec3 LRDPos = FLDPos;
+	Vec3 leftTangent = LRDPos - LLDPos;
+	Vec3 leftBitangent = LLUPos - LLDPos;
+	Vec3 leftNormal = CrossProduct3D( leftTangent, leftBitangent );
+	Vertex_PCUTBN LLD = Vertex_PCUTBN( Vertex_PCU( LLDPos, tintColor, Vec2::ZERO ), leftTangent, leftBitangent, leftNormal );
+	Vertex_PCUTBN LRU = Vertex_PCUTBN( Vertex_PCU( LRUPos, tintColor, Vec2::ONE ), leftTangent, leftBitangent, leftNormal );
+	Vertex_PCUTBN LLU = Vertex_PCUTBN( Vertex_PCU( LLUPos, tintColor, Vec2::ZERO_ONE ), leftTangent, leftBitangent, leftNormal );
+	Vertex_PCUTBN LRD = Vertex_PCUTBN( Vertex_PCU( LRDPos, tintColor, Vec2::ONE_ZERO ), leftTangent, leftBitangent, leftNormal );
+
+
+	// right face
+	// RLD = FRD, RRD = BLD, RLU = FRU, RRU = BLU
+	Vec3 RLDPos = FRDPos;
+	Vec3 RRUPos = BLUPos;
+	Vec3 RLUPos = FRUPos;
+	Vec3 RRDPos = BLDPos;
+	Vec3 rightTangent = RRDPos - RLDPos;
+	Vec3 rightBitangent = RLUPos - RLDPos;
+	Vec3 rightNormal = CrossProduct3D( rightTangent, rightBitangent );
+	Vertex_PCUTBN RLD = Vertex_PCUTBN( Vertex_PCU( RLDPos, tintColor, Vec2::ZERO ), rightTangent, rightBitangent, rightNormal );
+	Vertex_PCUTBN RRU = Vertex_PCUTBN( Vertex_PCU( RRUPos, tintColor, Vec2::ONE ), rightTangent, rightBitangent, rightNormal );
+	Vertex_PCUTBN RLU = Vertex_PCUTBN( Vertex_PCU( RLUPos, tintColor, Vec2::ZERO_ONE ), rightTangent, rightBitangent, rightNormal );
+	Vertex_PCUTBN RRD = Vertex_PCUTBN( Vertex_PCU( RRDPos, tintColor, Vec2::ONE_ZERO ), rightTangent, rightBitangent, rightNormal );
+
+	// top face
+	// TLD = FLU, TRD = FRU, TLU = BRU, TRU = BLU
+	Vec3 TLDPos = FLUPos;
+	Vec3 TRUPos = BLUPos;
+	Vec3 TLUPos = BRUPos;
+	Vec3 TRDPos = FRUPos;
+	Vec3 topTangent = TRDPos - TLDPos;
+	Vec3 topBitangent = TLUPos - TLDPos;
+	Vec3 topNormal = CrossProduct3D( topTangent, topBitangent );
+	Vertex_PCUTBN TLD = Vertex_PCUTBN( Vertex_PCU( TLDPos, tintColor, Vec2::ZERO ), topTangent, topBitangent, topNormal );
+	Vertex_PCUTBN TRU = Vertex_PCUTBN( Vertex_PCU( TRUPos, tintColor, Vec2::ONE ), topTangent, topBitangent, topNormal );
+	Vertex_PCUTBN TLU = Vertex_PCUTBN( Vertex_PCU( TLUPos, tintColor, Vec2::ZERO_ONE ), topTangent, topBitangent, topNormal );
+	Vertex_PCUTBN TRD = Vertex_PCUTBN( Vertex_PCU( TRDPos, tintColor, Vec2::ONE_ZERO ), topTangent, topBitangent, topNormal );
+	
+	// bottom face
+	// BOLD = BRD, BORD = BLD, BOLU = FLD, BORU = FRD
+	Vec3 bottomLDPos = BRDPos;
+	Vec3 bottomRUPos = FRDPos;
+	Vec3 bottomLUPos = FLDPos;
+	Vec3 bottomRDPos = BLDPos;
+	Vec3 bottomTangent = bottomRDPos - bottomLDPos;
+	Vec3 bottomBitangent = bottomLUPos - bottomLDPos;
+	Vec3 bottomNormal = CrossProduct3D( bottomTangent, bottomBitangent );
+	Vertex_PCUTBN bottomLD = Vertex_PCUTBN( Vertex_PCU( bottomLDPos, tintColor, Vec2::ZERO ), bottomTangent, bottomBitangent, bottomNormal );
+	Vertex_PCUTBN bottomRU = Vertex_PCUTBN( Vertex_PCU( bottomRUPos, tintColor, Vec2::ONE ), bottomTangent, bottomBitangent, bottomNormal );
+	Vertex_PCUTBN bottomLU = Vertex_PCUTBN( Vertex_PCU( bottomLUPos, tintColor, Vec2::ZERO_ONE ), bottomTangent, bottomBitangent, bottomNormal );
+	Vertex_PCUTBN bottomRD = Vertex_PCUTBN( Vertex_PCU( bottomRDPos, tintColor, Vec2::ONE_ZERO ), bottomTangent, bottomBitangent, bottomNormal );
+
+	vertices.reserve( 36 );
+	// front triangles
+	vertices.push_back( FLD );
+	vertices.push_back( FRU );
+	vertices.push_back( FRD );
+
+	vertices.push_back( FLD );
+	vertices.push_back( FRU );
+	vertices.push_back( FLU );
+
+	// back triangles
+	vertices.push_back( BLD );
+	vertices.push_back( BRU );
+	vertices.push_back( BRD );
+
+	vertices.push_back( BLD );
+	vertices.push_back( BRU );
+	vertices.push_back( BLU );
+
+	// left triangles
+	vertices.push_back( LLD );
+	vertices.push_back( LRU );
+	vertices.push_back( LRD );
+	
+	vertices.push_back( LLD );
+	vertices.push_back( LRU );
+	vertices.push_back( LLU );
+
+	// right triangles
+	vertices.push_back( RLD );
+	vertices.push_back( RRU );
+	vertices.push_back( RRD );
+	
+	vertices.push_back( RLD );
+	vertices.push_back( RRU );
+	vertices.push_back( RLU );
+
+	// top triangles
+	vertices.push_back( TLD );
+	vertices.push_back( TRU );
+	vertices.push_back( TRD );
+						
+	vertices.push_back( TLD );
+	vertices.push_back( TRU );
+	vertices.push_back( TLU );
+
+	// bottom triangles
+	vertices.push_back( bottomLD );
+	vertices.push_back( bottomRU );
+	vertices.push_back( bottomRD );
+						
+	vertices.push_back( bottomLD );
+	vertices.push_back( bottomRU );
+	vertices.push_back( bottomLU );
+}
+
+void AppendTBNVertsForSphere3D( std::vector<Vertex_PCUTBN>& vertices, Vec3 center, float radius, int hCut, int vCut, Rgba8& tintColor )
+{
+	float deltaTheta = 360.f / (float)vCut;
+	float deltaPhi	 = 180.f / (float)hCut;
+	for( int rowIndex = 0; rowIndex < hCut; rowIndex++ ) {
+		float phi = -90.f + rowIndex * deltaPhi;
+		for( int columnIndex = 0; columnIndex < vCut; columnIndex++ ) {
+			// append face
+			float theta = columnIndex * deltaTheta;
+			Vec3 posLeftDown	= Vec3::MakeFromPolarDegrees( theta, phi, radius );
+			Vec3 posRightDown	= Vec3::MakeFromPolarDegrees( ( theta + deltaTheta ), phi, radius );
+			Vec3 posLeftUp		= Vec3::MakeFromPolarDegrees( theta, ( phi + deltaPhi ), radius );
+			Vec3 posRightUp		= Vec3::MakeFromPolarDegrees( ( theta + deltaTheta ), ( phi + deltaPhi ), radius );
+
+			Vec2 uvLeftDown		= MakeSphereUVFromPolarDegrees( theta, phi );
+			Vec2 uvRightDown	= MakeSphereUVFromPolarDegrees( ( theta + deltaTheta ), phi );
+			Vec2 uvLeftUp		= MakeSphereUVFromPolarDegrees( theta, ( phi + deltaPhi ) );
+			Vec2 uvRightUp		= MakeSphereUVFromPolarDegrees( ( theta + deltaTheta ), ( phi + deltaPhi ) );
+
+			Vec3 tangentLeft = MakeSphereTangentFromPolarDegrees( theta );
+			Vec3 tangentRight = MakeSphereTangentFromPolarDegrees( ( theta + deltaTheta ) );
+
+			Vec2 bitangentLeftDown		= MakeSphereBitangentFromPolarDegrees( theta, phi );
+			Vec2 bitangentRightDown		= MakeSphereBitangentFromPolarDegrees( (theta + deltaTheta), phi );
+			Vec2 bitangentLeftUp		= MakeSphereBitangentFromPolarDegrees( theta, (phi + deltaPhi) );
+			Vec2 bitangentRightUp		= MakeSphereBitangentFromPolarDegrees( (theta + deltaTheta), (phi + deltaPhi) );
+
+			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posLeftDown + center ), tintColor, uvLeftDown ), tangentLeft, bitangentLeftDown, posLeftDown ) );
+			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posRightDown + center ), tintColor, uvRightDown ), tangentRight, bitangentRightDown, posRightDown ) );
+			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posRightUp + center ), tintColor, uvRightUp ), tangentRight, bitangentRightUp, posRightUp ) );
+															 
+			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posLeftDown + center ), tintColor, uvLeftDown ), tangentLeft, bitangentLeftDown, posLeftDown ) );
+			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posLeftUp + center ), tintColor, uvLeftUp ), tangentLeft, bitangentLeftUp, posLeftUp ) );
+			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posRightUp + center ), tintColor, uvRightUp ), tangentRight, bitangentRightUp, posRightUp ) );
+		}
+	}
+}
+
+// Append indexed PCU vert
 void AppendIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index, const std::vector<Vertex_PCU> source )
 {
 	for( int sIndex = 0; sIndex < source.size(); sIndex++ ){
@@ -572,6 +781,44 @@ void AppendIndexedVertsForCone3D( std::vector<Vertex_PCU>& vertices, std::vector
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 
+
+// append indexed tbn verts
+void AppendIndexedTBNVerts( std::vector<Vertex_PCUTBN>& dest, std::vector<uint>& index, const std::vector<Vertex_PCUTBN> source )
+{
+	for( int sIndex = 0; sIndex < source.size(); sIndex++ ) {
+		const Vertex_PCUTBN& sourceVertex = source[sIndex];
+		int pointIndex;
+		if( IsTBNPointInsideDest( sourceVertex, dest, pointIndex ) ) {
+			index.push_back( pointIndex );
+		}
+		else {
+			dest.push_back( sourceVertex );
+			index.push_back( (uint)dest.size() - 1 );
+		}
+	}
+}
+
+void AppendIndexedTBNVertsForAABB2D( std::vector<Vertex_PCUTBN>& vertices, std::vector<uint>& index, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
+{
+	std::vector<Vertex_PCUTBN> verticesNotIndexed;
+	AppendTBNVertsForAABB2D( verticesNotIndexed, bound, tintColor, uvAtMins, uvAtMaxs );
+	AppendIndexedTBNVerts( vertices, index, verticesNotIndexed );
+}
+
+void AppendIndexedTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, std::vector<uint>& index, AABB3 box, Rgba8& tintColor )
+{
+	std::vector<Vertex_PCUTBN> verticesNotIndexed;
+	AppendTBNVertsForAABB3D( verticesNotIndexed, box, tintColor );
+	AppendIndexedTBNVerts( vertices, index, verticesNotIndexed );
+}
+
+void AppendIndexedTBNVertsForSphere3D( std::vector<Vertex_PCUTBN>& vertices, std::vector<uint>& index, Vec3 center, float radius, int hCut, int vCut, Rgba8& tintColor )
+{
+	std::vector<Vertex_PCUTBN> verticesNotIndexed;
+	AppendTBNVertsForSphere3D( verticesNotIndexed, center, radius, hCut, vCut, tintColor );
+	AppendIndexedTBNVerts( vertices, index, verticesNotIndexed );
+}
+
 bool IsPointInsideDest( const Vertex_PCU point, const std::vector<Vertex_PCU> dest, uint& index ) 
 {
 	if( dest.size() == 0 ){ return false; }
@@ -585,12 +832,35 @@ bool IsPointInsideDest( const Vertex_PCU point, const std::vector<Vertex_PCU> de
 	return false;
 }
 
-Vec2 MakeSphereUVFromPolayDegrees( float theta, float phi )
+bool IsTBNPointInsideDest( const Vertex_PCUTBN& point, const std::vector<Vertex_PCUTBN>& dest, int& index )
+{
+	if( dest.size() == 0 ) { return false; }
+
+	for( uint dIndex = 0; dIndex < dest.size(); dIndex++ ) {
+		if( point == dest[dIndex] ) {
+			index = dIndex;
+			return true;
+		}
+	}
+	return false;
+}
+
+Vec2 MakeSphereUVFromPolarDegrees( float theta, float phi )
 {
 	Vec2 result;
 	result.x = RangeMapFloat( 0.f, 360.f, 0.f, 1.f, theta );
 	result.y = RangeMapFloat( -90.f, 90.f, 0.f, 1.f, phi );
 	return result;
+}
+
+Vec3 MakeSphereTangentFromPolarDegrees( float theta )
+{
+	return Vec3( -SinDegrees( theta ), 0.f, -CosDegrees( theta ) );
+}
+
+Vec3 MakeSphereBitangentFromPolarDegrees( float theta, float phi )
+{
+	return Vec3( -SinDegrees( phi ) * CosDegrees( theta	 ), CosDegrees( phi ), SinDegrees( phi ) * SinDegrees( theta )  );
 }
 
 void AppendTesselateIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index, const std::vector<Vertex_PCU> source )

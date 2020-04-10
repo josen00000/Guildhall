@@ -14,8 +14,10 @@
 
 
 //Static objects
-Vec2 Vec2::ZERO = Vec2(0,0);
-Vec2 Vec2::ONE = Vec2(1,1);
+Vec2 Vec2::ZERO		= Vec2( 0, 0 );
+Vec2 Vec2::ONE		= Vec2( 1, 1 );
+Vec2 Vec2::ZERO_ONE = Vec2( 0, 1 );
+Vec2 Vec2::ONE_ZERO = Vec2( 1, 0 );
 
 
 //-----------------------------------------------------------------------------------------------

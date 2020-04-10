@@ -112,6 +112,11 @@ const Vec3 Vec3::GetNormalized() const{
 	return tem_Vec3;
 }
 
+std::string Vec3::GetText()
+{
+	return std::string( "Vec3 x: " + std::to_string( x ) + ".  y: " + std::to_string( y ) + ".  z: " + std::to_string( z ) + "." );
+}
+
 void Vec3::Normalize()
 {
 	float length = GetLength();

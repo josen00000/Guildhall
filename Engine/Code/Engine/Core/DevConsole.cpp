@@ -112,11 +112,11 @@ void DevConsole::Render( RenderContext& renderer ) const
 	AddVertForInput();
 	AddVertForContent();
 	Texture* temTexture = m_font->GetTexture();
-	g_theRenderer->BindTexture( temTexture );
+	g_theRenderer->SetDiffuseTexture( temTexture );
 	renderer.DrawVertexVector( m_vertices );
 
 
-	g_theRenderer->BindTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 
 	if( m_ableRenderCaret ) {
 		RenderCaret();

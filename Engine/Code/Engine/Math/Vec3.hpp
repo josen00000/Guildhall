@@ -1,5 +1,7 @@
 ﻿#pragma once
+#include <string>
 #include "Engine/Math/MathUtils.hpp"
+
 
 struct Vec3 {
 public:
@@ -30,6 +32,8 @@ public:
 	const Vec3 GetRotatedAboutZDegrees( float deltaDegrees ) const;
 	const Vec3 GetClamped( float maxLength )const;
 	const Vec3 GetNormalized() const;
+
+	std::string GetText();
 
 	// Mutator
 	void Normalize();

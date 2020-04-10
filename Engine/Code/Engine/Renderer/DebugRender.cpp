@@ -191,19 +191,19 @@ void DebugRenderOneObject( DebugRenderObject* object, float xrayTint )
 {
 	if( object->m_type == OBJECT_TEXT ) {
 		Texture* textTex = g_defaultDebugFont->GetTexture();
-		g_ctx->BindTexture( textTex );
+		g_ctx->SetDiffuseTexture( textTex );
 	}
 	if( object->m_type == OBJECT_BILLBOARD_TEXT ) {
 		Texture* textTex = g_defaultDebugFont->GetTexture();
-		g_ctx->BindTexture( textTex );
+		g_ctx->SetDiffuseTexture( textTex );
 		object->m_transform.SetRotationFromPitchRollYawDegrees( g_camera->m_transform.GetRotationPRYDegrees() );
 	}
 	if( object->m_type == OBJECT_QUAD && object->m_texture != nullptr ) {
-		g_ctx->BindTexture( object->m_texture );
+		g_ctx->SetDiffuseTexture( object->m_texture );
 	}
 	if( object->m_type == OBJECT_SCREEN_TEXT ) {
 		Texture* textTex = g_defaultDebugFont->GetTexture();
-		g_ctx->BindTexture( textTex );
+		g_ctx->SetDiffuseTexture( textTex );
 	}
 	
 	Rgba8 tintColor = object->GetTintColor( (float)g_clock->GetTotalSeconds() );
@@ -211,7 +211,7 @@ void DebugRenderOneObject( DebugRenderObject* object, float xrayTint )
 	g_ctx->SetTintColor( tintColor );
 	
 	object->RenderObject( g_ctx );
-	g_ctx->BindTexture( nullptr );
+	g_ctx->SetDiffuseTexture( nullptr );
 }
 
 void AddObjectToVectors( DebugRenderObject* object, DebugRenderMode mode )

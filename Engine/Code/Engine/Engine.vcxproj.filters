@@ -43,15 +43,18 @@
     <Filter Include="physics">
       <UniqueIdentifier>{3f0da5f4-0e33-463e-bc33-c68f606484e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\VerticesStructure">
+      <UniqueIdentifier>{376aac44-a2b7-4486-817b-ab544858a728}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Mesh">
+      <UniqueIdentifier>{b9cca59c-b0e8-4959-aa75-b685b030f273}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Camera.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Core\Rgba8.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vertex_PCU.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Core\ErrorWarningAssert.cpp">
@@ -98,9 +101,6 @@
     </ClCompile>
     <ClCompile Include="Core\EventSystem.cpp">
       <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\MeshUtils.cpp">
-      <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Input\MouseController.cpp">
       <Filter>Input</Filter>
@@ -161,9 +161,6 @@
     </ClCompile>
     <ClCompile Include="Platform\Window.cpp">
       <Filter>Platform</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\GPUMesh.cpp">
-      <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Core\Transform.cpp">
       <Filter>Core</Filter>
@@ -261,15 +258,24 @@
     <ClCompile Include="Math\Algorithm.cpp">
       <Filter>Math\basic</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Vertex_PCU.cpp">
+      <Filter>Core\VerticesStructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Vertex_PCUTBN.cpp">
+      <Filter>Core\VerticesStructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPUMesh.cpp">
+      <Filter>Renderer\Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\MeshUtils.cpp">
+      <Filter>Renderer\Mesh</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Core\Rgba8.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vertex_PCU.hpp">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Core\EngineCommon.hpp">
@@ -341,9 +347,6 @@
     <ClInclude Include="Core\EventSystem.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\MeshUtils.hpp">
-      <Filter>Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Input\MouseController.hpp">
       <Filter>Input</Filter>
     </ClInclude>
@@ -408,9 +411,6 @@
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\RenderCommon.hpp">
-      <Filter>Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\GPUMesh.hpp">
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Core\Transform.hpp">
@@ -508,6 +508,18 @@
     </ClInclude>
     <ClInclude Include="Math\Algorithm.hpp">
       <Filter>Math\basic</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Vertex_PCU.hpp">
+      <Filter>Core\VerticesStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Vertex_PCUTBN.hpp">
+      <Filter>Core\VerticesStructure</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPUMesh.hpp">
+      <Filter>Renderer\Mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\MeshUtils.hpp">
+      <Filter>Renderer\Mesh</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

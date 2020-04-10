@@ -8,6 +8,7 @@
 #include "Engine/Renderer/RenderCommon.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Shader.hpp"
+#include "Engine/Renderer/VertexBuffer.hpp"
 
 
 void* FileReadToNewBuffer( std::string const& fileName, size_t* out_size ) {
@@ -154,7 +155,7 @@ Shader::Shader( RenderContext* owner )
 
 Shader::~Shader()
 {
-	DX_SAFE_RELEASE(m_inputLayout);
+	DX_SAFE_RELEASE(m_d3dInputLayout);
 	m_owner = nullptr;
 }
 
@@ -173,57 +174,34 @@ bool Shader::CreateFromFile( std::string const& fileName )
 	return m_vertexStage.IsValid() && m_fragmentStage.IsValid();
 }
 
-ID3D11InputLayout* Shader::GetOrCreateInputLayout()
+ID3D11InputLayout* Shader::GetOrCreateInputLayout( VertexBuffer* vbo )
 {
-	if( m_inputLayout != nullptr ){ return m_inputLayout; }
+	if( vbo->m_attributes == m_attribute && m_d3dInputLayout != nullptr ){ return m_d3dInputLayout; }
 
-	D3D11_INPUT_ELEMENT_DESC vertexDesc[3];
-	for( int i = 0; i < 3; i++ ) {
-		vertexDesc[i].SemanticName			= Vertex_PCU::s_layout[i].name.c_str();
-		vertexDesc[i].SemanticIndex			= 0;							//	Array for semantic name; 
-		vertexDesc[i].Format				= TransformToD3DDataFormat( Vertex_PCU::s_layout[i].type );	// what in 
-		vertexDesc[i].InputSlot				= 0;							// 
-		vertexDesc[i].AlignedByteOffset		= Vertex_PCU::s_layout[i].offset;	// 
-		vertexDesc[i].InputSlotClass		= D3D11_INPUT_PER_VERTEX_DATA;	// vertex and instance 
-		vertexDesc[i].InstanceDataStepRate	= 0;
+	const buffer_attribute_t* vboLayout = vbo->m_attributes;
+	std::vector<D3D11_INPUT_ELEMENT_DESC> vertexDescs;
+
+	int i = 0;
+	while( vboLayout[i].name != "" ){
+		D3D11_INPUT_ELEMENT_DESC vertexDesc;
+		vertexDesc.SemanticName			= vboLayout[i].name.c_str();
+		vertexDesc.SemanticIndex		= 0;							//	Array for semantic name; 
+		vertexDesc.Format				= TransformToD3DDataFormat( vboLayout[i].type );	// what in 
+		vertexDesc.InputSlot			= 0;							// 
+		vertexDesc.AlignedByteOffset	= vboLayout[i].offset;	// 
+		vertexDesc.InputSlotClass		= D3D11_INPUT_PER_VERTEX_DATA;	// vertex and instance 
+		vertexDesc.InstanceDataStepRate	= 0;
+		vertexDescs.push_back( vertexDesc );
+		i++;
 	}
-	/*// pos
-	vertexDesc[0].SemanticName					= "POSITION";					// link to what in shader ( shader input name
-	vertexDesc[0].SemanticIndex					= 0;							//	Array for semantic name; 
-	vertexDesc[0].Format						= DXGI_FORMAT_R32G32B32_FLOAT;	// what in 
-	vertexDesc[0].InputSlot						= 0;							// 
-	vertexDesc[0].AlignedByteOffset				= offsetof(Vertex_PCU, m_pos);	// 
-	vertexDesc[0].InputSlotClass				= D3D11_INPUT_PER_VERTEX_DATA;	// vertex and instance 
-	vertexDesc[0].InstanceDataStepRate			= 0;							// 
-
-	// color
-	vertexDesc[1].SemanticName					= "COLOR";							// link to what in shader ( shader input name
-	vertexDesc[1].SemanticIndex					= 0;								//	Array for semantic name for color not for pos; 
-	vertexDesc[1].Format						= DXGI_FORMAT_R8G8B8A8_UNORM;		//  unorm unsigned normal value 
-	vertexDesc[1].InputSlot						= 0;								//  only one buffer bind
-	vertexDesc[1].AlignedByteOffset				= offsetof( Vertex_PCU, m_color );	// 
-	vertexDesc[1].InputSlotClass				= D3D11_INPUT_PER_VERTEX_DATA;		// vertex and instance 
-	vertexDesc[1].InstanceDataStepRate			= 0;								// 
-
-	// UV																			
-	vertexDesc[2].SemanticName					= "TEXCOORD";						
-	vertexDesc[2].SemanticIndex					= 0;								  
-	vertexDesc[2].Format						= DXGI_FORMAT_R32G32_FLOAT	;		
-	vertexDesc[2].InputSlot						= 0;								
-	vertexDesc[2].AlignedByteOffset				= offsetof( Vertex_PCU, m_uvTexCoords );
-	vertexDesc[2].InputSlotClass				= D3D11_INPUT_PER_VERTEX_DATA;		
-	vertexDesc[2].InstanceDataStepRate			= 0;								
-
-*/
 
 	ID3D11Device* device = m_owner->m_device;
-	device->CreateInputLayout( 
-		vertexDesc, 3, //describe the vertex
+	device->CreateInputLayout(
+		vertexDescs.data(), vertexDescs.size(), //describe the vertex
 		m_vertexStage.GetByteCode(), m_vertexStage.GetByteCodeLength(),
-		&m_inputLayout);
+		&m_d3dInputLayout );
 
-	return m_inputLayout;
-
+	return m_d3dInputLayout;
 }
 
 DXGI_FORMAT Shader::TransformToD3DDataFormat( BufferFormatType type )

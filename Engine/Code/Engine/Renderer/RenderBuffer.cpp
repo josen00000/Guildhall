@@ -40,7 +40,7 @@ bool RenderBuffer::Update( void const* data, size_t dataByteSize, size_t element
 		// memcpy( very fast for bit to bit copy )
 		// block call : wait for the result 
 		D3D11_MAPPED_SUBRESOURCE mapped;
-		HRESULT  result = ctx->Map( m_handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped); // lock the memory
+		HRESULT  result = ctx->Map( m_handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped ); // lock the memory
 		if( SUCCEEDED( result ) ) {
 			memcpy( mapped.pData, data, dataByteSize );
 			ctx->Unmap( m_handle, 0 );

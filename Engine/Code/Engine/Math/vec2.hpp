@@ -82,5 +82,7 @@ public:
 	//static variable
 	static Vec2 ZERO;
 	static Vec2 ONE;
+	static Vec2 ZERO_ONE;
+	static Vec2 ONE_ZERO;
 };
 

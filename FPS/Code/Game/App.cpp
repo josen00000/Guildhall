@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
+#include "Engine/Core/Time/Clock.hpp"
 #include "Engine/Core/Time/Time.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
@@ -34,6 +35,7 @@ void App::Startup()
 	g_theInputSystem	= new InputSystem();
 	g_theEventSystem	= new EventSystem();
 
+	Clock::SystemStartUp();
 	
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );
@@ -83,6 +85,8 @@ void App::Shutdown()
 	g_theInputSystem->Shutdown();
 	g_theConsole->Shutdown();
 	g_theRenderer->Shutdown();
+
+	Clock::SystemShutDown();
 	
 	delete g_camera;
 	delete g_UICamera;

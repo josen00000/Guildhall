@@ -28,6 +28,8 @@
 
 #define RENDER_DEBUG
 
+std::vector<std::string> g_shaderNames;
+
 
 void RenderContext::StartUp( Window* window )
 {
@@ -46,18 +48,26 @@ void RenderContext::StartUp( Window* window )
 	m_defaultShader->CreateFromFile( "data/Shader/default.hlsl" );
 	
 	m_immediateVBO = new VertexBuffer( this, MEMORY_HINT_DYNAMIC );
+	m_immediateVBO->SetLayout( Vertex_PCU::s_layout );
 
-	m_frameUBO	= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_modelUBO	= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_tintUBO	= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	
+	// create uniform buffer
+	m_frameUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_modelUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_tintUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_lightUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_ambientUBO	= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+
+
 	m_defaultSampler = new Sampler( this, SAMPLER_POINT );
 
 	m_texDefaultColor = CreateTextureFromColor( Rgba8::WHITE );
+	m_texDefaultNormal = CreateTextureFromVec4( Vec4( 0.5f, 0.5f, 1.f, 1.f ) );
 	AddTexture( m_texDefaultColor );
-	
+	AddTexture(m_texDefaultNormal );
+
 	CreateBlendState();
 	CreateDefaultRasterStateDesc();
+	CreateShaderNames();
 
 	m_clock = new Clock();
 }
@@ -72,6 +82,9 @@ void RenderContext::Shutdown()
 	delete m_frameUBO;
 	delete m_modelUBO;
 	delete m_tintUBO;
+	delete m_lightUBO;
+	delete m_ambientUBO;
+	//delete m_currentVBO;
 
 	m_swapChain			= nullptr;
 	m_currentShader		= nullptr;
@@ -94,7 +107,7 @@ void RenderContext::Shutdown()
 	DX_SAFE_RELEASE(m_opaqueBlendState);
 	DX_SAFE_RELEASE(m_currentDepthStencilState);
 	DX_SAFE_RELEASE(m_rasterState);
-
+	//DX_SAFE_RELEASE(m_currentLayout);
 	SELF_SAFE_RELEASE(m_defaultRasterStateDesc);
 }
 
@@ -129,16 +142,21 @@ void RenderContext::BeginCamera( Camera* camera )
 
 	// Bind and set uniform buffer
 	RenderBuffer* cameraUBO = camera->GetOrCreateCameraBuffer( this );
-	Mat44 test = Mat44();
-	SetModelMatrix( Mat44() );
-	SetTintColor( Vec4( 0.5f, 0.5f, 0.5f, 0.5f ) );
-	SetTintColor( Vec4( 0.1f, 0.2f, 0.3f, 0.4f ) );
+
+	SetModelAndSpecular( Mat44(), 1.f, 1.f );
+	
+	SetTintColor( Rgba8::WHITE );
+	
 	BindUniformBuffer( UBO_FRAME_SLOT, m_frameUBO );
 	BindUniformBuffer( UBO_CAMERA_SLOT, cameraUBO );
 	BindUniformBuffer( UBO_MODEL_SLOT, m_modelUBO );
 	BindUniformBuffer( UBO_TINT_SLOT, m_tintUBO );
+	BindUniformBuffer( UBO_LIGHT_SLOT, m_lightUBO );
+	BindUniformBuffer( UBO_AMBIENT_SLOT, m_ambientUBO );
 
-	BindTexture( nullptr ); //default white texture;
+
+	SetDiffuseTexture( nullptr ); //default white texture;
+	SetNormalTexture( nullptr ); //default white texture;
 	BindSampler( nullptr );
 
 }
@@ -223,8 +241,23 @@ void RenderContext::ClearTargetView( Texture* output, const Rgba8& clearColor )
 
 	m_context->ClearRenderTargetView( rtv, clearFolats );
 }
+// 
+// void RenderContext::BindTexture( Texture* texture )
+// {
+// 	Texture* tempTexture = const_cast<Texture*>(texture);
+// 	if( tempTexture == nullptr ) {
+// 		tempTexture = m_texDefaultColor;
+// 	}
+// 	TextureView* shaderResourceView = tempTexture->GetOrCreateShaderResourceView();
+// 	ID3D11ShaderResourceView* srvHandle = shaderResourceView->GetSRVHandle();
+// 	m_context->PSSetShaderResources( 0, 1, &srvHandle ); // texture shader resource
+// 														 // can bind in vertex shader 
+// 														 // color lUT
+// 														 // faster find colro in pixel shader
+// 														 // fancy staff
+// }
 
-void RenderContext::BindTexture( Texture* texture )
+void RenderContext::BindTexture( Texture* texture, uint slot )
 {
 	Texture* tempTexture = const_cast<Texture*>(texture);
 	if( tempTexture == nullptr ) {
@@ -232,11 +265,27 @@ void RenderContext::BindTexture( Texture* texture )
 	}
 	TextureView* shaderResourceView = tempTexture->GetOrCreateShaderResourceView();
 	ID3D11ShaderResourceView* srvHandle = shaderResourceView->GetSRVHandle();
-	m_context->PSSetShaderResources( 0, 1, &srvHandle ); // texture shader resource
+	m_context->PSSetShaderResources( slot, 1, &srvHandle ); // texture shader resource
 														 // can bind in vertex shader 
 														 // color lUT
 														 // faster find colro in pixel shader
 														 // fancy staff
+}
+
+void RenderContext::SetDiffuseTexture( Texture* texture )
+{
+	if( texture == nullptr ) {
+		BindTexture( m_texDefaultColor, TEXTURE_DIFFUSE_SLOT );
+	}
+	BindTexture( texture, TEXTURE_DIFFUSE_SLOT );
+}
+
+void RenderContext::SetNormalTexture( Texture* texture )
+{
+	if( texture == nullptr ) {
+		BindTexture( m_texDefaultNormal, TEXTURE_NORMAL_SLOT );
+	}
+	BindTexture( texture, TEXTURE_NORMAL_SLOT );
 }
 
 void RenderContext::BindSampler( const Sampler* sampler )
@@ -271,6 +320,11 @@ void RenderContext::BindShader( const char* fileName )
 	BindShader( shader );
 }
 
+void RenderContext::BindShader( std::string fileName )
+{
+	BindShader( fileName.c_str() );
+}
+
 void RenderContext::BindRasterState()
 {
 	if( m_rasterState == nullptr ) {
@@ -293,6 +347,7 @@ void RenderContext::BindVertexBuffer( VertexBuffer* vbo )
 		m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 		m_lastBoundVBO = vboHandle;
 	}
+	m_currentVBO = vbo;
 }
 
 void RenderContext::BindIndexBuffer( IndexBuffer* ibo )
@@ -340,14 +395,33 @@ void RenderContext::SetBlendMode( BlendMode blendMode )
 
 void RenderContext::SetModelMatrix( Mat44 model )
 {
-	model_t modelData;
-	modelData.model = model;
-	m_modelUBO->Update( &modelData, sizeof( modelData ), sizeof( modelData ) );
+	m_model.model = model;
+	m_modelHasChanged = true;
+	//m_modelUBO->Update( &modelData, sizeof( modelData ), sizeof( modelData ) );
+}
+
+void RenderContext::SetSpecularFactor( float factor )
+{
+	m_model.specularFactor = factor;
+	m_modelHasChanged = true;
+}
+
+void RenderContext::SetSpecularPow( float pow )
+{
+	m_model.specularPow	 = pow;
+	m_modelHasChanged = true;
+}
+
+void RenderContext::SetModelAndSpecular( Mat44 model, float factor, float pow )
+{
+	SetModelMatrix( model );
+	SetSpecularFactor( factor );
+	SetSpecularPow( pow	 );
 }
 
 void RenderContext::SetTintColor( Vec4 color )
 {
-	tint_color tintData;
+	tint_color_t tintData;
 	tintData.r = color.x;
 	tintData.g = color.y;
 	tintData.b = color.z;
@@ -503,18 +577,22 @@ void RenderContext::SetFrontFaceWindOrder( RasterWindOrder order )
 void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 {
 	UpdateLayoutIfNeeded();
+	UpdateLightIfNeeded();
+	UpdateModelIfNeeded();
 	m_context->Draw( numVertexes, vertexOffset ); // what is vertexOffset
 }
 
 void RenderContext::DrawIndexed( int indexCount, int indexOffset /*= 0*/, int vertexOffset /*= 0 */ )
 {
 	UpdateLayoutIfNeeded();
+	UpdateLightIfNeeded();
+	UpdateModelIfNeeded();
 	m_context->DrawIndexed( (uint)indexCount,indexOffset, vertexOffset );
 }
 
 void RenderContext::DrawMesh( GPUMesh* mesh )
 {
-	mesh->UpdateVerticeBuffer( nullptr );
+	mesh->UpdateVerticeBuffer( );
 	BindVertexBuffer( mesh->GetOrCreateVertexBuffer() );
 
 	bool hasIndices = mesh->GetIndexCount() > 0;
@@ -557,6 +635,7 @@ void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 
 void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 {
+	//BindVertexBuffer( m_immediateVBO );
 	float temZ = 0.f; // set to zero or use default
 	Vertex_PCU temAABB2[6] ={
 		// triangle2
@@ -579,6 +658,7 @@ void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, cons
 
 void RenderContext::DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor )
 {
+	//BindVertexBuffer( m_immediateVBO );
 	float halfThick = thick / 2;
 	Vec2 direction = lineSeg.GetDirection();
 	direction.SetLength( halfThick );
@@ -697,6 +777,13 @@ Texture* RenderContext::CreateTextureFromColor( Rgba8 color )
 	return tempTexture;
 }
 
+Texture* RenderContext::CreateTextureFromVec4( Vec4 input )
+{
+	Rgba8 inputColor = Rgba8::GetColorFromVec4( input );
+	Texture* tempTex = CreateTextureFromColor( inputColor );
+	return tempTex;
+}
+
 Shader* RenderContext::GetOrCreateShader( char const* fileName )
 {
 	std::string tempName = std::string( fileName );
@@ -758,13 +845,34 @@ void RenderContext::UpdateLayoutIfNeeded()
 {
 	 //happen in both draw
 	if( m_previousLayout != m_currentLayout || m_shaderHasChanged ){
-		m_currentLayout = m_currentShader->GetOrCreateInputLayout( );
+		m_currentLayout = m_currentShader->GetOrCreateInputLayout( m_currentVBO );// need change later
 		m_context->IASetInputLayout( m_currentLayout );
+		DX_SAFE_RELEASE(m_previousLayout);
 		m_previousLayout = m_currentLayout;
 		m_shaderHasChanged = false;
 	}
 	else{
 		m_context->IASetInputLayout( m_currentLayout );
+	}
+}
+
+void RenderContext::UpdateLightIfNeeded()
+{
+	if( m_ambientHasChanged ) {
+		m_ambientUBO->Update( &m_ambientLight, sizeof(m_ambientLight), sizeof(m_ambientLight) );
+		m_ambientHasChanged = false;
+	}
+	if( m_lightHasChanged ) {
+		m_lightUBO->Update( &m_light, sizeof(m_light), sizeof(m_light) );
+		m_lightHasChanged = false;
+	}
+}
+
+void RenderContext::UpdateModelIfNeeded()
+{
+	if( m_modelHasChanged ) {
+		m_modelUBO->Update( &m_model, sizeof(m_model), sizeof(m_model) );
+		m_modelHasChanged = false;
 	}
 }
 
@@ -846,6 +954,84 @@ void RenderContext::createRasterState()
 	m_device->CreateRasterizerState( &desc, &m_rasterState );
 }
 
+void RenderContext::SetAmbientColor( Rgba8 color )
+{
+	Vec3 v3_color = color.GetVec3Color();
+	m_ambientLight.color = v3_color;	
+	m_ambientHasChanged = true;
+}
+
+void RenderContext::SetAmbientIntensity( float intensity )
+{
+	m_ambientLight.intensity = intensity;
+	m_ambientHasChanged = true;
+}
+
+void RenderContext::SetAmbientLight( Rgba8 color, float intensity )
+{
+	SetAmbientColor( color );
+	SetAmbientIntensity( intensity );
+}
+
+void RenderContext::DisableAmbient()
+{
+	SetAmbientLight( Rgba8::WHITE, 1.f );
+}
+
+void RenderContext::DebugRenderLight()
+{
+	
+}
+
+void RenderContext::EnableLight( int index, const light_t& lightInfo )
+{
+	UNUSED(index);
+	m_light = lightInfo;
+	m_lightHasChanged = true;
+}
+
+void RenderContext::EnablePointLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 Attenuation )
+{
+	UNUSED(Attenuation);
+	UNUSED(index);
+	m_light.position = position;
+	m_light.color = color.GetVec3Color();
+	m_light.intensity = intensity;
+	m_lightHasChanged = true;
+}
+
+void RenderContext::DisableLight( int index )
+{
+	m_light.intensity = 0.f;
+	m_lightHasChanged = false;
+}
+
+void RenderContext::UsePreviousShader()
+{
+	if( m_currentShaderIndex != 0 ) {
+		m_currentShaderIndex--;
+		BindShader( g_shaderNames[m_currentShaderIndex] );
+	}
+}
+
+void RenderContext::UseNextShader()
+{
+	if( m_currentShaderIndex != g_shaderNames.size() ) {
+		m_currentShaderIndex++;
+		BindShader( g_shaderNames[m_currentShaderIndex] );
+	}
+}
+
+void RenderContext::CreateShaderNames()
+{
+	g_shaderNames.push_back( std::string( "data/Shader/default.hlsl" ) );
+	g_shaderNames.push_back( std::string( "data/Shader/lit.hlsl" ) );
+	g_shaderNames.push_back( std::string( "data/Shader/normals.hlsl" ) );
+	g_shaderNames.push_back( std::string( "data/Shader/tangents.hlsl" ) );
+	g_shaderNames.push_back( std::string( "data/Shader/bitangents.hlsl" ) );
+	g_shaderNames.push_back( std::string( "data/Shader/surface_normals.hlsl" ) );
+}
+
 void RenderContext::Prensent()
 {
 	m_swapChain->Present();
@@ -885,7 +1071,7 @@ Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )
 
 	// Check if the load was successful
 	GUARANTEE_OR_DIE( imageData, Stringf( "Failed to load image \"%s\"", imageFilePath ) );
-	GUARANTEE_OR_DIE( numComponents == 4 && imageTexelSizeX > 0 && imageTexelSizeY > 0, Stringf( "ERROR loading image \"%s\" (Bpp=%i, size=%i,%i)", imageFilePath, numComponents, imageTexelSizeX, imageTexelSizeY ) );
+	GUARANTEE_OR_DIE( ( numComponents == 4 || numComponents == 3 ) && imageTexelSizeX > 0 && imageTexelSizeY > 0, Stringf( "ERROR loading image \"%s\" (Bpp=%i, size=%i,%i)", imageFilePath, numComponents, imageTexelSizeX, imageTexelSizeY ) );
 
 	D3D11_TEXTURE2D_DESC desc;
 	desc.Width				= imageTexelSizeX;
@@ -932,6 +1118,7 @@ void RenderContext::CleanTextures()
 		}
 	}
 	m_texDefaultColor = nullptr;
+	m_texDefaultNormal = nullptr;
 }
 
 void RenderContext::CleanShaders()

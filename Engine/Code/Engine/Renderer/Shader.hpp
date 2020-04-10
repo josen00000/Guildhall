@@ -4,6 +4,7 @@
 #include "Engine/Renderer/RenderCommon.hpp"
 
 class RenderContext;
+class VertexBuffer;
 struct ID3D10Bolb;
 struct ID3D11InputLayout;
 struct ID3D11PixelShader;
@@ -47,11 +48,12 @@ public:
 	Shader( RenderContext* owner );
 	~Shader();
 	bool CreateFromFile( std::string const& fileName );
-	ID3D11InputLayout* GetOrCreateInputLayout();
+	ID3D11InputLayout* GetOrCreateInputLayout( VertexBuffer* vbo );
 	DXGI_FORMAT TransformToD3DDataFormat( BufferFormatType type );
 public:
 	RenderContext*	m_owner	= nullptr;
 	ShaderStage m_vertexStage;
 	ShaderStage m_fragmentStage;
-	ID3D11InputLayout* m_inputLayout = nullptr;
+	ID3D11InputLayout* m_d3dInputLayout = nullptr;
+	buffer_attribute_t* m_attribute = nullptr;
 };

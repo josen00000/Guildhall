@@ -36,6 +36,7 @@ public:
 	void RunFrame( float deltaSeclnds );
 	void Reset();
 	void Render() const;
+	void RenderLightObjects() const;
 	void RenderUI() const;
 
 	
@@ -43,10 +44,11 @@ private:
 	void Update( float deltaSeconds );
 	void UpdateUI( float deltaSeconds );
 	void UpdateCamera(float deltaSeconds );
-
+	void UpdateLighting();
 
 	void HandleDevKeyboardInput( float deltaSeconds );
 	void HandleDebugKeyboardInput( float deltaSeconds );
+	void HandleLightKeyboardInput( float deltaSeconds );
 	void HandleMouseInput( float deltaSeconds );
 	void HandleCameraMovement( float deltaSeconds );
 		 
@@ -70,6 +72,12 @@ private:
 	void RenderTesSpheres() const;
 	void RenderCubeSphere() const;
 
+	// light objects
+	void CreateLightQuadObjects();
+	void CreateLightCubeObjects();
+	void CreateLightSphereObjects();
+	void UpdateLightObjects( float deltaSeconds );
+
 	// DebugRender
 	void CreateDebugRenderObjects();
 
@@ -86,10 +94,19 @@ public:
 	Camera* m_UICamera		= nullptr;
 	RandomNumberGenerator* m_rng = nullptr;
 	
-	GPUMesh* m_cubeMesh			= nullptr;
 	GPUMesh* m_sphereMesh		= nullptr;
 	GPUMesh* m_tesMesh			= nullptr;
 	GPUMesh* m_cubeSphereMesh	= nullptr;
+	
+	// sd a 06
+	GPUMesh* m_lightQuadMesh	= nullptr;
+	GPUMesh* m_lightSphereMesh	= nullptr;
+	GPUMesh* m_lightCubeMesh	= nullptr;
+
+	GameObject* m_lightQuadObject	= nullptr;
+	GameObject* m_lightSphereObject = nullptr;
+	GameObject* m_lightCubeObject	= nullptr;
+	
 
 	GameObject* m_tesselationObject = nullptr;
 	GameObject* m_cubeSphereObject = nullptr;

@@ -42,19 +42,25 @@ void Game::Startup()
 	// debug render system
 	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
 	CreateTestObjects();
-	CreateDebugRenderObjects();
+	//CreateDebugRenderObjects();
 	//DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, 20.f );
 }
 
 void Game::Shutdown()
 {
 	delete m_rng;
-	delete m_cubeMesh;
 	delete m_sphereMesh;
 	delete m_tesMesh;
+	SELF_SAFE_RELEASE(m_lightQuadMesh);
 	SELF_SAFE_RELEASE(m_cubeSphereMesh);
+	SELF_SAFE_RELEASE(m_lightCubeMesh);
+
 
 	// clear game objects
+	SELF_SAFE_RELEASE(m_lightQuadObject);
+	SELF_SAFE_RELEASE(m_lightCubeObject);
+	SELF_SAFE_RELEASE(m_lightSphereObject);
+
 	for( int i = 0; i < m_sphereObjects.size(); i++ ){
 		delete m_sphereObjects[i];
 	}
@@ -77,8 +83,11 @@ void Game::Update( float deltaSeconds )
 	if( !g_theConsole->IsOpen() ) {
 		HandleDevKeyboardInput( deltaSeconds );
 		HandleDebugKeyboardInput( deltaSeconds );
+		HandleLightKeyboardInput( deltaSeconds );
 	}
 	UpdateMeshes( deltaSeconds );
+	UpdateLighting();
+	UpdateLightObjects( deltaSeconds );
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -91,14 +100,23 @@ void Game::UpdateCamera( float deltaSeconds )
 	UNUSED( deltaSeconds );
 }
 
+void Game::UpdateLighting()
+{
+	Vec3 lightPos = m_gameCamera->GetPosition();
+// 	std::string lightStr = "light pos is " + lightPos.GetText();
+// 	DebugAddScreenText( Vec4( 0.1f, 0.1f, 0.f, 0.f ), Vec2::ZERO, 20.f, Rgba8::BLACK, Rgba8::BLACK, 0.f, lightStr );
+// 	DebugAddScreenText( Vec4( 0.5f, 0.5f, -11.f, -20.f), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::GREEN, 0.f, "test" );
+// 	Transform testTrans;
+// 	testTrans.SetPosition( Vec3( -1.f, -1.f, -1.f ) );
+// 
+// 	std::string lightStr1 = lightStr + " world testing!";
+// 	DebugAddWorldText( testTrans, Vec2::ZERO, Rgba8::BLACK, Rgba8::BLACK, 0.f, DEBUG_RENDER_ALWAYS, lightStr1 );
+	//lightPos = Vec3( 1.f, 1.f, -3.f );
+	g_theRenderer->EnablePointLight( 0, lightPos, Rgba8::GREEN, 1.f, Vec3::ZERO );
+}
+
 void Game::UpdateMeshes( float deltaSeconds )
 {
-	static float totalSeconds = 0.f;
-	totalSeconds += deltaSeconds;
-	float rotCoe = SinDegrees( totalSeconds );
-	Vec3 rotation = Vec3( 0, 0, rotCoe * 180 );
-	m_cubeMesh->SetRotation( rotation );
-
 	UpdateSphereMeshes( deltaSeconds );
 }
 
@@ -168,12 +186,30 @@ void Game::HandleDebugKeyboardInput( float deltaSeconds )
 		DebugAddWorldBasis( transMat, Rgba8::WHITE, Rgba8::WHITE, debugTime, DEBUG_RENDER_ALWAYS );
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_8 ) ) {
-		DebugAddWorldText( trans, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::BLACK, -debugTime * 2, DEBUG_RENDER_XRAY, "testing" );
+		Vec3 cameraPos = m_gameCamera->GetPosition();
+		std::string lightStr = "light pos is " + cameraPos.GetText();
+		DebugAddWorldText( trans, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::BLACK, debugTime * 2, DEBUG_RENDER_XRAY, lightStr );
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_9 ) ) {
-		DebugAddWorldBillboardText( trans.m_pos, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::GREEN, debugTime * 2, DEBUG_RENDER_XRAY, "test" );
+		Vec3 cameraPos = m_gameCamera->GetPosition();
+		std::string lightStr = "light pos is " + cameraPos.GetText();
+		DebugAddWorldBillboardText( trans.m_pos, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::GREEN, debugTime * 2, DEBUG_RENDER_ALWAYS, lightStr );
 	}
+
 	
+}
+
+void Game::HandleLightKeyboardInput( float deltaSeconds )
+{
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_COMMA ) ){
+		g_theRenderer->UsePreviousShader();
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_PERIOD ) ){
+		g_theRenderer->UseNextShader();
+		g_theRenderer->BindShader( "data/Shader/surface_normals.hlsl" );
+	}
+
+
 }
 
 void Game::HandleMouseInput( float deltaSeconds )
@@ -268,20 +304,38 @@ void Game::Render() const
  	Rgba8 tempColor = Rgba8::DARK_GRAY;
  	m_gameCamera->m_clearColor = tempColor;
  	g_theRenderer->BeginCamera( m_gameCamera );
+	g_theRenderer->SetTintColor( Rgba8::WHITE );
  	g_theRenderer->DrawAABB2D( AABB2( Vec2( -5, -5 ),Vec2::ZERO  ), Rgba8::RED );
  	//g_theRenderer->BindShader( "data/Shader/Reverse.hlsl" );
  	//g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
- 	g_theRenderer->SetModelMatrix( m_cubeMesh->GetModelMatrix() );
- 	g_theRenderer->DrawMesh( m_cubeMesh );
 
  	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
- 	g_theRenderer->BindTexture( temp );
+ 	g_theRenderer->SetDiffuseTexture( temp );
 	//RenderSpheres();
 	//RenderCubeSphere();
 	//RenderTesSpheres();
+
+	RenderLightObjects();
 	g_theRenderer->EndCamera( );
 
 	DebugRenderWorldToCamera( m_gameCamera );
+}
+
+void Game::RenderLightObjects() const
+{
+	//g_theRenderer->RenderLight();
+	g_theRenderer->SetSpecularFactor( 0.8f );
+	g_theRenderer->SetSpecularPow( 32.f );
+	g_theRenderer->SetAmbientLight( Rgba8::BLUE, 1.f );
+	//g_theRenderer->BindTexture("tile_normal)
+	Texture* tempNormal = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/tile_normal.png" );
+	Texture* tempDiffuse = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/tile_diffuse.png" );
+	g_theRenderer->SetDiffuseTexture( tempDiffuse );
+	g_theRenderer->SetNormalTexture( tempNormal );
+	//g_theRenderer->BindShader( "data/Shader/surface_normals.hlsl" );
+	m_lightQuadObject->Render();	
+	m_lightCubeObject->Render();
+	m_lightSphereObject->Render();
 }
 
 void Game::RenderSpheres() const
@@ -302,6 +356,52 @@ void Game::RenderCubeSphere() const
 	m_cubeSphereObject->Render();
 }
 
+void Game::CreateLightQuadObjects()
+{
+	AABB2 QuadAABB = AABB2( Vec2( 0.f, 0.f), Vec2( 3.f, 3.f ) );
+	m_lightQuadMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
+	std::vector<Vertex_PCUTBN> vertices;
+	std::vector<uint> indices;
+	AppendIndexedTBNVertsForAABB2D( vertices, indices, QuadAABB, Rgba8::WHITE, Vec2::ZERO, Vec2::ONE );
+	m_lightQuadMesh->UpdateTBNVerticesInCPU( vertices );
+	m_lightQuadMesh->UpdateIndicesInCPU( indices );
+
+	m_lightQuadObject = new GameObject();
+	m_lightQuadObject->m_mesh = m_lightQuadMesh;
+}
+
+void Game::CreateLightCubeObjects()
+{
+	AABB3 cubeAABB3 = AABB3( Vec3( -5.f, 0.f, -6.5f ), Vec3( -2.f, 3.f, -3.5f ) );
+	m_lightCubeMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
+	std::vector<Vertex_PCUTBN> vertices;
+	std::vector<uint> indices;
+	AppendIndexedTBNVertsForAABB3D( vertices, indices, cubeAABB3, Rgba8::WHITE );
+	m_lightCubeMesh->UpdateTBNVerticesInCPU( vertices );
+	m_lightCubeMesh->UpdateIndicesInCPU( indices );
+
+	m_lightCubeObject = new GameObject();
+	m_lightCubeObject->m_mesh = m_lightCubeMesh;
+}
+
+void Game::CreateLightSphereObjects()
+{
+	m_lightSphereMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
+	std::vector<Vertex_PCUTBN> vertices;
+	std::vector<uint> indices;
+	AppendIndexedTBNVertsForSphere3D( vertices, indices, Vec3( 7.5f, 1.5f, -5.f ), 1.5f, 32, 16, Rgba8::WHITE );
+	m_lightSphereMesh->UpdateTBNVerticesInCPU( vertices );
+	m_lightSphereMesh->UpdateIndicesInCPU( indices );
+
+	m_lightSphereObject = new GameObject();
+	m_lightSphereObject->m_mesh = m_lightSphereMesh;
+}
+
+void Game::UpdateLightObjects( float deltaSeconds )
+{
+
+}
+
 void Game::CreateDebugRenderObjects()
 {
 
@@ -310,14 +410,13 @@ void Game::CreateDebugRenderObjects()
 	// only test for ui
 	float debugTime = 10.f;
 	// UI
-	//DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, debugTime );
+	DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, debugTime );
 	//DebugAddScreenText( Vec4( 0.5f, 0.5f, -10.f, -20.f), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::GREEN, debugTime, "test" );
-	//DebugAddScreenQuad( AABB2( Vec2( 1.f, 1.f ), Vec2( 20.f, 20.f ) ), Rgba8::RED, debugTime );
-	//DebugAddScreenLine( Vec2( 15.f, 15.f ), Vec2( 40.f, 40.f ), Rgba8::BLUE, debugTime );
+	DebugAddScreenQuad( AABB2( Vec2( 1.f, 1.f ), Vec2( 20.f, 20.f ) ), Rgba8::RED, debugTime );
+	DebugAddScreenLine( Vec2( 15.f, 15.f ), Vec2( 40.f, 40.f ), Rgba8::BLUE, debugTime );
 	DebugAddScreenArrow( Vec2( 50.f, 50.f), Vec2( 50.f, 30.f ), Rgba8::YELLOW, debugTime );
 	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
 	DebugAddScreenTexturedQuad( AABB2( Vec2( 60.f, 60.f ), Vec2( 80.f, 80.f	) ), temp, Rgba8::GREEN, debugTime ); 
-
 
 	Mat44 basisMat2D = Mat44();
 	basisMat2D.SetTranslation3D( Vec3( 0.f, 0.f, -3.f ) );
@@ -338,19 +437,11 @@ void Game::LoadAssets()
 
 void Game::CreateTestObjects()
 {
-	m_cubeMesh = new GPUMesh();
-	m_cubeMesh->m_owner = g_theRenderer;
-	std::vector<Vertex_PCU> vertices;
-	std::vector<uint> indices;
-	AABB2 testAABB = AABB2( Vec2::ZERO, Vec2::ONE * 10 );
-	AABB3 testAABB3 = AABB3( Vec3::ZERO, Vec3::ONE );
-	m_cubeMesh->SetPosition( Vec3( 1.f, 0.5f, -8.f ) );
-	AppendIndexedVertsForAABB3D( vertices, indices, testAABB3, Rgba8::BLUE );
-	m_cubeMesh->UpdateVerticesInCPU( vertices );
-	m_cubeMesh->UpdateIndicesInCPU( indices );
-
 	CreateCubeSphereObjects();
 	CreateSphereObjects();
+	CreateLightQuadObjects();
+	CreateLightCubeObjects();
+	CreateLightSphereObjects();
 
 	// tesselation object
 	m_tesselationObject = new GameObject();

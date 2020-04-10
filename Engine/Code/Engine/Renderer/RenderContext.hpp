@@ -3,6 +3,7 @@
 #include <string>
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
+#include "Engine/Core/Vertex_PCUTBN.hpp"
 #include "Engine/Math/Mat44.hpp"
 
 class BitmapFont;
@@ -44,7 +45,14 @@ enum BufferSlot {
 	UBO_FRAME_SLOT	= 0,
 	UBO_CAMERA_SLOT,
 	UBO_MODEL_SLOT,
-	UBO_TINT_SLOT
+	UBO_TINT_SLOT,
+	UBO_LIGHT_SLOT,
+	UBO_AMBIENT_SLOT
+};
+
+enum TextureSlot: uint{
+	TEXTURE_DIFFUSE_SLOT = 0,
+	TEXTURE_NORMAL_SLOT
 };
 
 // raster state
@@ -94,18 +102,35 @@ struct time_data_t {
 
 struct model_t {
 	Mat44 model;
+	float specularFactor;
+	float specularPow;
+	float padding[2];
 };
 
 struct camera_ortho_t {
 	Mat44 projection;
 	Mat44 view;
+	Vec3 position;
+	float pad00;
 };
 
-struct tint_color {
+struct tint_color_t {
 	float r;
 	float g;
 	float b;
 	float a;
+};
+
+struct light_t {
+	Vec3 position;
+	float pad;
+	Vec3 color;
+	float intensity;
+};
+
+struct ambient_t {
+	Vec3 color;
+	float intensity;
 };
 
 class RenderContext{
@@ -127,10 +152,12 @@ public:
 	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 
 	// Bind
-	void BindTexture( Texture* texture);
+	void SetDiffuseTexture( Texture* texture );
+	void SetNormalTexture( Texture* texture );
 	void BindSampler( const Sampler* sampler );
 	void BindShader( Shader* shader );
 	void BindShader( const char* fileName );
+	void BindShader( std::string fileName );
 	void BindRasterState();
 	void BindVertexBuffer( VertexBuffer* vbo );
 	void BindIndexBuffer( IndexBuffer* ibo );
@@ -139,6 +166,9 @@ public:
 	// Set State	
 	void SetBlendMode( BlendMode blendMode );
 	void SetModelMatrix( Mat44 model );
+	void SetSpecularFactor( float factor );
+	void SetSpecularPow( float pow );
+	void SetModelAndSpecular( Mat44 model, float factor, float pow );
 	void SetTintColor( Vec4 color );
 	void SetTintColor( Rgba8 color );
 	void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
@@ -168,6 +198,8 @@ public:
 	BitmapFont* CreateOrGetBitmapFontFromFile( const char* fontName, const char* fontFilePath );
 	Texture* CreateOrGetTextureFromFile( const char* imageFilePath );
 	Texture* CreateTextureFromColor( Rgba8 color );
+	Texture* CreateTextureFromVec4( Vec4 input );
+	Texture* CreateTextureFromVec3( Vec3 input );
 	Texture* GetSwapChainBackBuffer();
 	void AddTexture( Texture* tex );
 
@@ -175,16 +207,32 @@ public:
 	SwapChain* CreateSwapChain( Window* window, uint flags );
 	void createRasterState();
 
+	// lighting
+	void SetAmbientColor( Rgba8 color );
+	void SetAmbientIntensity( float intensity );
+	void SetAmbientLight( Rgba8 color, float intensity ); 
+	void DisableAmbient();
+	void DebugRenderLight();
+
+	void EnableLight( int index, const light_t& lightInfo );
+	void EnablePointLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 Attenuation );
+	void DisableLight( int index );
+
+	// shader
+	void UsePreviousShader();
+	void UseNextShader();
+	void CreateShaderNames();
+
 	// end 
 	void Prensent();
 
 private:
 	void	UpdateLayoutIfNeeded(); 
+	void	UpdateLightIfNeeded(); 
+	void	UpdateModelIfNeeded();
 	void	UpdateFrameTime( float deltaSeconds );
 	void	CreateBlendState();
-
-	
-
+	void	BindTexture( Texture* texture, uint slot );
 
 	// begin camera
 	void BeginCameraViewport( IntVec2 viewPortSize );
@@ -209,7 +257,13 @@ public:
 
 
 private:
-	bool m_shaderHasChanged = false;
+	bool m_modelHasChanged		= false;
+	bool m_shaderHasChanged		= false;
+	bool m_ambientHasChanged	= false;
+	bool m_lightHasChanged		= false;
+
+	int m_currentShaderIndex = 0;
+
 	std::vector <Texture*> m_textureList;
 	std::map<std::string, Texture*>			m_loadedTextures;
 	std::map<std::string, BitmapFont*>		m_loadedFonts;
@@ -228,14 +282,27 @@ private:
 	ID3D11Buffer*	m_lastBoundIBO	= nullptr;	
 	ID3D11Buffer*	m_lastBoundVBO	= nullptr;
 	VertexBuffer*	m_immediateVBO	= nullptr;
+	VertexBuffer*	m_currentVBO	= nullptr;
+	
+	// uniform buffer
 	RenderBuffer*	m_frameUBO		= nullptr;
 	RenderBuffer*	m_modelUBO		= nullptr;
 	RenderBuffer*	m_tintUBO		= nullptr;
+	RenderBuffer*	m_lightUBO		= nullptr;
+	RenderBuffer*	m_ambientUBO	= nullptr;
+	//RenderBuffer*	m_tintUBO		= nullptr;
 
-// 	buffer_attribute_t* m_currentLayout		= nullptr;
-// 	buffer_attribute_t* m_previousLayout	= nullptr;
+ 	//buffer_attribute_t* m_currentLayout	= nullptr;
+ 	//buffer_attribute_t* m_previousLayout	= nullptr;
 
 	Texture* m_texDefaultColor = nullptr;
+	Texture* m_texDefaultNormal = nullptr;
+
+	// light
+	ambient_t m_ambientLight;
+	light_t m_light;
+	model_t m_model;
+
 
 	// states
 	ID3D11BlendState* m_additiveBlendState	= nullptr;

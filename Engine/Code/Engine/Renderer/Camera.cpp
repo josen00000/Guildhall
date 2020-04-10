@@ -250,6 +250,7 @@ void Camera::UpdateCameraUBO()
 	cameraData.projection = m_projection; 
 	UpdateViewMatrix();
 	cameraData.view = m_view;
+	cameraData.position = m_transform.GetPosition();
 	m_cameraUBO->Update( &cameraData, sizeof( cameraData ), sizeof( cameraData ) );
 }
 

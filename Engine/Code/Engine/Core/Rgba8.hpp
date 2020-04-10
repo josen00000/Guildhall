@@ -1,4 +1,8 @@
 #pragma once
+
+struct Vec3;
+struct Vec4;
+
 struct Rgba8 {
 public:
 	unsigned char r = 255;
@@ -12,6 +16,11 @@ public:
 	~Rgba8(){}
 	explicit Rgba8(unsigned char ini_r, unsigned char ini_g, unsigned char ini_b, unsigned char ini_a = 255);
 	static Rgba8 GetLerpColor( Rgba8 a, Rgba8 b, float value );
+	static Rgba8 GetColorFromVec4( Vec4 input );
+
+	// Accessor
+	Vec3 GetVec3Color() const;
+
 	//Mutators
 	void SetFromText(const char* text);
 

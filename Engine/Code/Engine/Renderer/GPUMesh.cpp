@@ -11,17 +11,46 @@ GPUMesh::~GPUMesh()
 	SELF_SAFE_RELEASE( m_indiceBuffer);
 }
 
-void GPUMesh::UpdateVerticeBuffer( const buffer_attribute_t* layout  )
+
+GPUMesh::GPUMesh( RenderContext* owner, Vertex_Type type/*=VERTEX_TYPE_PCU */ )
+	:m_owner(owner)
+	,m_type(type)
 {
-	UNUSED(layout);
+}
+
+void GPUMesh::UpdateVerticeBuffer( )
+{
 	GetOrCreateVertexBuffer();
-	size_t dataByteSize = (size_t)(m_vertices.size() * sizeof(Vertex_PCU) );
-	m_vertexBuffer->Update( &m_vertices[0], dataByteSize, sizeof(Vertex_PCU) );
+	size_t dataByteSize;
+	size_t elementByteSize;
+	switch( m_type )
+	{
+	case VERTEX_TYPE_PCU:
+		elementByteSize = sizeof(Vertex_PCU);
+		dataByteSize = (size_t)( m_vertices.size() * elementByteSize );
+		m_vertexBuffer->Update( &m_vertices[0], dataByteSize, elementByteSize );
+		m_vertexBuffer->SetLayout( Vertex_PCU::s_layout );
+		break;
+	case VERTEX_TYPE_PCUTBN:
+		elementByteSize = sizeof(Vertex_PCUTBN);
+		dataByteSize = (size_t)( m_TBNVertices.size() * elementByteSize );
+		m_vertexBuffer->Update( &m_TBNVertices[0], dataByteSize, elementByteSize );
+		
+		m_vertexBuffer->SetLayout( Vertex_PCUTBN::s_layout );
+		break;
+	default:
+		break;
+	}
 }
 
 void GPUMesh::UpdateVerticesInCPU( std::vector<Vertex_PCU> vertices )
 {
 	m_vertices = vertices;
+}
+
+void GPUMesh::UpdateTBNVerticesInCPU( std::vector<Vertex_PCUTBN> vertices )
+{
+	m_TBNVertices = vertices;
 }
 
 void GPUMesh::UpdateIndiceBuffer()
@@ -33,31 +62,6 @@ void GPUMesh::UpdateIndiceBuffer()
 void GPUMesh::UpdateIndicesInCPU( std::vector<uint> indices )
 {
 	m_indices = indices;
-}
-
-void GPUMesh::SetPosition( Vec3 pos )
-{
-	m_transform.SetPosition( pos );
-}
-
-void GPUMesh::SetRotation( Vec3 rot )
-{
-	m_transform.SetRotationFromPitchRollYawDegrees( rot );
-}
-
-Vec3 GPUMesh::GetPosition() const
-{
-	return m_transform.GetPosition();
-}
-
-Vec3 GPUMesh::GetRotation() const
-{
-	return m_transform.GetRotationPRYDegrees();
-}
-
-Mat44 GPUMesh::GetModelMatrix() const
-{
-	return m_transform.ToMatrix();
 }
 
 VertexBuffer* GPUMesh::GetOrCreateVertexBuffer()
@@ -80,5 +84,10 @@ IndexBuffer* GPUMesh::GetOrCreateIndexBuffer()
 	GUARANTEE_OR_DIE( m_owner != nullptr, "GPU Mesh owner is nullptr!" );
 	m_indiceBuffer = new IndexBuffer( m_owner, MEMORY_HINT_DYNAMIC );
 	return m_indiceBuffer;
+}
+
+void GPUMesh::SetType( Vertex_Type type )
+{
+	m_type = type;
 }
 
