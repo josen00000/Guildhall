@@ -21,6 +21,7 @@ extern AudioSystem*		g_theAudioSystem;
 extern RenderContext*	g_theRenderer;
 extern InputSystem*		g_theInputSystem;
 extern DevConsole*		g_theConsole;
+extern Game*			g_theGame;
 
 Game::Game( Camera* gameCamera, Camera* UICamera )
 	:m_gameCamera(gameCamera)
@@ -41,9 +42,15 @@ void Game::Startup()
 
 	// debug render system
 	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
+	CreateShaderNames();
 	CreateTestObjects();
 	//CreateDebugRenderObjects();
-	//DebugAddScreenPoint( Vec2( 10.f, 80.f ), 20.f, Rgba8::RED, 20.f );
+
+	EventCallbackFunctionPtr SetAmbientColorFuncPtr			= LightCommandSetAmbientColor;
+	EventCallbackFunctionPtr SetLightColorFuncPtr			= LightCommandSetLightColor;
+
+	g_theConsole->AddCommandToCommandList( std::string( "set_ambient_color"), std::string(" set ambient color( color = vec3)" ), SetAmbientColorFuncPtr );
+	g_theConsole->AddCommandToCommandList( std::string( "set_light_color"), std::string(" set light color( color = vec3)" ), SetLightColorFuncPtr );
 }
 
 void Game::Shutdown()
@@ -86,13 +93,15 @@ void Game::Update( float deltaSeconds )
 		HandleLightKeyboardInput( deltaSeconds );
 	}
 	UpdateMeshes( deltaSeconds );
-	UpdateLighting();
-	UpdateLightObjects( deltaSeconds );
+	UpdateLighting( deltaSeconds );
+	//UpdateLightObjects( deltaSeconds );
+	UpdateUI( deltaSeconds );
 }
 
 void Game::UpdateUI( float deltaSeconds )
 {
 	UNUSED( deltaSeconds );
+	CreateDebugScreen();
 }
 
 void Game::UpdateCamera( float deltaSeconds )
@@ -100,19 +109,57 @@ void Game::UpdateCamera( float deltaSeconds )
 	UNUSED( deltaSeconds );
 }
 
-void Game::UpdateLighting()
+void Game::UpdateLighting( float deltaSeconds )
 {
-	Vec3 lightPos = m_gameCamera->GetPosition();
-// 	std::string lightStr = "light pos is " + lightPos.GetText();
-// 	DebugAddScreenText( Vec4( 0.1f, 0.1f, 0.f, 0.f ), Vec2::ZERO, 20.f, Rgba8::BLACK, Rgba8::BLACK, 0.f, lightStr );
-// 	DebugAddScreenText( Vec4( 0.5f, 0.5f, -11.f, -20.f), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::GREEN, 0.f, "test" );
-// 	Transform testTrans;
-// 	testTrans.SetPosition( Vec3( -1.f, -1.f, -1.f ) );
-// 
-// 	std::string lightStr1 = lightStr + " world testing!";
-// 	DebugAddWorldText( testTrans, Vec2::ZERO, Rgba8::BLACK, Rgba8::BLACK, 0.f, DEBUG_RENDER_ALWAYS, lightStr1 );
-	//lightPos = Vec3( 1.f, 1.f, -3.f );
-	g_theRenderer->EnablePointLight( 0, lightPos, Rgba8::GREEN, 1.f, Vec3::ZERO );
+	static float animationSeconds = 0.f;
+	float theta = animationSeconds * 30.f;
+	float dist = 8.f;
+	if( m_isLightFollowCamera ) {
+		m_lightPos = m_gameCamera->GetPosition();
+	}
+	else {
+		DebugAddWorldPoint( m_lightPos, 1.f, m_lightColor, 0.1f, DEBUG_RENDER_ALWAYS );
+	}
+	if( m_isLightFollowAnimation ) {
+		animationSeconds += deltaSeconds;
+		m_lightPos = Vec3( CosDegrees( theta ) * dist, 0, -SinDegrees( theta ) * dist ) + Vec3( 0.f, 0.f, -5.f );
+	}
+	else {
+		animationSeconds = 0.f;
+	}
+
+	g_theRenderer->EnablePointLight( 0, m_lightPos, m_lightColor, m_lightIntensity, m_diffuseAttenuation );
+}
+
+void Game::CreateShaderNames()
+{
+	m_shaderNames.push_back( std::string( "data/Shader/default.hlsl" ) );
+	m_shaderNames.push_back( std::string( "data/Shader/lit.hlsl" ) );
+	m_shaderNames.push_back( std::string( "data/Shader/normal.hlsl" ) );
+	m_shaderNames.push_back( std::string( "data/Shader/tangent.hlsl" ) );
+	m_shaderNames.push_back( std::string( "data/Shader/bitangent.hlsl" ) );
+	m_shaderNames.push_back( std::string( "data/Shader/surface_normal.hlsl" ) );
+}
+
+void Game::CreateDebugScreen()
+{
+	float deltaHeight = 3.f;
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f ), Vec2::ZERO, 3.f, Rgba8::WHITE, "Ambient light intensity: %.2f. [9,0]", m_ambientLightIntensity );
+	std::string attenuationText = "Attenuation: " + m_diffuseAttenuation.GetText();
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Diffuse Attenuation: %.2f, %.2f, %.2f ", m_diffuseAttenuation.x, m_diffuseAttenuation.y, m_diffuseAttenuation.z );
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 2 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Specular Attenuation: %.2f, %.2f, %.2f ", m_specularAttenuation.x, m_specularAttenuation.y, m_specularAttenuation.z );
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 3 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Light intensity: %.2f. [-,+] ", m_lightIntensity );
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 4 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Specular Factor: %.2f. ['[',']'] ", m_specularFactor );
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 5 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Specular Pow: %.2f. [';' , '''] ", m_specularPow );
+	std::string shaderName = "Shader : " + m_shaderNames[m_currentShaderIndex];
+	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 6 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, shaderName );
+
+}
+
+void Game::BindCurrentShader() const
+{
+	std::string currentShaderName = m_shaderNames[m_currentShaderIndex];
+	g_theRenderer->BindShader( currentShaderName );
 }
 
 void Game::UpdateMeshes( float deltaSeconds )
@@ -190,25 +237,102 @@ void Game::HandleDebugKeyboardInput( float deltaSeconds )
 		std::string lightStr = "light pos is " + cameraPos.GetText();
 		DebugAddWorldText( trans, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::BLACK, debugTime * 2, DEBUG_RENDER_XRAY, lightStr );
 	}
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_9 ) ) {
-		Vec3 cameraPos = m_gameCamera->GetPosition();
-		std::string lightStr = "light pos is " + cameraPos.GetText();
-		DebugAddWorldBillboardText( trans.m_pos, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::GREEN, debugTime * 2, DEBUG_RENDER_ALWAYS, lightStr );
-	}
-
 	
 }
 
 void Game::HandleLightKeyboardInput( float deltaSeconds )
 {
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_COMMA ) ){
-		g_theRenderer->UsePreviousShader();
+		UsePreviousShader();
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_PERIOD ) ){
-		g_theRenderer->UseNextShader();
-		g_theRenderer->BindShader( "data/Shader/surface_normals.hlsl" );
+		UseNextShader();
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_9 ) ) {
+		m_ambientLightIntensity -= 0.1f * deltaSeconds;
+		if( m_ambientLightIntensity < 0.f ) {
+			m_ambientLightIntensity = 0.f;
+		}
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_0 ) ) {
+		m_ambientLightIntensity += 0.1f * deltaSeconds;
+		if( m_ambientLightIntensity > 1.f ) {
+			m_ambientLightIntensity = 1.f;
+		}
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_T ) ){
+		if( m_diffuseAttenuation.x == 1 ) {
+			m_diffuseAttenuation = Vec3( 0.f, 1.f, 0.f );
+		}
+		else if( m_diffuseAttenuation.y == 1 ) {
+			m_diffuseAttenuation = Vec3( 0.f, 0.f, 1.f );
+		}
+		else {
+			m_diffuseAttenuation = Vec3( 1.f, 0.f, 0.f );
+		}
+
+		if( m_specularAttenuation.x == 1 ) {
+			m_specularAttenuation = Vec3( 0.f, 1.f, 0.f );
+		}
+		else if( m_specularAttenuation.y == 1 ) {
+			m_specularAttenuation = Vec3( 0.f, 0.f, 1.f );
+		}
+		else {
+			m_specularAttenuation = Vec3( 1.f, 0.f, 0.f );
+		}
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_MINUS ) ) {
+		m_lightIntensity -= 0.1f * deltaSeconds;
+		if( m_lightIntensity < 0.f ) {
+			m_lightIntensity = 0.f;
+		}
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_PLUS ) ) {
+		m_lightIntensity += 0.1f * deltaSeconds;
+		if( m_lightIntensity > 1.0f ) {
+			m_lightIntensity = 1.f;
+		}
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F5 ) ) {
+		m_lightPos = Vec3::ZERO;
+		m_isLightFollowCamera = false;
+		m_isLightFollowAnimation = false;
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F6 ) ) {
+		m_lightPos = m_gameCamera->GetPosition();
+		m_isLightFollowCamera = false;
+		m_isLightFollowAnimation = false;
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F7 ) ) {
+		m_isLightFollowCamera = true;
+		m_isLightFollowAnimation = false;
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F8 ) ) {
+		m_isLightFollowAnimation = true;
+		m_isLightFollowCamera = false;
 	}
 
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_LEFT_BRACKET ) ) {
+		m_specularFactor -= 0.1f * deltaSeconds;
+		if( m_specularFactor < 0.f ) {
+			m_specularFactor = 0.f;
+		}
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_BRACKET ) ) {
+		m_specularFactor += 0.1f * deltaSeconds;
+		if( m_specularFactor > 1.0f ) {
+			m_specularFactor = 1.f;
+		}
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_SEMICOLON ) ) {
+		m_specularPow -= 1.f * deltaSeconds;
+		if( m_specularPow < 1.f ) {
+			m_specularPow = 1.f;
+		}
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_QUOTE ) ) {
+		m_specularPow += 10.f * deltaSeconds;
+	}
 
 }
 
@@ -261,6 +385,20 @@ void Game::HandleCameraMovement( float deltaSeconds )
 	//g_theConsole->PrintString( Rgba8::RED, "mouse move is " + std::to_string( mouseMove.x ) + std::to_string( mouseMove.y ) );
 }
 
+void Game::UseNextShader()
+{
+	if( m_currentShaderIndex < m_shaderNames.size() -1 ) {
+		m_currentShaderIndex++;
+	}
+}
+
+void Game::UsePreviousShader()
+{
+	if( m_currentShaderIndex > 0 ) {
+		m_currentShaderIndex--;
+	}
+}
+
 void Game::CheckIfExit()
 {
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) || g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_X ) ){
@@ -305,9 +443,7 @@ void Game::Render() const
  	m_gameCamera->m_clearColor = tempColor;
  	g_theRenderer->BeginCamera( m_gameCamera );
 	g_theRenderer->SetTintColor( Rgba8::WHITE );
- 	g_theRenderer->DrawAABB2D( AABB2( Vec2( -5, -5 ),Vec2::ZERO  ), Rgba8::RED );
- 	//g_theRenderer->BindShader( "data/Shader/Reverse.hlsl" );
- 	//g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2(5,5) ), Rgba8::RED );
+ 	//g_theRenderer->DrawAABB2D( AABB2( Vec2( -5, -5 ),Vec2::ZERO  ), Rgba8::RED );
 
  	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
  	g_theRenderer->SetDiffuseTexture( temp );
@@ -315,6 +451,9 @@ void Game::Render() const
 	//RenderCubeSphere();
 	//RenderTesSpheres();
 
+
+	// sd a06
+	BindCurrentShader();
 	RenderLightObjects();
 	g_theRenderer->EndCamera( );
 
@@ -324,15 +463,15 @@ void Game::Render() const
 void Game::RenderLightObjects() const
 {
 	//g_theRenderer->RenderLight();
-	g_theRenderer->SetSpecularFactor( 0.8f );
-	g_theRenderer->SetSpecularPow( 32.f );
-	g_theRenderer->SetAmbientLight( Rgba8::BLUE, 1.f );
-	//g_theRenderer->BindTexture("tile_normal)
+	g_theRenderer->SetDiffuseAttenuation( m_diffuseAttenuation );
+	g_theRenderer->SetSpecularAttenuation( m_specularAttenuation );
+	g_theRenderer->SetSpecularFactor( m_specularFactor );
+	g_theRenderer->SetSpecularPow( m_specularPow );
+	g_theRenderer->SetAmbientLight( m_ambientLightColor, m_ambientLightIntensity );
 	Texture* tempNormal = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/tile_normal.png" );
 	Texture* tempDiffuse = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/tile_diffuse.png" );
 	g_theRenderer->SetDiffuseTexture( tempDiffuse );
 	g_theRenderer->SetNormalTexture( tempNormal );
-	//g_theRenderer->BindShader( "data/Shader/surface_normals.hlsl" );
 	m_lightQuadObject->Render();	
 	m_lightCubeObject->Render();
 	m_lightSphereObject->Render();
@@ -358,7 +497,7 @@ void Game::RenderCubeSphere() const
 
 void Game::CreateLightQuadObjects()
 {
-	AABB2 QuadAABB = AABB2( Vec2( 0.f, 0.f), Vec2( 3.f, 3.f ) );
+	AABB2 QuadAABB = AABB2( Vec2( -1.5f, -1.5f ), Vec2( 1.5f, 1.5f ) );
 	m_lightQuadMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
 	std::vector<Vertex_PCUTBN> vertices;
 	std::vector<uint> indices;
@@ -372,7 +511,7 @@ void Game::CreateLightQuadObjects()
 
 void Game::CreateLightCubeObjects()
 {
-	AABB3 cubeAABB3 = AABB3( Vec3( -5.f, 0.f, -6.5f ), Vec3( -2.f, 3.f, -3.5f ) );
+	AABB3 cubeAABB3 = AABB3( Vec3( -1.5f, -1.5f, -1.5f ), Vec3( 1.5f, 1.5f, 1.5f ) );
 	m_lightCubeMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
 	std::vector<Vertex_PCUTBN> vertices;
 	std::vector<uint> indices;
@@ -382,6 +521,7 @@ void Game::CreateLightCubeObjects()
 
 	m_lightCubeObject = new GameObject();
 	m_lightCubeObject->m_mesh = m_lightCubeMesh;
+	m_lightCubeObject->SetPosition( Vec3( -5.f, 0.f, -5.f ) );
 }
 
 void Game::CreateLightSphereObjects()
@@ -389,17 +529,35 @@ void Game::CreateLightSphereObjects()
 	m_lightSphereMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
 	std::vector<Vertex_PCUTBN> vertices;
 	std::vector<uint> indices;
-	AppendIndexedTBNVertsForSphere3D( vertices, indices, Vec3( 7.5f, 1.5f, -5.f ), 1.5f, 32, 16, Rgba8::WHITE );
+	AppendIndexedTBNVertsForSphere3D( vertices, indices, Vec3::ZERO, 1.5f, 32, 16, Rgba8::WHITE );
 	m_lightSphereMesh->UpdateTBNVerticesInCPU( vertices );
 	m_lightSphereMesh->UpdateIndicesInCPU( indices );
 
 	m_lightSphereObject = new GameObject();
 	m_lightSphereObject->m_mesh = m_lightSphereMesh;
+	m_lightSphereObject->SetPosition( Vec3( 5.f, 0.f, -5.f ) );
 }
 
 void Game::UpdateLightObjects( float deltaSeconds )
 {
+	static float totalSeconds = deltaSeconds;
+	totalSeconds += deltaSeconds;
+	
+	float x = 10.f;
+	float y = 180.f;
+	
+	m_lightSphereObject->SetRotation( Vec3( SinDegrees( totalSeconds * 100 + x ) * y, CosDegrees( totalSeconds * 100 + x ) * y , 0.f ) );
+	m_lightCubeObject->SetRotation( Vec3( SinDegrees( totalSeconds * 100 + x ) * y, CosDegrees( totalSeconds * 100 + x ) * y, 0.f ) );
+}
 
+void Game::SetAttenuation( Vec3 atten )
+{
+	m_diffuseAttenuation = atten;
+}
+
+void Game::SetAttenuation( float x, float y, float z )
+{
+	m_diffuseAttenuation = Vec3( x, y, z );
 }
 
 void Game::CreateDebugRenderObjects()
@@ -491,3 +649,18 @@ void Game::CreateCubeSphereObjects()
 
 }
 
+bool LightCommandSetAmbientColor( EventArgs& args )
+{
+	Vec3 color = args.GetValue( std::to_string( 0 ), Vec3::ONE );
+	Vec4 v4_color = Vec4( color );
+	g_theGame->m_ambientLightColor = Rgba8::GetColorFromVec4( v4_color );
+	return true;
+}
+
+bool LightCommandSetLightColor( EventArgs& args )
+{
+	Vec3 color = args.GetValue( std::to_string( 0 ), Vec3::ONE );
+	Vec4 v4_color = Vec4( color );
+	g_theGame->m_lightColor = Rgba8::GetColorFromVec4( v4_color );
+	return true;
+}

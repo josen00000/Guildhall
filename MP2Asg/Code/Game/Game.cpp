@@ -426,7 +426,7 @@ bool Game::IsDrawedPolygonConvex() const
 
 void Game::Render() const
 {
-	g_theRenderer->BindTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
 		if( m_gameObjects[objIndex] == nullptr ){ continue; }
 		m_gameObjects[objIndex]->Render();
@@ -472,9 +472,9 @@ void Game::RenderToolTip() const
 		Vec2 clientPos = g_theInputSystem->GetNormalizedMousePosInClient( hWnd );
 		Vec2 UIMousePos = m_UICamera->GetCameraAsBox().GetPointAtUV( clientPos );
 		AABB2 toolBox = AABB2( UIMousePos + Vec2( 20, 20 ), UIMousePos + Vec2( 80, 40 ));
-		g_theRenderer->BindTexture( nullptr );
+		g_theRenderer->SetDiffuseTexture( nullptr );
 		g_theRenderer->DrawAABB2D( toolBox, Rgba8::GRAY );
-		g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+		g_theRenderer->SetDiffuseTexture( g_squirrelFont->GetTexture() );
 
 		std::vector<Vertex_PCU> toolVertices;
 		std::string mode;
@@ -526,7 +526,7 @@ void Game::RenderToolTip() const
 
 void Game::RenderGravity() const
 {
-	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+	g_theRenderer->SetDiffuseTexture( g_squirrelFont->GetTexture() );
 	std::vector<Vertex_PCU> gravityVertices;
 	std::string gravity = "The Gravity is: " + std::to_string( g_thePhysics->m_gravityAccel.y );
 	g_squirrelFont->AddVertsForTextInBox2D( gravityVertices, m_UICamera->GetCameraAsBox(), 3.f, gravity, Rgba8::RED, 1.f, Vec2::ZERO );
@@ -535,7 +535,7 @@ void Game::RenderGravity() const
 
 void Game::RenderMouse() const
 {
-	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+	g_theRenderer->SetDiffuseTexture( g_squirrelFont->GetTexture() );
 	std::vector<Vertex_PCU> mouseVertices;
 	std::string gravity = "The mousePos is: " + std::to_string( m_mousePos.x ) + " , " + std::to_string( m_mousePos.y );
 	g_squirrelFont->AddVertsForTextInBox2D( mouseVertices, m_UICamera->GetCameraAsBox(), 3.f, gravity, Rgba8::RED, 1.f, Vec2( 0.f, ( 9 / m_UICamera->GetCameraHeight() ) ) );
@@ -545,7 +545,7 @@ void Game::RenderMouse() const
 
 void Game::RenderTime() const
 {
-	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+	g_theRenderer->SetDiffuseTexture( g_squirrelFont->GetTexture() );
 	std::vector<Vertex_PCU> timeVertices;
 	std::string time;
 	if( g_thePhysics->IsClockPause() ){

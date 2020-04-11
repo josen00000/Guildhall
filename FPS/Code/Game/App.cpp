@@ -158,9 +158,9 @@ void App::ResetGame()
 
 void App::BeginFrame()
 {
+	Clock::BeginFrame();
 	g_theInputSystem->BeginFrame();
 	g_theRenderer->BeginFrame();
-
 }
 
 void App::Update( float deltaSeconds )
@@ -195,8 +195,8 @@ const void App::Render() const
 
 void App::EndFrame()
 {
-	g_theInputSystem->EndFrame();
 	g_theRenderer->EndFrame();
+	g_theInputSystem->EndFrame();
 	g_theConsole->EndFrame();
 	DebugRenderEndFrame();
 }

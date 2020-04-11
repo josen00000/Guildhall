@@ -5,6 +5,7 @@
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/Vertex_PCUTBN.hpp"
 #include "Engine/Math/Mat44.hpp"
+#include "Engine/Renderer/D3D11Common.hpp"
 
 class BitmapFont;
 class Clock;
@@ -30,6 +31,7 @@ struct ID3D11InputLayout;
 struct ID3D11RasterizerState;
 struct LineSegment2;
 struct Vec4;
+struct IDXGIDebug;
 
 typedef std::map<std::string, Shader*>::iterator ShaderMapIterator;
 
@@ -47,7 +49,8 @@ enum BufferSlot {
 	UBO_MODEL_SLOT,
 	UBO_TINT_SLOT,
 	UBO_LIGHT_SLOT,
-	UBO_AMBIENT_SLOT
+	UBO_AMBIENT_SLOT,
+	UBO_ATTENUATION_SLOT
 };
 
 enum TextureSlot: uint{
@@ -70,6 +73,11 @@ enum RasterFillMode {
 enum RasterWindOrder {
 	FRONT_CLOCKWISE,
 	FRONT_COUNTER_CLOCKWISE
+};
+
+enum AttenuationType {
+	ATTENUATION_DIFFUSE,
+	ATTENUATION_SPECULAR
 };
 
 // 	D3D11_COMPARISON_NEVER	= 1,
@@ -128,6 +136,13 @@ struct light_t {
 	float intensity;
 };
 
+struct attenuation_t {
+	Vec3 diffuse;
+	float pad0;
+	Vec3 specular;
+	float pad1;
+};
+
 struct ambient_t {
 	Vec3 color;
 	float intensity;
@@ -173,7 +188,10 @@ public:
 	void SetTintColor( Rgba8 color );
 	void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
 	void DisableDepth();
+	void SetDiffuseAttenuation( Vec3 atten );
+	void SetSpecularAttenuation( Vec3 atten );
 	bool CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass );
+
 
 	// raster state
 	
@@ -199,7 +217,6 @@ public:
 	Texture* CreateOrGetTextureFromFile( const char* imageFilePath );
 	Texture* CreateTextureFromColor( Rgba8 color );
 	Texture* CreateTextureFromVec4( Vec4 input );
-	Texture* CreateTextureFromVec3( Vec3 input );
 	Texture* GetSwapChainBackBuffer();
 	void AddTexture( Texture* tex );
 
@@ -218,11 +235,6 @@ public:
 	void EnablePointLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 Attenuation );
 	void DisableLight( int index );
 
-	// shader
-	void UsePreviousShader();
-	void UseNextShader();
-	void CreateShaderNames();
-
 	// end 
 	void Prensent();
 
@@ -233,6 +245,12 @@ private:
 	void	UpdateFrameTime( float deltaSeconds );
 	void	CreateBlendState();
 	void	BindTexture( Texture* texture, uint slot );
+	void	SetAttenuation( Vec3 atten, AttenuationType type );
+
+	// debug
+	void	CreateDebugModule();
+	void	ReportLiveObjects();
+	void	DestroyDebugModule();
 
 	// begin camera
 	void BeginCameraViewport( IntVec2 viewPortSize );
@@ -255,12 +273,16 @@ public:
 
 	Clock*					m_clock = nullptr;
 
+	// debug mode
+	HMODULE m_debugModule = nullptr;
+	IDXGIDebug* m_debug = nullptr;
 
 private:
-	bool m_modelHasChanged		= false;
-	bool m_shaderHasChanged		= false;
-	bool m_ambientHasChanged	= false;
-	bool m_lightHasChanged		= false;
+	bool m_modelHasChanged			= false;
+	bool m_shaderHasChanged			= false;
+	bool m_ambientHasChanged		= false;
+	bool m_lightHasChanged			= false;
+	bool m_attenuationHasChanged	= false;
 
 	int m_currentShaderIndex = 0;
 
@@ -285,11 +307,12 @@ private:
 	VertexBuffer*	m_currentVBO	= nullptr;
 	
 	// uniform buffer
-	RenderBuffer*	m_frameUBO		= nullptr;
-	RenderBuffer*	m_modelUBO		= nullptr;
-	RenderBuffer*	m_tintUBO		= nullptr;
-	RenderBuffer*	m_lightUBO		= nullptr;
-	RenderBuffer*	m_ambientUBO	= nullptr;
+	RenderBuffer*	m_frameUBO			= nullptr;
+	RenderBuffer*	m_modelUBO			= nullptr;
+	RenderBuffer*	m_tintUBO			= nullptr;
+	RenderBuffer*	m_lightUBO			= nullptr;
+	RenderBuffer*	m_ambientUBO		= nullptr;
+	RenderBuffer*	m_attenuationUBO	= nullptr;
 	//RenderBuffer*	m_tintUBO		= nullptr;
 
  	//buffer_attribute_t* m_currentLayout	= nullptr;
@@ -302,7 +325,7 @@ private:
 	ambient_t m_ambientLight;
 	light_t m_light;
 	model_t m_model;
-
+	attenuation_t m_attenuation;
 
 	// states
 	ID3D11BlendState* m_additiveBlendState	= nullptr;

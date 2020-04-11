@@ -15,6 +15,7 @@ void* FileReadToNewBuffer( std::string const& fileName, size_t* out_size ) {
 	
 	FILE* fp = nullptr;
 	fopen_s( &fp, fileName.c_str(), "r" );
+	GUARANTEE_RECOVERABLE( fp != nullptr, "Create Shader with wrong name." );
 	if( fp == nullptr ){ return nullptr; }
 
 	fseek( fp, 0, SEEK_END );
@@ -196,8 +197,9 @@ ID3D11InputLayout* Shader::GetOrCreateInputLayout( VertexBuffer* vbo )
 	}
 
 	ID3D11Device* device = m_owner->m_device;
+	DX_SAFE_RELEASE(m_d3dInputLayout);
 	device->CreateInputLayout(
-		vertexDescs.data(), vertexDescs.size(), //describe the vertex
+		vertexDescs.data(), (uint)vertexDescs.size(), //describe the vertex
 		m_vertexStage.GetByteCode(), m_vertexStage.GetByteCodeLength(),
 		&m_d3dInputLayout );
 

@@ -264,7 +264,7 @@ void DebugRenderSystemStartup( RenderContext* ctx, Camera* camera )
 	std::string AddScreenQuadComdDesc			= std::string( "screen quad(min=vec2 max=vec2 duration=float)" );
 	std::string AddScreenTextComdDesc			= std::string( "screen text(position=vec2 pivot=vec2 text=string)" );
 
- 	EventCallbackFunctionPtr enableRenderFuncPtr			= DebugRenderCommandEnableDebugEvent;		
+ 	EventCallbackFunctionPtr enableRenderFuncPtr			= DebugRenderCommandEnableDebugEvent;				
  	EventCallbackFunctionPtr AddWorldPointFuncPtr			= DebugRenderCommandAddWorldPointEvent;
  	EventCallbackFunctionPtr AddWorldWireSphereFuncPtr		= DebugRenderCommandAddWorldWireSphereEvent;
  	EventCallbackFunctionPtr AddWorldWireBoundFuncPtr		= DebugRenderCommandAddWorldWireBoundEvent;
@@ -789,7 +789,7 @@ void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 color, const c
 	std::string result = Stringv( format, args );
 	va_end( args );
 
-	DebugAddScreenText( pos, pivot, size, color, color, 1.f, result );
+	DebugAddScreenText( pos, pivot, size, color, color, 0.00000001f, result );
 }
 
 void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, Rgba8 color, const char* format, ... )

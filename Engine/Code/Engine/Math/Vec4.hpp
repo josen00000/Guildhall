@@ -12,8 +12,8 @@ public:
 
 	Vec4(){}
 	~Vec4(){}
-	Vec4( Vec3 XYZ, float w );
-	Vec4(float inputX, float inputY, float inputZ, float inputW  );
+	Vec4( Vec3 XYZ, float w= 0 );
+	explicit Vec4(float inputX, float inputY, float inputZ, float inputW  );
 
 	//Mutators
 	void SetFormText(const char* text);

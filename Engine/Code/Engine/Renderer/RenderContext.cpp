@@ -28,14 +28,13 @@
 
 #define RENDER_DEBUG
 
-std::vector<std::string> g_shaderNames;
-
 
 void RenderContext::StartUp( Window* window )
 {
 	UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
 #if defined(RENDER_DEBUG)
 	flags |= D3D11_CREATE_DEVICE_DEBUG;
+	CreateDebugModule();
 #endif	
 	// Initial context
 	// Create resource( swapchain, sampler, shader ...)
@@ -51,11 +50,12 @@ void RenderContext::StartUp( Window* window )
 	m_immediateVBO->SetLayout( Vertex_PCU::s_layout );
 
 	// create uniform buffer
-	m_frameUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_modelUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_tintUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_lightUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_ambientUBO	= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_frameUBO			= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_modelUBO			= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_tintUBO			= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_lightUBO			= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_ambientUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_attenuationUBO	= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 
 
 	m_defaultSampler = new Sampler( this, SAMPLER_POINT );
@@ -67,13 +67,14 @@ void RenderContext::StartUp( Window* window )
 
 	CreateBlendState();
 	CreateDefaultRasterStateDesc();
-	CreateShaderNames();
 
 	m_clock = new Clock();
 }
 
 void RenderContext::Shutdown()
 {
+	ReportLiveObjects();
+
 	// add debug module if needed
 	delete m_swapChain;
 	delete m_defaultSampler;
@@ -84,7 +85,7 @@ void RenderContext::Shutdown()
 	delete m_tintUBO;
 	delete m_lightUBO;
 	delete m_ambientUBO;
-	//delete m_currentVBO;
+	SELF_SAFE_RELEASE(m_attenuationUBO)
 
 	m_swapChain			= nullptr;
 	m_currentShader		= nullptr;
@@ -153,6 +154,7 @@ void RenderContext::BeginCamera( Camera* camera )
 	BindUniformBuffer( UBO_TINT_SLOT, m_tintUBO );
 	BindUniformBuffer( UBO_LIGHT_SLOT, m_lightUBO );
 	BindUniformBuffer( UBO_AMBIENT_SLOT, m_ambientUBO );
+	BindUniformBuffer( UBO_ATTENUATION_SLOT, m_attenuationUBO );
 
 
 	SetDiffuseTexture( nullptr ); //default white texture;
@@ -270,6 +272,58 @@ void RenderContext::BindTexture( Texture* texture, uint slot )
 														 // color lUT
 														 // faster find colro in pixel shader
 														 // fancy staff
+}
+
+void RenderContext::SetAttenuation( Vec3 atten, AttenuationType type )
+{
+	switch( type )
+	{
+	case ATTENUATION_DIFFUSE:
+		m_attenuation.diffuse = atten;
+		m_attenuationHasChanged = true;
+		break;
+	case ATTENUATION_SPECULAR:
+		m_attenuation.specular = atten;
+		m_attenuationHasChanged = true;
+		break;
+	default:
+		break;
+	}
+}
+
+void RenderContext::CreateDebugModule()
+{
+	m_debugModule = ::LoadLibraryA( "Dxgidebug.dll" );
+	if( m_debugModule == nullptr ) {
+		//LogTaggedPrintf( "gfx", "Failed to find dxgidebug.dll.  No debug features enabled." );
+	}
+	else {
+		// find a function in the loaded dll
+		typedef HRESULT( WINAPI* GetDebugModuleCB )(REFIID, void**);
+		GetDebugModuleCB cb = (GetDebugModuleCB) ::GetProcAddress( m_debugModule, "DXGIGetDebugInterface" );
+
+		// create our debug object
+		HRESULT hr = cb( __uuidof(IDXGIDebug), (void**)&m_debug );
+		GUARANTEE_OR_DIE( SUCCEEDED( hr ), "what is the error?" );
+	}
+}
+
+void RenderContext::ReportLiveObjects()
+{
+	if( nullptr != m_debug ) {
+		m_debug->ReportLiveObjects( DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL );
+	}
+}
+
+void RenderContext::DestroyDebugModule()
+{
+	if( nullptr != m_debug ) {
+		DX_SAFE_RELEASE( m_debug );   // release our debug object
+		FreeLibrary( m_debugModule ); // unload the dll
+
+		m_debug = nullptr;
+		m_debugModule = nullptr;
+	}
 }
 
 void RenderContext::SetDiffuseTexture( Texture* texture )
@@ -473,6 +527,16 @@ void RenderContext::DisableDepth()
 	dsDesc.DepthEnable		= false;
 	m_device->CreateDepthStencilState( &dsDesc, &m_currentDepthStencilState );
 	m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 );
+}
+
+void RenderContext::SetDiffuseAttenuation( Vec3 atten )
+{
+	SetAttenuation( atten, ATTENUATION_DIFFUSE );
+}
+
+void RenderContext::SetSpecularAttenuation( Vec3 atten )
+{
+	SetAttenuation( atten, ATTENUATION_SPECULAR );
 }
 
 bool RenderContext::CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass )
@@ -781,6 +845,7 @@ Texture* RenderContext::CreateTextureFromVec4( Vec4 input )
 {
 	Rgba8 inputColor = Rgba8::GetColorFromVec4( input );
 	Texture* tempTex = CreateTextureFromColor( inputColor );
+	//m_textureList.push_back( tempTex );
 	return tempTex;
 }
 
@@ -865,6 +930,10 @@ void RenderContext::UpdateLightIfNeeded()
 	if( m_lightHasChanged ) {
 		m_lightUBO->Update( &m_light, sizeof(m_light), sizeof(m_light) );
 		m_lightHasChanged = false;
+	}
+	if( m_attenuationHasChanged ){
+		m_attenuationUBO->Update( &m_attenuation, sizeof(m_attenuation), sizeof(m_attenuation) );
+		m_attenuationHasChanged = false;
 	}
 }
 
@@ -1002,35 +1071,11 @@ void RenderContext::EnablePointLight( int index, Vec3 position, Rgba8 color, flo
 
 void RenderContext::DisableLight( int index )
 {
+	UNUSED(index);
 	m_light.intensity = 0.f;
 	m_lightHasChanged = false;
 }
 
-void RenderContext::UsePreviousShader()
-{
-	if( m_currentShaderIndex != 0 ) {
-		m_currentShaderIndex--;
-		BindShader( g_shaderNames[m_currentShaderIndex] );
-	}
-}
-
-void RenderContext::UseNextShader()
-{
-	if( m_currentShaderIndex != g_shaderNames.size() ) {
-		m_currentShaderIndex++;
-		BindShader( g_shaderNames[m_currentShaderIndex] );
-	}
-}
-
-void RenderContext::CreateShaderNames()
-{
-	g_shaderNames.push_back( std::string( "data/Shader/default.hlsl" ) );
-	g_shaderNames.push_back( std::string( "data/Shader/lit.hlsl" ) );
-	g_shaderNames.push_back( std::string( "data/Shader/normals.hlsl" ) );
-	g_shaderNames.push_back( std::string( "data/Shader/tangents.hlsl" ) );
-	g_shaderNames.push_back( std::string( "data/Shader/bitangents.hlsl" ) );
-	g_shaderNames.push_back( std::string( "data/Shader/surface_normals.hlsl" ) );
-}
 
 void RenderContext::Prensent()
 {

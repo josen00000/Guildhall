@@ -8,3 +8,4 @@ debug_add_world_wire_sphere
 test
 help
 debug_add_screen_point
+set_light_color

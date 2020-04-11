@@ -145,29 +145,7 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 	float4 textureNormalColor = tNormal.Sample( sSampler, input.uv );
 	float3 surfaceNormal = ( textureNormalColor * 2.f - float4( 1.0f, 1.0f, 1.0f, 1.0f ) ).xyz;
 	float3 finalNormal = mul( surfaceNormal, TBN );
-	float4 objectColor = textureColor * input.color;
-
-	// phong model
+	float3 finalNormalColor = ( finalNormal + float3( 1.0f, 1.0f, 1.0f) ) * 0.5f;
 	
-	// ambient
-	float3 ambient = AMBIENT_LIGHT.xyz * AMBIENT_LIGHT.w;
-
-	// diffuse
-	float3 lightPos = LIGHT.worldPosition;
-	float3 lightDirection = normalize( lightPos - input.worldPosition );
-	float diffuseStrength = max( dot( lightDirection, finalNormal ), 0.0f );
-	float3 diffuse = diffuseStrength * LIGHT.color * LIGHT.intensity;
-
-	// specular
-	float3 cameraPos = CAMERA_POSITION;
-	float3 cameraDirection = normalize( cameraPos - input.worldPosition );
-	float3 halfDirection = normalize( ( cameraDirection + lightDirection ) / 2 );
-	float specularStrength = max( dot( halfDirection, finalNormal ), 0.0f );
-	float expSpecularStrength = pow( specularStrength, SPECULAR_POWER );
-	float3 specular = expSpecularStrength * SPECULAR_FACTOR * LIGHT.color * LIGHT.intensity;
-	// combine
-
-	float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
-	//float3 phongColor = ( specular );// * objectColor.xyz; // testing
-	return float4( phongColor, objectColor.w );
+	return float4( finalNormalColor, 1 );
 }

@@ -2,6 +2,9 @@
 #include <vector>
 #include "Game/GameCommon.hpp"
 #include "Engine/Math/vec2.hpp"
+#include "Engine/Core/Rgba8.hpp"
+#include "Engine/Math/Vec3.hpp"
+#include "Engine/Core/EventSystem.hpp"
 
 
 class Camera;
@@ -44,14 +47,22 @@ private:
 	void Update( float deltaSeconds );
 	void UpdateUI( float deltaSeconds );
 	void UpdateCamera(float deltaSeconds );
-	void UpdateLighting();
+	void UpdateLighting( float deltaSeconds );
+	void CreateShaderNames();
+	void CreateDebugScreen();
+	void BindCurrentShader() const;
 
 	void HandleDevKeyboardInput( float deltaSeconds );
 	void HandleDebugKeyboardInput( float deltaSeconds );
 	void HandleLightKeyboardInput( float deltaSeconds );
 	void HandleMouseInput( float deltaSeconds );
 	void HandleCameraMovement( float deltaSeconds );
+
+	// shader
+	void UseNextShader();
+	void UsePreviousShader();
 		 
+
 	//Game State Check
 	void CheckIfExit();
 	void CheckGameStates();
@@ -77,6 +88,10 @@ private:
 	void CreateLightCubeObjects();
 	void CreateLightSphereObjects();
 	void UpdateLightObjects( float deltaSeconds );
+
+	// light setting
+	void SetAttenuation( Vec3 atten );
+	void SetAttenuation( float x, float y, float z );
 
 	// DebugRender
 	void CreateDebugRenderObjects();
@@ -107,11 +122,28 @@ public:
 	GameObject* m_lightSphereObject = nullptr;
 	GameObject* m_lightCubeObject	= nullptr;
 	
-
 	GameObject* m_tesselationObject = nullptr;
 	GameObject* m_cubeSphereObject = nullptr;
 
 	std::vector<Vertex_PCU> m_vertices;
 	std::vector<Vertex_PCU> m_UIVertices;
 	std::vector<GameObject*> m_sphereObjects;
+	
+	std::vector<std::string> m_shaderNames;
+	bool m_isLightFollowCamera = false;
+	bool m_isLightFollowAnimation = false;
+	int m_currentShaderIndex;
+	float m_ambientLightIntensity = 0.f;
+	Vec3 m_diffuseAttenuation = Vec3( 0.f, 1.f, 0.f );
+	Vec3 m_lightPos;
+	Vec3 m_specularAttenuation = Vec3( 0.f, 1.f, 0.f );
+	Rgba8 m_ambientLightColor = Rgba8::GREEN;
+	Rgba8 m_lightColor = Rgba8::RED;
+	float m_lightIntensity = 1.f;
+	float m_specularFactor = 1.f;
+	float m_specularPow = 8.f;
 };
+
+// Light Command
+bool LightCommandSetAmbientColor( EventArgs& args );
+bool LightCommandSetLightColor( EventArgs& args );

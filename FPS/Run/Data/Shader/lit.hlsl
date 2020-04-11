@@ -64,7 +64,15 @@ cbuffer ambient_constants : register(b5) {
 	float4 AMBIENT_LIGHT;
 }
 
+cbuffer attenuation_constants : register(b6) {
+	float3 DIFFUSE_ATTENUATION;
+	float pad0;
+	float3 SPECULAR_ATTENUATION;
+	float pad1;
+}
+
 Texture2D <float4> tDiffuse	: register(t0);
+Texture2D <float4> tNormal	: register(t1);
 SamplerState sSampler: register(s0);
 //--------------------------------------------------------------------------------------
 // Programmable Shader Stages
@@ -105,11 +113,17 @@ v2f_t VertexFunction( vs_input_t input )
 
 	float4 localNormal = float4( input.normal, 0.0f );
 	float4 worldNormal = mul( MODEL, localNormal );
+	float4 localTangent = float4( input.tangent, 0.0f );
+	float4 worldTangent = mul( MODEL, localTangent );
+	float4 localBitangent = float4( input.bitangent, 0.0f );
+	float4 worldBitangent = mul( MODEL, localBitangent );
 
 	v2f.position = clipPos;
 	v2f.color = input.color * TINT; 
 	v2f.uv = input.uv; 
 	v2f.worldPosition = worldPos.xyz;
+	v2f.worldTangent = worldTangent.xyz;
+	v2f.worldBitangent = worldBitangent.xyz;
 	v2f.worldNormal = worldNormal.xyz;
 	return v2f;
 }
@@ -126,31 +140,44 @@ float3 ndcPos = clipPos.xyz / clipPos.w;
 // is being drawn to the first bound color target.
 float4 FragmentFunction( v2f_t input ) : SV_Target0
 {
+	// TBN
+	float3 normal = normalize( input.worldNormal );
+	float3 tangent = normalize( input.worldTangent );
+	float3 bitangent = normalize( input.worldBitangent );
+
+	float3x3 TBN = float3x3( tangent, bitangent, normal );
+
+	// object
 	float4 textureColor = tDiffuse.Sample( sSampler, input.uv );
+	float4 textureNormalColor = tNormal.Sample( sSampler, input.uv );
+	float3 surfaceNormal = ( textureNormalColor * 2.f - float4( 1.0f, 1.0f, 1.0f, 1.0f ) ).xyz;
+	float3 finalNormal = mul( surfaceNormal, TBN );
 	float4 objectColor = textureColor * input.color;
 
 	// phong model
-	float3 surfaceNormal = normalize( input.worldNormal );
+	float3 lightPos = LIGHT.worldPosition;
+	float lightDist = distance( input.worldPosition, lightPos );
 	
 	// ambient
 	float3 ambient = AMBIENT_LIGHT.xyz * AMBIENT_LIGHT.w;
 
 	// diffuse
-	float3 lightPos = LIGHT.worldPosition;
 	float3 lightDirection = normalize( lightPos - input.worldPosition );
-	float diffuseStrength = max( dot( lightDirection, surfaceNormal ), 0.0f );
-	float3 diffuse = diffuseStrength * LIGHT.color * LIGHT.intensity;
+	float diffuseStrength = max( dot( lightDirection, finalNormal ), 0.0f );
+	float diffuseIntensity = LIGHT.intensity / ( DIFFUSE_ATTENUATION.x + DIFFUSE_ATTENUATION.y * lightDist + DIFFUSE_ATTENUATION.z * pow( lightDist, 2 ) );
+	float3 diffuse = diffuseStrength * LIGHT.color * diffuseIntensity;
 
 	// specular
 	float3 cameraPos = CAMERA_POSITION;
 	float3 cameraDirection = normalize( cameraPos - input.worldPosition );
 	float3 halfDirection = normalize( ( cameraDirection + lightDirection ) / 2 );
-	float specularStrength = max( dot( halfDirection, surfaceNormal ), 0.0f );
+	float specularStrength = max( dot( halfDirection, finalNormal ), 0.0f );
 	float expSpecularStrength = pow( specularStrength, SPECULAR_POWER );
-	float3 specular = expSpecularStrength * SPECULAR_FACTOR * LIGHT.color * LIGHT.intensity;
+	float specularIntensity = LIGHT.intensity / ( SPECULAR_ATTENUATION.x + SPECULAR_ATTENUATION.y * lightDist + SPECULAR_ATTENUATION.z * pow( lightDist, 2 ) );
+	float3 specular = expSpecularStrength * SPECULAR_FACTOR * LIGHT.color * specularIntensity;
 	// combine
 
 	float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
-	//float3 phongColor = ( specular );// * objectColor.xyz; // testing
+	//float3 phongColor = ( ambient + diffuse ) * objectColor.xyz;
 	return float4( phongColor, objectColor.w );
 }
