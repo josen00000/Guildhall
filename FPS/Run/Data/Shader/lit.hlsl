@@ -229,7 +229,17 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 
 	// combine
 	float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
-	float3 finalColor = ApplyFog( test_world_pos, CAMERA_POSITION, phongColor );
+	//float3 finalColor = ApplyFog( input.WorldPosition, CAMERA_POSITION, phongColor );
 	//float3 phongColor = ( ambient + diffuse ) * objectColor.xyz;
-	return float4( phongColor, objectColor.w );
+	// fog
+	float camera_dist = distance( input.worldPosition, CAMERA_POSITION );
+	//float3 test = pos - camera_pos;
+	//float test_dist = sqrt( dot( test, test ) );
+	float fog_amount = ( camera_dist - SCENE_DATA.fog_near_dist ) / ( SCENE_DATA.fog_far_dist - SCENE_DATA.fog_near_dist ); 
+		//lerp( SCENE_DATA.fog_near_dist, SCENE_DATA.fog_far_dist, camera_dist );
+	float3 fog_color = lerp( SCENE_DATA.fog_near_color, SCENE_DATA.fog_far_color, float3( fog_amount, fog_amount, fog_amount ) );
+	//return float3( fog_amount.xxx ); 
+	float3 final_color = lerp( phongColor, fog_color, fog_amount );
+
+	return float4( final_color, objectColor.w );
 }

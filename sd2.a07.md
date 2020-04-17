@@ -21,9 +21,9 @@ Some more adanced shading techniques and more supported lights.
     - *Have all these visible in the scene concurrently*
     - *Note: Local and Infinite are just attenuation values...*
 - [x] Shader should be branchless using a unified lighting structure
-- [-] Support linear fog...
-      - [-] `RenderContext::EnableFog( float nearFog, float farFog, rgba nearFogColor, rgba farFogColor );`
-      - [-] `RenderContext::DisableFog()` (shader is just 'always' going to do fog, so what do you set this to to make it not have an effect?)
+- [x] Support linear fog...
+      - [x] `RenderContext::EnableFog( float nearFog, float farFog, rgba nearFogColor, rgba farFogColor );`
+      - [x] `RenderContext::DisableFog()` (shader is just 'always' going to do fog, so what do you set this to to make it not have an effect?)
 - [x] Dissolve Shader Effect
     - [x] Support a `Material Block` uniform buffer with your `RenderContext`
         - Suggest a `RenderContext::SetMaterialBuffer( RenderBuffer* buf )`
