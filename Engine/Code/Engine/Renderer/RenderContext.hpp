@@ -5,6 +5,7 @@
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/Vertex_PCUTBN.hpp"
 #include "Engine/Math/Mat44.hpp"
+#include "Engine/Math/Vec4.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
 
 class BitmapFont;
@@ -34,6 +35,7 @@ struct Vec4;
 struct IDXGIDebug;
 
 typedef std::map<std::string, Shader*>::iterator ShaderMapIterator;
+typedef Vec4 color_intensity;
 
 enum BlendMode
 {
@@ -48,14 +50,21 @@ enum BufferSlot {
 	UBO_CAMERA_SLOT,
 	UBO_MODEL_SLOT,
 	UBO_TINT_SLOT,
-	UBO_LIGHT_SLOT,
-	UBO_AMBIENT_SLOT,
-	UBO_ATTENUATION_SLOT
+	UBO_SCENE_DATA_SLOT,
+	UBO_DISSOLVE_SLOT,
+	UBO_MATERIAL_SLOT,
 };
 
 enum TextureSlot: uint{
-	TEXTURE_DIFFUSE_SLOT = 0,
-	TEXTURE_NORMAL_SLOT
+	TEXTURE_DIFFUSE_SLOT0 = 0,
+	TEXTURE_DIFFUSE_SLOT1,
+	TEXTURE_DIFFUSE_SLOT2,
+	TEXTURE_DIFFUSE_SLOT3,
+	TEXTURE_NORMAL_SLOT0,
+	TEXTURE_NORMAL_SLOT1,
+	TEXTURE_NORMAL_SLOT2,
+	TEXTURE_NORMAL_SLOT3,
+	TEXTURE_USER_SLOT1 = 8
 };
 
 // raster state
@@ -129,23 +138,49 @@ struct tint_color_t {
 	float a;
 };
 
-struct light_t {
-	Vec3 position;
-	float pad;
-	Vec3 color;
-	float intensity;
-};
-
-struct attenuation_t {
-	Vec3 diffuse;
+struct light_t { // _t means type
+	Vec3 position = Vec3::ZERO;
 	float pad0;
-	Vec3 specular;
-	float pad1;
+	color_intensity color = Vec4::ONE;
+	Vec3 diffuseAttenuation = Vec3( 0.0f, 0.0f, 1.0f );
+	float cos_inner_half_angle = -1.0f;
+	Vec3 specularAttenuation = Vec3( 0.0f, 0.0f, 1.0f );
+	float cos_outer_half_angle = -1.0f;
+	Vec3 direction = Vec3( 1.f, 0.f, 0.f );
+	float direction_factor = 0.0f; // what is factor choose between direction light or point light
+									// bool direction light or point light
 };
 
-struct ambient_t {
-	Vec3 color;
-	float intensity;
+
+struct scene_data_t {
+	color_intensity ambient;
+	color_intensity emissive;
+	
+	light_t lights[MAX_LIGHTS_NUM];
+
+	float diffuse_factor = 1.0f;
+	float emissive_factor = 1.0f;
+
+	float fog_near_distance = 0.0f;
+	float fog_far_distance = 0.0f;
+
+	Vec3 fog_near_color = Vec3( 1.f, 1.f, 1.f );
+	float pad_0;
+	Vec3 fog_far_color = Vec3( 1.f, 1.f, 1.f );
+	float pad_1;
+};
+
+struct dissolve_data_t {
+	Vec3 burnStartColor = Vec3( 1.f, 0.f, 0.f );
+	float burnEdgeWidth = 0.0f;
+	Vec3 burnEndColor = Vec3( 0.f, 0.f, 0.f );
+	float burnAmount = 0.0f;
+};
+
+struct project_data_t {
+	Mat44 world_to_clip = Mat44();
+	Vec3 pos = Vec3::ZERO;
+	float power = 0.0f;
 };
 
 class RenderContext{
@@ -167,8 +202,11 @@ public:
 	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 
 	// Bind
-	void SetDiffuseTexture( Texture* texture );
-	void SetNormalTexture( Texture* texture );
+	void SetDiffuseTexture( Texture* texture, int index = 0 );
+	void SetNormalTexture( Texture* texture, int index = 0 );
+	void SetDissolveTexture( Texture* texture );
+	void SetFog( float fogFarDist, float fogNearDist, Rgba8 fogFarColor, Rgba8 fogNearColor );
+	void DisableFog();
 	void BindSampler( const Sampler* sampler );
 	void BindShader( Shader* shader );
 	void BindShader( const char* fileName );
@@ -184,12 +222,14 @@ public:
 	void SetSpecularFactor( float factor );
 	void SetSpecularPow( float pow );
 	void SetModelAndSpecular( Mat44 model, float factor, float pow );
+	void SetMaterialBuffer( RenderBuffer* ubo );
+	void SetDissolveData( Vec3 startColor, Vec3 endColor, float width, float amount );
 	void SetTintColor( Vec4 color );
 	void SetTintColor( Rgba8 color );
 	void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
 	void DisableDepth();
-	void SetDiffuseAttenuation( Vec3 atten );
-	void SetSpecularAttenuation( Vec3 atten );
+	void SetDiffuseAttenuation( int lightIndex, Vec3 atten );
+	void SetSpecularAttenuation( int lightIndex, Vec3 atten );
 	bool CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass );
 
 
@@ -229,10 +269,11 @@ public:
 	void SetAmbientIntensity( float intensity );
 	void SetAmbientLight( Rgba8 color, float intensity ); 
 	void DisableAmbient();
-	void DebugRenderLight();
 
 	void EnableLight( int index, const light_t& lightInfo );
-	void EnablePointLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 Attenuation );
+	void EnablePointLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 attenuation );
+	void EnableDirectionLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 attenuation );
+	void EnableSpotLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 attenuation, Vec3 direction, float halfInnerDegrees, float halfOuterDegrees );
 	void DisableLight( int index );
 
 	// end 
@@ -240,12 +281,13 @@ public:
 
 private:
 	void	UpdateLayoutIfNeeded(); 
-	void	UpdateLightIfNeeded(); 
+	void	UpdateSceneIfNeeded();
 	void	UpdateModelIfNeeded();
 	void	UpdateFrameTime( float deltaSeconds );
 	void	CreateBlendState();
 	void	BindTexture( Texture* texture, uint slot );
-	void	SetAttenuation( Vec3 atten, AttenuationType type );
+	void	SetAttenuation( int lightIndex, Vec3 atten, AttenuationType type );
+	void	InitialLights();
 
 	// debug
 	void	CreateDebugModule();
@@ -280,9 +322,7 @@ public:
 private:
 	bool m_modelHasChanged			= false;
 	bool m_shaderHasChanged			= false;
-	bool m_ambientHasChanged		= false;
-	bool m_lightHasChanged			= false;
-	bool m_attenuationHasChanged	= false;
+	bool m_sceneHasChanged			= false;
 
 	int m_currentShaderIndex = 0;
 
@@ -310,10 +350,8 @@ private:
 	RenderBuffer*	m_frameUBO			= nullptr;
 	RenderBuffer*	m_modelUBO			= nullptr;
 	RenderBuffer*	m_tintUBO			= nullptr;
-	RenderBuffer*	m_lightUBO			= nullptr;
-	RenderBuffer*	m_ambientUBO		= nullptr;
-	RenderBuffer*	m_attenuationUBO	= nullptr;
-	//RenderBuffer*	m_tintUBO		= nullptr;
+	RenderBuffer*	m_sceneDataUBO		= nullptr;
+	RenderBuffer*	m_dissolveUBO		= nullptr;
 
  	//buffer_attribute_t* m_currentLayout	= nullptr;
  	//buffer_attribute_t* m_previousLayout	= nullptr;
@@ -322,10 +360,9 @@ private:
 	Texture* m_texDefaultNormal = nullptr;
 
 	// light
-	ambient_t m_ambientLight;
-	light_t m_light;
+	scene_data_t m_sceneData;
 	model_t m_model;
-	attenuation_t m_attenuation;
+	dissolve_data_t m_dissolveData;
 
 	// states
 	ID3D11BlendState* m_additiveBlendState	= nullptr;

@@ -3,6 +3,10 @@
 #include "Engine/Math/Vec3.hpp"
 
 
+Vec4 Vec4::ZERO	= Vec4( 0.f, 0.f, 0.f, 0.f );
+Vec4 Vec4::ONE	= Vec4( 1.f, 1.f, 1.f, 1.f );
+
+
 Vec4::Vec4( float inputX, float inputY, float inputZ, float inputW )
 {
 	x = inputX;
@@ -33,6 +37,19 @@ void Vec4::SetFormText( const char* text )
 	z = (float)atof( dimensionZ.c_str() );
 	w = (float)atof( dimensionW.c_str() );
 
+}
+
+void Vec4::SetXYZ( Vec3 color )
+{
+	x = color.x;
+	y = color.y;
+	z = color.z;
+
+}
+
+void Vec4::SetW( float intensity )
+{
+	w = intensity;
 }
 
 const Vec4 Vec4::operator-( const Vec4& vecToSubtract ) const

@@ -125,7 +125,7 @@ bool ShaderStage::Compile( RenderContext* ctx, std::string const& fileName, /* f
 		}
 	}
 
-	DX_SAFE_RELEASE(errors);
+	DX_SAFE_RELEASE(errors); // always errors
 
 	if( stage == SHADER_TYPE_VERTEX ) {
 		m_byteCode = byteCode;
@@ -197,7 +197,7 @@ ID3D11InputLayout* Shader::GetOrCreateInputLayout( VertexBuffer* vbo )
 	}
 
 	ID3D11Device* device = m_owner->m_device;
-	DX_SAFE_RELEASE(m_d3dInputLayout);
+	DX_SAFE_RELEASE(m_d3dInputLayout); // what is error. need to figure out
 	device->CreateInputLayout(
 		vertexDescs.data(), (uint)vertexDescs.size(), //describe the vertex
 		m_vertexStage.GetByteCode(), m_vertexStage.GetByteCodeLength(),

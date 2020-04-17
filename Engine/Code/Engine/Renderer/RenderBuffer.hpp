@@ -24,7 +24,7 @@ enum RenderMemoryHint : uint {
 
 class RenderBuffer {
 public:
-	RenderBuffer( RenderContext* owner, RenderBufferUsage usage, RenderMemoryHint memHint );
+	RenderBuffer( char const* debugName, RenderContext* owner, RenderBufferUsage usage, RenderMemoryHint memHint );
 	~RenderBuffer();
 
 	bool Update( void const* data, size_t dataByteSize, size_t elementByteSize );
@@ -42,6 +42,7 @@ public:
 
 		 size_t m_bufferByteSize;
 		 size_t m_elementByteSize;
+		 std::string m_debugName;
 };
 
 

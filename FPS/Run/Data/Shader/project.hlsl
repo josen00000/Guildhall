@@ -100,19 +100,22 @@ cbuffer scene_constants : register(b4) {
 	scene_data_t SCENE_DATA;
 }
 
+cbuffer project_consts : register(b6) {
+	float4x4 clip_to_world;
+	float3 project_pos;
+	float project_pow;
+}
+
 Texture2D <float4> tDiffuse		: register(t0);
 Texture2D <float4> tNormal		: register(t1);
 Texture2D <float4> tDissolve	: register(t8);
 SamplerState sSampler: register(s0);
 
 float3 ApplyFog( float3 pos, float3 camera_pos, float3 color ){
-	float dist = distance( pos, camera_pos );
-	float3 test = pos - camera_pos;
-	float test_dist = sqrt( dot( test, test ) );
+	float dist = distance( camera_pos, pos );
 	float fog_amount = lerp( SCENE_DATA.fog_near_dist, SCENE_DATA.fog_far_dist, dist );
 	float3 fog_color = lerp( SCENE_DATA.fog_near_color, SCENE_DATA.fog_far_color, float3( fog_amount, fog_amount, fog_amount ) );
-	return float3( fog_amount.xxx ); 
-	//return lerp( color, SCENE_DATA.fog_far_color, fog_amount.xxx );
+	return lerp( fog_color, color, fog_amount.xxx );
 }
 
 //--------------------------------------------------------------------------------------
@@ -176,6 +179,31 @@ float3 ndcPos = clipPos.xyz / clipPos.w;
 // is being drawn to the first bound color target.
 float4 FragmentFunction( v2f_t input ) : SV_Target0
 {
+	float4x4 projector_matrix = clip_to_world;
+	float4 clip_pos = float4( input.worldPosition, 1.0f );
+	clip_pos = mul( projector_matrix, clip_pos );
+	float3 ndc = clip_pos.xyz / clip_pos.w;
+	float2 projector_uv = ( ndc.xy  + float2( 1.0f, 1.0f )) * 0.5f;
+
+	float u_blend = step( 0, projector_uv.x ) * step( projector_uv.x, 1.f ); // * step( 1.f, projector_uv.x );
+	float v_blend = step( 0, projector_uv.y ) * step( projector_uv.y, 1.f );
+	//float u_blend = step( projector_uv.x, 0 ) * ( 1 - step(  projector_uv.x, 1.f ) );
+	//float v_blend = step( projector_uv.y, 0 ) * ( 1 - step(  projector_uv.y, 1.f ) );
+
+	float blend = u_blend * v_blend;
+	float3 dir_to_camera = normalize( project_pos - input.worldPosition );
+	float face_blend = step( 0.0f, dot( input.worldNormal, dir_to_camera ) );
+	float final_blend = blend * face_blend * project_pow;
+	//projector_uv.x *= blend;
+	//projector_uv.y *= blend;
+
+	float4 projector_color = tDiffuse.Sample( sSampler, projector_uv );
+	float4 final_color =  projector_color * final_blend;
+
+	//return float4( face_blend, 0.f, 0.f, 1.f );
+	return final_color;
+	//return projector_color;
+	/*
 	// TBN
 	float3 normal = normalize( input.worldNormal );
 	float3 tangent = normalize( input.worldTangent );
@@ -195,7 +223,6 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 	float3 ambient = SCENE_DATA.ambientLight.xyz * SCENE_DATA.ambientLight.w;
 	float3 cameraPos = CAMERA_POSITION;
 	float3 cameraDirection = normalize( cameraPos - input.worldPosition );
-	float3 test_world_pos = input.worldPosition;
 
 	// diffuse and specular
 	float3 diffuse = float3( 0.f, 0.f, 0.f );
@@ -206,7 +233,7 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 		float3 lightPos = tempLight.worldPosition;
 		float lightDist = distance( input.worldPosition, lightPos );
 		float3 light_to_world = input.worldPosition - lightPos;	
-		float planeDist = abs( dot( light_to_world, tempLight.direction ) );
+		float planeDist = dot( light_to_world, tempLight.direction );
 		lightDist = lerp( lightDist, planeDist, tempLight.direction_factor );
 		float3 surfaceToLightDirection = normalize( lightPos - input.worldPosition );
 		surfaceToLightDirection = lerp( surfaceToLightDirection, -tempLight.direction, tempLight.direction_factor.xxx );
@@ -229,7 +256,8 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 
 	// combine
 	float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
-	float3 finalColor = ApplyFog( test_world_pos, CAMERA_POSITION, phongColor );
+	float3 finalColor = ApplyFog( input.worldPosition, cameraPos, phongColor );
 	//float3 phongColor = ( ambient + diffuse ) * objectColor.xyz;
-	return float4( phongColor, objectColor.w );
+	return float4( finalColor, objectColor.w );
+	*/
 }

@@ -15,10 +15,17 @@ public:
 	Vec4( Vec3 XYZ, float w= 0 );
 	explicit Vec4(float inputX, float inputY, float inputZ, float inputW  );
 
-	//Mutators
+	// Mutators
 	void SetFormText(const char* text);
+	void SetXYZ( Vec3 color ); // only use for color
+	void SetW( float intensity ); // only use for intensity
 
 	const Vec4 operator-( const Vec4& vecToSubtract ) const;
 	const Vec4 operator*=( float uniformScale ) const;
+
+	// static variable
+	static Vec4 ZERO;
+	static Vec4 ONE;
+
 };
 

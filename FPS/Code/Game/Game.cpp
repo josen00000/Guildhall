@@ -14,6 +14,7 @@
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Shader.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
+#include "Engine/Renderer/RenderBuffer.hpp"
 
 extern App*				g_theApp;
 extern BitmapFont*		g_squirrelFont;
@@ -22,6 +23,9 @@ extern RenderContext*	g_theRenderer;
 extern InputSystem*		g_theInputSystem;
 extern DevConsole*		g_theConsole;
 extern Game*			g_theGame;
+
+RenderBuffer* g_dissolveBuffer;
+RenderBuffer* g_projectorBuffer;
 
 Game::Game( Camera* gameCamera, Camera* UICamera )
 	:m_gameCamera(gameCamera)
@@ -43,7 +47,7 @@ void Game::Startup()
 	// debug render system
 	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
 	CreateShaderNames();
-	CreateTestObjects();
+	CreateGameObjects();
 	//CreateDebugRenderObjects();
 
 	EventCallbackFunctionPtr SetAmbientColorFuncPtr			= LightCommandSetAmbientColor;
@@ -51,6 +55,10 @@ void Game::Startup()
 
 	g_theConsole->AddCommandToCommandList( std::string( "set_ambient_color"), std::string(" set ambient color( color = vec3)" ), SetAmbientColorFuncPtr );
 	g_theConsole->AddCommandToCommandList( std::string( "set_light_color"), std::string(" set light color( color = vec3)" ), SetLightColorFuncPtr );
+
+	g_dissolveBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_projectorBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_theRenderer->SetFog( 10.f, 3.f, Rgba8::BLACK, Rgba8::RED );
 }
 
 void Game::Shutdown()
@@ -58,10 +66,13 @@ void Game::Shutdown()
 	delete m_rng;
 	delete m_sphereMesh;
 	delete m_tesMesh;
+	SELF_SAFE_RELEASE(m_cubeSphereMesh);
 	SELF_SAFE_RELEASE(m_lightQuadMesh);
 	SELF_SAFE_RELEASE(m_cubeSphereMesh);
 	SELF_SAFE_RELEASE(m_lightCubeMesh);
-
+	SELF_SAFE_RELEASE(m_lightSphereMesh);
+	SELF_SAFE_RELEASE(g_dissolveBuffer);
+	SELF_SAFE_RELEASE(g_projectorBuffer);
 
 	// clear game objects
 	SELF_SAFE_RELEASE(m_lightQuadObject);
@@ -96,6 +107,7 @@ void Game::Update( float deltaSeconds )
 	UpdateLighting( deltaSeconds );
 	//UpdateLightObjects( deltaSeconds );
 	UpdateUI( deltaSeconds );
+	UpdateA07Objects( deltaSeconds );
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -127,8 +139,49 @@ void Game::UpdateLighting( float deltaSeconds )
 	else {
 		animationSeconds = 0.f;
 	}
+	//g_theRenderer->EnableSpotLight( 0, m_lightPos, m_lightColor, m_lightIntensity, m_diffuseAttenuation, Vec3( 0.f, 0.f, -1.f ), 15.f, 30.f );
+	//g_theRenderer->EnablePointLight( 0, m_lightPos, m_lightColor, m_lightIntensity, m_diffuseAttenuation );
+	g_theRenderer->EnableDirectionLight( 0, Vec3( 0.f, 0.f, 100.f), Rgba8::RED, 1.f, Vec3( 1.f, 0.f, 0.f ) );
+	//g_theRenderer->EnablePointLight( 1, Vec3::ZERO, Rgba8::BLUE, m_lightIntensity, m_diffuseAttenuation );
+	//g_theRenderer->EnablePointLight( 1, Vec3::ONE, Rgba8::YELLOW, m_lightIntensity, m_diffuseAttenuation );
 
-	g_theRenderer->EnablePointLight( 0, m_lightPos, m_lightColor, m_lightIntensity, m_diffuseAttenuation );
+}
+
+void Game::UpdateA07Objects( float deltaSeocnds )
+{
+	// dissolve object
+	float burnOutTime = 10.f;
+	static float totalSeconds = 0.0f;
+	//Rgba8
+	Rgba8 startColor = Rgba8::RED;
+	Rgba8 endColor = Rgba8::WHITE;
+	totalSeconds += deltaSeocnds;
+	static dissolve_data_t  dissolve_data;
+	dissolve_data.burnAmount = totalSeconds / burnOutTime;
+	dissolve_data.burnStartColor = startColor.GetVec3Color();
+	dissolve_data.burnEndColor = endColor.GetVec3Color();
+	dissolve_data.burnEdgeWidth = 0.3f;
+	if( dissolve_data.burnAmount > 1 ){
+		dissolve_data.burnAmount = 1;
+	}
+	
+	g_dissolveBuffer->Update( &dissolve_data, sizeof( dissolve_data_t), sizeof(dissolve_data_t) );
+
+	// update project object
+	UpdateProjectObjects( deltaSeocnds );
+}
+
+void Game::UpdateProjectBuffer()
+{
+	static project_data_t project_data;
+	Mat44 view =  m_gameCamera->GetUpdatedViewMatrix();
+	Mat44 projection = Mat44::CreatePerspectiveProjectionMatrix( 30.f, 1.f, -0.1f, -100.f );
+	projection.Multiply( view );
+	project_data.world_to_clip = projection;
+	project_data.pos = m_gameCamera->GetPosition();
+	project_data.power = 1.f;
+	g_projectorBuffer->Update( &project_data, sizeof(project_data_t), sizeof(project_data_t) );
+	//g_theRenderer->SetMaterialBuffer(g_projectorBuffer);
 }
 
 void Game::CreateShaderNames()
@@ -153,6 +206,7 @@ void Game::CreateDebugScreen()
 	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 5 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Specular Pow: %.2f. [';' , '''] ", m_specularPow );
 	std::string shaderName = "Shader : " + m_shaderNames[m_currentShaderIndex];
 	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 6 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, shaderName );
+	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 7 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "project lock" + GetStringFromBool( m_isprojectFollowCamera ) ));
 
 }
 
@@ -333,6 +387,9 @@ void Game::HandleLightKeyboardInput( float deltaSeconds )
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_QUOTE ) ) {
 		m_specularPow += 10.f * deltaSeconds;
 	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_Z ) ){
+		m_isprojectFollowCamera = !m_isprojectFollowCamera;
+	}
 
 }
 
@@ -455,6 +512,7 @@ void Game::Render() const
 	// sd a06
 	BindCurrentShader();
 	RenderLightObjects();
+	RenderA07Objects();
 	g_theRenderer->EndCamera( );
 
 	DebugRenderWorldToCamera( m_gameCamera );
@@ -463,18 +521,63 @@ void Game::Render() const
 void Game::RenderLightObjects() const
 {
 	//g_theRenderer->RenderLight();
-	g_theRenderer->SetDiffuseAttenuation( m_diffuseAttenuation );
-	g_theRenderer->SetSpecularAttenuation( m_specularAttenuation );
+	//g_theRenderer->SetDiffuseTexture()
+	g_theRenderer->SetDiffuseAttenuation( 0, m_diffuseAttenuation );
+	g_theRenderer->SetSpecularAttenuation( 0, m_specularAttenuation );
 	g_theRenderer->SetSpecularFactor( m_specularFactor );
 	g_theRenderer->SetSpecularPow( m_specularPow );
 	g_theRenderer->SetAmbientLight( m_ambientLightColor, m_ambientLightIntensity );
+	//g_theRenderer->BindShader( "data/Shader/fresnel.hlsl" ); // testing
 	Texture* tempNormal = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/tile_normal.png" );
 	Texture* tempDiffuse = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/tile_diffuse.png" );
 	g_theRenderer->SetDiffuseTexture( tempDiffuse );
 	g_theRenderer->SetNormalTexture( tempNormal );
+
+
+
+	//g_theRenderer->BindShader( "Data/Shader/lit.hlsl");
 	m_lightQuadObject->Render();	
-	m_lightCubeObject->Render();
-	m_lightSphereObject->Render();
+	//m_lightCubeObject->Render();
+	//m_lightSphereObject->Render();
+}
+
+void Game::RenderA07Objects() const
+{
+	// dissolve object
+	// bind texture
+	// bind ubo buffer
+	// render
+	g_theRenderer->BindShader("Data/Shader/dissolve.hlsl");
+	g_theRenderer->SetMaterialBuffer( g_dissolveBuffer );
+	Texture* disTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/noise.png" );
+	g_theRenderer->SetDissolveTexture( disTex );
+	m_dissolveObject->Render();
+
+	// triplanar object
+	
+	g_theRenderer->BindShader("Data/Shader/triplanar.hlsl");
+	Texture* triDifTex1 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/dry_rock/color.jpg" );
+	Texture* triDifTex2 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/example_colour.png" );
+	Texture* triDifTex3 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/ruin_wall_03_height_0.png" );
+	Texture* triNorTex1 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/dry_rock/normal.jpg" );
+	Texture* triNorTex2 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/example_normal.png" );
+	Texture* triNorTex3 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images//ruin_wall_03_norm_0.png" );
+	g_theRenderer->SetDiffuseTexture( triDifTex1, 1 );
+	g_theRenderer->SetDiffuseTexture( triDifTex2, 2 );
+	g_theRenderer->SetDiffuseTexture( triDifTex3, 3 );
+	g_theRenderer->SetNormalTexture( triNorTex1, 1 );
+	g_theRenderer->SetNormalTexture( triNorTex2, 2 );
+	g_theRenderer->SetNormalTexture( triNorTex3, 3 );
+	m_triplanarObject->Render();
+
+	// project object
+	g_theRenderer->BindShader( "Data/Shader/project.hlsl" );
+	g_theRenderer->SetMaterialBuffer( g_projectorBuffer );
+	Texture* projectTestTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/chi.jpg" );
+	g_theRenderer->SetDiffuseTexture( projectTestTex );
+	for( int i = 0; i < 5; i++ ) {
+		m_projectObjects[i]->Render();
+	}
 }
 
 void Game::RenderSpheres() const
@@ -499,6 +602,7 @@ void Game::CreateLightQuadObjects()
 {
 	AABB2 QuadAABB = AABB2( Vec2( -1.5f, -1.5f ), Vec2( 1.5f, 1.5f ) );
 	m_lightQuadMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
+	m_lightQuadMesh->m_debugMsg = "lightquad";
 	std::vector<Vertex_PCUTBN> vertices;
 	std::vector<uint> indices;
 	AppendIndexedTBNVertsForAABB2D( vertices, indices, QuadAABB, Rgba8::WHITE, Vec2::ZERO, Vec2::ONE );
@@ -513,6 +617,7 @@ void Game::CreateLightCubeObjects()
 {
 	AABB3 cubeAABB3 = AABB3( Vec3( -1.5f, -1.5f, -1.5f ), Vec3( 1.5f, 1.5f, 1.5f ) );
 	m_lightCubeMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
+	m_lightCubeMesh->m_debugMsg = "lightcube";
 	std::vector<Vertex_PCUTBN> vertices;
 	std::vector<uint> indices;
 	AppendIndexedTBNVertsForAABB3D( vertices, indices, cubeAABB3, Rgba8::WHITE );
@@ -527,6 +632,7 @@ void Game::CreateLightCubeObjects()
 void Game::CreateLightSphereObjects()
 {
 	m_lightSphereMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
+	m_lightSphereMesh->m_debugMsg = "light sphere";
 	std::vector<Vertex_PCUTBN> vertices;
 	std::vector<uint> indices;
 	AppendIndexedTBNVertsForSphere3D( vertices, indices, Vec3::ZERO, 1.5f, 32, 16, Rgba8::WHITE );
@@ -548,6 +654,46 @@ void Game::UpdateLightObjects( float deltaSeconds )
 	
 	m_lightSphereObject->SetRotation( Vec3( SinDegrees( totalSeconds * 100 + x ) * y, CosDegrees( totalSeconds * 100 + x ) * y , 0.f ) );
 	m_lightCubeObject->SetRotation( Vec3( SinDegrees( totalSeconds * 100 + x ) * y, CosDegrees( totalSeconds * 100 + x ) * y, 0.f ) );
+}
+
+void Game::CreateDissolveObject()
+{
+	m_dissolveObject = new GameObject();
+	m_dissolveObject->m_mesh = m_lightCubeMesh;
+	m_dissolveObject->SetPosition( Vec3( -5.f, 0.f, -5.f ) );
+}
+
+void Game::CreateTriPlanarObjects()
+{
+	m_triplanarObject = new GameObject();
+	m_triplanarObject->m_mesh = m_lightSphereMesh;
+	m_triplanarObject->SetPosition( Vec3( 5.f, 0.f, -5.f ) );
+	m_triplanarObject->SetRotation( Vec3::ZERO );
+}
+
+void Game::CreateProjectObjects()
+{
+	Vec3 startPos( -10.f, 5.f, -10.f );
+	for( int i = 0; i < 5; i++ ) {
+		GameObject* tempObj = new GameObject();
+		tempObj->m_mesh = m_lightCubeMesh;
+		tempObj->SetPosition( startPos + Vec3( 3.f * i, 0.f, 0.f ) );
+		tempObj->SetRotation( Vec3::ZERO );
+		m_projectObjects.push_back( tempObj );
+	}
+}
+
+void Game::UpdateProjectObjects( float deltaSeconds )
+{
+	static float totalTime = 0.f;
+	totalTime += deltaSeconds;
+	float rotDegrees = SinDegrees( totalTime * 30.f ) * 30.f ;
+	for( int i = 0; i < 5; i++ ) {
+		m_projectObjects[i]->SetRotation( Vec3( 0.f, 0.f, rotDegrees * i ) ); 
+	}
+	if( m_isprojectFollowCamera ) {
+		UpdateProjectBuffer();
+	}
 }
 
 void Game::SetAttenuation( Vec3 atten )
@@ -593,17 +739,21 @@ void Game::LoadAssets()
 	//g_theAudioSystem->CreateOrGetSound("FilePath");
 }
 
-void Game::CreateTestObjects()
+void Game::CreateGameObjects()
 {
 	CreateCubeSphereObjects();
 	CreateSphereObjects();
 	CreateLightQuadObjects();
 	CreateLightCubeObjects();
 	CreateLightSphereObjects();
+	CreateDissolveObject();
+	CreateTriPlanarObjects();
+	CreateProjectObjects();
 
 	// tesselation object
 	m_tesselationObject = new GameObject();
 	m_tesMesh = new GPUMesh();
+	m_tesMesh->m_debugMsg = "tesMesh";
 	m_tesMesh->m_owner = g_theRenderer;
 	std::vector<Vertex_PCU> sphereVertices;
 	std::vector<Vertex_PCU> tesIndexedVertices;
@@ -618,6 +768,7 @@ void Game::CreateTestObjects()
 void Game::CreateSphereObjects()
 {
 	m_sphereMesh = new GPUMesh();
+	m_sphereMesh->m_debugMsg = "sphere mesh";
 	m_sphereMesh->m_owner = g_theRenderer;
 	std::vector<Vertex_PCU> vertices;
 	std::vector<uint> indices;
@@ -639,6 +790,7 @@ void Game::CreateCubeSphereObjects()
 	std::vector<uint> indices;
 	AppendIndexedVertsForCubeSphere3D( vertices, indices, cube, 1 );
 	m_cubeSphereMesh = new GPUMesh();
+	m_cubeSphereMesh->m_debugMsg = "my cube sphere ";
 	m_cubeSphereMesh->m_owner = g_theRenderer;
 	m_cubeSphereMesh->UpdateVerticesInCPU( vertices );
 	m_cubeSphereMesh->UpdateIndicesInCPU( indices );

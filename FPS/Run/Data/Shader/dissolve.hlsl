@@ -47,13 +47,8 @@ struct scene_data_t {
 	float diffuse_factor;
 	float emissive_factor;
 
-	float fog_near_dist;
-	float fog_far_dist;
-
-	float3 fog_near_color;
-	float pad_0;
-	float3 fog_far_color;
-	float pad_1;
+	float fog_near_distance;
+	float fog_far_distance;
 };
 static float SHIFT = 0.75f;
 
@@ -71,6 +66,7 @@ float CalculateLightIntensity( light_t light, float3 position ){
 	intensityAmount = smoothstep( 0.f, 1.f, intensityAmount );
 	return intensityAmount;
 }
+
 
 cbuffer time_constants : register(b0){
 	float SYSTEM_TIME_SECONDS;
@@ -100,21 +96,17 @@ cbuffer scene_constants : register(b4) {
 	scene_data_t SCENE_DATA;
 }
 
+cbuffer dissolve_constants : register(b6) {
+	float3	BURN_START_COLOR;
+	float	BURN_EDGE_WIDTH;
+	float3	BURN_END_COLOR;
+	float	BURN_AMOUNT;
+}
+
 Texture2D <float4> tDiffuse		: register(t0);
 Texture2D <float4> tNormal		: register(t1);
 Texture2D <float4> tDissolve	: register(t8);
 SamplerState sSampler: register(s0);
-
-float3 ApplyFog( float3 pos, float3 camera_pos, float3 color ){
-	float dist = distance( pos, camera_pos );
-	float3 test = pos - camera_pos;
-	float test_dist = sqrt( dot( test, test ) );
-	float fog_amount = lerp( SCENE_DATA.fog_near_dist, SCENE_DATA.fog_far_dist, dist );
-	float3 fog_color = lerp( SCENE_DATA.fog_near_color, SCENE_DATA.fog_far_color, float3( fog_amount, fog_amount, fog_amount ) );
-	return float3( fog_amount.xxx ); 
-	//return lerp( color, SCENE_DATA.fog_far_color, fog_amount.xxx );
-}
-
 //--------------------------------------------------------------------------------------
 // Programmable Shader Stages
 //--------------------------------------------------------------------------------------
@@ -176,60 +168,63 @@ float3 ndcPos = clipPos.xyz / clipPos.w;
 // is being drawn to the first bound color target.
 float4 FragmentFunction( v2f_t input ) : SV_Target0
 {
-	// TBN
-	float3 normal = normalize( input.worldNormal );
-	float3 tangent = normalize( input.worldTangent );
-	float3 bitangent = normalize( input.worldBitangent );
+//	// TBN
+//	float3 normal = normalize( input.worldNormal );
+//	float3 tangent = normalize( input.worldTangent );
+//	float3 bitangent = normalize( input.worldBitangent );
+//
+//	float3x3 TBN = float3x3( tangent, bitangent, normal );
+//
+//	// object
+//	float4 textureColor = tDiffuse.Sample( sSampler, input.uv );
+//	float4 textureNormalColor = tNormal.Sample( sSampler, input.uv );
+//	float3 surfaceNormal = ( textureNormalColor * 2.f - float4( 1.0f, 1.0f, 1.0f, 1.0f ) ).xyz;
+//	float3 finalNormal = mul( surfaceNormal, TBN );
+//	float4 objectColor = textureColor * input.color;
+//
+//	// phong model
+//	// ambient
+//	float3 ambient = SCENE_DATA.ambientLight.xyz * SCENE_DATA.ambientLight.w;
+//	float3 cameraPos = CAMERA_POSITION;
+//	float3 cameraDirection = normalize( cameraPos - input.worldPosition );
+//
+//	// diffuse and specular
+//	float3 diffuse = float3( 0.f, 0.f, 0.f );
+//	float3 specular = float3( 0.f, 0.f, 0.f );
+//	for( int i = 0; i < MAX_LIGHT; i++ ) {
+//		light_t tempLight = SCENE_DATA.lights[i];
+//		float tempLightIntensity = CalculateLightIntensity( tempLight, input.worldPosition );
+//		float3 lightPos = tempLight.worldPosition;
+//		float lightDist = distance( input.worldPosition, lightPos );
+//		float3 surfaceToLightDirection = normalize( lightPos - input.worldPosition );
+//
+//
+//		// diffuse
+//		float diffuseStrength = max( dot( surfaceToLightDirection, finalNormal ), 0.0f );
+//		float diffuseIntensity = tempLightIntensity / ( tempLight.diffuseAttenuation.x + tempLight.diffuseAttenuation.y * lightDist + tempLight.diffuseAttenuation.z * pow( lightDist, 2 ) );
+//		diffuse += diffuseStrength * tempLight.color_intensity.xyz * diffuseIntensity;
+//
+//		// specular
+//		float3 halfDirection = normalize( ( cameraDirection + surfaceToLightDirection ) / 2 );
+//		float specularStrength = max( dot( halfDirection, finalNormal ), 0.0f );
+//		float expSpecularStrength = pow( specularStrength, SPECULAR_POWER );
+//		float specularIntensity = tempLightIntensity / ( tempLight.specularAttenuation.x + tempLight.specularAttenuation.y * lightDist + tempLight.specularAttenuation.z * pow( lightDist, 2 ) );
+//		specular += expSpecularStrength * SPECULAR_FACTOR * tempLight.color_intensity.xyz * specularIntensity;
+//
+//	}
+//	diffuse = min( diffuse, float3( 1.0f, 1.0f, 1.0f ) );
+//
+//
+//	// combine
+//	float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
+//	//float3 phongColor = ( ambient + diffuse ) * objectColor.xyz;
+	
+	float dissolve_height = tDissolve.Sample( sSampler, input.uv ).x;
+	float dissolve_min = RangeMap( BURN_AMOUNT, 0.f, 1.f, 0 - BURN_EDGE_WIDTH, 1  );
+	float dissolve_max = dissolve_min + BURN_EDGE_WIDTH;
+	clip( dissolve_height - dissolve_min );
+	float burn_color_amount = smoothstep( dissolve_min, dissolve_max, dissolve_height );
+	float3 burn_color = lerp( BURN_START_COLOR, BURN_END_COLOR, burn_color_amount );
 
-	float3x3 TBN = float3x3( tangent, bitangent, normal );
-
-	// object
-	float4 textureColor = tDiffuse.Sample( sSampler, input.uv );
-	float4 textureNormalColor = tNormal.Sample( sSampler, input.uv );
-	float3 surfaceNormal = ( textureNormalColor * 2.f - float4( 1.0f, 1.0f, 1.0f, 1.0f ) ).xyz;
-	float3 finalNormal = mul( surfaceNormal, TBN );
-	float4 objectColor = textureColor * input.color;
-
-	// phong model
-	// ambient
-	float3 ambient = SCENE_DATA.ambientLight.xyz * SCENE_DATA.ambientLight.w;
-	float3 cameraPos = CAMERA_POSITION;
-	float3 cameraDirection = normalize( cameraPos - input.worldPosition );
-	float3 test_world_pos = input.worldPosition;
-
-	// diffuse and specular
-	float3 diffuse = float3( 0.f, 0.f, 0.f );
-	float3 specular = float3( 0.f, 0.f, 0.f );
-	for( int i = 0; i < MAX_LIGHT; i++ ) {
-		light_t tempLight = SCENE_DATA.lights[i];
-		float tempLightIntensity = CalculateLightIntensity( tempLight, input.worldPosition );
-		float3 lightPos = tempLight.worldPosition;
-		float lightDist = distance( input.worldPosition, lightPos );
-		float3 light_to_world = input.worldPosition - lightPos;	
-		float planeDist = abs( dot( light_to_world, tempLight.direction ) );
-		lightDist = lerp( lightDist, planeDist, tempLight.direction_factor );
-		float3 surfaceToLightDirection = normalize( lightPos - input.worldPosition );
-		surfaceToLightDirection = lerp( surfaceToLightDirection, -tempLight.direction, tempLight.direction_factor.xxx );
-
-		// diffuse
-		float diffuseStrength = max( dot( surfaceToLightDirection, finalNormal ), 0.0f );
-		float diffuseIntensity = tempLightIntensity / ( tempLight.diffuseAttenuation.x + tempLight.diffuseAttenuation.y * lightDist + tempLight.diffuseAttenuation.z * pow( lightDist, 2 ) );
-		diffuse += diffuseStrength * tempLight.color_intensity.xyz * diffuseIntensity;
-
-		// specular
-		float3 halfDirection = normalize( ( cameraDirection + surfaceToLightDirection ) / 2 );
-		float specularStrength = max( dot( halfDirection, finalNormal ), 0.0f );
-		float expSpecularStrength = pow( specularStrength, SPECULAR_POWER );
-		float specularIntensity = tempLightIntensity / ( tempLight.specularAttenuation.x + tempLight.specularAttenuation.y * lightDist + tempLight.specularAttenuation.z * pow( lightDist, 2 ) );
-		specular += expSpecularStrength * SPECULAR_FACTOR * tempLight.color_intensity.xyz * specularIntensity;
-
-	}
-	diffuse = min( diffuse, float3( 1.0f, 1.0f, 1.0f ) );
-
-
-	// combine
-	float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
-	float3 finalColor = ApplyFog( test_world_pos, CAMERA_POSITION, phongColor );
-	//float3 phongColor = ( ambient + diffuse ) * objectColor.xyz;
-	return float4( phongColor, objectColor.w );
+	return float4( burn_color, 1 );
 }

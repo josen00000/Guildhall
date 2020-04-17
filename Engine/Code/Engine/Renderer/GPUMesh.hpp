@@ -30,7 +30,9 @@ public:
 
 	// Accessor
 	VertexBuffer* GetOrCreateVertexBuffer();
+	VertexBuffer* GetOrCreateVertexBuffer( const char* debug );
 	IndexBuffer* GetOrCreateIndexBuffer(); 
+	IndexBuffer* GetOrCreateIndexBuffer( const char* debug ); 
 	int GetVertexCount() const { return (int)m_vertices.size(); }
 	int GetIndexCount() const { return (int)m_indices.size(); }
 
@@ -45,6 +47,7 @@ public:
 public:
 	RenderContext* m_owner = nullptr;
 	Vertex_Type m_type = VERTEX_TYPE_PCU;
+	std::string m_debugMsg;
 
 private:
 	VertexBuffer* m_vertexBuffer = nullptr;

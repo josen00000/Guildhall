@@ -9,6 +9,7 @@ CubeSphere::CubeSphere( RenderContext* ctx, int level, AABB3 cube )
 	,m_cube(cube)
 {
 	m_mesh = new GPUMesh();
+	m_mesh->m_debugMsg = "cube sphere";
 	m_mesh->m_owner = ctx;
 	std::vector<Vertex_PCU> vertices;
 	std::vector<uint> indices;

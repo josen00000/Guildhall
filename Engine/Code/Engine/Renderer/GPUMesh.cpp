@@ -8,7 +8,7 @@
 GPUMesh::~GPUMesh()
 {
 	SELF_SAFE_RELEASE(m_vertexBuffer);
-	SELF_SAFE_RELEASE( m_indiceBuffer);
+	SELF_SAFE_RELEASE(m_indiceBuffer);
 }
 
 
@@ -34,7 +34,7 @@ void GPUMesh::UpdateVerticeBuffer( )
 	case VERTEX_TYPE_PCUTBN:
 		elementByteSize = sizeof(Vertex_PCUTBN);
 		dataByteSize = (size_t)( m_TBNVertices.size() * elementByteSize );
-		m_vertexBuffer->Update( &m_TBNVertices[0], dataByteSize, elementByteSize );
+		m_vertexBuffer->Update( m_TBNVertices.data(), dataByteSize, elementByteSize );
 		
 		m_vertexBuffer->SetLayout( Vertex_PCUTBN::s_layout );
 		break;
@@ -55,7 +55,7 @@ void GPUMesh::UpdateTBNVerticesInCPU( std::vector<Vertex_PCUTBN> vertices )
 
 void GPUMesh::UpdateIndiceBuffer()
 {
-	GetOrCreateIndexBuffer();
+	GetOrCreateIndexBuffer( m_debugMsg.c_str() );
 	m_indiceBuffer->Update( m_indices );
 }
 
@@ -83,6 +83,17 @@ IndexBuffer* GPUMesh::GetOrCreateIndexBuffer()
 
 	GUARANTEE_OR_DIE( m_owner != nullptr, "GPU Mesh owner is nullptr!" );
 	m_indiceBuffer = new IndexBuffer( m_owner, MEMORY_HINT_DYNAMIC );
+	return m_indiceBuffer;
+}
+
+IndexBuffer* GPUMesh::GetOrCreateIndexBuffer( const char* debug )
+{
+	if( m_indiceBuffer != nullptr ) {
+		return m_indiceBuffer;
+	}
+
+	GUARANTEE_OR_DIE( m_owner != nullptr, "GPU Mesh owner is nullptr!" );
+	m_indiceBuffer = new IndexBuffer( debug, m_owner, MEMORY_HINT_DYNAMIC );
 	return m_indiceBuffer;
 }
 

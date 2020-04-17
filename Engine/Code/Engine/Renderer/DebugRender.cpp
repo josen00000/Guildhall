@@ -70,6 +70,13 @@ void CreateGPUMeshes()
 	g_basisMesh		= new GPUMesh();
 	g_basisMesh2D	= new GPUMesh();
 
+	g_sphereMesh->m_debugMsg = "g_sphereMesh";
+	g_lineMesh->m_debugMsg = "g_lineMesh";
+	g_cubeMesh->m_debugMsg = "g_cubeMesh";
+	g_arrowMesh->m_debugMsg = "g_arrowMesh";
+	g_basisMesh->m_debugMsg = "g_basisMesh";
+	g_basisMesh2D->m_debugMsg = "g_basisMesh2D";
+
 	// sphere
 	std::vector<Vertex_PCU> sphereVertices;
 	std::vector<uint> sphereIndices;
@@ -344,7 +351,7 @@ void DebugRenderScreenTo( Texture* output )
 	if( !g_ableDebug ){ return; }
 
 	// !!! not create every frame. create a new at start up.
-	Camera* screenCamera = new Camera( 0.f, -100.f, g_screenMin, g_screenMax, g_aspectRatio );
+	Camera* screenCamera = new Camera( 0.f, -100.f, g_screenMin, g_screenMax, g_aspectRatio, "debug screen cam" );
 	screenCamera->SetColorTarget( output );
 	screenCamera->SetDepthStencilTarget( nullptr ); // don't need depth stencil target set target to nullptr
 	screenCamera->SetClearMode( CLEAR_NONE );

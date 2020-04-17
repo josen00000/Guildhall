@@ -1,8 +1,14 @@
 #include "IndexBuffer.hpp"
 
 IndexBuffer::IndexBuffer( RenderContext* ctx, RenderMemoryHint hint )
-	:RenderBuffer( ctx, INDEX_BUFFER_BIT, hint )
+	:RenderBuffer( "indexBuffer", ctx, INDEX_BUFFER_BIT, hint )
 {
+}
+
+IndexBuffer::IndexBuffer( const char* debug, RenderContext* ctx, RenderMemoryHint hint )
+	:RenderBuffer( debug, ctx, INDEX_BUFFER_BIT, hint )
+{
+
 }
 
 void IndexBuffer::Update( int iCount, const uint* indices )

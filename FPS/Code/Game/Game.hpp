@@ -40,6 +40,7 @@ public:
 	void Reset();
 	void Render() const;
 	void RenderLightObjects() const;
+	void RenderA07Objects() const;
 	void RenderUI() const;
 
 	
@@ -48,6 +49,8 @@ private:
 	void UpdateUI( float deltaSeconds );
 	void UpdateCamera(float deltaSeconds );
 	void UpdateLighting( float deltaSeconds );
+	void UpdateA07Objects( float deltaSeocnds );
+	void UpdateProjectBuffer();
 	void CreateShaderNames();
 	void CreateDebugScreen();
 	void BindCurrentShader() const;
@@ -74,7 +77,7 @@ private:
 	void LoadAssets();
 
 	// Mesh
-	void CreateTestObjects();
+	void CreateGameObjects();
 	void UpdateMeshes( float deltaSeconds );
 	void UpdateSphereMeshes( float deltaSeconds );
 	void CreateSphereObjects();
@@ -88,6 +91,12 @@ private:
 	void CreateLightCubeObjects();
 	void CreateLightSphereObjects();
 	void UpdateLightObjects( float deltaSeconds );
+
+	// sd a07 objects
+	void CreateDissolveObject();
+	void CreateTriPlanarObjects();
+	void CreateProjectObjects();
+	void UpdateProjectObjects( float deltaSeconds );
 
 	// light setting
 	void SetAttenuation( Vec3 atten );
@@ -125,6 +134,11 @@ public:
 	GameObject* m_tesselationObject = nullptr;
 	GameObject* m_cubeSphereObject = nullptr;
 
+	// sd a 07
+	GameObject* m_dissolveObject = nullptr;
+	GameObject* m_triplanarObject = nullptr;
+	std::vector<GameObject*> m_projectObjects;
+
 	std::vector<Vertex_PCU> m_vertices;
 	std::vector<Vertex_PCU> m_UIVertices;
 	std::vector<GameObject*> m_sphereObjects;
@@ -132,13 +146,14 @@ public:
 	std::vector<std::string> m_shaderNames;
 	bool m_isLightFollowCamera = false;
 	bool m_isLightFollowAnimation = false;
+	bool m_isprojectFollowCamera = true;
 	int m_currentShaderIndex;
 	float m_ambientLightIntensity = 0.f;
 	Vec3 m_diffuseAttenuation = Vec3( 0.f, 1.f, 0.f );
 	Vec3 m_lightPos;
 	Vec3 m_specularAttenuation = Vec3( 0.f, 1.f, 0.f );
 	Rgba8 m_ambientLightColor = Rgba8::GREEN;
-	Rgba8 m_lightColor = Rgba8::RED;
+	Rgba8 m_lightColor = Rgba8::WHITE;
 	float m_lightIntensity = 1.f;
 	float m_specularFactor = 1.f;
 	float m_specularPow = 8.f;

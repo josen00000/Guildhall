@@ -4,10 +4,12 @@
 #include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 
-RenderBuffer::RenderBuffer( RenderContext* owner, RenderBufferUsage usage, RenderMemoryHint memHint )
-	:m_owner(owner) // Run order how it declare, in memory order
-	,m_usage(usage)
-	,m_memHint(memHint)
+
+RenderBuffer::RenderBuffer( char const* debugName, RenderContext* owner, RenderBufferUsage usage, RenderMemoryHint memHint )	
+	:m_owner( owner ) // Run order how it declare, in memory order
+	,m_usage( usage )
+	,m_memHint( memHint )
+	,m_debugName(debugName)
 {
 	m_handle = nullptr;
 	m_bufferByteSize = 0U;
@@ -140,5 +142,9 @@ bool RenderBuffer::Create( size_t dataByteSize, size_t elementByteSize )
 
 	m_bufferByteSize = dataByteSize;
 	m_elementByteSize = elementByteSize;
+
+	if( m_handle != nullptr ) {
+		//m_handle->SetPrivateData( WKPDID_D3DDebugObjectName, (size_t)m_debugName.size() , m_debugName.c_str() );
+	}
 	return ( m_handle != nullptr );
 }

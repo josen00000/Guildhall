@@ -20,17 +20,34 @@ Camera::Camera( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio 
 	m_projectionType = PROJECTION_ORTHOGRAPHIC;
 }
 
-Camera::Camera( float fov/*=60.f*/, float nearZ/*=-0.1*/, float farZ/*=-100*/, Vec3 pos, Vec3 rotPRY, Vec3 scale )
+Camera::Camera( float fov/*=60.f*/, float nearZ/*=-0.1*/, float farZ/*=-100*/, Vec3 pos, Vec3 rotPRY, Vec3 scale, const char* debugMsg )
 {
 	m_transform = Transform( pos, rotPRY, scale );
 	SetProjectionPerspective( fov, nearZ, farZ );
 	m_projectionType = PROJECTION_PERSPECTIVE;
+	m_debugString = debugMsg;
 }
 
 Camera::Camera( float nZ, float fZ, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
 {
 	m_transform = Transform();
 	SetOrthoView( bottomLeft, topRight, nZ, fZ, aspectRatio );
+	m_projectionType = PROJECTION_ORTHOGRAPHIC;
+}
+
+Camera::Camera( float nZ, float fZ, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1*/, const char* debugMsg /*= "" */ )
+{
+	m_transform = Transform();
+	SetOrthoView( bottomLeft, topRight, nZ, fZ, aspectRatio );
+	m_debugString = debugMsg;
+	m_projectionType = PROJECTION_ORTHOGRAPHIC;
+}
+
+Camera::Camera( const char* debugMsg, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
+{
+	m_transform = Transform();
+	SetOrthoView( bottomLeft, topRight, aspectRatio );
+	m_debugString = debugMsg;
 	m_projectionType = PROJECTION_ORTHOGRAPHIC;
 }
 
@@ -42,6 +59,13 @@ Camera* Camera::CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& to
 
 Camera* Camera::CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos, Vec3 rotPRY, Vec3 scale )
 {
+	Camera* result = new Camera( fov, nearZ, farZ, pos, rotPRY, scale );
+	return result;
+}
+
+Camera* Camera::CreatePerspectiveCamera( const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos/*=Vec3::ZERO*/, Vec3 rotPRY/*=Vec3::ZERO*/, Vec3 scale/*=Vec3::ONE */ )
+{
+	UNUSED(debugMsg);
 	Camera* result = new Camera( fov, nearZ, farZ, pos, rotPRY, scale );
 	return result;
 }
@@ -106,6 +130,12 @@ AABB2 Camera::GetCameraAsBox() const
 {
 	AABB2 result = AABB2( GetOrthoMin(), GetOrthoMax() );
 	return result;
+}
+
+Mat44 Camera::GetUpdatedViewMatrix()
+{
+	UpdateViewMatrix();
+	return m_view;
 }
 
 Mat44 Camera::GetModelMatrix() const
@@ -236,12 +266,14 @@ Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext* ctx )
 
 RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx )
 {
+	static int i = 0;
+	i++;
+	m_debugString += std::to_string( i );
 	if( m_cameraUBO == nullptr ) {
-		m_cameraUBO = new RenderBuffer( ctx, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+		m_cameraUBO = new RenderBuffer( m_debugString.c_str(), ctx, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	}
 	UpdateCameraUBO();
 	return m_cameraUBO;
-	
 }
 
 void Camera::UpdateCameraUBO()

@@ -2,7 +2,7 @@
 #include "RenderCommon.hpp"
 
 VertexBuffer::VertexBuffer( RenderContext* ctx, RenderMemoryHint hint )
-	:RenderBuffer( ctx, VERTEX_BUFFER_BIT, hint )
+	:RenderBuffer( "vertexBuffer", ctx, VERTEX_BUFFER_BIT, hint )
 {
 }
 

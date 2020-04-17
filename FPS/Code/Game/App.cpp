@@ -42,12 +42,13 @@ void App::Startup()
 	g_theInputSystem->Startup();
 
 	g_camera			= Camera::CreatePerspectiveCamera( 60, -0.1f, -100.f );
+	g_camera->m_debugString = "gamecamera";
 	g_camera->SetClearMode( CLEAR_NONE, Rgba8::DARK_GRAY );
 	g_camera->EnableClearColor( Rgba8::DARK_GRAY );
 	g_camera->EnableClearDepth( 1 );
 	g_camera->SetRenderContext( g_theRenderer );
-	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
-	g_devCamera			= new Camera( Vec2( -32, -18 ), Vec2( 32, 18 ) );
+	g_UICamera			= new Camera( "uicamera", Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
+	g_devCamera			= new Camera( "devCamera", Vec2( -32, -18 ), Vec2( 32, 18 ) );
 	g_theGame			= new Game( g_camera, g_UICamera );
 
 	g_theGame->Startup();
@@ -96,6 +97,7 @@ void App::Shutdown()
 	delete g_theEventSystem;
 	delete g_theRenderer;
 	
+
 	g_theGame			= nullptr;
 	g_camera			= nullptr;
 	g_UICamera			= nullptr;

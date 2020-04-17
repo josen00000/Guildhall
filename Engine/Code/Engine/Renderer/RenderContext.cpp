@@ -50,13 +50,11 @@ void RenderContext::StartUp( Window* window )
 	m_immediateVBO->SetLayout( Vertex_PCU::s_layout );
 
 	// create uniform buffer
-	m_frameUBO			= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_modelUBO			= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_tintUBO			= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_lightUBO			= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_ambientUBO		= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_attenuationUBO	= new RenderBuffer( this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-
+	m_frameUBO			= new RenderBuffer( "frameUBO", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_modelUBO			= new RenderBuffer( "test1", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_tintUBO			= new RenderBuffer( "test2", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_sceneDataUBO		= new RenderBuffer( "test3", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_dissolveUBO		= new RenderBuffer( "test4", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 
 	m_defaultSampler = new Sampler( this, SAMPLER_POINT );
 
@@ -68,12 +66,12 @@ void RenderContext::StartUp( Window* window )
 	CreateBlendState();
 	CreateDefaultRasterStateDesc();
 
+	InitialLights();
 	m_clock = new Clock();
 }
 
 void RenderContext::Shutdown()
 {
-	ReportLiveObjects();
 
 	// add debug module if needed
 	delete m_swapChain;
@@ -83,9 +81,8 @@ void RenderContext::Shutdown()
 	delete m_frameUBO;
 	delete m_modelUBO;
 	delete m_tintUBO;
-	delete m_lightUBO;
-	delete m_ambientUBO;
-	SELF_SAFE_RELEASE(m_attenuationUBO)
+	delete m_sceneDataUBO;
+	SELF_SAFE_RELEASE(m_dissolveUBO);
 
 	m_swapChain			= nullptr;
 	m_currentShader		= nullptr;
@@ -108,8 +105,10 @@ void RenderContext::Shutdown()
 	DX_SAFE_RELEASE(m_opaqueBlendState);
 	DX_SAFE_RELEASE(m_currentDepthStencilState);
 	DX_SAFE_RELEASE(m_rasterState);
+	DX_SAFE_RELEASE(m_previousLayout);
 	//DX_SAFE_RELEASE(m_currentLayout);
 	SELF_SAFE_RELEASE(m_defaultRasterStateDesc);
+	ReportLiveObjects();
 }
 
 void RenderContext::BeginFrame()
@@ -152,10 +151,8 @@ void RenderContext::BeginCamera( Camera* camera )
 	BindUniformBuffer( UBO_CAMERA_SLOT, cameraUBO );
 	BindUniformBuffer( UBO_MODEL_SLOT, m_modelUBO );
 	BindUniformBuffer( UBO_TINT_SLOT, m_tintUBO );
-	BindUniformBuffer( UBO_LIGHT_SLOT, m_lightUBO );
-	BindUniformBuffer( UBO_AMBIENT_SLOT, m_ambientUBO );
-	BindUniformBuffer( UBO_ATTENUATION_SLOT, m_attenuationUBO );
-
+	BindUniformBuffer( UBO_SCENE_DATA_SLOT, m_sceneDataUBO );
+	BindUniformBuffer( UBO_DISSOLVE_SLOT, m_dissolveUBO );
 
 	SetDiffuseTexture( nullptr ); //default white texture;
 	SetNormalTexture( nullptr ); //default white texture;
@@ -274,20 +271,28 @@ void RenderContext::BindTexture( Texture* texture, uint slot )
 														 // fancy staff
 }
 
-void RenderContext::SetAttenuation( Vec3 atten, AttenuationType type )
+void RenderContext::SetAttenuation( int lightIndex, Vec3 atten, AttenuationType type )
 {
+	light_t& light = m_sceneData.lights[lightIndex];
 	switch( type )
 	{
 	case ATTENUATION_DIFFUSE:
-		m_attenuation.diffuse = atten;
-		m_attenuationHasChanged = true;
+		light.diffuseAttenuation = atten;
+		m_sceneHasChanged = true;
 		break;
 	case ATTENUATION_SPECULAR:
-		m_attenuation.specular = atten;
-		m_attenuationHasChanged = true;
+		light.specularAttenuation = atten;
+		m_sceneHasChanged = true;
 		break;
 	default:
 		break;
+	}
+}
+
+void RenderContext::InitialLights()
+{
+	for( int i = 0; i < MAX_LIGHTS_NUM; i++ ) {
+		DisableLight( i );
 	}
 }
 
@@ -311,7 +316,7 @@ void RenderContext::CreateDebugModule()
 void RenderContext::ReportLiveObjects()
 {
 	if( nullptr != m_debug ) {
-		m_debug->ReportLiveObjects( DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL );
+		m_debug->ReportLiveObjects( DXGI_DEBUG_ALL, (DXGI_DEBUG_RLO_FLAGS)(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL) );
 	}
 }
 
@@ -326,20 +331,44 @@ void RenderContext::DestroyDebugModule()
 	}
 }
 
-void RenderContext::SetDiffuseTexture( Texture* texture )
+void RenderContext::SetDiffuseTexture( Texture* tex, int index )
 {
-	if( texture == nullptr ) {
-		BindTexture( m_texDefaultColor, TEXTURE_DIFFUSE_SLOT );
+	if( tex == nullptr ) {
+		BindTexture( m_texDefaultColor, TEXTURE_DIFFUSE_SLOT0 + index );
 	}
-	BindTexture( texture, TEXTURE_DIFFUSE_SLOT );
+	BindTexture( tex, TEXTURE_DIFFUSE_SLOT0 + index );
 }
 
-void RenderContext::SetNormalTexture( Texture* texture )
+void RenderContext::SetNormalTexture( Texture* texture, int index )
 {
 	if( texture == nullptr ) {
-		BindTexture( m_texDefaultNormal, TEXTURE_NORMAL_SLOT );
+		BindTexture( m_texDefaultNormal, TEXTURE_NORMAL_SLOT0 + index  );
 	}
-	BindTexture( texture, TEXTURE_NORMAL_SLOT );
+	BindTexture( texture, TEXTURE_NORMAL_SLOT0 + index );
+}
+
+void RenderContext::SetDissolveTexture( Texture* texture )
+{
+// 	if( texture == nullptr ) {
+// 		BindTexture( )
+// 	}
+	BindTexture( texture, TEXTURE_USER_SLOT1 );
+}
+
+void RenderContext::SetFog( float fogFarDist, float fogNearDist, Rgba8 fogFarColor, Rgba8 fogNearColor )
+{
+	m_sceneData.fog_far_distance = fogFarDist;
+	m_sceneData.fog_near_distance = fogNearDist;
+	m_sceneData.fog_far_color = fogFarColor.GetVec3Color();
+	m_sceneData.fog_near_color = fogNearColor.GetVec3Color();
+	m_sceneHasChanged = true;
+}
+
+void RenderContext::DisableFog()
+{
+	m_sceneData.fog_far_color = Vec3::ONE;
+	m_sceneData.fog_near_color = Vec3::ONE;
+	m_sceneHasChanged = true;
 }
 
 void RenderContext::BindSampler( const Sampler* sampler )
@@ -470,7 +499,21 @@ void RenderContext::SetModelAndSpecular( Mat44 model, float factor, float pow )
 {
 	SetModelMatrix( model );
 	SetSpecularFactor( factor );
-	SetSpecularPow( pow	 );
+	SetSpecularPow( pow );
+}
+
+void RenderContext::SetMaterialBuffer( RenderBuffer* ubo )
+{
+	BindUniformBuffer( UBO_MATERIAL_SLOT, ubo );
+}
+
+void RenderContext::SetDissolveData( Vec3 startColor, Vec3 endColor, float width, float amount )
+{
+	m_dissolveData.burnStartColor = startColor;
+	m_dissolveData.burnEndColor = endColor;
+	m_dissolveData.burnEdgeWidth = width;
+	m_dissolveData.burnAmount = amount;
+	m_dissolveUBO->Update( &m_dissolveData, sizeof(dissolve_data_t), sizeof(dissolve_data_t) );
 }
 
 void RenderContext::SetTintColor( Vec4 color )
@@ -529,14 +572,14 @@ void RenderContext::DisableDepth()
 	m_context->OMSetDepthStencilState( m_currentDepthStencilState, 1 );
 }
 
-void RenderContext::SetDiffuseAttenuation( Vec3 atten )
+void RenderContext::SetDiffuseAttenuation( int lightIndex, Vec3 atten )
 {
-	SetAttenuation( atten, ATTENUATION_DIFFUSE );
+	SetAttenuation( lightIndex, atten, ATTENUATION_DIFFUSE );
 }
 
-void RenderContext::SetSpecularAttenuation( Vec3 atten )
+void RenderContext::SetSpecularAttenuation( int lightIndex, Vec3 atten )
 {
-	SetAttenuation( atten, ATTENUATION_SPECULAR );
+	SetAttenuation( lightIndex, atten, ATTENUATION_SPECULAR );
 }
 
 bool RenderContext::CheckDepthStencilState( DepthCompareFunc func, bool writeDepthOnPass )
@@ -641,7 +684,7 @@ void RenderContext::SetFrontFaceWindOrder( RasterWindOrder order )
 void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 {
 	UpdateLayoutIfNeeded();
-	UpdateLightIfNeeded();
+	UpdateSceneIfNeeded();
 	UpdateModelIfNeeded();
 	m_context->Draw( numVertexes, vertexOffset ); // what is vertexOffset
 }
@@ -649,7 +692,7 @@ void RenderContext::Draw( int numVertexes, int vertexOffset /*= 0 */ )
 void RenderContext::DrawIndexed( int indexCount, int indexOffset /*= 0*/, int vertexOffset /*= 0 */ )
 {
 	UpdateLayoutIfNeeded();
-	UpdateLightIfNeeded();
+	UpdateSceneIfNeeded();
 	UpdateModelIfNeeded();
 	m_context->DrawIndexed( (uint)indexCount,indexOffset, vertexOffset );
 }
@@ -912,7 +955,7 @@ void RenderContext::UpdateLayoutIfNeeded()
 	if( m_previousLayout != m_currentLayout || m_shaderHasChanged ){
 		m_currentLayout = m_currentShader->GetOrCreateInputLayout( m_currentVBO );// need change later
 		m_context->IASetInputLayout( m_currentLayout );
-		DX_SAFE_RELEASE(m_previousLayout);
+		//DX_SAFE_RELEASE(m_previousLayout);
 		m_previousLayout = m_currentLayout;
 		m_shaderHasChanged = false;
 	}
@@ -921,19 +964,11 @@ void RenderContext::UpdateLayoutIfNeeded()
 	}
 }
 
-void RenderContext::UpdateLightIfNeeded()
+void RenderContext::UpdateSceneIfNeeded()
 {
-	if( m_ambientHasChanged ) {
-		m_ambientUBO->Update( &m_ambientLight, sizeof(m_ambientLight), sizeof(m_ambientLight) );
-		m_ambientHasChanged = false;
-	}
-	if( m_lightHasChanged ) {
-		m_lightUBO->Update( &m_light, sizeof(m_light), sizeof(m_light) );
-		m_lightHasChanged = false;
-	}
-	if( m_attenuationHasChanged ){
-		m_attenuationUBO->Update( &m_attenuation, sizeof(m_attenuation), sizeof(m_attenuation) );
-		m_attenuationHasChanged = false;
+	if( m_sceneHasChanged ) {
+		m_sceneDataUBO->Update( &m_sceneData, sizeof( m_sceneData ), sizeof( m_sceneData ) );
+		m_sceneHasChanged = false;
 	}
 }
 
@@ -1026,14 +1061,14 @@ void RenderContext::createRasterState()
 void RenderContext::SetAmbientColor( Rgba8 color )
 {
 	Vec3 v3_color = color.GetVec3Color();
-	m_ambientLight.color = v3_color;	
-	m_ambientHasChanged = true;
+	m_sceneData.ambient.SetXYZ( v3_color );
+	m_sceneHasChanged = true;
 }
 
 void RenderContext::SetAmbientIntensity( float intensity )
 {
-	m_ambientLight.intensity = intensity;
-	m_ambientHasChanged = true;
+	m_sceneData.ambient.SetW( intensity );
+	m_sceneHasChanged = true;
 }
 
 void RenderContext::SetAmbientLight( Rgba8 color, float intensity )
@@ -1047,35 +1082,55 @@ void RenderContext::DisableAmbient()
 	SetAmbientLight( Rgba8::WHITE, 1.f );
 }
 
-void RenderContext::DebugRenderLight()
-{
-	
-}
-
 void RenderContext::EnableLight( int index, const light_t& lightInfo )
 {
-	UNUSED(index);
-	m_light = lightInfo;
-	m_lightHasChanged = true;
+	m_sceneData.lights[index] = lightInfo;
+	m_sceneHasChanged = true;
 }
 
-void RenderContext::EnablePointLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 Attenuation )
+void RenderContext::EnablePointLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 attenuation )
 {
-	UNUSED(Attenuation);
-	UNUSED(index);
-	m_light.position = position;
-	m_light.color = color.GetVec3Color();
-	m_light.intensity = intensity;
-	m_lightHasChanged = true;
+	light_t& light = m_sceneData.lights[index];
+	light.position = position;
+	light.color.SetXYZ( color.GetVec3Color() );
+	light.color.SetW (intensity );
+	light.diffuseAttenuation = attenuation;
+	light.specularAttenuation = attenuation;
+	light.direction_factor = 0.f;
+	m_sceneHasChanged = true;
+}
+
+void RenderContext::EnableDirectionLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 attenuation )
+{
+	light_t& light = m_sceneData.lights[index];
+	light.position = position;
+	light.color.SetXYZ( color.GetVec3Color() );
+	light.color.SetW( intensity );
+	light.diffuseAttenuation = attenuation;
+	light.specularAttenuation = attenuation;
+	light.direction_factor = 1.f;
+	m_sceneHasChanged = true;
+}
+
+void RenderContext::EnableSpotLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 attenuation, Vec3 direction, float halfInnerDegrees, float halfOuterDegrees )
+{
+	light_t& light = m_sceneData.lights[index];
+	light.position = position;
+	light.color.SetXYZ( color.GetVec3Color() );
+	light.color.SetW( intensity );
+	light.diffuseAttenuation = attenuation;
+	light.specularAttenuation = attenuation;
+	light.direction = direction;
+	light.cos_inner_half_angle = CosDegrees( halfInnerDegrees );
+	light.cos_outer_half_angle = CosDegrees( halfOuterDegrees );
+	m_sceneHasChanged = true;
 }
 
 void RenderContext::DisableLight( int index )
 {
-	UNUSED(index);
-	m_light.intensity = 0.f;
-	m_lightHasChanged = false;
+	m_sceneData.lights[index].color.SetW( 0.f );
+	m_sceneHasChanged = true;
 }
-
 
 void RenderContext::Prensent()
 {
@@ -1116,7 +1171,7 @@ Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )
 
 	// Check if the load was successful
 	GUARANTEE_OR_DIE( imageData, Stringf( "Failed to load image \"%s\"", imageFilePath ) );
-	GUARANTEE_OR_DIE( ( numComponents == 4 || numComponents == 3 ) && imageTexelSizeX > 0 && imageTexelSizeY > 0, Stringf( "ERROR loading image \"%s\" (Bpp=%i, size=%i,%i)", imageFilePath, numComponents, imageTexelSizeX, imageTexelSizeY ) );
+	GUARANTEE_OR_DIE(  imageTexelSizeX > 0 && imageTexelSizeY > 0, Stringf( "ERROR loading image \"%s\" (Bpp=%i, size=%i,%i)", imageFilePath, numComponents, imageTexelSizeX, imageTexelSizeY ) );
 
 	D3D11_TEXTURE2D_DESC desc;
 	desc.Width				= imageTexelSizeX;

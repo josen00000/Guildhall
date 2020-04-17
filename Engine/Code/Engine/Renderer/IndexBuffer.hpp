@@ -6,6 +6,7 @@
 class IndexBuffer : public RenderBuffer {
 public:
 	IndexBuffer( RenderContext* ctx, RenderMemoryHint hint );
+	IndexBuffer( const char* debug, RenderContext* ctx, RenderMemoryHint hint );
 
 public:
 	void Update( const std::vector<uint>& indices );

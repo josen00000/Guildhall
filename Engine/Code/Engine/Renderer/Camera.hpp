@@ -38,10 +38,13 @@ public:
 
 	Camera( const Camera& camera ) = delete;
 	explicit Camera( const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
+	explicit Camera(  const char* debugMsg, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
 	explicit Camera(  float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1 );
-	explicit Camera( float fov=60.f, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
+	explicit Camera(  float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1, const char* debugMsg = "" );
+	explicit Camera( float fov=60.f, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE, const char* debugMsg = "" );
 	static Camera* CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& topRight );
 	static Camera* CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
+	static Camera* CreatePerspectiveCamera( const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
 	void Translate( const Vec3& translation );
 
 public:
@@ -59,6 +62,7 @@ public:
 	ProjectionType GetCameraProjectionType() const{ return m_projectionType; }
 
 	Mat44	GetViewMatrix() const { return m_view; }
+	Mat44	GetUpdatedViewMatrix();
 	Mat44	GetProjectionMatrix() const { return m_projection; }
 	Mat44	GetModelMatrix() const;
 
@@ -120,6 +124,7 @@ public:
 	uint m_clearStencil = 0;
 	Transform m_transform;
 	ProjectionType m_projectionType = PROJECTION_ORTHOGRAPHIC;
+	std::string m_debugString;
 
 private:
 	bool m_useDepth = false;
