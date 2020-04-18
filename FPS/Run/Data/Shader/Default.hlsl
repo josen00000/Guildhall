@@ -97,13 +97,4 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 {
 	float4 color = tDiffuse.Sample( sSampler, input.uv );
 	return color * input.color;
-	// we'll outoupt our UV coordinates as color here
-	// to make sure they're being passed correctly.
-	// Very common rendering debugging method is to 
-	// use color to portray information; 
-	//float4 uvAsColor = float4( input.uv, 0.0f, 1.0f ); 
-	//float4 finalColor = uvAsColor * input.color * float4( 0, 0, 0, 0 );
-	//	//* TINT; 
-	//
-	//return finalColor; 
 }

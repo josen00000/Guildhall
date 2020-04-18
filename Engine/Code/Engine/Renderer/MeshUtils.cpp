@@ -20,8 +20,8 @@ void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound
 
 	// right down triangle
 	vertices.push_back( leftdown );
-	vertices.push_back( rightup );
 	vertices.push_back( rightdown );
+	vertices.push_back( rightup );
 }
 
 void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor )
@@ -75,8 +75,8 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 	vertices.reserve( 36 );
 	// front triangles
 	vertices.push_back( frontLeftdown );
-	vertices.push_back( frontRightup );
 	vertices.push_back( frontRightdown );
+	vertices.push_back( frontRightup );
 
 	vertices.push_back( frontLeftdown );
 	vertices.push_back( frontRightup );
@@ -84,8 +84,8 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 
 	// back triangles
 	vertices.push_back( backLeftdown );
-	vertices.push_back( backRightup );
 	vertices.push_back( backRightdown );
+	vertices.push_back( backRightup );
 
 	vertices.push_back( backLeftdown );
 	vertices.push_back( backRightup );
@@ -93,8 +93,8 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 
 	// left triangles
 	vertices.push_back( leftLeftdown );
-	vertices.push_back( leftRightup );
 	vertices.push_back( leftRightdown );
+	vertices.push_back( leftRightup );
 
 	vertices.push_back( leftLeftdown );
 	vertices.push_back( leftRightup );
@@ -102,8 +102,8 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 
 	// right triangles
 	vertices.push_back( rightLeftdown );
-	vertices.push_back( rightRightup );
 	vertices.push_back( rightRightdown );
+	vertices.push_back( rightRightup );
 
 	vertices.push_back( rightLeftdown );
 	vertices.push_back( rightRightup );
@@ -111,8 +111,8 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 
 	// top triangles
 	vertices.push_back( topLeftdown );
-	vertices.push_back( topRightup );
 	vertices.push_back( topRightdown );
+	vertices.push_back( topRightup );
 
 	vertices.push_back( topLeftdown );
 	vertices.push_back( topRightup );
@@ -120,8 +120,8 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 
 	// bottom triangles
 	vertices.push_back( bottomLeftdown );
-	vertices.push_back( bottomRightup );
 	vertices.push_back( bottomRightdown );
+	vertices.push_back( bottomRightup );
 
 	vertices.push_back( bottomLeftdown );
 	vertices.push_back( bottomRightup );
@@ -154,8 +154,8 @@ void AppendVertsForOBB2D( std::vector<Vertex_PCU>& vertices, const OBB2& bound, 
 
 	//triangle 1
 	vertices.push_back( leftDown );
-	vertices.push_back( leftUp );
 	vertices.push_back( rightUp );
+	vertices.push_back( leftUp );
 	//triangle 2
 	vertices.push_back( leftDown );
 	vertices.push_back( rightDown );
@@ -241,8 +241,8 @@ void AppendVertsForSphere3D( std::vector<Vertex_PCU>& vertices, Vec3 center, flo
 			vertices.push_back( Vertex_PCU( ( posRightUp + center ),	tintColor, uvRightup ) );
 
 			vertices.push_back( Vertex_PCU( ( posLeftDown + center ),	tintColor, uvLeftDown ) );
-			vertices.push_back( Vertex_PCU( ( posLeftUp + center ),		tintColor, uvLeftUp ) );
 			vertices.push_back( Vertex_PCU( ( posRightUp + center ),	tintColor, uvRightup ) );
+			vertices.push_back( Vertex_PCU( ( posLeftUp + center ),		tintColor, uvLeftUp ) );
 		}
 	}
 
@@ -318,8 +318,8 @@ void AppendVertsForCubeSPhere3D( std::vector<Vertex_PCU>& vertices, const AABB3&
 				vertices.push_back( tinyLeftUp );
 
 				vertices.push_back( tinyLeftDown );
-				vertices.push_back( tinyRightUp );
 				vertices.push_back( tinyRightDown );
+				vertices.push_back( tinyRightUp );
 			}
 
 		}
@@ -380,8 +380,8 @@ void AppendVertsForCubeSPhere3D( std::vector<Vertex_PCU>& vertices, const AABB3&
 				vertices.push_back( tinyLeftUp );
 
 				vertices.push_back( tinyLeftDown );
-				vertices.push_back( tinyRightUp );
 				vertices.push_back( tinyRightDown );
+				vertices.push_back( tinyRightUp );
 			}
 
 		}
@@ -501,8 +501,8 @@ void AppendVertsForCone3D( std::vector<Vertex_PCU>& vertices, Cone3 cone, int le
 		vertices.push_back( startNext );
 
 		// side
-		vertices.push_back( startCurrent );
 		vertices.push_back( end );
+		vertices.push_back( startCurrent );
 		vertices.push_back( startNext );
 
 		thetaDeg = thetaDeg + deltaThetaDeg;
@@ -529,8 +529,8 @@ void AppendTBNVertsForAABB2D( std::vector<Vertex_PCUTBN>& vertices, const AABB2&
 
 	// right down triangle
 	vertices.push_back( leftdown );
-	vertices.push_back( rightup );
 	vertices.push_back( rightdown );
+	vertices.push_back( rightup );
 }
 
 
@@ -625,8 +625,8 @@ void AppendTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, AABB3 box, R
 	vertices.reserve( 36 );
 	// front triangles
 	vertices.push_back( FLD );
-	vertices.push_back( FRU );
 	vertices.push_back( FRD );
+	vertices.push_back( FRU );
 
 	vertices.push_back( FLD );
 	vertices.push_back( FRU );
@@ -634,8 +634,8 @@ void AppendTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, AABB3 box, R
 
 	// back triangles
 	vertices.push_back( BLD );
-	vertices.push_back( BRU );
 	vertices.push_back( BRD );
+	vertices.push_back( BRU );
 
 	vertices.push_back( BLD );
 	vertices.push_back( BRU );
@@ -643,8 +643,8 @@ void AppendTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, AABB3 box, R
 
 	// left triangles
 	vertices.push_back( LLD );
-	vertices.push_back( LRU );
 	vertices.push_back( LRD );
+	vertices.push_back( LRU );
 	
 	vertices.push_back( LLD );
 	vertices.push_back( LRU );
@@ -652,8 +652,8 @@ void AppendTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, AABB3 box, R
 
 	// right triangles
 	vertices.push_back( RLD );
-	vertices.push_back( RRU );
 	vertices.push_back( RRD );
+	vertices.push_back( RRU );
 	
 	vertices.push_back( RLD );
 	vertices.push_back( RRU );
@@ -661,8 +661,8 @@ void AppendTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, AABB3 box, R
 
 	// top triangles
 	vertices.push_back( TLD );
-	vertices.push_back( TRU );
 	vertices.push_back( TRD );
+	vertices.push_back( TRU );
 						
 	vertices.push_back( TLD );
 	vertices.push_back( TRU );
@@ -670,8 +670,8 @@ void AppendTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, AABB3 box, R
 
 	// bottom triangles
 	vertices.push_back( bottomLD );
-	vertices.push_back( bottomRU );
 	vertices.push_back( bottomRD );
+	vertices.push_back( bottomRU );
 						
 	vertices.push_back( bottomLD );
 	vertices.push_back( bottomRU );
@@ -710,8 +710,8 @@ void AppendTBNVertsForSphere3D( std::vector<Vertex_PCUTBN>& vertices, Vec3 cente
 			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posRightUp + center ), tintColor, uvRightUp ), tangentRight, bitangentRightUp, posRightUp ) );
 															 
 			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posLeftDown + center ), tintColor, uvLeftDown ), tangentLeft, bitangentLeftDown, posLeftDown ) );
-			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posLeftUp + center ), tintColor, uvLeftUp ), tangentLeft, bitangentLeftUp, posLeftUp ) );
 			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posRightUp + center ), tintColor, uvRightUp ), tangentRight, bitangentRightUp, posRightUp ) );
+			vertices.push_back( Vertex_PCUTBN( Vertex_PCU( ( posLeftUp + center ), tintColor, uvLeftUp ), tangentLeft, bitangentLeftUp, posLeftUp ) );
 		}
 	}
 }

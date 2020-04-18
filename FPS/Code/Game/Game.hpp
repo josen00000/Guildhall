@@ -96,6 +96,7 @@ private:
 	void CreateDissolveObject();
 	void CreateTriPlanarObjects();
 	void CreateProjectObjects();
+	void CreateParallaxObjects();
 	void UpdateProjectObjects( float deltaSeconds );
 
 	// light setting
@@ -137,6 +138,7 @@ public:
 	// sd a 07
 	GameObject* m_dissolveObject = nullptr;
 	GameObject* m_triplanarObject = nullptr;
+	GameObject* m_parallaxObject = nullptr;
 	std::vector<GameObject*> m_projectObjects;
 
 	std::vector<Vertex_PCU> m_vertices;
@@ -147,13 +149,15 @@ public:
 	bool m_isLightFollowCamera = false;
 	bool m_isLightFollowAnimation = false;
 	bool m_isprojectFollowCamera = true;
+	bool m_isFogEnable = true;
 	int m_currentShaderIndex;
 	float m_ambientLightIntensity = 0.f;
+	float m_parallaxDepth  = 1.f;
 	Vec3 m_diffuseAttenuation = Vec3( 0.f, 1.f, 0.f );
 	Vec3 m_lightPos;
 	Vec3 m_specularAttenuation = Vec3( 0.f, 1.f, 0.f );
 	Rgba8 m_ambientLightColor = Rgba8::GREEN;
-	Rgba8 m_lightColor = Rgba8::WHITE;
+	Rgba8 m_lightColor = Rgba8::RED;
 	float m_lightIntensity = 1.f;
 	float m_specularFactor = 1.f;
 	float m_specularPow = 8.f;

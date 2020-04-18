@@ -8,5 +8,5 @@ debug_add_world_wire_sphere
 test
 debug_add_screen_point
 set_ambient_color
-help
 set_light_color
+help

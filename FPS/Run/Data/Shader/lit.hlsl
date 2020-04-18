@@ -101,7 +101,7 @@ cbuffer scene_constants : register(b4) {
 }
 
 Texture2D <float4> tDiffuse		: register(t0);
-Texture2D <float4> tNormal		: register(t1);
+Texture2D <float4> tNormal		: register(t4);
 Texture2D <float4> tDissolve	: register(t8);
 SamplerState sSampler: register(s0);
 
@@ -195,7 +195,6 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 	float3 ambient = SCENE_DATA.ambientLight.xyz * SCENE_DATA.ambientLight.w;
 	float3 cameraPos = CAMERA_POSITION;
 	float3 cameraDirection = normalize( cameraPos - input.worldPosition );
-	float3 test_world_pos = input.worldPosition;
 
 	// diffuse and specular
 	float3 diffuse = float3( 0.f, 0.f, 0.f );
@@ -205,11 +204,8 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 		float tempLightIntensity = CalculateLightIntensity( tempLight, input.worldPosition );
 		float3 lightPos = tempLight.worldPosition;
 		float lightDist = distance( input.worldPosition, lightPos );
-		float3 light_to_world = input.worldPosition - lightPos;	
-		float planeDist = abs( dot( light_to_world, tempLight.direction ) );
-		lightDist = lerp( lightDist, planeDist, tempLight.direction_factor );
 		float3 surfaceToLightDirection = normalize( lightPos - input.worldPosition );
-		surfaceToLightDirection = lerp( surfaceToLightDirection, -tempLight.direction, tempLight.direction_factor.xxx );
+
 
 		// diffuse
 		float diffuseStrength = max( dot( surfaceToLightDirection, finalNormal ), 0.0f );
@@ -227,19 +223,28 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 	diffuse = min( diffuse, float3( 1.0f, 1.0f, 1.0f ) );
 
 
+
+
 	// combine
-	float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
+	//float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
+	float3 phongColor =  specular  * objectColor.xyz;
 	//float3 finalColor = ApplyFog( input.WorldPosition, CAMERA_POSITION, phongColor );
 	//float3 phongColor = ( ambient + diffuse ) * objectColor.xyz;
 	// fog
 	float camera_dist = distance( input.worldPosition, CAMERA_POSITION );
 	//float3 test = pos - camera_pos;
 	//float test_dist = sqrt( dot( test, test ) );
-	float fog_amount = ( camera_dist - SCENE_DATA.fog_near_dist ) / ( SCENE_DATA.fog_far_dist - SCENE_DATA.fog_near_dist ); 
+	//float fog_amount = ( camera_dist - SCENE_DATA.fog_near_dist ) / ( SCENE_DATA.fog_far_dist - SCENE_DATA.fog_near_dist ); 
+	float fog_amount = smoothstep( SCENE_DATA.fog_near_dist, SCENE_DATA.fog_far_dist, camera_dist ); 
+
 		//lerp( SCENE_DATA.fog_near_dist, SCENE_DATA.fog_far_dist, camera_dist );
 	float3 fog_color = lerp( SCENE_DATA.fog_near_color, SCENE_DATA.fog_far_color, float3( fog_amount, fog_amount, fog_amount ) );
 	//return float3( fog_amount.xxx ); 
-	float3 final_color = lerp( phongColor, fog_color, fog_amount );
+	float3 final_color = lerp( phongColor, fog_color, fog_amount.xxx );
 
+	//float fresnel = pow( length( cross( cameraDirection, normal ) ), 16 );
+	//float4 fresnelColor = float4( float3( 0.f, 1.f, 0.f ), fresnel );
+	//return fresnelColor;
+	//float4 finalColor = phongColor + fresnelColor;
 	return float4( final_color, objectColor.w );
 }

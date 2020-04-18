@@ -26,6 +26,7 @@ extern Game*			g_theGame;
 
 RenderBuffer* g_dissolveBuffer;
 RenderBuffer* g_projectorBuffer;
+RenderBuffer* g_parallaxBuffer;
 
 Game::Game( Camera* gameCamera, Camera* UICamera )
 	:m_gameCamera(gameCamera)
@@ -58,7 +59,8 @@ void Game::Startup()
 
 	g_dissolveBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	g_projectorBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	g_theRenderer->SetFog( 10.f, 3.f, Rgba8::BLACK, Rgba8::RED );
+	g_parallaxBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+
 }
 
 void Game::Shutdown()
@@ -73,6 +75,7 @@ void Game::Shutdown()
 	SELF_SAFE_RELEASE(m_lightSphereMesh);
 	SELF_SAFE_RELEASE(g_dissolveBuffer);
 	SELF_SAFE_RELEASE(g_projectorBuffer);
+	SELF_SAFE_RELEASE(g_parallaxBuffer);
 
 	// clear game objects
 	SELF_SAFE_RELEASE(m_lightQuadObject);
@@ -140,11 +143,18 @@ void Game::UpdateLighting( float deltaSeconds )
 		animationSeconds = 0.f;
 	}
 	//g_theRenderer->EnableSpotLight( 0, m_lightPos, m_lightColor, m_lightIntensity, m_diffuseAttenuation, Vec3( 0.f, 0.f, -1.f ), 15.f, 30.f );
-	//g_theRenderer->EnablePointLight( 0, m_lightPos, m_lightColor, m_lightIntensity, m_diffuseAttenuation );
-	g_theRenderer->EnableDirectionLight( 0, Vec3( 0.f, 0.f, 100.f), Rgba8::RED, 1.f, Vec3( 1.f, 0.f, 0.f ) );
+	g_theRenderer->EnablePointLight( 0, m_lightPos, m_lightColor, m_lightIntensity, m_diffuseAttenuation );
+	//g_theRenderer->EnableDirectionLight( 0, Vec3( 0.f, 0.f, 100.f), Rgba8::RED, 1.f, Vec3( 1.f, 0.f, 0.f ) );
 	//g_theRenderer->EnablePointLight( 1, Vec3::ZERO, Rgba8::BLUE, m_lightIntensity, m_diffuseAttenuation );
 	//g_theRenderer->EnablePointLight( 1, Vec3::ONE, Rgba8::YELLOW, m_lightIntensity, m_diffuseAttenuation );
 
+	// fog
+	if( m_isFogEnable ) {
+		g_theRenderer->SetFog( 10.f, 3.f, Rgba8::BLACK, Rgba8::RED );
+	}
+	else {
+		g_theRenderer->DisableFog();
+	}
 }
 
 void Game::UpdateA07Objects( float deltaSeocnds )
@@ -169,6 +179,11 @@ void Game::UpdateA07Objects( float deltaSeocnds )
 
 	// update project object
 	UpdateProjectObjects( deltaSeocnds );
+
+	// update larallax box
+	static parallax_data_t parallax_data;
+	parallax_data.depth = m_parallaxDepth;
+	g_parallaxBuffer->Update( &parallax_data, sizeof( parallax_data_t), sizeof( parallax_data_t) );
 }
 
 void Game::UpdateProjectBuffer()
@@ -206,7 +221,9 @@ void Game::CreateDebugScreen()
 	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 5 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Specular Pow: %.2f. [';' , '''] ", m_specularPow );
 	std::string shaderName = "Shader : " + m_shaderNames[m_currentShaderIndex];
 	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 6 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, shaderName );
-	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 7 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "project lock" + GetStringFromBool( m_isprojectFollowCamera ) ));
+	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 7 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "button 'z' project lock" + GetStringFromBool( !m_isprojectFollowCamera ) ));
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 8 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"parallax depth(has bug): %.2f. ['N' , 'M'] ", m_parallaxDepth );
+	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 9 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "button 'f' disable, enable fog. using lit shader" + GetStringFromBool( m_isFogEnable ) ));
 
 }
 
@@ -387,10 +404,21 @@ void Game::HandleLightKeyboardInput( float deltaSeconds )
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_QUOTE ) ) {
 		m_specularPow += 10.f * deltaSeconds;
 	}
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_Z ) ){
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_Z ) ) {
 		m_isprojectFollowCamera = !m_isprojectFollowCamera;
 	}
-
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F ) ) {
+		m_isFogEnable = !m_isFogEnable;
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_N ) ) {
+		m_parallaxDepth += 1.f * deltaSeconds;
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_M ) ) {
+		m_parallaxDepth -= 1.f * deltaSeconds;
+		if( m_parallaxDepth < 1.f ) {
+			m_parallaxDepth = 1.f;
+		}
+	}
 }
 
 void Game::HandleMouseInput( float deltaSeconds )
@@ -522,6 +550,7 @@ void Game::RenderLightObjects() const
 {
 	//g_theRenderer->RenderLight();
 	//g_theRenderer->SetDiffuseTexture()
+	g_theRenderer->SetCullMode(RASTER_CULL_NONE);
 	g_theRenderer->SetDiffuseAttenuation( 0, m_diffuseAttenuation );
 	g_theRenderer->SetSpecularAttenuation( 0, m_specularAttenuation );
 	g_theRenderer->SetSpecularFactor( m_specularFactor );
@@ -532,13 +561,13 @@ void Game::RenderLightObjects() const
 	Texture* tempDiffuse = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/tile_diffuse.png" );
 	g_theRenderer->SetDiffuseTexture( tempDiffuse );
 	g_theRenderer->SetNormalTexture( tempNormal );
+	m_lightQuadObject->Render();
 
-
-
+	// fresnel object
+	g_theRenderer->BindShader( "Data/Shader/fresnel.hlsl" );
 	//g_theRenderer->BindShader( "Data/Shader/lit.hlsl");
-	m_lightQuadObject->Render();	
 	//m_lightCubeObject->Render();
-	//m_lightSphereObject->Render();
+	m_lightSphereObject->Render();
 }
 
 void Game::RenderA07Objects() const
@@ -547,18 +576,18 @@ void Game::RenderA07Objects() const
 	// bind texture
 	// bind ubo buffer
 	// render
+	g_theRenderer->SetCullMode(RASTER_CULL_BACK);
 	g_theRenderer->BindShader("Data/Shader/dissolve.hlsl");
 	g_theRenderer->SetMaterialBuffer( g_dissolveBuffer );
 	Texture* disTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/noise.png" );
-	g_theRenderer->SetDissolveTexture( disTex );
+	g_theRenderer->SetMaterialTexture( disTex );
 	m_dissolveObject->Render();
 
 	// triplanar object
-	
 	g_theRenderer->BindShader("Data/Shader/triplanar.hlsl");
 	Texture* triDifTex1 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/dry_rock/color.jpg" );
 	Texture* triDifTex2 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/example_colour.png" );
-	Texture* triDifTex3 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/ruin_wall_03_height_0.png" );
+	Texture* triDifTex3 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/ruin_wall_03_0.png" );
 	Texture* triNorTex1 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/dry_rock/normal.jpg" );
 	Texture* triNorTex2 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/example_normal.png" );
 	Texture* triNorTex3 = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images//ruin_wall_03_norm_0.png" );
@@ -569,6 +598,13 @@ void Game::RenderA07Objects() const
 	g_theRenderer->SetNormalTexture( triNorTex2, 2 );
 	g_theRenderer->SetNormalTexture( triNorTex3, 3 );
 	m_triplanarObject->Render();
+	// light
+// 	g_theRenderer->BindShader( "Data/Shader/lit.hlsl" );
+// 	g_theRenderer->SetDiffuseTexture( triDifTex1 );
+// 	g_theRenderer->SetNormalTexture( triNorTex1 );
+// 	m_lightQuadObject->Render();	
+
+
 
 	// project object
 	g_theRenderer->BindShader( "Data/Shader/project.hlsl" );
@@ -578,6 +614,16 @@ void Game::RenderA07Objects() const
 	for( int i = 0; i < 5; i++ ) {
 		m_projectObjects[i]->Render();
 	}
+
+	// parallax object
+	g_theRenderer->BindShader( "Data/Shader/parallax.hlsl" );
+	g_theRenderer->SetMaterialBuffer( g_parallaxBuffer );
+	Texture* parallaxTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/ruin_wall_03_height_0.png" );
+	g_theRenderer->SetMaterialTexture( parallaxTex );
+	g_theRenderer->SetDiffuseTexture( triDifTex3 );
+	g_theRenderer->SetNormalTexture( triNorTex3 );
+	m_parallaxObject->Render();
+
 }
 
 void Game::RenderSpheres() const
@@ -641,7 +687,7 @@ void Game::CreateLightSphereObjects()
 
 	m_lightSphereObject = new GameObject();
 	m_lightSphereObject->m_mesh = m_lightSphereMesh;
-	m_lightSphereObject->SetPosition( Vec3( 5.f, 0.f, -5.f ) );
+	m_lightSphereObject->SetPosition( Vec3( 3.5f, 0.f, -5.f ) );
 }
 
 void Game::UpdateLightObjects( float deltaSeconds )
@@ -667,7 +713,7 @@ void Game::CreateTriPlanarObjects()
 {
 	m_triplanarObject = new GameObject();
 	m_triplanarObject->m_mesh = m_lightSphereMesh;
-	m_triplanarObject->SetPosition( Vec3( 5.f, 0.f, -5.f ) );
+	m_triplanarObject->SetPosition( Vec3( 7.f, 0.f, -5.f ) );
 	m_triplanarObject->SetRotation( Vec3::ZERO );
 }
 
@@ -683,6 +729,14 @@ void Game::CreateProjectObjects()
 	}
 }
 
+void Game::CreateParallaxObjects()
+{
+	Vec3 startPos( 5.f, 7.f, -5.f );
+	m_parallaxObject = new GameObject();
+	m_parallaxObject->m_mesh = m_lightCubeMesh;
+	m_parallaxObject->SetPosition( startPos );
+}
+
 void Game::UpdateProjectObjects( float deltaSeconds )
 {
 	static float totalTime = 0.f;
@@ -694,6 +748,11 @@ void Game::UpdateProjectObjects( float deltaSeconds )
 	if( m_isprojectFollowCamera ) {
 		UpdateProjectBuffer();
 	}
+	Transform trans = *(m_projectObjects[0]->m_trans);
+	Vec3 pos = trans.GetPosition();
+	pos += Vec3( 0.f, 3.f, 0.f );
+	trans.SetPosition( pos );
+	DebugAddWorldText( trans, Vec2::ZERO, Rgba8::RED, Rgba8::RED, 0.1f, DEBUG_RENDER_ALWAYS, std::string("projector shader") );
 }
 
 void Game::SetAttenuation( Vec3 atten )
@@ -749,6 +808,7 @@ void Game::CreateGameObjects()
 	CreateDissolveObject();
 	CreateTriPlanarObjects();
 	CreateProjectObjects();
+	CreateParallaxObjects();
 
 	// tesselation object
 	m_tesselationObject = new GameObject();

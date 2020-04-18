@@ -19,6 +19,7 @@
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
+#include "Engine/Core/Image.hpp"
 //third party library
 #include "Engine/stb_image.h"
 
@@ -347,12 +348,9 @@ void RenderContext::SetNormalTexture( Texture* texture, int index )
 	BindTexture( texture, TEXTURE_NORMAL_SLOT0 + index );
 }
 
-void RenderContext::SetDissolveTexture( Texture* texture )
+void RenderContext::SetMaterialTexture( Texture* texture, int index /*= 0 */ )
 {
-// 	if( texture == nullptr ) {
-// 		BindTexture( )
-// 	}
-	BindTexture( texture, TEXTURE_USER_SLOT1 );
+	BindTexture( texture, TEXTURE_USER_SLOT1 + index );
 }
 
 void RenderContext::SetFog( float fogFarDist, float fogNearDist, Rgba8 fogFarColor, Rgba8 fogNearColor )
@@ -366,8 +364,8 @@ void RenderContext::SetFog( float fogFarDist, float fogNearDist, Rgba8 fogFarCol
 
 void RenderContext::DisableFog()
 {
-	m_sceneData.fog_far_color = Vec3::ONE;
-	m_sceneData.fog_near_color = Vec3::ONE;
+	m_sceneData.fog_far_distance = 1;
+	m_sceneData.fog_near_distance = 2;
 	m_sceneHasChanged = true;
 }
 
@@ -1186,6 +1184,8 @@ Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )
 	desc.CPUAccessFlags		= 0;
 	desc.MiscFlags			= 0;
 
+	//float b= 3;
+	//int a = sizeof(b);
 	D3D11_SUBRESOURCE_DATA initialData;
 	initialData.pSysMem = imageData;
 	initialData.SysMemPitch = imageTexelSizeX * 4;
@@ -1197,6 +1197,43 @@ Texture* RenderContext::CreateTextureFromFile( const char* imageFilePath )
 	Texture* temTexture = new Texture( imageFilePath, this, texHandle );
 	stbi_image_free( imageData );
 	return temTexture;
+}
+
+void RenderContext::CreateCubeMapTexturesFromImages( const Image* src )
+{
+	int width = src[0].GetDimensions().x;
+	int height = src[0].GetDimensions().y;
+	D3D11_TEXTURE2D_DESC cubeDesc;
+	cubeDesc.Width				= width;
+	cubeDesc.Height				= height;
+	cubeDesc.MipLevels			= 1;
+	cubeDesc.ArraySize			= 6;
+	cubeDesc.Format				= DXGI_FORMAT_R8G8B8A8_UNORM;
+	cubeDesc.SampleDesc.Count	= 1;
+	cubeDesc.SampleDesc.Quality = 0;
+	cubeDesc.Usage				= D3D11_USAGE_DEFAULT; // mip-chains, GPU/DEFAUTE
+	cubeDesc.BindFlags			= D3D11_BIND_SHADER_RESOURCE;
+	cubeDesc.CPUAccessFlags		= 0;
+	cubeDesc.MiscFlags			= 0;
+
+	D3D11_SUBRESOURCE_DATA data[TEXCUBE_NUM];
+	D3D11_SUBRESOURCE_DATA *pdata = nullptr;
+
+	if( nullptr != src ) {
+		pdata = data;
+		uint pitch = width * 4; // temp for rgba.
+
+		for( int i = 0; i <TEXCUBE_NUM; i++ ) {
+			data[i].pSysMem = src[i].GetImageData().data();
+			data[i].SysMemPitch = pitch;
+		}
+
+		// create resource
+		ID3D11Texture2D* texHandle = nullptr;
+		m_device->CreateTexture2D( &cubeDesc, pdata, &texHandle );
+
+
+	}
 }
 
 Texture* RenderContext::CheckTextureExist( const char* imageFilePath ) const

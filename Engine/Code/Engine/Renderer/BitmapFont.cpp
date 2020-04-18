@@ -42,8 +42,8 @@ void BitmapFont::AddVertsForText2D( std::vector<Vertex_PCU>& vertexArray, const 
 
 		//push triangle A
 		vertexArray.push_back(leftDown);
-		vertexArray.push_back(leftUp);
 		vertexArray.push_back(rightUp);
+		vertexArray.push_back(leftUp);
 		//push triangle B
 		vertexArray.push_back(leftDown);
 		vertexArray.push_back(rightDown);
@@ -70,15 +70,15 @@ void BitmapFont::AddVertsForTextInBox2D( std::vector<Vertex_PCU>& vertexArray, c
 		m_glyphSpriteSheet.GetSpriteUVs( minUV, maxUV, c );
 
 		Vertex_PCU leftDown = Vertex_PCU( minPos, tint, minUV );
-		Vertex_PCU leftUp = Vertex_PCU( minPos + Vec2( 0, cellHeight ), tint, Vec2( minUV.x, maxUV.y ) );
 		Vertex_PCU rightUp = Vertex_PCU( minPos + Vec2( cellRightPosX, cellHeight ), tint, maxUV );
+		Vertex_PCU leftUp = Vertex_PCU( minPos + Vec2( 0, cellHeight ), tint, Vec2( minUV.x, maxUV.y ) );
 		Vertex_PCU rightDown = Vertex_PCU( minPos + Vec2( cellRightPosX, 0 ), tint, Vec2( maxUV.x, minUV.y ) );
 		minPos.x += cellWidth;
 
 		//push triangle A
 		vertexArray.push_back( leftDown );
-		vertexArray.push_back( leftUp );
 		vertexArray.push_back( rightUp );
+		vertexArray.push_back( leftUp );
 		//push triangle B
 		vertexArray.push_back( leftDown );
 		vertexArray.push_back( rightDown );

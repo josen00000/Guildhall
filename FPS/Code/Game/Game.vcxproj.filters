@@ -71,5 +71,11 @@
     <FxCompile Include="..\..\Run\Data\Shader\project.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\parallax.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\fresnel.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

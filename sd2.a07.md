@@ -43,7 +43,7 @@ Some more adanced shading techniques and more supported lights.
 - [x] *X07.11: 05%*: Projected Texture Effect
 - [ ] *X07.12: 05%*: Interior Mapping Shader
 - [x] *X07.13: 03%*: Fresnel or Highlight Shader
-- [ ] *X07.20: 05%*: Parallax Mapping Shader
+- [-] *X07.20: 05%*: Parallax Mapping Shader
     - [ ] *X07.21 05%*: Self Occluding Parallax Shader, aka Deep/Steep Parallax Shader
 - [ ] *X07.30: 05%*: Support a Cube Map
     - [ ] *X07.31: 05%*: Support skybox clearing mode for a camera

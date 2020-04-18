@@ -20,6 +20,7 @@ class Shader;
 class Texture;
 class VertexBuffer;
 class Window;
+class Image;
 
 struct AABB2;
 struct D3D11_RASTERIZER_DESC;
@@ -110,6 +111,16 @@ enum DepthCompareFunc {
 	NUM_COMPARE_DEPTH_FUNC
 };
 
+enum TexureCubeSide {
+	TEXCUBE_FRONT,
+	TEXCUBE_BACK,
+	TEXCUBE_LEFT,
+	TEXCUBE_RIGHT,
+	TEXCUBE_TOP,
+	TEXCUBE_BOTTOM,
+	TEXCUBE_NUM 
+};
+
 // data used in shader
 struct time_data_t {
 	float system_time;
@@ -183,6 +194,12 @@ struct project_data_t {
 	float power = 0.0f;
 };
 
+struct parallax_data_t {
+	int count;
+	float depth;
+	float pad[2];
+};
+
 class RenderContext{
 public :
 	RenderContext(){}
@@ -204,7 +221,7 @@ public:
 	// Bind
 	void SetDiffuseTexture( Texture* texture, int index = 0 );
 	void SetNormalTexture( Texture* texture, int index = 0 );
-	void SetDissolveTexture( Texture* texture );
+	void SetMaterialTexture( Texture* texture, int index = 0 );
 	void SetFog( float fogFarDist, float fogNearDist, Rgba8 fogFarColor, Rgba8 fogNearColor );
 	void DisableFog();
 	void BindSampler( const Sampler* sampler );
@@ -302,6 +319,7 @@ private:
 	BitmapFont*		CheckBitmapFontExist( const char* fontName ) const;
 	BitmapFont*		CreateBitmapFontFromFile(const char* fontName, const char* fontFilePath);
 	Texture*		CreateTextureFromFile(const char* imageFilePath);
+	void			CreateCubeMapTexturesFromImages( const Image* src );
 	Texture*		CheckTextureExist(const char* imageFilePath) const;
 	void			CleanTextures();
 	void			CleanShaders();
