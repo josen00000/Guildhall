@@ -61,7 +61,7 @@ void Game::Shutdown()
 	SELF_SAFE_RELEASE(m_lightQuadMesh);
 	SELF_SAFE_RELEASE(m_cubeSphereMesh);
 	SELF_SAFE_RELEASE(m_lightCubeMesh);
-
+	SELF_SAFE_RELEASE(m_lightSphereMesh);
 
 	// clear game objects
 	SELF_SAFE_RELEASE(m_lightQuadObject);
