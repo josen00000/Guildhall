@@ -27,10 +27,112 @@ EventSystem*	g_theEventSystem	= nullptr;
 DevConsole*		g_theConsole		= nullptr;
 
 
+#include <vector>
+#include <functional>
+
+void SubscribeTest( float t ) {
+	DebuggerPrintf( "test in subscribe %f", t );
+}
+
+void AddTest( int a, int b ) {
+	int c = a + b;
+	DebuggerPrintf( "result %i = %i + %i" , a, b, c );
+}
+
+class TestClass {
+public:
+	TestClass( int v)
+		:m_value(v){}
+
+	void SomeMethod( int a, int b ) {
+		int c = a + b;
+		DebuggerPrintf( "method %i = %i + %i", c, a, b );
+	}
+private:
+	int m_value;
+};
+
+
+template<typename ...ARGS>
+class Delegate {
+public:
+public:
+	using function_t = std::function<void(ARGS...)>;
+	using c_callback_t = void(*)(ARGS...);
+	
+	struct sub_t {
+		void const* func_id;
+		void const* obj_id;
+		function_t callable;
+
+		inline bool operator==( sub_t const& other ) const { return func_id == other.func_id;}
+	};
+
+
+	void subscribe( c_callback_t const& cb ) {
+		sub_t sub;
+		sub.func_id = &cb;
+		sub.callable = cb;
+		subscribe(sub);
+	}
+	void invoke( ARGS const &... args ) {
+		for( sub_t& cb : m_callbacks ) {
+			cb.callable( args... );
+		}
+	}
+	void unsubscribe( c_callback_t const& cb ) {
+		sub_t sub;
+		sub.func_id = cb;
+		unsubscribe( sub );
+	}
+	template <typename OBJ_TYPE>
+	void subscribe_method( OBJ_TYPE* obj, void(OBJ_TYPE::* mcb)(ARGS...) ) {
+		sub_t sub;
+		sub.obj_id = obj;
+		sub.func_id = *( void const**)&mcb;
+		sub.callable = [=]( ARGS ...args) { (obj->*mcb)( args...); };
+
+		subscribe( sub );
+	}
+
+	template <typename OBJ_TYPE>
+	void unsubscribe_method( OBJ_TYPE* obj, void(OBJ_TYPE::* mcb)(ARGS...) ) {
+		sub_t sub;
+		sub.obj_id = obj;
+		sub.func_id = *( void const**) &mcb;
+
+		unsubscribe( sub );
+	}
+
+// 	template< typename OBJ_TYPE>
+// 	void subscribe_method( OBJ_TYPE* obj, void(OBJ_TYPE::* mcb)(ARGS...) ) {
+// 
+// 	}
+
+	void operator() ( ARGS const&... args ) {
+		invoke( args... );
+	}
+
+private:
+	void subscribe( sub_t const& sub ) {
+		m_callbacks.push_back( sub );
+	}
+	void unsubscribe( sub_t const& sub ) {
+		for( uint i = 0; i < m_callbacks.size(); ++i ) {
+			if( m_callbacks[i] == sub ) {
+				m_callbacks.erase( m_callbacks.begin() + i );
+				return;
+			}
+		}
+	}
+	std::vector<sub_t> m_callbacks;
+};
+
 
 
 void App::Startup()
 {
+	TemplateTesting();
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theEventSystem	= new EventSystem();
@@ -78,6 +180,24 @@ void App::Startup()
 	g_theConsole->AddCommandToCommandList( testComd, testComdDesc, nullptr );
 	g_theConsole->AddCommandToCommandList( testComd1, testComd1Desc, nullptr );
 	g_theConsole->AddCommandToCommandList( testComd2, testComd2Desc, nullptr );
+}
+
+void App::TemplateTesting()
+{
+	Delegate<float> update;
+	Delegate<int, int> add;
+
+	TestClass obj( 7 );
+
+
+	update.subscribe( SubscribeTest );
+	add.subscribe( AddTest );
+	add.subscribe_method( &obj, &TestClass::SomeMethod );
+
+	update.unsubscribe( SubscribeTest );
+
+	update.invoke( 3.15f );
+	add.invoke( 4, 6 );
 }
 
 void App::Shutdown()
@@ -222,3 +342,4 @@ bool HelpCommandEvent( EventArgs& args )
 	}
 	return true;
 }
+

@@ -201,7 +201,6 @@ void Game::UpdateProjectBuffer()
 
 void Game::CreateShaderNames()
 {
-	m_shaderNames.push_back( std::string( "data/Shader/default.hlsl" ) );
 	m_shaderNames.push_back( std::string( "data/Shader/lit.hlsl" ) );
 	m_shaderNames.push_back( std::string( "data/Shader/normal.hlsl" ) );
 	m_shaderNames.push_back( std::string( "data/Shader/tangent.hlsl" ) );
@@ -415,8 +414,8 @@ void Game::HandleLightKeyboardInput( float deltaSeconds )
 	}
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_M ) ) {
 		m_parallaxDepth -= 1.f * deltaSeconds;
-		if( m_parallaxDepth < 1.f ) {
-			m_parallaxDepth = 1.f;
+		if( m_parallaxDepth < 0.f ) {
+			m_parallaxDepth = 0.f;
 		}
 	}
 }

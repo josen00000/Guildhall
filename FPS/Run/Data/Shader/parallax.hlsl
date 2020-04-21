@@ -111,13 +111,11 @@ float3x3 GetWorldToSurfaceTransform( float3 tangent, float3 bitangent, float3 no
 	tangent = normalize( tangent );
 	bitangent = normalize( bitangent );
 	return float3x3( tangent, bitangent, normal );
-
 }
 
 float3x3 GetSurfaceToWorldTransform( float3 tangent, float3 bitangent, float3 normal ) {
 	float3x3 surface_to_world = float3x3( tangent, bitangent, normal );
 	return transpose( surface_to_world );
-
 }
 
 
@@ -133,6 +131,7 @@ float2 ComputeShallowParallaxUV( float3 local_dir, float2 uv_start ) {
 	float h1 = tMaterial.Sample( sSampler, uv_end ).x;
 	float t = ( 1 - h0 ) / ( ( h1 - h0 ) + 1 );
 	return lerp( uv_start, uv_end, t.xx );
+	//return uv_end;
 }
 
 float3 ApplyFog( float3 pos, float3 camera_pos, float3 color ){

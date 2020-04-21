@@ -171,14 +171,12 @@ struct scene_data_t {
 
 	float diffuse_factor = 1.0f;
 	float emissive_factor = 1.0f;
+	float pad[2];
 
 	float fog_near_distance = 0.0f;
-	float fog_far_distance = 0.0f;
-
 	Vec3 fog_near_color = Vec3( 1.f, 1.f, 1.f );
-	float pad_0;
+	float fog_far_distance = 0.0f;
 	Vec3 fog_far_color = Vec3( 1.f, 1.f, 1.f );
-	float pad_1;
 };
 
 struct dissolve_data_t {

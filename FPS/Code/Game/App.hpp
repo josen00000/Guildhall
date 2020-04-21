@@ -12,6 +12,7 @@ public:
 	App(){}
 	~App() {}
 	void Startup();
+	void TemplateTesting();
 	void Shutdown();
 	void BeginFrame();
 	void RunFrame();
