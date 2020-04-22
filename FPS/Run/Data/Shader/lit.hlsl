@@ -98,7 +98,7 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 	// object
 	float4 texture_color = tDiffuse.Sample( sSampler, input.uv );
 	float4 texture_normal_color = tNormal.Sample( sSampler, input.uv );
-	float3 surface_normal = ( texture_normal_color * 2.f - float4( 1.0f, 1.0f, 1.0f, 1.0f ) ).xyz;
+	float3 surface_normal = NormalColorToVector( texture_normal_color ); 
 	float3 final_normal = mul( surface_normal, TBN );
 	float4 object_color = texture_color * input.color;
 
@@ -106,6 +106,7 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 	// ambient
 	float3 ambient = SCENE_DATA.ambient_light.xyz * SCENE_DATA.ambient_light.w;
 	float3 final_color = ComputeLightAt( input.world_pos, final_normal, object_color );
+	final_color += ambient;
 	final_color = ApplyFog( input.world_pos, final_color );
 	return float4( final_color, object_color.w );
 }

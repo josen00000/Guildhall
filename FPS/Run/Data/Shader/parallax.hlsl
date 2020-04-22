@@ -1,4 +1,5 @@
 //#include "common.hlsl"
+#include "phong.hlsl"
 //--------------------------------------------------------------------------------------
 // Stream Input
 // ------
@@ -25,97 +26,10 @@ struct vs_input_t
 	float3 normal		: NORMAL;
 };
 
-const static int MAX_LIGHT = 8;
-
-struct light_t {
-	float3 worldPosition;
-	float light_pad;
-	float4 color_intensity;
-	float3 diffuseAttenuation;
-	float cosInnerAngle;
-	float3 specularAttenuation;
-	float cosOuterAngle;
-	float3 direction;
-	float direction_factor;
-};
-struct scene_data_t {
-	float4 ambientLight;
-	float4 emissiveLight;
-
-	light_t lights[MAX_LIGHT];
-
-	float diffuse_factor;
-	float emissive_factor;
-
-	float fog_near_dist;
-	float fog_far_dist;
-
-	float3 fog_near_color;
-	float pad_0;
-	float3 fog_far_color;
-	float pad_1;
-};
-static float SHIFT = 0.75f;
-
-float RangeMap( float val, float inMin, float inMax, float outMin, float outMax ){
-	float domain = inMax - inMin;
-	float range = outMax - outMin;
-	return( (val - inMin) / domain ) * range + outMin;
-}
-
-float CalculateLightIntensity( light_t light, float3 position ){
-	float3 lightToSurfaceDirection = normalize( position - light.worldPosition );
-	float cosTheta = dot( lightToSurfaceDirection, light.direction );
-	float intensityAmount = RangeMap( cosTheta, light.cosOuterAngle, light.cosInnerAngle, 0.f, light.color_intensity.w );
-	intensityAmount = clamp( intensityAmount, 0.f, 1.f );
-	intensityAmount = smoothstep( 0.f, 1.f, intensityAmount );
-	return intensityAmount;
-}
-
-cbuffer time_constants : register(b0){
-	float SYSTEM_TIME_SECONDS;
-	float SYSTEM_TIME_DELTA_SECONDS;
-};
-
-// MVP - Model - View - Projections
-cbuffer camera_constants : register(b1) {
-	float4x4 PROJECTION; // CAMERA_TO_CLIP_TRANSFORM
-	float4x4 VIEW;
-	float3	CAMERA_POSITION;
-	float	camera_pad;
-};
-
-cbuffer model_constants : register(b2) {
-	float4x4 MODEL;
-	float SPECULAR_FACTOR;
-	float SPECULAR_POWER;
-	float2 model_pad;
-}
-
-cbuffer tint_constants : register(b3) {
-	float4 TINT;
-}
-
-cbuffer scene_constants : register(b4) {
-	scene_data_t SCENE_DATA;
-}
-
 cbuffer material_constants : register(b6) {
 	uint STEP_COUNT;
 	float DEPTH;
 	float2 pad;
-}
-
-float3x3 GetWorldToSurfaceTransform( float3 tangent, float3 bitangent, float3 normal ) {
-	normal = normalize( normal );
-	tangent = normalize( tangent );
-	bitangent = normalize( bitangent );
-	return float3x3( tangent, bitangent, normal );
-}
-
-float3x3 GetSurfaceToWorldTransform( float3 tangent, float3 bitangent, float3 normal ) {
-	float3x3 surface_to_world = float3x3( tangent, bitangent, normal );
-	return transpose( surface_to_world );
 }
 
 
@@ -125,24 +39,48 @@ Texture2D <float4> tMaterial	: register(t8);
 SamplerState sSampler: register(s0);
 
 float2 ComputeShallowParallaxUV( float3 local_dir, float2 uv_start ) {
-	float2 uv_move = local_dir.xy * float2( DEPTH, DEPTH );
+	float2 uv_move = local_dir.xy * float2( DEPTH, DEPTH ) / abs(local_dir.z);
 	float2 uv_end = uv_start + uv_move;
 	float h0 = tMaterial.Sample( sSampler, uv_start ).x;
 	float h1 = tMaterial.Sample( sSampler, uv_end ).x;
 	float t = ( 1 - h0 ) / ( ( h1 - h0 ) + 1 );
+	//return t.xx * uv_move + float2( 0.5f, 0.5f );
 	return lerp( uv_start, uv_end, t.xx );
-	//return uv_end;
 }
 
-float3 ApplyFog( float3 pos, float3 camera_pos, float3 color ){
-	float dist = distance( pos, camera_pos );
-	float3 test = pos - camera_pos;
-	float test_dist = sqrt( dot( test, test ) );
-	float fog_amount = lerp( SCENE_DATA.fog_near_dist, SCENE_DATA.fog_far_dist, dist );
-	float3 fog_color = lerp( SCENE_DATA.fog_near_color, SCENE_DATA.fog_far_color, float3( fog_amount, fog_amount, fog_amount ) );
-	return float3( fog_amount.xxx ); 
-	//return lerp( color, SCENE_DATA.fog_far_color, fog_amount.xxx );
+float2 ComputeDeepParallaxUV( float3 local_dir, float2 uv_start ) {
+	float2 step_uv = uv_start;
+
+	const float step = 1.0f / STEP_COUNT;
+	float2 uv_move = local_dir.xy * DEPTH * step / abs(local_dir.z); // why 0.5 here
+
+	float z = 1.0f;
+	float height = 0.f;
+
+	int i = 0;
+	float heights[32];
+	for( i = 0; i < STEP_COUNT; i++ ) {
+		heights[i] = tMaterial.Sample( sSampler, step_uv ).x;
+		step_uv += uv_move;
+	}
+
+	for( int i = 1; i < STEP_COUNT; i++ ) {
+		float h1 = heights[i];
+		if( (z - step) <= h1 ) {
+			float t0 = z;
+			float t1 = z - step;
+			float h0 = heights[i - 1];
+
+			float t = ( t0 - h0 ) / ( h1 - h0 + t0 - t1 );
+			float2 uv0 = uv_start + uv_move * ( i - 1 );
+			float2 uv1 = uv0 + uv_move;
+			return lerp( uv0, uv1, t.xx );
+		}
+		z -= step;
+	}
+	return float2( 1.f, 1.f );
 }
+
 
 //--------------------------------------------------------------------------------------
 // Programmable Shader Stages
@@ -152,14 +90,14 @@ float3 ApplyFog( float3 pos, float3 camera_pos, float3 color ){
 // for passing data from vertex to fragment (v-2-f)
 struct v2f_t
 {
-	float4 position : SV_POSITION;
-	float4 color : COLOR;
-	float2 uv : UV;
+	float4 pos		: SV_POSITION;
+	float4 color	: COLOR;
+	float2 uv		: UV;
 
-	float3 worldPosition	: WORLD_POSITION;
-	float3 worldTangent		: WORLD_TANGENT;
-	float3 worldBitangent	: WORLD_BITANGENT;
-	float3 worldNormal		: WORLD_NORMAL;
+	float3 world_pos		: WORLD_POSITION;
+	float3 world_tangent	: WORLD_TANGENT;
+	float3 world_bitangent	: WORLD_BITANGENT;
+	float3 world_normal		: WORLD_NORMAL;
 };
 
 
@@ -169,27 +107,25 @@ v2f_t VertexFunction( vs_input_t input )
 {
 	v2f_t v2f = (v2f_t)0;
 
-	// forward vertex input onto the next stage
+	float4 local_pos	= float4( input.position, 1 );
+	float4 world_pos	= mul( MODEL, local_pos );
+	float4 view_pos		= mul( VIEW, world_pos );
+	float4 clip_pos		= mul( PROJECTION, view_pos );// = worldPos; // might have a w
 
-	float4 localPos		= float4( input.position, 1 );
-	float4 worldPos		= mul( MODEL, localPos );
-	float4 cameraPos	= mul(VIEW, worldPos );
-	float4 clipPos		= mul( PROJECTION, cameraPos );// = worldPos; // might have a w
+	float4 local_normal = float4( input.normal, 0.0f );
+	float4 world_normal = mul( MODEL, local_normal );
+	float4 local_tangent = float4( input.tangent, 0.0f );
+	float4 world_tangent = mul( MODEL, local_tangent );
+	float4 local_bitangent = float4( input.bitangent, 0.0f );
+	float4 world_bitangent = mul( MODEL, local_bitangent );
 
-	float4 localNormal = float4( input.normal, 0.0f );
-	float4 worldNormal = mul( MODEL, localNormal );
-	float4 localTangent = float4( input.tangent, 0.0f );
-	float4 worldTangent = mul( MODEL, localTangent );
-	float4 localBitangent = float4( input.bitangent, 0.0f );
-	float4 worldBitangent = mul( MODEL, localBitangent );
-
-	v2f.position = clipPos;
+	v2f.pos = clip_pos;
 	v2f.color = input.color * TINT;
 	v2f.uv = input.uv;
-	v2f.worldPosition = worldPos.xyz;
-	v2f.worldTangent = worldTangent.xyz;
-	v2f.worldBitangent = worldBitangent.xyz;
-	v2f.worldNormal = worldNormal.xyz;
+	v2f.world_pos = world_pos.xyz;
+	v2f.world_tangent = world_tangent.xyz;
+	v2f.world_bitangent = world_bitangent.xyz;
+	v2f.world_normal = world_normal.xyz;
 	return v2f;
 }
 
@@ -206,75 +142,29 @@ float3 ndcPos = clipPos.xyz / clipPos.w;
 float4 FragmentFunction( v2f_t input ) : SV_Target0
 {
 	// TBN
-	float3 normal = normalize( input.worldNormal );
-	float3 tangent = normalize( input.worldTangent );
-	float3 bitangent = normalize( input.worldBitangent );
+	float3 normal = normalize( input.world_normal );
+	float3 tangent = normalize( input.world_tangent );
+	float3 bitangent = normalize( input.world_bitangent );
 
 	float3x3 TBN = float3x3( tangent, bitangent, normal );
 
 	float3x3 world_to_surface = GetWorldToSurfaceTransform( tangent, bitangent, normal );
-	float3 look_dir = normalize( input.worldPosition - CAMERA_POSITION);
+	float3 look_dir = normalize( input.world_pos - CAMERA_POSITION );
 	float3 surf_look_dir = mul( look_dir, world_to_surface );
 
-	float2 parallax_uv = ComputeShallowParallaxUV( surf_look_dir, input.uv );
+	float2 parallax_uv = ComputeDeepParallaxUV( surf_look_dir, input.uv );
+	//return float4( parallax_uv, 0.f, 1.f );
 
 	// object
-	float4 textureColor = tDiffuse.Sample( sSampler, parallax_uv );
-	float4 textureNormalColor = tNormal.Sample( sSampler, parallax_uv );
-	float3 surfaceNormal = ( textureNormalColor * 2.f - float4( 1.0f, 1.0f, 1.0f, 1.0f ) ).xyz;
-	float3 finalNormal = mul( surfaceNormal, TBN );
-	float4 objectColor = textureColor * input.color;
+	float4 texture_color = tDiffuse.Sample( sSampler, parallax_uv );
+	float4 texture_normal_color = tNormal.Sample( sSampler, parallax_uv );
+	float3 surface_normal = NormalColorToVector( texture_normal_color ); 
+	float3 final_normal = mul( surface_normal, TBN );
+	float4 object_color = texture_color * input.color;
+
 
 	// phong model
 	// ambient
-	float3 ambient = SCENE_DATA.ambientLight.xyz * SCENE_DATA.ambientLight.w;
-	float3 cameraPos = CAMERA_POSITION;
-	float3 cameraDirection = normalize( cameraPos - input.worldPosition );
-	float3 test_world_pos = input.worldPosition;
-
-	// diffuse and specular
-	float3 diffuse = float3( 0.f, 0.f, 0.f );
-	float3 specular = float3( 0.f, 0.f, 0.f );
-	for( int i = 0; i < MAX_LIGHT; i++ ) {
-		light_t tempLight = SCENE_DATA.lights[i];
-		float tempLightIntensity = CalculateLightIntensity( tempLight, input.worldPosition );
-		float3 lightPos = tempLight.worldPosition;
-		float lightDist = distance( input.worldPosition, lightPos );
-		float3 light_to_world = input.worldPosition - lightPos;	
-		float planeDist = abs( dot( light_to_world, tempLight.direction ) );
-		lightDist = lerp( lightDist, planeDist, tempLight.direction_factor );
-		float3 surfaceToLightDirection = normalize( lightPos - input.worldPosition );
-		surfaceToLightDirection = lerp( surfaceToLightDirection, -tempLight.direction, tempLight.direction_factor.xxx );
-
-		// diffuse
-		float diffuseStrength = max( dot( surfaceToLightDirection, finalNormal ), 0.0f );
-		float diffuseIntensity = tempLightIntensity / ( tempLight.diffuseAttenuation.x + tempLight.diffuseAttenuation.y * lightDist + tempLight.diffuseAttenuation.z * pow( lightDist, 2 ) );
-		diffuse += diffuseStrength * tempLight.color_intensity.xyz * diffuseIntensity;
-
-		// specular
-		float3 halfDirection = normalize( ( cameraDirection + surfaceToLightDirection ) / 2 );
-		float specularStrength = max( dot( halfDirection, finalNormal ), 0.0f );
-		float expSpecularStrength = pow( specularStrength, SPECULAR_POWER );
-		float specularIntensity = tempLightIntensity / ( tempLight.specularAttenuation.x + tempLight.specularAttenuation.y * lightDist + tempLight.specularAttenuation.z * pow( lightDist, 2 ) );
-		specular += expSpecularStrength * SPECULAR_FACTOR * tempLight.color_intensity.xyz * specularIntensity;
-
-	}
-	diffuse = min( diffuse, float3( 1.0f, 1.0f, 1.0f ) );
-
-
-	// combine
-	float3 phongColor = ( ambient + diffuse + specular ) * objectColor.xyz;
-	//float3 finalColor = ApplyFog( input.WorldPosition, CAMERA_POSITION, phongColor );
-	//float3 phongColor = ( ambient + diffuse ) * objectColor.xyz;
-	// fog
-	//float camera_dist = distance( input.worldPosition, CAMERA_POSITION );
-	////float3 test = pos - camera_pos;
-	////float test_dist = sqrt( dot( test, test ) );
-	//float fog_amount = ( camera_dist - SCENE_DATA.fog_near_dist ) / ( SCENE_DATA.fog_far_dist - SCENE_DATA.fog_near_dist ); 
-	//	//lerp( SCENE_DATA.fog_near_dist, SCENE_DATA.fog_far_dist, camera_dist );
-	//float3 fog_color = lerp( SCENE_DATA.fog_near_color, SCENE_DATA.fog_far_color, float3( fog_amount, fog_amount, fog_amount ) );
-	//return float3( fog_amount.xxx ); 
-	//float3 final_color = lerp( phongColor, fog_color, fog_amount );
-
-	return float4( phongColor, objectColor.w );
+	float3 final_color = ComputeLightAt( input.world_pos, final_normal, object_color );
+	return float4( final_color, object_color.w );
 }

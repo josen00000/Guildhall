@@ -10,7 +10,7 @@ public:
 	Window();
 	~Window();
 	
-	bool Open( std::string const& title, float aspectRatio, float ratioOfHeight = 0.90f );
+	bool Open( std::string const& title, float aspectRatio, float ratioOfHeight = 1.0f );
 	void Close();
 	void BeginFrame();
 	

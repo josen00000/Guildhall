@@ -183,6 +183,9 @@ void Game::UpdateA07Objects( float deltaSeocnds )
 	// update larallax box
 	static parallax_data_t parallax_data;
 	parallax_data.depth = m_parallaxDepth;
+	parallax_data.count = 8;
+	//parallax_data.depth = 0.05f;
+
 	g_parallaxBuffer->Update( &parallax_data, sizeof( parallax_data_t), sizeof( parallax_data_t) );
 }
 
@@ -410,10 +413,13 @@ void Game::HandleLightKeyboardInput( float deltaSeconds )
 		m_isFogEnable = !m_isFogEnable;
 	}
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_N ) ) {
-		m_parallaxDepth += 1.f * deltaSeconds;
+		m_parallaxDepth += 1.f * deltaSeconds * 0.1f;
+		if( m_parallaxDepth > 0.5f ) {
+			m_parallaxDepth = 0.5f;
+		}
 	}
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_M ) ) {
-		m_parallaxDepth -= 1.f * deltaSeconds;
+		m_parallaxDepth -= 1.f * deltaSeconds * 0.1f;
 		if( m_parallaxDepth < 0.f ) {
 			m_parallaxDepth = 0.f;
 		}

@@ -152,12 +152,12 @@ public:
 	bool m_isFogEnable = true;
 	int m_currentShaderIndex;
 	float m_ambientLightIntensity = 0.f;
-	float m_parallaxDepth  = 1.f;
+	float m_parallaxDepth  = 0.f;
 	Vec3 m_diffuseAttenuation = Vec3( 0.f, 1.f, 0.f );
 	Vec3 m_lightPos;
 	Vec3 m_specularAttenuation = Vec3( 0.f, 1.f, 0.f );
-	Rgba8 m_ambientLightColor = Rgba8::GREEN;
-	Rgba8 m_lightColor = Rgba8::RED;
+	Rgba8 m_ambientLightColor = Rgba8::WHITE;
+	Rgba8 m_lightColor = Rgba8::WHITE;
 	float m_lightIntensity = 1.f;
 	float m_specularFactor = 1.f;
 	float m_specularPow = 8.f;

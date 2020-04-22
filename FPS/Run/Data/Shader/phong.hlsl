@@ -29,6 +29,7 @@ float2 ComputeLightFactor( light_t light, float3 world_pos, float3 world_normal,
 float3 ComputeLightAt( float3 world_pos, float3 world_normal, float3 surf_color ) {
 	float3 point_to_eye_dir = normalize( CAMERA_POSITION - world_pos );
 
+	float3 ambient = SCENE_DATA.ambient_light.xyz * SCENE_DATA.ambient_light.w;
 	float3 diffuse = float3( 0.f, 0.f, 0.f );
 	float3 specular = float3( 0.f, 0.f, 0.f );
 	for( int i = 0; i < MAX_LIGHTS; i++ ) {
@@ -42,6 +43,6 @@ float3 ComputeLightAt( float3 world_pos, float3 world_normal, float3 surf_color 
 	diffuse = min( diffuse, float3( 1.0f, 1.0f, 1.0f ) );
 	specular *= SPECULAR_FACTOR;
 
-	return diffuse * surf_color + specular * surf_color;
+	return ( diffuse + ambient + specular ) * surf_color;
 }
 
