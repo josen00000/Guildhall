@@ -3,10 +3,10 @@
 
 struct Vertex_PCUTBN {
 public:
-	Vertex_PCU pcu;
-	Vec3 m_tangent;
-	Vec3 m_bitangent;
-	Vec3 m_normal;
+	Vertex_PCU m_pcu;
+	Vec3 m_tangent = Vec3::ONE;
+	Vec3 m_bitangent = Vec3::ONE;
+	Vec3 m_normal = Vec3::ONE;
 
 	static buffer_attribute_t s_layout[];
 public:

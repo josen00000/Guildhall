@@ -15,6 +15,12 @@
 #include "Engine/Renderer/Shader.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
+#include "Engine/Renderer/ObjectReader.hpp"
+#include "Engine/Math/IntVec2.hpp"
+#include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Renderer/ShaderState.hpp"
+#include "Engine/Renderer/Material.hpp"
+
 
 extern App*				g_theApp;
 extern BitmapFont*		g_squirrelFont;
@@ -49,6 +55,8 @@ void Game::Startup()
 	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
 	CreateShaderNames();
 	CreateGameObjects();
+	LoadObjects();
+	CreateTestMaterial();
 	//CreateDebugRenderObjects();
 
 	EventCallbackFunctionPtr SetAmbientColorFuncPtr			= LightCommandSetAmbientColor;
@@ -73,6 +81,8 @@ void Game::Shutdown()
 	SELF_SAFE_RELEASE(m_cubeSphereMesh);
 	SELF_SAFE_RELEASE(m_lightCubeMesh);
 	SELF_SAFE_RELEASE(m_lightSphereMesh);
+	SELF_SAFE_RELEASE(m_loadMesh);
+
 	SELF_SAFE_RELEASE(g_dissolveBuffer);
 	SELF_SAFE_RELEASE(g_projectorBuffer);
 	SELF_SAFE_RELEASE(g_parallaxBuffer);
@@ -442,10 +452,10 @@ void Game::HandleCameraMovement( float deltaSeconds )
 		coe = 1.0f;
 	}
 
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_LEFT_ARROW ) ) {
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_A ) ) {
 		movement.x -= 1.0f * coe;
 	}
-	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_RIGHT_ARROW ) ) {
+	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
 		movement.x += 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_UP_ARROW ) ) {
@@ -455,10 +465,10 @@ void Game::HandleCameraMovement( float deltaSeconds )
 		movement.y -= 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_W ) ){
-		movement.z += 1.0f * coe;
+		movement.z -= 1.0f * coe;
 	}
 	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
-		movement.z -= 1.0f * coe;
+		movement.z += 1.0f * coe;
 	}
 
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
@@ -467,9 +477,10 @@ void Game::HandleCameraMovement( float deltaSeconds )
 	
 	Mat44 rotationMatrix = m_gameCamera->m_transform.GetRotationMatrix();
 	float temY = movement.y;
+	movement.y = 0.0f;
 	Vec3 cameraPos = m_gameCamera->GetPosition();
 	movement = rotationMatrix.TransformPosition3D( movement ); 
-	movement.y = temY;
+	movement.y += temY;
 	cameraPos += movement * deltaSeconds;
 	m_gameCamera->SetPosition( cameraPos );
 	//g_theConsole->PrintString( Rgba8::RED, "mouse move is " + std::to_string( mouseMove.x ) + std::to_string( mouseMove.y ) );
@@ -529,6 +540,20 @@ void Game::CheckIfNoClip()
 
 void Game::Render() const
 {
+	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
+	Texture* colorTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	Texture* normalTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	Texture* bloomTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	Texture* albedoTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	Texture* bitangentTarget	= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	Texture* tangentTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	m_gameCamera->SetColorTarget( colorTarget, 0 );
+	m_gameCamera->SetColorTarget( bloomTarget, 1 );
+	m_gameCamera->SetColorTarget( normalTarget, 2 );
+	m_gameCamera->SetColorTarget( albedoTarget, 3 );
+	m_gameCamera->SetColorTarget( tangentTarget, 4 );
+
+
  	Rgba8 tempColor = Rgba8::DARK_GRAY;
  	m_gameCamera->m_clearColor = tempColor;
  	g_theRenderer->BeginCamera( m_gameCamera );
@@ -542,13 +567,31 @@ void Game::Render() const
 	//RenderTesSpheres();
 
 
-	// sd a06
+	// sd a07
 	BindCurrentShader();
-	RenderLightObjects();
-	RenderA07Objects();
+	//RenderLightObjects();
+	//RenderA07Objects();
+	// sd a08
+	Rendera08Objects();
 	g_theRenderer->EndCamera( );
+	//TestImageEffect( tempRT );
 
 	DebugRenderWorldToCamera( m_gameCamera );
+	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
+	//GUARANTEE_OR_DIE( g_theRenderer->m_totalRenderTargetMade < 10, "leaking " );
+	
+	// setup camera 
+	// bind shader for effect
+	// render full screen image
+	
+
+	g_theRenderer->CopyTexture( backBuffer, colorTarget );
+	g_theRenderer->ReleaseRenderTarget( colorTarget );
+	g_theRenderer->ReleaseRenderTarget( normalTarget );
+	g_theRenderer->ReleaseRenderTarget( bloomTarget );
+	g_theRenderer->ReleaseRenderTarget( albedoTarget );
+	g_theRenderer->ReleaseRenderTarget( bitangentTarget );
+	g_theRenderer->ReleaseRenderTarget( tangentTarget );
 }
 
 void Game::RenderLightObjects() const
@@ -570,7 +613,6 @@ void Game::RenderLightObjects() const
 
 	// fresnel object
 	g_theRenderer->BindShader( "Data/Shader/fresnel.hlsl" );
-	//g_theRenderer->BindShader( "Data/Shader/lit.hlsl");
 	//m_lightCubeObject->Render();
 	m_lightSphereObject->Render();
 }
@@ -758,6 +800,55 @@ void Game::UpdateProjectObjects( float deltaSeconds )
 	pos += Vec3( 0.f, 3.f, 0.f );
 	trans.SetPosition( pos );
 	DebugAddWorldText( trans, Vec2::ZERO, Rgba8::RED, Rgba8::RED, 0.1f, DEBUG_RENDER_ALWAYS, std::string("projector shader") );
+}
+
+void Game::LoadObjects()
+{
+	ObjectReader* testObjReader = new ObjectReader( "Data/Model/halloween_miku/mesh.obj" );
+	//testObjReader->SetPostTransRot( Vec3( 0.f, 0.f, 180.f ) );
+	m_loadObject = new GameObject();
+	m_loadMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
+	testObjReader->GenerateGPUMesh( *m_loadMesh );
+	m_loadObject->m_mesh = m_loadMesh;
+	m_loadObject->SetPosition( Vec3( 0.f, 0.f, -10.f ) );
+	Texture* temTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Model/halloween_miku/diffuse.png" );
+	m_loadObject->m_tex = temTex; 
+
+	m_testShaderState = new ShaderState( g_theRenderer, "Data/Shader/States/defaultShader.xml" );
+}
+
+void Game::Updatea08Objects( float deltaSeconds )
+{
+
+}
+
+void Game::Rendera08Objects() const
+{
+	g_theRenderer->DisableFog();
+	//g_theRenderer->BindShader( nullptr );
+	g_theRenderer->BindShaderState( m_testShaderState );
+	//g_theRenderer->SetFillMode( RASTER_FILL_WIREFRAME );
+	m_loadObject->Render();
+}
+
+void Game::TestImageEffect( Texture* renderTarget ) const
+{
+	Texture* backbuffer = g_theRenderer->GetSwapChainBackBuffer();
+
+	Shader* tempShader = g_theRenderer->GetOrCreateShader( "Data/Shader/ImageEffect.hlsl" );
+	g_theRenderer->StartEffect( backbuffer, renderTarget, tempShader );
+
+	g_theRenderer->EndEffect();
+
+}
+
+void Game::CreateTestMaterial()
+{
+	m_testMaterial = new Material();
+	m_testMaterial->SetShaderState( m_testShaderState );
+	Texture* temTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Model/halloween_miku/diffuse.png" );
+	m_testMaterial->AddTexture( temTex );
+
 }
 
 void Game::SetAttenuation( Vec3 atten )

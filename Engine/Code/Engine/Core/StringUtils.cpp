@@ -83,20 +83,26 @@ Strings SplitStringOnDelimiter( const std::string& originalString, const char de
 
 	while( true ) {
 		size_t splitEndIndex = originalString.find( delimiterToSplitOn, splitStartIndex );
-		size_t splitLength = splitEndIndex - splitStartIndex;
-		std::string subString = std::string( originalString, splitStartIndex, splitLength );
-		resultStrings.push_back( subString );
-		resultStringsNumber++;
 
-		if( resultStringsNumber == splitNum ) {
-			std::string subString1 = std::string( originalString, splitEndIndex+1, std::string::npos );
+		if( splitEndIndex == std::string::npos || resultStringsNumber == splitNum ) {
+			std::string subString1 = std::string( originalString, splitStartIndex, std::string::npos );
 			resultStrings.push_back( subString1 );
 			break;
 		}
-
-		if( splitEndIndex == std::string::npos ) { break; }
-		splitStartIndex = splitEndIndex + 1;
+		int delimiterLength = 0;
+ 		while( originalString[splitEndIndex] == delimiterToSplitOn ){
+ 			splitEndIndex++;
+			delimiterLength++;
+ 		}
+		
+		size_t splitLength = splitEndIndex - splitStartIndex - delimiterLength;
+		std::string subString = std::string( originalString, splitStartIndex, splitLength );
+		resultStrings.push_back( subString );
+		resultStringsNumber++;
+		splitStartIndex = splitEndIndex;
+		if( splitEndIndex >= originalString.size() ){ break; }
 	}
+
 	return resultStrings;
 }
 
@@ -104,12 +110,12 @@ std::string GetStringWithoutSpace( const char* originalString )
 {
 	size_t startIndex = 0;
 	while( true ) {
-		if( originalString[startIndex] != ' ' ){ break;}
+		if( originalString[startIndex] != ' ' ){ break; }
 		startIndex++;
 	}
 	
 	size_t endIndex = startIndex;
-	while(true){
+	while( true ){
 		if( originalString[endIndex] == '\0' || originalString[endIndex] == ' '){
 			break;
 		}
@@ -124,8 +130,38 @@ std::string GetStringWithoutSpace( const char* originalString )
 
 std::string GetStringWithoutSpace( std::string originalString )
 {
-	std::string result = GetStringWithoutSpace( originalString.c_str() );
+	return std::string();
+}
+
+std::string TrimStringWithOneSpace( std::string originalString )
+{
+	int copyIndex = 0;
+	int spaceNum = 0;
+	std::string result;
+	result.resize( originalString.size() );
+	for( int i = 0; i < originalString.size(); i++ ) {
+		if( originalString[i] != ' ' ) {
+			result[copyIndex] = originalString[i];
+			copyIndex++;
+			spaceNum = 0;
+		}
+		else {
+			if( spaceNum == 0 ) {
+				result[copyIndex] = originalString[i];
+				copyIndex++;
+				spaceNum++;
+			}
+			else {
+				continue;
+			}
+		}
+	}
 	return result;
+}
+
+Strings GetStringsWithoutSpace( std::string originalString )
+{
+	return SplitStringOnDelimiter( originalString, ' ' );
 }
 
 bool GetBoolFromText( const char* text )
@@ -171,5 +207,15 @@ std::string GetStringFromBool( bool input )
 		result = "false";
 	}
 	return result;
+}
+
+bool IsStringFullOfSpace( std::string text )
+{
+	return text.find_first_not_of( ' ' ) == std::string::npos ;
+}
+
+bool IsStringStartWithChar( std::string text, const char c )
+{
+	return text[0] == c;
 }
 

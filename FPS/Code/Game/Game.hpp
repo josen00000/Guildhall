@@ -14,6 +14,9 @@ class GPUMesh;
 class InputSystem;
 class RenderContext;
 class RandomNumberGenerator;
+class Texture;
+class ShaderState;
+class Material;
 
 struct Vertex_PCU;
 
@@ -99,6 +102,13 @@ private:
 	void CreateParallaxObjects();
 	void UpdateProjectObjects( float deltaSeconds );
 
+	// sd a08
+	void LoadObjects();
+	void Updatea08Objects( float deltaSeconds );
+	void Rendera08Objects() const;
+	void TestImageEffect( Texture* renderTarget ) const;
+	void CreateTestMaterial();
+
 	// light setting
 	void SetAttenuation( Vec3 atten );
 	void SetAttenuation( float x, float y, float z );
@@ -140,6 +150,14 @@ public:
 	GameObject* m_triplanarObject = nullptr;
 	GameObject* m_parallaxObject = nullptr;
 	std::vector<GameObject*> m_projectObjects;
+
+	// sd a08
+	GameObject* m_loadObject = nullptr;
+	GPUMesh* m_loadMesh = nullptr;
+	ShaderState* m_testShaderState = nullptr;
+
+	// sd a09
+	Material* m_testMaterial = nullptr;
 
 	std::vector<Vertex_PCU> m_vertices;
 	std::vector<Vertex_PCU> m_UIVertices;

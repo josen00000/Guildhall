@@ -9,18 +9,20 @@
 #include "Engine/Renderer/D3D11Common.hpp"
 
 class BitmapFont;
-class Clock;
 class Camera;
+class Clock;
 class GPUMesh;
+class Image;
 class IndexBuffer;
 class RenderBuffer;
 class Sampler;
-class SwapChain;
 class Shader;
+class ShaderState;
+class SwapChain;
 class Texture;
 class VertexBuffer;
 class Window;
-class Image;
+class Material;
 
 struct AABB2;
 struct D3D11_RASTERIZER_DESC;
@@ -215,7 +217,17 @@ public:
 
 	void ClearState();
 	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
+	
+	// new for render target
+	Texture* CreateRenderTarget( IntVec2 texSize );
+	void CopyTexture( Texture* dst, Texture* src );
+	void ApplyEffect( Texture* dst, Texture* src, Material* mat );
+	void StartEffect( Texture* dst, Texture* src, Shader* shader );
+	void EndEffect();
 
+	Texture* AcquireRenderTargetMatching( Texture* texture );
+	void ReleaseRenderTarget( Texture* tex );
+	
 	// Bind
 	void SetDiffuseTexture( Texture* texture, int index = 0 );
 	void SetNormalTexture( Texture* texture, int index = 0 );
@@ -226,10 +238,12 @@ public:
 	void BindShader( Shader* shader );
 	void BindShader( const char* fileName );
 	void BindShader( std::string fileName );
+	void BindShaderState( ShaderState* state );
 	void BindRasterState();
 	void BindVertexBuffer( VertexBuffer* vbo );
 	void BindIndexBuffer( IndexBuffer* ibo );
 	void BindUniformBuffer( uint slot, RenderBuffer* ubo ); // ubo - uniform buffer object
+	void BindMaterial( Material* matl );
 	
 	// Set State	
 	void SetBlendMode( BlendMode blendMode );
@@ -335,12 +349,15 @@ public:
 	HMODULE m_debugModule = nullptr;
 	IDXGIDebug* m_debug = nullptr;
 
+	int m_totalRenderTargetMade = 0;
 private:
 	bool m_modelHasChanged			= false;
 	bool m_shaderHasChanged			= false;
 	bool m_sceneHasChanged			= false;
 
 	int m_currentShaderIndex = 0;
+
+	std::vector<Texture*> m_renderTargetPool;
 
 	std::vector <Texture*> m_textureList;
 	std::map<std::string, Texture*>			m_loadedTextures;
@@ -349,6 +366,7 @@ private:
 
 	// default
 	Camera*		m_currentCamera		= nullptr;
+	Camera*		m_effectCamera		= nullptr;
 	Shader*		m_currentShader		= nullptr;
 	Shader*		m_defaultShader		= nullptr;
 	Sampler*	m_defaultSampler	= nullptr;
@@ -389,4 +407,5 @@ private:
 
 	D3D11_RASTERIZER_DESC* m_defaultRasterStateDesc = nullptr;
 	ID3D11RasterizerState* m_rasterState		= nullptr;
+
 };

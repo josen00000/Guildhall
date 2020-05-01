@@ -37,11 +37,11 @@ public:
 	~Camera();
 
 	Camera( const Camera& camera ) = delete;
-	explicit Camera( const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
+	explicit Camera( const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
 	explicit Camera(  const char* debugMsg, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
 	explicit Camera(  float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1 );
 	explicit Camera(  float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1, const char* debugMsg = "" );
-	explicit Camera( float fov=60.f, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE, const char* debugMsg = "" );
+	explicit Camera( float fov/*60.f*/, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE, const char* debugMsg = "" );
 	static Camera* CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& topRight );
 	static Camera* CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
 	static Camera* CreatePerspectiveCamera( const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
@@ -75,7 +75,8 @@ public:
 	uint	GetClearStencil() const { return m_clearStencil; }
 
 
-	Texture*		GetColorTarget() const;
+	int				GetColorTargetCount() const;
+	Texture*		GetColorTarget( uint slot=0 ) const;
 	Texture*		GetDepthStencilTarget() const { return m_depthStencilTarget; }
 	Texture*		GetOrCreateDepthStencilTarget( RenderContext* ctx );
 	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx );
@@ -99,7 +100,7 @@ public:
 	void DisableClearDepth();
 	void DisableClearStencil();
 
-	void SetColorTarget( Texture* colorTarget );
+	void SetColorTarget( Texture* colorTarget, uint slot=0 );
 	void SetDepthStencilTarget( Texture* texture );
 	void SetPitchRollYawRotation( float pitch, float roll, float yaw );
 
@@ -128,7 +129,7 @@ public:
 
 private:
 	bool m_useDepth = false;
-	Texture* m_colorTarget = nullptr;    // texture to render to 
+	std::vector<Texture*> m_colorTargets;    // texture to render to 
 	Texture* m_depthStencilTarget = nullptr;
 	RenderBuffer* m_cameraUBO = nullptr; // render data( vertices )
 	Mat44 m_projection;

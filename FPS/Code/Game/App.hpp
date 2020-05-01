@@ -2,7 +2,7 @@
 #include "Engine/Core/EventSystem.hpp"
 #include "Engine/Math/vec2.hpp"
 #include "Game/GameCommon.hpp"
-
+#include "Engine/Renderer/ObjectReader.hpp"
 
 class Game;
 
@@ -13,6 +13,7 @@ public:
 	~App() {}
 	void Startup();
 	void TemplateTesting();
+	void StringTesting();
 	void Shutdown();
 	void BeginFrame();
 	void RunFrame();

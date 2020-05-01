@@ -78,4 +78,9 @@
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\..\Run\Data\Shader\states\defaultShader.xml">
+      <Filter>Shader</Filter>
+    </Xml>
+  </ItemGroup>
 </Project>

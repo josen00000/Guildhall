@@ -38,7 +38,8 @@ public:
 	// Mutator
 	void Normalize();
 
-	void SetFromText( const char* text);
+	void SetFromText( const char* text, const char delim=',' );
+	void SetFromText( std::string text, const char delim=',' );
 
 	static const Vec3 MakeFromPolarDegrees( float theta, float phi, float length=1.f );
 

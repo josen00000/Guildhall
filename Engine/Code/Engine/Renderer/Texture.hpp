@@ -15,6 +15,9 @@ public:
 	static Texture* CreateDepthStencilBuffer( RenderContext* ctx, int width, int height );
 
 
+	// accessor
+	ID3D11Texture2D* GetHandle() const { return m_handle; }
+
 	void SetTextureID( const int textureID );
 	const int GetTextureID() const { return m_textureID; }
 	IntVec2 GetTexelSize() const { return m_texelSizeCoords; }

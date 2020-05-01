@@ -10,11 +10,14 @@ public:
 	~GameObject();
 
 public:
-	void SetRotation( Vec3 rot );
+	void SetRotation( Vec3 rot ); 
 	void SetPosition( Vec3 pos );
 	void SetScale( Vec3 scale );
 	void Render();
+	void SetMesh( GPUMesh* mesh ); 
+
 public:
 	GPUMesh* m_mesh;
 	Transform* m_trans;
+	Texture* m_tex = nullptr;
 };

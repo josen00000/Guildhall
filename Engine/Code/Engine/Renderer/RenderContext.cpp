@@ -15,11 +15,13 @@
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Sampler.hpp" 
 #include "Engine/Renderer/Shader.hpp"
+#include "Engine/Renderer/ShaderState.hpp"
 #include "Engine/Renderer/SwapChain.hpp"
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
 #include "Engine/Core/Image.hpp"
+#include "Engine/Renderer/Material.hpp"
 //third party library
 #include "Engine/stb_image.h"
 
@@ -69,6 +71,10 @@ void RenderContext::StartUp( Window* window )
 
 	InitialLights();
 	m_clock = new Clock();
+
+	m_effectCamera = new Camera();
+	m_effectCamera->EnableClearColor( Rgba8::BLACK );
+
 }
 
 void RenderContext::Shutdown()
@@ -180,9 +186,38 @@ void RenderContext::BeginCameraRTVAndViewport( Camera* camera )
 	if( output == nullptr ) {
 		output = GetSwapChainBackBuffer();
 	}
+	std::vector<ID3D11RenderTargetView*> rtvs;
+	int rtvCount = camera->GetColorTargetCount();
+	rtvs.resize( rtvCount );
 
-	TextureView* rtv = output->GetOrCreateRenderTargetView(); // texture view: handler of the data in texture
-	ID3D11RenderTargetView* d3d_rtv = rtv->GetRTVHandle();
+	for( int i = 0; i < rtvCount; i++ ) {
+		rtvs[i] = nullptr;
+		Texture* colorTarget = camera->GetColorTarget( i );
+		if( colorTarget != nullptr ) {
+			TextureView* rtv = colorTarget->GetOrCreateRenderTargetView();
+			rtvs[i] = rtv->GetRTVHandle();
+		}
+		else {
+			rtvs[i] = nullptr;
+		}
+	}
+
+	if( camera->m_clearState & CLEAR_COLOR_BIT ){
+		Rgba8 clearColor = camera->m_clearColor;
+		float  clearFloats[4];
+		clearFloats[0] = clearColor.r / 255.f;
+		clearFloats[1] = clearColor.g / 255.f;
+		clearFloats[2] = clearColor.b / 255.f;
+		clearFloats[3] = clearColor.a / 255.f;
+
+		for( int i = 0; i < rtvCount; i++ ) {
+			if( rtvs[i] != nullptr ) {
+				m_context->ClearRenderTargetView( rtvs[i], clearFloats );
+			}
+		}
+	}
+	//TextureView* rtv = output->GetOrCreateRenderTargetView(); // texture view: handler of the data in texture
+	//ID3D11RenderTargetView* d3d_rtv = rtv->GetRTVHandle();
 
 	IntVec2 outputSize = output->GetTexelSize();
 	BeginCameraViewport( outputSize );
@@ -197,17 +232,16 @@ void RenderContext::BeginCameraRTVAndViewport( Camera* camera )
 		if( camera->IsClearDepth() ) {
 			m_context->ClearDepthStencilView( dsv, D3D11_CLEAR_DEPTH, 1.f, 0 );
 		}
-		m_context->OMSetRenderTargets( 1, &d3d_rtv, dsv ); // dsv always exist
+		m_context->OMSetRenderTargets( (uint)rtvs.size(), rtvs.data(), dsv ); // dsv always exist
 	}
 	else {
-		m_context->OMSetRenderTargets( 1, &d3d_rtv, NULL );
+		m_context->OMSetRenderTargets( (uint)rtvs.size(), rtvs.data(), NULL );
 	}
 
 	// color
 	if( camera->IsClearColor() ) {
 		ClearTargetView( output, camera->GetClearColor() );
 	}
-
 }
 
 void RenderContext::EndCamera()
@@ -241,6 +275,73 @@ void RenderContext::ClearTargetView( Texture* output, const Rgba8& clearColor )
 
 	m_context->ClearRenderTargetView( rtv, clearFolats );
 }
+
+Texture* RenderContext::CreateRenderTarget( IntVec2 texSize )
+{
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width				= texSize.x;
+	desc.Height				= texSize.y;
+	desc.MipLevels			= 1;
+	desc.ArraySize			= 1;
+	desc.Format				= DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count	= 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage				= D3D11_USAGE_DEFAULT; // mip-chains, GPU/DEFAUTE
+	desc.BindFlags			= D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	desc.CPUAccessFlags		= 0;
+	desc.MiscFlags			= 0;
+
+	ID3D11Texture2D* texHandle = nullptr;
+	m_device->CreateTexture2D( &desc, nullptr, &texHandle );
+
+	Texture* newTexture = new Texture( this, texHandle );
+	return newTexture;
+
+}
+
+void RenderContext::CopyTexture( Texture* dst, Texture* src )
+{
+	m_context->CopyResource( dst->GetHandle(), src->GetHandle() ); // format and size has to match
+}
+
+void RenderContext::StartEffect( Texture* dst, Texture* src, Shader* shader )
+{
+	m_effectCamera->SetColorTarget( dst );
+	BeginCamera( m_effectCamera );
+	BindShader( shader );
+	SetDiffuseTexture( src );
+}
+
+void RenderContext::EndEffect()
+{
+	m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	m_context->Draw( 3, 0 );
+	EndCamera( );
+}
+
+Texture* RenderContext::AcquireRenderTargetMatching( Texture* texture )
+{
+	IntVec2 size = texture->GetTexelSize();
+
+	for( int i = 0; i < m_renderTargetPool.size(); i++ ) {
+		Texture* rt = m_renderTargetPool[i];
+		if( rt->GetTexelSize() == size ) {
+			m_renderTargetPool[i] = m_renderTargetPool.back();
+			m_renderTargetPool.pop_back();
+			return rt;
+		}
+	}
+
+	Texture* tex = CreateRenderTarget( size );
+	m_totalRenderTargetMade++;
+	return tex;
+}
+
+void RenderContext::ReleaseRenderTarget( Texture* tex )
+{
+	m_renderTargetPool.push_back( tex );
+}
+
 // 
 // void RenderContext::BindTexture( Texture* texture )
 // {
@@ -364,8 +465,8 @@ void RenderContext::SetFog( float fogFarDist, float fogNearDist, Rgba8 fogFarCol
 
 void RenderContext::DisableFog()
 {
-	m_sceneData.fog_far_distance = 1;
-	m_sceneData.fog_near_distance = 2;
+	m_sceneData.fog_far_distance = 0.1f;
+	m_sceneData.fog_near_distance = 0.2f;
 	m_sceneHasChanged = true;
 }
 
@@ -404,6 +505,11 @@ void RenderContext::BindShader( const char* fileName )
 void RenderContext::BindShader( std::string fileName )
 {
 	BindShader( fileName.c_str() );
+}
+
+void RenderContext::BindShaderState( ShaderState* state )
+{
+	state->PrepareForDraw();
 }
 
 void RenderContext::BindRasterState()
@@ -448,6 +554,18 @@ void RenderContext::BindUniformBuffer( uint slot, RenderBuffer* ubo )
 
 	m_context->VSSetConstantBuffers( slot, 1, &uboHandle ); // bind to vertex shader
 	m_context->PSSetConstantBuffers( slot, 1, &uboHandle ); // bind to pixel shader
+}
+
+void RenderContext::BindMaterial( Material* matl )
+{
+	BindShaderState( matl->m_shaderState );
+
+	for( int i = 0; i < matl->m_texturePerSlot.size(); i++ ) {
+		BindTexture( matl->m_texturePerSlot[i], i );
+	}
+	BindSampler( matl->m_sampler );
+	matl->UpdateUniformBuffer();
+	BindUniformBuffer( UBO_MATERIAL_SLOT, matl->m_ubo );
 }
 
 void RenderContext::SetBlendMode( BlendMode blendMode )
@@ -1253,6 +1371,11 @@ void RenderContext::CleanTextures()
 			delete m_textureList[texIndex];
 			m_textureList[texIndex] = nullptr;
 		}
+	}
+
+	GUARANTEE_OR_DIE( m_renderTargetPool.size() == m_totalRenderTargetMade, "bug" );
+	for( int i = 0; i < m_renderTargetPool.size(); i++ ){
+		SELF_SAFE_RELEASE( m_renderTargetPool[i] );
 	}
 	m_texDefaultColor = nullptr;
 	m_texDefaultNormal = nullptr;

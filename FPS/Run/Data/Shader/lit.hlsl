@@ -28,6 +28,14 @@ struct vs_input_t
 	float3 normal		: NORMAL;
 };
 
+struct fragment_output_t {
+	float4 color : SV_Target0;
+	float4 bloom : SV_Target1;
+	float4 normal : SV_Target2;
+	float4 albedo : SV_Target3;
+	float4 tangent : SV_Target4;
+};
+
 Texture2D <float4> tDiffuse		: register(t0);
 Texture2D <float4> tNormal		: register(t4);
 Texture2D <float4> tDissolve	: register(t8);
@@ -86,7 +94,7 @@ v2f_t VertexFunction( vs_input_t input )
 //
 // SV_Target0 at the end means the float4 being returned
 // is being drawn to the first bound color target.
-float4 FragmentFunction( v2f_t input ) : SV_Target0
+fragment_output_t FragmentFunction( v2f_t input ) 
 {
 	// TBN
 	float3 normal = normalize( input.world_normal );
@@ -97,6 +105,7 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 
 	// object
 	float4 texture_color = tDiffuse.Sample( sSampler, input.uv );
+	//return float4( VectorToNormalColor( normal ), 1.0f );
 	float4 texture_normal_color = tNormal.Sample( sSampler, input.uv );
 	float3 surface_normal = NormalColorToVector( texture_normal_color ); 
 	float3 final_normal = mul( surface_normal, TBN );
@@ -108,5 +117,13 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 	float3 final_color = ComputeLightAt( input.world_pos, final_normal, object_color );
 	final_color += ambient;
 	final_color = ApplyFog( input.world_pos, final_color );
-	return float4( final_color, object_color.w );
+	//return float4( final_color, object_color.w );
+
+	fragment_output_t output;
+	output.color = float4( final_color.xyz, object_color.w  );
+	output.bloom = float4( 0, 0, 0, 1 );
+	output.normal = float4( ( final_normal + float3( 1, 1, 1 ) ) * .5f, 1 );
+	output.tangent = float4( ( tangent + float3( 1, 1, 1 ) ) * .5f, 1 );
+
+	return output;
 }

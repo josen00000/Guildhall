@@ -52,12 +52,6 @@ void AppendIndexedTBNVertsForAABB3D( std::vector<Vertex_PCUTBN>& vertices, std::
 void AppendIndexedTBNVertsForSphere3D( std::vector<Vertex_PCUTBN>& vertices, std::vector<uint>& index, Vec3 center, float radius, int hCut, int vCut, Rgba8& tintColor );
 
 
-
-
-
-
-
-
 // help function
 bool IsPointInsideDest( const Vertex_PCU point, const std::vector<Vertex_PCU> dest, uint& index );
 bool IsTBNPointInsideDest( const Vertex_PCUTBN& point, const std::vector<Vertex_PCUTBN> & dest, int& index );

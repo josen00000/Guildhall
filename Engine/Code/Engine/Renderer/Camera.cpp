@@ -122,7 +122,7 @@ RenderContext* Camera::GetRenderContext() const
 float Camera::GetOutputAspectRatio()
 {
 	IntVec2 outputSize = GetColorTarget()->GetTexelSize();
-	float ratio = (float)( outputSize.x / outputSize.y );
+	float ratio = ( (float)outputSize.x / (float)outputSize.y );
 	return ratio;
 }
 
@@ -224,9 +224,12 @@ void Camera::DisableClearStencil()
 	m_clearState = m_clearState & ~CLEAR_STENCIL_BIT;
 }
 
-void Camera::SetColorTarget( Texture* colorTarget )
+void Camera::SetColorTarget( Texture* colorTarget, uint slot )
 {
-	m_colorTarget = colorTarget;
+	if( slot >= m_colorTargets.size() ) {
+		m_colorTargets.resize( slot +1 );
+	}
+	m_colorTargets[slot] = colorTarget;
 }
 
 void Camera::SetDepthStencilTarget( Texture* texture )
@@ -245,9 +248,15 @@ void Camera::SetProjectionPerspective( float fov/*=60*/, float nearZ/*=-0.1*/, f
 	m_projection = Mat44::CreatePerspectiveProjectionMatrix( fov, aspect, nearZ, farZ );
 }
 
-Texture* Camera::GetColorTarget() const
+int Camera::GetColorTargetCount() const
 {
-	if( m_colorTarget != nullptr ){ return m_colorTarget; }
+	return (int)m_colorTargets.size();
+}
+
+Texture* Camera::GetColorTarget( uint slot ) const
+{
+	//if( m_colorTargets != nullptr ){ return m_colorTargets; }
+	if( slot < m_colorTargets.size() ){ return m_colorTargets[slot]; }
 
 	return g_theRenderer->GetSwapChainBackBuffer();
 }
@@ -257,10 +266,9 @@ Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext* ctx )
 	if( m_depthStencilTarget != nullptr ){
 		return m_depthStencilTarget;
 	}
-	if( m_colorTarget == nullptr ){
-		m_colorTarget = ctx->GetSwapChainBackBuffer();
-	}
-	m_depthStencilTarget = Texture::CreateDepthStencilBuffer( ctx, m_colorTarget->GetTexelSize().x, m_colorTarget->GetTexelSize().y );
+	Texture* colorTarget = GetColorTarget();
+
+	m_depthStencilTarget = Texture::CreateDepthStencilBuffer( ctx, colorTarget->GetTexelSize().x, colorTarget->GetTexelSize().y );
 	return m_depthStencilTarget;
 }
 

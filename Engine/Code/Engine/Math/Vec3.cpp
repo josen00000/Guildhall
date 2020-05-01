@@ -125,9 +125,9 @@ void Vec3::Normalize()
 	z = z / length;
 }
 
-void Vec3::SetFromText( const char* text )
+void Vec3::SetFromText( const char* text, const char delim )
 {
-	Strings dimensions = SplitStringOnDelimiter( text, "," ); 
+	Strings dimensions = SplitStringOnDelimiter( text, delim );
 	std::string dimensionX = GetStringWithoutSpace( dimensions[0].c_str() );
 	std::string dimensionY = GetStringWithoutSpace( dimensions[1].c_str() );
 	std::string dimensionZ = GetStringWithoutSpace( dimensions[2].c_str() );
@@ -135,7 +135,11 @@ void Vec3::SetFromText( const char* text )
 	x = (float)atof( dimensionX.c_str() );
 	y = (float)atof( dimensionY.c_str() );
 	z = (float)atof( dimensionZ.c_str() );
+}
 
+void Vec3::SetFromText( std::string text, const char delim/*=',' */ )
+{
+	SetFromText( text.c_str(), delim );
 }
 
 const Vec3 Vec3::MakeFromPolarDegrees( float theta, float phi, float length/*=1.f */ )

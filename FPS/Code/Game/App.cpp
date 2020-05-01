@@ -133,6 +133,7 @@ private:
 void App::Startup()
 {
 	TemplateTesting();
+	StringTesting();
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theEventSystem	= new EventSystem();
@@ -198,6 +199,28 @@ void App::TemplateTesting()
 
 	update.invoke( 3.15f );
 	add.invoke( 4, 6 );
+}
+
+void App::StringTesting()
+{
+	std::string test1 = "a      b     c d s fffff   eeewwa w wedfasdf    wer  ";
+	std::string test2 = "abcdesf";
+	std::string test3 = "abcdesf     ";
+	std::string test4 = "we are the worldsssss rea   lly  ddd ?";
+	std::string res1 = TrimStringWithOneSpace( test1 );
+	std::string res2 = TrimStringWithOneSpace( test2 );
+	std::string res3 = TrimStringWithOneSpace( test3 );
+	std::string res4 = TrimStringWithOneSpace( test4 );
+	
+	//ObjectReader* test = new ObjectReader( "Data/Model/planet.obj" );
+	//test->LoadObject();
+// 	Vec3 a = test->m_positions[0];
+// 	Vec3 b = test->m_positions.back();
+// 	Vec3 c = test->m_normals[0];
+// 	Vec3 d = test->m_normals.back();
+// 	Vec2 a2 = test->m_uvs[0];
+// 	Vec2 b2 = test->m_uvs.back();
+// 	auto dddd = test->m_facePoints.back();
 }
 
 void App::Shutdown()
@@ -312,7 +335,6 @@ const void App::Render() const
 	
 	g_theConsole->Render( *g_theRenderer );
 
-	DebugRenderScreenTo( g_camera->GetColorTarget() );
 }
 
 void App::EndFrame()

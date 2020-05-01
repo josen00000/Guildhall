@@ -33,6 +33,9 @@ void GameObject::SetScale( Vec3 scale )
 
 void GameObject::Render()
 {
+	if( m_tex != nullptr ) {
+		g_theRenderer->SetDiffuseTexture( m_tex );
+	}
 	g_theRenderer->SetModelMatrix( m_trans->ToMatrix() );
 	g_theRenderer->DrawMesh( m_mesh );
 }

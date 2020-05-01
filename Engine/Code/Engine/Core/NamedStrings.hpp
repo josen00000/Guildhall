@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "Engine/Core/XmlUtils.hpp"
+#include "Engine/ThirdParty/XmlUtils.hpp"
 
 struct Vec3;
 
