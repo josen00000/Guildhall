@@ -827,6 +827,7 @@ void Game::Rendera08Objects() const
 	g_theRenderer->DisableFog();
 	//g_theRenderer->BindShader( nullptr );
 	g_theRenderer->BindShaderState( m_testShaderState );
+	//g_theRenderer->BindMaterial( m_testMaterial );
 	//g_theRenderer->SetFillMode( RASTER_FILL_WIREFRAME );
 	m_loadObject->Render();
 }
@@ -848,6 +849,19 @@ void Game::CreateTestMaterial()
 	m_testMaterial->SetShaderState( m_testShaderState );
 	Texture* temTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Model/halloween_miku/diffuse.png" );
 	m_testMaterial->AddTexture( temTex );
+
+	Rgba8 startColor = Rgba8::RED;
+	Rgba8 endColor = Rgba8::WHITE;
+	dissolve_data_t  dissolve_data;
+	dissolve_data.burnAmount = 1;
+	dissolve_data.burnStartColor = startColor.GetVec3Color();
+	dissolve_data.burnEndColor = endColor.GetVec3Color();
+	dissolve_data.burnEdgeWidth = 0.3f;
+	if( dissolve_data.burnAmount > 1 ) {
+		dissolve_data.burnAmount = 1;
+	}
+	//m_testMaterial->SetData<dissolve_data_t>(  &dissolve_data );
+	//g_dissolveBuffer->Update( &dissolve_data, sizeof( dissolve_data_t ), sizeof( dissolve_data_t ) );
 
 }
 

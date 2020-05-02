@@ -7,7 +7,9 @@
 
 void Material::UpdateUniformBuffer()
 {
-	m_ubo->Update( m_uboCPUData.data(), m_uboCPUData.size(), m_uboCPUData.size() );
+	if( m_ubo != nullptr ) {
+		m_ubo->Update( m_uboCPUData.data(), m_uboCPUData.size(), m_uboCPUData.size() );
+	}
 }
 
 Material::~Material()
