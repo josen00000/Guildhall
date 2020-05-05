@@ -20,6 +20,8 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Renderer/ShaderState.hpp"
 #include "Engine/Renderer/Material.hpp"
+#include "Engine/Renderer/Sampler.hpp"
+#include "Engine/Core/Delegate.hpp"
 
 
 extern App*				g_theApp;
@@ -33,6 +35,8 @@ extern Game*			g_theGame;
 RenderBuffer* g_dissolveBuffer;
 RenderBuffer* g_projectorBuffer;
 RenderBuffer* g_parallaxBuffer;
+RenderBuffer* g_bloomBuffer;
+RenderBuffer* g_grayBuffer;
 
 Game::Game( Camera* gameCamera, Camera* UICamera )
 	:m_gameCamera(gameCamera)
@@ -56,7 +60,8 @@ void Game::Startup()
 	CreateShaderNames();
 	CreateGameObjects();
 	LoadObjects();
-	CreateTestMaterial();
+	//CreateTestMaterial();
+	CreateImageEffectObj();
 	//CreateDebugRenderObjects();
 
 	EventCallbackFunctionPtr SetAmbientColorFuncPtr			= LightCommandSetAmbientColor;
@@ -68,6 +73,8 @@ void Game::Startup()
 	g_dissolveBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	g_projectorBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	g_parallaxBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_bloomBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_grayBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 
 }
 
@@ -86,6 +93,11 @@ void Game::Shutdown()
 	SELF_SAFE_RELEASE(g_dissolveBuffer);
 	SELF_SAFE_RELEASE(g_projectorBuffer);
 	SELF_SAFE_RELEASE(g_parallaxBuffer);
+	SELF_SAFE_RELEASE(g_bloomBuffer);
+	SELF_SAFE_RELEASE(g_grayBuffer);
+
+	//SELF_SAFE_RELEASE(m_bloomShader);
+	//SELF_SAFE_RELEASE(m_grayShader);
 
 	// clear game objects
 	SELF_SAFE_RELEASE(m_lightQuadObject);
@@ -118,6 +130,7 @@ void Game::Update( float deltaSeconds )
 	}
 	UpdateMeshes( deltaSeconds );
 	UpdateLighting( deltaSeconds );
+	UpdateImageEffectObj();
 	//UpdateLightObjects( deltaSeconds );
 	UpdateUI( deltaSeconds );
 	UpdateA07Objects( deltaSeconds );
@@ -235,7 +248,9 @@ void Game::CreateDebugScreen()
 	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 6 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, shaderName );
 	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 7 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "button 'z' project lock" + GetStringFromBool( !m_isprojectFollowCamera ) ));
 	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 8 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"parallax depth(has bug): %.2f. ['N' , 'M'] ", m_parallaxDepth );
-	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 9 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "button 'f' disable, enable fog. using lit shader" + GetStringFromBool( m_isFogEnable ) ));
+	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 9 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "button 'f' disable, enable fog. using lit shader" + std::to_string( g_theRenderer->GetTotalTexturePoolCount() ) ));
+	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 10 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "Total Texture Pool count" + std::to_string( g_theRenderer->GetTotalTexturePoolCount()) ));
+	DebugAddScreenText( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 11 ), Vec2::ZERO, 3.f, Rgba8::WHITE, Rgba8::WHITE, 0.000001f, std::string( "Texture Pool Free count" + std::to_string( g_theRenderer->GetTexturePoolFreeCount()) ));
 
 }
 
@@ -422,16 +437,35 @@ void Game::HandleLightKeyboardInput( float deltaSeconds )
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F ) ) {
 		m_isFogEnable = !m_isFogEnable;
 	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_B ) ) {
+		m_isUsingBloomEffect = !m_isUsingBloomEffect;
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_G ) ) {
+		m_isUsingGrayEffect = !m_isUsingGrayEffect;
+	}
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_N ) ) {
-		m_parallaxDepth += 1.f * deltaSeconds * 0.1f;
-		if( m_parallaxDepth > 0.5f ) {
-			m_parallaxDepth = 0.5f;
+		m_tintStrength += 1.f * deltaSeconds;
+		if( m_tintStrength > 1.f ) {
+			m_tintStrength = 1.f;
 		}
 	}
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_M ) ) {
-		m_parallaxDepth -= 1.f * deltaSeconds * 0.1f;
-		if( m_parallaxDepth < 0.f ) {
-			m_parallaxDepth = 0.f;
+		m_tintStrength -= 1.f * deltaSeconds;
+		if( m_tintStrength < 0.f ) {
+			m_tintStrength = 0.f;
+		}
+	}
+
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_J ) ) {
+		m_grayStrength += 1.f * deltaSeconds;
+		if( m_grayStrength > 1.f ) {
+			m_grayStrength = 1.f;
+		}
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_K ) ) {
+		m_grayStrength -= 1.f * deltaSeconds;
+		if( m_grayStrength < 0.f ) {
+			m_grayStrength = 0.f;
 		}
 	}
 }
@@ -541,12 +575,14 @@ void Game::CheckIfNoClip()
 void Game::Render() const
 {
 	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
+	Texture* grayScaleTex		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	Texture* bloomTex			= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	Texture* colorTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	Texture* normalTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	Texture* bloomTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	Texture* albedoTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
-	Texture* bitangentTarget	= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	Texture* tangentTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	int  test = g_theRenderer->GetTexturePoolFreeCount();
 	m_gameCamera->SetColorTarget( colorTarget, 0 );
 	m_gameCamera->SetColorTarget( bloomTarget, 1 );
 	m_gameCamera->SetColorTarget( normalTarget, 2 );
@@ -574,24 +610,54 @@ void Game::Render() const
 	// sd a08
 	Rendera08Objects();
 	g_theRenderer->EndCamera( );
-	//TestImageEffect( tempRT );
 
 	DebugRenderWorldToCamera( m_gameCamera );
 	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
+	// image effect
+	// sd a09
+	if( m_isUsingGrayEffect ) {
+		g_grayBuffer->Update( &m_colorData, sizeof(Mat44), sizeof(Mat44) );
+		//g_theRenderer->BindUniformBuffer( 6, g_grayBuffer);
+		//g_theRenderer->SetMaterialBuffer( g_grayBuffer );
+		TestImageEffect( grayScaleTex, colorTarget, m_grayShader, g_grayBuffer );
+	}
+	if( m_isUsingBloomEffect ) {
+		
+		float data[4];
+		data[0] = bloomTarget->GetTexelSize().x;
+		data[1] = bloomTarget->GetTexelSize().y;
+		data[2] = 0.f;
+		data[3] = 0.f;
+
+		g_bloomBuffer->Update( &data, sizeof(ColorData), sizeof(ColorData) );
+		g_theRenderer->SetMaterialBuffer( g_bloomBuffer );
+		TestBloomImageEffect( bloomTex, colorTarget, bloomTarget, m_bloomShader, g_bloomBuffer );
+	}
+	//TestImageEffect( tempRT );
+
 	//GUARANTEE_OR_DIE( g_theRenderer->m_totalRenderTargetMade < 10, "leaking " );
 	
 	// setup camera 
 	// bind shader for effect
 	// render full screen image
 	
+	if( m_isUsingBloomEffect ) {
+		g_theRenderer->CopyTexture( backBuffer, bloomTex );
+	}
+	else if( m_isUsingGrayEffect ) {
+		g_theRenderer->CopyTexture( backBuffer, grayScaleTex );
+	}
+	else {
+		g_theRenderer->CopyTexture( backBuffer, colorTarget );
+	}
 
-	g_theRenderer->CopyTexture( backBuffer, colorTarget );
 	g_theRenderer->ReleaseRenderTarget( colorTarget );
 	g_theRenderer->ReleaseRenderTarget( normalTarget );
 	g_theRenderer->ReleaseRenderTarget( bloomTarget );
 	g_theRenderer->ReleaseRenderTarget( albedoTarget );
-	g_theRenderer->ReleaseRenderTarget( bitangentTarget );
 	g_theRenderer->ReleaseRenderTarget( tangentTarget );
+	g_theRenderer->ReleaseRenderTarget( grayScaleTex );
+	g_theRenderer->ReleaseRenderTarget( bloomTex );
 }
 
 void Game::RenderLightObjects() const
@@ -804,14 +870,14 @@ void Game::UpdateProjectObjects( float deltaSeconds )
 
 void Game::LoadObjects()
 {
-	ObjectReader* testObjReader = new ObjectReader( "Data/Model/halloween_miku/mesh.obj" );
+	ObjectReader* testObjReader = new ObjectReader( "Data/Model/luka/mesh.obj" );
 	//testObjReader->SetPostTransRot( Vec3( 0.f, 0.f, 180.f ) );
 	m_loadObject = new GameObject();
 	m_loadMesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCUTBN );
 	testObjReader->GenerateGPUMesh( *m_loadMesh );
 	m_loadObject->m_mesh = m_loadMesh;
 	m_loadObject->SetPosition( Vec3( 0.f, 0.f, -10.f ) );
-	Texture* temTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Model/halloween_miku/diffuse.png" );
+	Texture* temTex = g_theRenderer->CreateOrGetTextureFromFile( "Data/Model/luka/diffuse.png" );
 	m_loadObject->m_tex = temTex; 
 
 	m_testShaderState = new ShaderState( g_theRenderer, "Data/Shader/States/defaultShader.xml" );
@@ -832,15 +898,16 @@ void Game::Rendera08Objects() const
 	m_loadObject->Render();
 }
 
-void Game::TestImageEffect( Texture* renderTarget ) const
+void Game::TestImageEffect( Texture* dstTex, Texture* srcTex, Shader* shader, RenderBuffer* ubo ) const
 {
-	Texture* backbuffer = g_theRenderer->GetSwapChainBackBuffer();
-
-	Shader* tempShader = g_theRenderer->GetOrCreateShader( "Data/Shader/ImageEffect.hlsl" );
-	g_theRenderer->StartEffect( backbuffer, renderTarget, tempShader );
-
+	g_theRenderer->StartEffect( dstTex, srcTex, shader, ubo );
 	g_theRenderer->EndEffect();
+}
 
+void Game::TestBloomImageEffect( Texture* dstTex, Texture* normalColor, Texture* bloomTex, Shader* shader, RenderBuffer* ubo ) const
+{
+	g_theRenderer->StartBloomEffect( dstTex, bloomTex, normalColor, shader, ubo );
+	g_theRenderer->EndEffect();
 }
 
 void Game::CreateTestMaterial()
@@ -863,6 +930,52 @@ void Game::CreateTestMaterial()
 	//m_testMaterial->SetData<dissolve_data_t>(  &dissolve_data );
 	//g_dissolveBuffer->Update( &dissolve_data, sizeof( dissolve_data_t ), sizeof( dissolve_data_t ) );
 
+}
+
+void Game::CreateImageEffectObj()
+{
+	m_tintStrength = 0.f;
+	m_grayStrength = 1.f;
+	m_targetColor = Rgba8::RED;
+	Vec3 v3_color =  m_tintStrength * m_targetColor.GetVec3Color();
+	Mat44 tintMat = Mat44(
+		Vec3( 1 - m_tintStrength, 0, 0 ),
+		Vec3( 0, 1 - m_tintStrength, 0 ),
+		Vec3( 0, 0, 1 - m_tintStrength ),
+		v3_color
+		);
+	Mat44 grayMat = Mat44(
+ 		Vec3( 1 - 0.66f * m_grayStrength, 0.33f * m_grayStrength, 0.33f * m_grayStrength ),
+ 		Vec3( 0.33f * m_grayStrength, 1 - 0.66f * m_grayStrength, 0.33f * m_grayStrength ),
+ 		Vec3( 0.33f * m_grayStrength, 0.33f * m_grayStrength, 1 - 0.66f * m_grayStrength ),
+ 		Vec3::ZERO
+ 		);
+	tintMat.Multiply( grayMat );
+	m_colorData.colorMat = tintMat;
+
+
+
+	m_grayShader = g_theRenderer->GetOrCreateShader( "Data/SHader/GrayEffect.hlsl" );
+	m_bloomShader = g_theRenderer->GetOrCreateShader( "Data/Shader/BloomEffect.hlsl" );
+}
+
+void Game::UpdateImageEffectObj()
+{
+	Vec3 v3_color =  m_tintStrength * m_targetColor.GetVec3Color();
+	Mat44 tintMat = Mat44(
+		Vec3( 1 - m_tintStrength, 0, 0 ),
+		Vec3( 0, 1 - m_tintStrength, 0 ),
+		Vec3( 0, 0, 1 - m_tintStrength ),
+		v3_color
+		);
+	Mat44 grayMat = Mat44(
+		Vec3( 1 - 0.66f * m_grayStrength, 0.33f * m_grayStrength, 0.33f * m_grayStrength ),
+		Vec3( 0.33f * m_grayStrength, 1 - 0.66f * m_grayStrength, 0.33f * m_grayStrength ),
+		Vec3( 0.33f * m_grayStrength, 0.33f * m_grayStrength, 1 - 0.66f * m_grayStrength ),
+		Vec3::ZERO
+		);
+	tintMat.Multiply( grayMat );
+	m_colorData.colorMat = tintMat;
 }
 
 void Game::SetAttenuation( Vec3 atten )

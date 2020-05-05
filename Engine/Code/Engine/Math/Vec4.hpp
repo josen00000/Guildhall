@@ -1,6 +1,7 @@
 #pragma once
 
 struct Vec3;
+struct Vec2;
 
 struct Vec4
 {
@@ -14,6 +15,7 @@ public:
 	~Vec4(){}
 	Vec4( Vec3 XYZ, float w= 0 );
 	explicit Vec4(float inputX, float inputY, float inputZ, float inputW  );
+	Vec4( Vec2 XY );
 
 	// Mutators
 	void SetFormText(const char* text);

@@ -12,8 +12,12 @@ public:
 	App(){}
 	~App() {}
 	void Startup();
+
+	// test function
 	void TemplateTesting();
 	void StringTesting();
+	void NamedPropertyTesting();
+
 	void Shutdown();
 	void BeginFrame();
 	void RunFrame();
@@ -37,3 +41,4 @@ private:
 
 bool HelpCommandEvent( EventArgs& args );
 bool QuitCommandEvent( EventArgs& args );
+bool eventTest( EventArgs& args );

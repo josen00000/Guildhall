@@ -90,6 +90,7 @@ void RenderContext::Shutdown()
 	delete m_tintUBO;
 	delete m_sceneDataUBO;
 	SELF_SAFE_RELEASE(m_dissolveUBO);
+	SELF_SAFE_RELEASE(m_effectCamera);
 
 	m_swapChain			= nullptr;
 	m_currentShader		= nullptr;
@@ -159,7 +160,11 @@ void RenderContext::BeginCamera( Camera* camera )
 	BindUniformBuffer( UBO_MODEL_SLOT, m_modelUBO );
 	BindUniformBuffer( UBO_TINT_SLOT, m_tintUBO );
 	BindUniformBuffer( UBO_SCENE_DATA_SLOT, m_sceneDataUBO );
-	BindUniformBuffer( UBO_DISSOLVE_SLOT, m_dissolveUBO );
+// 	RenderBuffer* testubo = new RenderBuffer( "test1", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+// 	Mat44 test = Mat44();
+// 	testubo->Update( &test, sizeof(Mat44), sizeof(Mat44) );
+// 	BindUniformBuffer( 6, testubo );
+	//BindUniformBuffer( UBO_DISSOLVE_SLOT, m_dissolveUBO );
 
 	SetDiffuseTexture( nullptr ); //default white texture;
 	SetNormalTexture( nullptr ); //default white texture;
@@ -304,12 +309,25 @@ void RenderContext::CopyTexture( Texture* dst, Texture* src )
 	m_context->CopyResource( dst->GetHandle(), src->GetHandle() ); // format and size has to match
 }
 
-void RenderContext::StartEffect( Texture* dst, Texture* src, Shader* shader )
+void RenderContext::StartEffect( Texture* dst, Texture* src, Shader* shader, RenderBuffer* ubo )
 {
 	m_effectCamera->SetColorTarget( dst );
+	//m_effectCamera->DisableClearColor();
 	BeginCamera( m_effectCamera );
 	BindShader( shader );
+	SetMaterialBuffer( ubo );
 	SetDiffuseTexture( src );
+}
+
+void RenderContext::StartBloomEffect( Texture* dst, Texture* src, Texture* color, Shader* shader, RenderBuffer* ubo )
+{
+	m_effectCamera->SetColorTarget( dst );
+	//m_effectCamera->DisableClearColor();
+	BeginCamera( m_effectCamera );
+	BindShader( shader );
+	SetMaterialBuffer( ubo );
+	SetDiffuseTexture( src );
+	SetDiffuseTexture( color, 1 );
 }
 
 void RenderContext::EndEffect()
@@ -1384,7 +1402,7 @@ void RenderContext::CleanTextures()
 void RenderContext::CleanShaders()
 {
 	for( ShaderMapIterator it = m_shaders.begin(); it != m_shaders.end(); ++it ) {
-		delete it->second;
+		SELF_SAFE_RELEASE(it->second);
 	}
 	m_shaders.clear();
 }

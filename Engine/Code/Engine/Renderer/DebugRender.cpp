@@ -870,7 +870,7 @@ bool DebugRenderCommandAddWorldBillboardTextEvent( EventArgs& args )
 {
 	Vec3 position		= args.GetValue( std::to_string( 0 ), Vec3::ZERO );
 	Vec2 pivot			= args.GetValue( std::to_string( 1 ), Vec2::ZERO );
-	std::string text	= args.GetValue( std::to_string( 2 ), "" );
+	std::string text	= args.GetValue( std::to_string( 2 ), std::string( " " ) );
 
 	DebugAddWorldBillboardText( position, pivot, g_defaultColor, g_defaultColor, 5.f, DEBUG_RENDER_USE_DEPTH, text );
 	return true;

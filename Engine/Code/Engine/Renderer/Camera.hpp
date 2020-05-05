@@ -36,7 +36,7 @@ public:
 	Camera(){}
 	~Camera();
 
-	Camera( const Camera& camera ) = delete;
+	//Camera( const Camera& camera ) = delete;
 	explicit Camera( const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
 	explicit Camera(  const char* debugMsg, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
 	explicit Camera(  float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1 );

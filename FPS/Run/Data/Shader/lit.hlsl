@@ -119,9 +119,11 @@ fragment_output_t FragmentFunction( v2f_t input )
 	final_color = ApplyFog( input.world_pos, final_color );
 	//return float4( final_color, object_color.w );
 
+	float3 bloom = ComputeBloomAt( input.world_pos, final_normal, object_color );
+
 	fragment_output_t output;
 	output.color = float4( final_color.xyz, object_color.w  );
-	output.bloom = float4( 0, 0, 0, 1 );
+	output.bloom = float4( bloom,  1 );
 	output.normal = float4( ( final_normal + float3( 1, 1, 1 ) ) * .5f, 1 );
 	output.tangent = float4( ( tangent + float3( 1, 1, 1 ) ) * .5f, 1 );
 

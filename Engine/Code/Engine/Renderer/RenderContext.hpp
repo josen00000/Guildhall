@@ -54,8 +54,8 @@ enum BufferSlot {
 	UBO_MODEL_SLOT,
 	UBO_TINT_SLOT,
 	UBO_SCENE_DATA_SLOT,
-	UBO_DISSOLVE_SLOT,
 	UBO_MATERIAL_SLOT,
+	UBO_DISSOLVE_SLOT,
 };
 
 enum TextureSlot: uint{
@@ -222,11 +222,14 @@ public:
 	Texture* CreateRenderTarget( IntVec2 texSize );
 	void CopyTexture( Texture* dst, Texture* src );
 	void ApplyEffect( Texture* dst, Texture* src, Material* mat );
-	void StartEffect( Texture* dst, Texture* src, Shader* shader );
+	void StartEffect( Texture* dst, Texture* src, Shader* shader, RenderBuffer* ubo );
+	void StartBloomEffect( Texture* dst, Texture* src, Texture* color, Shader* shader, RenderBuffer* ubo );
 	void EndEffect();
 
 	Texture* AcquireRenderTargetMatching( Texture* texture );
 	void ReleaseRenderTarget( Texture* tex );
+	int GetTotalTexturePoolCount() const { return m_totalRenderTargetMade; }
+	int GetTexturePoolFreeCount() const { return (int)m_renderTargetPool.size(); }
 	
 	// Bind
 	void SetDiffuseTexture( Texture* texture, int index = 0 );

@@ -77,6 +77,15 @@
     <FxCompile Include="..\..\Run\Data\Shader\fresnel.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\BloomEffect.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\GrayEffect.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\phong.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\..\Run\Data\Shader\states\defaultShader.xml">

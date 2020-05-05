@@ -1,6 +1,7 @@
 #include "Vec4.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Math/Vec3.hpp"
+#include "Engine/Math/Vec2.hpp"
 
 
 Vec4 Vec4::ZERO	= Vec4( 0.f, 0.f, 0.f, 0.f );
@@ -22,6 +23,14 @@ Vec4::Vec4( Vec3 XYZ, float w )
 	,w(w)
 
 {
+}
+
+Vec4::Vec4( Vec2 XY )
+	:x(XY.x)
+	,y(XY.y)
+{
+	z = 0;
+	w = 0;
 }
 
 void Vec4::SetFormText( const char* text )

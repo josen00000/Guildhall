@@ -13,6 +13,8 @@
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
+#include "Engine/Core/Delegate.hpp"
+#include "Engine/Core/NamedProperties.hpp"
 
 
 App*			g_theApp			= nullptr;
@@ -48,95 +50,26 @@ public:
 		int c = a + b;
 		DebuggerPrintf( "method %i = %i + %i", c, a, b );
 	}
+	void SomeMethod1( EventArgs& args ) {
+		int a = args.GetValue( "int test", 1 );
+	}
+	bool EventTest( EventArgs& args ) {
+		int a = args.GetValue<int>( "int test" , 1 );
+		return true;
+	}
 private:
 	int m_value;
 };
 
 
-template<typename ...ARGS>
-class Delegate {
-public:
-public:
-	using function_t = std::function<void(ARGS...)>;
-	using c_callback_t = void(*)(ARGS...);
-	
-	struct sub_t {
-		void const* func_id;
-		void const* obj_id;
-		function_t callable;
-
-		inline bool operator==( sub_t const& other ) const { return func_id == other.func_id;}
-	};
-
-
-	void subscribe( c_callback_t const& cb ) {
-		sub_t sub;
-		sub.func_id = &cb;
-		sub.callable = cb;
-		subscribe(sub);
-	}
-	void invoke( ARGS const &... args ) {
-		for( sub_t& cb : m_callbacks ) {
-			cb.callable( args... );
-		}
-	}
-	void unsubscribe( c_callback_t const& cb ) {
-		sub_t sub;
-		sub.func_id = cb;
-		unsubscribe( sub );
-	}
-	template <typename OBJ_TYPE>
-	void subscribe_method( OBJ_TYPE* obj, void(OBJ_TYPE::* mcb)(ARGS...) ) {
-		sub_t sub;
-		sub.obj_id = obj;
-		sub.func_id = *( void const**)&mcb;
-		sub.callable = [=]( ARGS ...args) { (obj->*mcb)( args...); };
-
-		subscribe( sub );
-	}
-
-	template <typename OBJ_TYPE>
-	void unsubscribe_method( OBJ_TYPE* obj, void(OBJ_TYPE::* mcb)(ARGS...) ) {
-		sub_t sub;
-		sub.obj_id = obj;
-		sub.func_id = *( void const**) &mcb;
-
-		unsubscribe( sub );
-	}
-
-// 	template< typename OBJ_TYPE>
-// 	void subscribe_method( OBJ_TYPE* obj, void(OBJ_TYPE::* mcb)(ARGS...) ) {
-// 
-// 	}
-
-	void operator() ( ARGS const&... args ) {
-		invoke( args... );
-	}
-
-private:
-	void subscribe( sub_t const& sub ) {
-		m_callbacks.push_back( sub );
-	}
-	void unsubscribe( sub_t const& sub ) {
-		for( uint i = 0; i < m_callbacks.size(); ++i ) {
-			if( m_callbacks[i] == sub ) {
-				m_callbacks.erase( m_callbacks.begin() + i );
-				return;
-			}
-		}
-	}
-	std::vector<sub_t> m_callbacks;
-};
-
-
-
 void App::Startup()
 {
-	TemplateTesting();
 	StringTesting();
+	NamedPropertyTesting();
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theEventSystem	= new EventSystem();
+	TemplateTesting();
 
 	Clock::SystemStartUp();
 	
@@ -185,20 +118,19 @@ void App::Startup()
 
 void App::TemplateTesting()
 {
-	Delegate<float> update;
-	Delegate<int, int> add;
-
 	TestClass obj( 7 );
+	g_theEventSystem->SubscribeEvent( "test", eventTest );
+	g_theEventSystem->SubscribeMethodToEvent( "test1", &obj, &TestClass::EventTest );
+	EventArgs args;
+	args.SetValue<float>( "float test", 1 );
+	args.SetValue<int>( "int test", 10 );
+	g_theEventSystem->FireEvent( "test", args );
+	g_theEventSystem->FireEvent( "test1", args );
 
+	Delegate<int, int> intDele;
+	intDele.subscribe_method( &obj, &TestClass::SomeMethod );
+	//intDele.subscribe_method( &obj, &TestClass::SomeMethod1 );
 
-	update.subscribe( SubscribeTest );
-	add.subscribe( AddTest );
-	add.subscribe_method( &obj, &TestClass::SomeMethod );
-
-	update.unsubscribe( SubscribeTest );
-
-	update.invoke( 3.15f );
-	add.invoke( 4, 6 );
 }
 
 void App::StringTesting()
@@ -223,18 +155,37 @@ void App::StringTesting()
 // 	auto dddd = test->m_facePoints.back();
 }
 
+void App::NamedPropertyTesting()
+{
+	NamedProperties* testProp = new NamedProperties();
+	float a = 10.f;
+	Camera* cameraA = new Camera();
+	Camera* cameraB = new Camera();
+
+	ObjectReader* testReader = new ObjectReader( "Data/Model/planet.obj" );
+
+	testProp->SetValue<float>( "floatA", a );
+	testProp->SetValue<Camera>( "cameraA", *cameraA );
+	//testProp->SetValue<ObjectReader>( "ReaderA", *testReader );
+
+	float b = testProp->GetValue<float>( "floatA", 20.f );
+	Camera cameraC = testProp->GetValue<Camera>( "cameraA", *cameraB );
+	
+}
+
 void App::Shutdown()
 {
 	g_theGame->Shutdown();
 	g_theInputSystem->Shutdown();
 	g_theConsole->Shutdown();
-	g_theRenderer->Shutdown();
 
 	Clock::SystemShutDown();
 	
 	delete g_camera;
 	delete g_UICamera;
 	delete g_devCamera;
+
+	g_theRenderer->Shutdown();
 	delete g_theInputSystem;
 	delete g_theGame;
 	delete g_theEventSystem;
@@ -365,3 +316,7 @@ bool HelpCommandEvent( EventArgs& args )
 	return true;
 }
 
+bool eventTest( EventArgs& args ) {
+	float a = args.GetValue<float>( "float test", 0 );
+	return true;
+}

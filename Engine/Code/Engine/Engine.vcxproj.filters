@@ -288,6 +288,9 @@
     <ClCompile Include="Renderer\Material.cpp">
       <Filter>Renderer\D3DPipeLine</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Delegate.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
@@ -556,6 +559,12 @@
     </ClInclude>
     <ClInclude Include="Renderer\Material.hpp">
       <Filter>Renderer\D3DPipeLine</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Delegate.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ConsumableDelegate.hpp">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

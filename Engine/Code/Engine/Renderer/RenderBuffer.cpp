@@ -144,7 +144,7 @@ bool RenderBuffer::Create( size_t dataByteSize, size_t elementByteSize )
 	m_elementByteSize = elementByteSize;
 
 	if( m_handle != nullptr ) {
-		//m_handle->SetPrivateData( WKPDID_D3DDebugObjectName, (size_t)m_debugName.size() , m_debugName.c_str() );
+		m_handle->SetPrivateData( WKPDID_D3DDebugObjectName, (size_t)m_debugName.size() , m_debugName.c_str() );
 	}
 	return ( m_handle != nullptr );
 }

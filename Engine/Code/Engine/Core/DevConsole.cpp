@@ -385,7 +385,7 @@ void DevConsole::ExecuteCommand( std::string comd, EventArgs& args )
 		return;
 	}
 	if( CheckIfCommandExist( comd ) ) {
-		g_theEventSystem->FireTheEvent( comd, args );
+		g_theEventSystem->FireEvent( comd, args );
 	}
 	else{
 		LogErrorMessage();
@@ -398,7 +398,7 @@ void DevConsole::AddCommandToCommandList( std::string comd, std::string desc, Ev
 		s_commands[comd] = desc;
 	}
 	if( comd == "test" || comd == "test1" || comd == "test2" ){ return;}
-	g_theEventSystem->SubscribeTheEvent( comd, funcPtr );
+	g_theEventSystem->SubscribeEvent( comd, funcPtr );
 }
 
 void DevConsole::ExecuteQuitFunction()
