@@ -13,7 +13,6 @@ public:
 
 public:
 	virtual void UpdateWorldShape() override;
-
 	// queries
 	virtual Vec2 GetClosestPoint( const Vec2& pos ) const override;
 	virtual bool Contains( const Vec2& pos ) const override;

@@ -15,6 +15,7 @@ public:
 	Collider2D* me;
 	Collider2D* other;
 	Manifold2D	manifold;
+	bool m_needResolve = true;
 
 public:
 	Collision2D( Collider2D* colA, Collider2D* colB, Manifold2D manifold );

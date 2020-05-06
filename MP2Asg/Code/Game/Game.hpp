@@ -39,6 +39,14 @@ public:
 	void DeleteGameObject( GameObject* obj );
 	void CleanDestroyedObjects();
 
+	void OnTriggerEnter( Collision2D colls );
+	void OnTriggerStay( Collision2D colls );
+	void OnTriggerLeave( Collision2D colls );
+
+	void OnCollliderEnter( Collision2D colls );
+	void OnCollliderStay( Collision2D colls );
+	void OnCollliderLeave( Collision2D colls );
+
 private:
 	void Update( float deltaSeconds );
 	void UpdatePhysics( float deltaSeconds );

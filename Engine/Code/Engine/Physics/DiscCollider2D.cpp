@@ -12,6 +12,7 @@ DiscCollider2D::DiscCollider2D( const Vec2& localPos, const Vec2& worldPos, floa
 	,m_radius(radius)
 {
 	m_type = COLLIDER2D_DISC;
+	InitDelegate();
 }
 
 DiscCollider2D::DiscCollider2D( const Vec2& worldPos, float radius )
@@ -19,11 +20,13 @@ DiscCollider2D::DiscCollider2D( const Vec2& worldPos, float radius )
 	,m_radius(radius)
 {
 	m_type = COLLIDER2D_DISC;
+	InitDelegate();
 }
 
 DiscCollider2D::DiscCollider2D()
 {
 	m_type = COLLIDER2D_DISC;
+	InitDelegate();
 }
 
 DiscCollider2D::~DiscCollider2D()

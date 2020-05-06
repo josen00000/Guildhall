@@ -5,6 +5,7 @@
 #include "Engine/Physics/DiscCollider2D.hpp"
 #include "Engine/Physics/PolygonCollider2D.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Game/GameObject.hpp"
 
 
 Rigidbody2D::Rigidbody2D( Physics2D* owner, Vec2 worldPos, Collider2D* col /*= nullptr */ )
@@ -40,6 +41,16 @@ void Rigidbody2D::SetCollider( Collider2D* collider )
 	}
 
 	m_collider = collider;
+}
+
+void Rigidbody2D::EnableTrigger()
+{
+	m_collider->EnableTrigger();
+}
+
+void Rigidbody2D::DisableTrigger()
+{
+	m_collider->DissableTrigger();
 }
 
 void Rigidbody2D::SetColliderPosition()
@@ -205,6 +216,11 @@ void Rigidbody2D::SetPosition( Vec2 position )
 void Rigidbody2D::SetVelocity( Vec2 velocity )
 {
 	m_velocity = velocity;
+}
+
+void Rigidbody2D::SetLayer( uint layerIndex )
+{
+	m_layer = layerIndex;
 }
 
 void Rigidbody2D::DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor )

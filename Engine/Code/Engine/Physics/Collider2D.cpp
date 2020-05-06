@@ -9,7 +9,9 @@
 #include "Engine/Physics/DiscCollider2D.hpp"
 #include "Engine/Physics/PolygonCollider2D.hpp"
 #include "Engine/Physics/RigidBody2D.hpp"
+#include "Game/Game.hpp"
 
+extern Game* g_theGame;
 
 typedef bool ( *collision_check_cb )( const Collider2D*, const Collider2D* );
 typedef Manifold2D ( *calculate_manifold )( const Collider2D*, const Collider2D* );
@@ -36,6 +38,16 @@ static calculate_manifold ManifoldMatrix[NUM_COLLIDER * NUM_COLLIDER] = {
 void Collider2D::Destroy()
 {
 	m_isDestroyed = true;
+}
+
+void Collider2D::InitDelegate()
+{
+// 	SubscribeEnterEvent( g_theGame, &Game::OnCollliderEnter );
+// 	SubscribeStayEvent( g_theGame, &Game::OnCollliderStay );
+// 	SubscribeLeaveEvent( g_theGame, &Game::OnCollliderLeave );
+// 	SubscribeTriggerEnterEvent( g_theGame, &Game::OnTriggerEnter );
+// 	SubscribeTriggerStayEvent( g_theGame, &Game::OnTriggerStay );
+// 	SubscribeTriggerLeaveEvent( g_theGame, &Game::OnTriggerLeave );
 }
 
 bool Collider2D::Intersects( const Collider2D* other ) const

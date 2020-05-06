@@ -261,6 +261,12 @@ void Game::HandleKeyboardInput()
 		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_3 ) ) {
 			m_selectedObj->SetSimulateMode( RIGIDBODY_DYNAMIC );
 		}
+		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_4 ) ) {
+			m_selectedObj->m_rb->EnableTrigger();
+		}
+		else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_5 ) ) {
+			m_selectedObj->m_rb->DisableTrigger();
+		}
 		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_PLUS ) ) {
 			if( m_selectedObj != nullptr ){
 				m_selectedObj->UpdateBounciness( 0.01f );
@@ -426,6 +432,7 @@ bool Game::IsDrawedPolygonConvex() const
 
 void Game::Render() const
 {
+	//g_theRenderer->BindShader( "Data/Shader/lit.hlsl" );
 	g_theRenderer->SetDiffuseTexture( nullptr );
 	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
 		if( m_gameObjects[objIndex] == nullptr ){ continue; }
@@ -467,7 +474,7 @@ void Game::RenderUI() const
 void Game::RenderToolTip() const
 {
 	float textHeight = 1.5f;
-	if( m_overObj != nullptr ){
+	if( m_overObj != nullptr && m_overObj->m_rb != nullptr ){
 		HWND hWnd = (HWND)g_theWindow->GetTopWindowHandle();
 		Vec2 clientPos = g_theInputSystem->GetNormalizedMousePosInClient( hWnd );
 		Vec2 UIMousePos = m_UICamera->GetCameraAsBox().GetPointAtUV( clientPos );
@@ -593,6 +600,7 @@ void Game::CreateContactTestObjects()
 
 	GameObject* testCubeObject = new GameObject( cubePoints );
 	GameObject* testTriObject = new GameObject( triPoints );
+	testTriObject->m_rb->SetLayer( 1 );
 	m_gameObjects.push_back( testCubeObject );
 	m_gameObjects.push_back( testTriObject );
 }
@@ -704,6 +712,36 @@ void Game::CleanDestroyedObjects()
 			DeleteGameObject( m_gameObjects[i] );
 		}
 	}
+}
+
+void Game::OnTriggerEnter( Collision2D colls )
+{
+	DebugAddScreenText( Vec4( 0.5f, 0.4f, 20.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 1.f, "Trigger Enter" );
+}
+
+void Game::OnTriggerStay( Collision2D colls )
+{
+	DebugAddScreenText( Vec4( 0.5f, 0.5f, 20.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.1f, "Trigger Stay" );
+}
+
+void Game::OnTriggerLeave( Collision2D colls )
+{
+	DebugAddScreenText( Vec4( 0.5f, 0.6f, 20.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 1.f, "Trigger Leave" );
+}
+
+void Game::OnCollliderEnter( Collision2D colls )
+{
+	DebugAddScreenText( Vec4( 0.5f, 0.7f, 20.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 1.f, "Collider Enter" );
+}
+
+void Game::OnCollliderStay( Collision2D colls )
+{
+	DebugAddScreenText( Vec4( 0.5f, 0.8f, 20.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.1f, "Collider stay" );
+}
+
+void Game::OnCollliderLeave( Collision2D colls )
+{
+	DebugAddScreenText( Vec4( 0.5f, 0.9f, 20.f, -20.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 1.f, "Collider Leave" );
 }
 
 bool Game::IsMouseOverObject( )

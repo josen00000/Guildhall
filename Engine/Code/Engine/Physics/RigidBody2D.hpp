@@ -1,10 +1,15 @@
 #pragma once
 #include "Engine/Math/vec2.hpp"
+#include "Engine/Core/NamedProperties.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 class Collider2D;
+class GameObject;
 class Physics2D;
 class RenderContext;
+
 struct Rgba8;
+
 
 enum SimulationMode {
 	RIGIDBODY_STATIC,		// Don't move, apply effector
@@ -16,7 +21,7 @@ class Rigidbody2D {
 	friend class Physics2D;
 
 public:
-	Rigidbody2D( Physics2D* owner, Vec2 worldPos, Collider2D* col = nullptr  );
+	Rigidbody2D(  Physics2D* owner, Vec2 worldPos, Collider2D* col = nullptr  );
 
 private:
 	~Rigidbody2D();
@@ -35,13 +40,17 @@ public:
 	float GetAngularVelocity() const { return m_angularVelocity; }
 	float GetFrameTorque() const { return m_frameTorque; }
 	float GetMoment() const { return m_moment; }
+
+	uint GetLayer() const { return m_layer; }
 	Vec2 GetImpactVelocity( Vec2 contact );
 	Vec2 GetPosition() const { return m_worldPosition; }
 	Vec2 GetVelocity() const { return m_velocity; }
 	Vec2 GetVerletVelocity() const;
 	Collider2D* GetCollider() const { return m_collider; }
 	SimulationMode GetSimulationMode() const { return m_mode; }
-	
+	template<typename T>
+	T GetValue( std::string const& keyName, const T& defValue ) const;
+
 	// Mutator
 	void SetMass( float mass );
 	void SetRotationInRadians( float rot );
@@ -50,9 +59,15 @@ public:
 	void SetMoment( float moment );
 	void SetPosition( Vec2 position );
 	void SetVelocity( Vec2 velocity );
+	void SetLayer( uint layerIndex );
+
 	void SetCollider( Collider2D* collider ); 
+	void EnableTrigger();
+	void DisableTrigger();
 	void SetColliderPosition();
 	void SetSimulationMode( SimulationMode mode );
+	template<typename T>
+	void SetProperty( const std::string& keyName, const T& value );
 
 	void UpdateDrag( float deltaDrag );
 	void UpdateVelocityPerFrame( const Vec2& deltaVel );
@@ -81,12 +96,16 @@ public:
 private:
 	bool m_isDestroyed	= false;
 	bool m_isEnable		= true;
+
+	uint m_layer = 0;
+
 	float m_mass		= 1.f;
 	float m_drag		= 0.f;
 	float m_rotationInRadians	= 0.f;
 	float m_angularVelocity		= 0.f;
 	float m_frameTorque			= 0.f;
 	float m_moment				= 0.f;
+
 	Vec2 m_velocity		= Vec2::ZERO;
 	Vec2 m_force		= Vec2::ZERO;
 	Vec2 m_frameStartPosition = Vec2::ZERO;
@@ -95,5 +114,17 @@ private:
 	SimulationMode m_mode = RIGIDBODY_DYNAMIC;
 	Physics2D*	m_system	= nullptr;
 	Collider2D* m_collider	= nullptr;
-
+	NamedProperties m_userProperties;
 };
+
+template<typename T>
+T Rigidbody2D::GetValue( std::string const& keyName, const T& defValue ) const
+{
+	return m_userProperties.GetValue( keyName, defValue );
+}
+
+template<typename T>
+void Rigidbody2D::SetProperty( const std::string& keyName, const T& value )
+{
+	m_userProperties.SetValue( keyName, value );
+}

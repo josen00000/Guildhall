@@ -582,7 +582,7 @@ void Game::Render() const
 	Texture* bloomTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	Texture* albedoTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	Texture* tangentTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
-	int  test = g_theRenderer->GetTexturePoolFreeCount();
+
 	m_gameCamera->SetColorTarget( colorTarget, 0 );
 	m_gameCamera->SetColorTarget( bloomTarget, 1 );
 	m_gameCamera->SetColorTarget( normalTarget, 2 );
@@ -624,8 +624,8 @@ void Game::Render() const
 	if( m_isUsingBloomEffect ) {
 		
 		float data[4];
-		data[0] = bloomTarget->GetTexelSize().x;
-		data[1] = bloomTarget->GetTexelSize().y;
+		data[0] = (float)bloomTarget->GetTexelSize().x;
+		data[1] = (float)bloomTarget->GetTexelSize().y;
 		data[2] = 0.f;
 		data[3] = 0.f;
 
@@ -885,7 +885,7 @@ void Game::LoadObjects()
 
 void Game::Updatea08Objects( float deltaSeconds )
 {
-
+	UNUSED(deltaSeconds);
 }
 
 void Game::Rendera08Objects() const

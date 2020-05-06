@@ -187,14 +187,15 @@ void RenderContext::BeginCameraViewport( IntVec2 viewPortSize )
 
 void RenderContext::BeginCameraRTVAndViewport( Camera* camera )
 {
-	Texture* output = camera->GetColorTarget(); // get texture output
-	if( output == nullptr ) {
-		output = GetSwapChainBackBuffer();
-	}
+ 	Texture* output = camera->GetColorTarget(); // get texture output 	
 	std::vector<ID3D11RenderTargetView*> rtvs;
 	int rtvCount = camera->GetColorTargetCount();
-	rtvs.resize( rtvCount );
 
+	if( rtvCount == 0 ) {
+		rtvCount = 1;
+	}
+	rtvs.resize( rtvCount );
+	
 	for( int i = 0; i < rtvCount; i++ ) {
 		rtvs[i] = nullptr;
 		Texture* colorTarget = camera->GetColorTarget( i );
@@ -206,6 +207,7 @@ void RenderContext::BeginCameraRTVAndViewport( Camera* camera )
 			rtvs[i] = nullptr;
 		}
 	}
+	
 
 	if( camera->m_clearState & CLEAR_COLOR_BIT ){
 		Rgba8 clearColor = camera->m_clearColor;

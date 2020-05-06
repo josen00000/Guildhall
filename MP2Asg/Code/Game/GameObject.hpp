@@ -57,6 +57,12 @@ public:
 	void ResetAngularVelocity();
 	void UpdateRotationRadians( float deltaRadians );
 
+	// collision
+	void OnOverlapStart( Collision2D );
+	void OnOverlapStay( Collision2D );
+	void OnOverlapLeave( Collision2D );
+
+
 public:
 	bool m_isDestroyed	= false;
 	bool m_isMouseIn	= false;

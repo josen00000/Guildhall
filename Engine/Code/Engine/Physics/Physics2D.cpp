@@ -97,7 +97,8 @@ void Physics2D::RotateRigidbodies( float deltaSeconds )
 
 void Physics2D::DetectCollisions()
 {
-	m_collisions.clear();
+	m_lastFrameCollisions = m_curtFrameCollisions;
+	m_curtFrameCollisions.clear();
 	for( int colIndex = 0; colIndex < m_colliders.size(); colIndex++ ) {
 		Collider2D* col1 = m_colliders[colIndex];
 		if( col1 == nullptr || !col1->GetRigidbody()->IsEnablePhysics() ){
@@ -108,14 +109,16 @@ void Physics2D::DetectCollisions()
 			if( col2 == nullptr || !col2->GetRigidbody()->IsEnablePhysics() ){
 				continue;
 			}
+			if( !IsRigidBodysAbleInteract( col1->GetRigidbody(), col2->GetRigidbody() ) ){ 
+				continue; }
+
 			Manifold2D manifold;
 			if( col1->IntersectsAndGetManifold( col2, manifold ) ){
-				CreateCollision( col1, col2, manifold );
-				//DebugAddWorldPoint( Vec3( manifold.contact.GetStartPos(), -50.f ), Rgba8::RED, -1.f, DEBUG_RENDER_ALWAYS );
-				//DebugAddWorldPoint( Vec3( manifold.contact.GetEndPos(), -50.f ), Rgba8::RED, -1.f, DEBUG_RENDER_ALWAYS );
+				Collision2D tempColls = CreateCollision( col1, col2, manifold );
 			}
 		}
 	}
+	SendCollisionMessage();
 }
 
 void Physics2D::CollisionResponse()
@@ -125,14 +128,16 @@ void Physics2D::CollisionResponse()
 
 void Physics2D::ResolveCollisions()
 {
-	for( int colIndex = 0; colIndex < m_collisions.size(); colIndex++ ){
-		Collision2D& tempCol = m_collisions[colIndex];
+	for( int colIndex = 0; colIndex < m_curtFrameCollisions.size(); colIndex++ ){
+		Collision2D& tempCol = m_curtFrameCollisions[colIndex];
 		ResolveCollision( tempCol );
 	}
 }
 
 void Physics2D::ResolveCollision( const Collision2D& collision )
 {
+	if( !collision.m_needResolve ) { return; }
+
 	CorrectObjectsInCollision( collision );
 	float nImpulse = CalculateCollisionNormalImpulse( collision );
 	Vec2 normalImpulse = nImpulse * collision.GetNormal();
@@ -266,10 +271,131 @@ void Physics2D::ApplyImpulseInCollision( const Collision2D& collision, Vec2 impu
 	}
 }
 
-void Physics2D::CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold )
+Collision2D Physics2D::CreateCollision( Collider2D* colA, Collider2D* colB, Manifold2D manifold )
 {
 	Collision2D collision = Collision2D( colA, colB, manifold );
-	m_collisions.push_back( collision );
+	if( colB->m_isTrigger || colA->m_isTrigger ) {
+		collision.m_needResolve = false;
+	}
+	m_curtFrameCollisions.push_back( collision );
+	return collision;
+}
+
+bool Physics2D::IsSameCollision( const Collision2D& colA, const Collision2D& colB ) const
+{
+	return ( ( colA.me == colB.me && colA.other == colB.other) || ( colA.me == colB.other && colB.me == colA.other) );
+}
+
+void Physics2D::SendCollisionMessage()
+{
+	for( int i = 0; i < m_curtFrameCollisions.size(); i++ ) {
+		CollisionState collsState = COLLISION_ENTER;
+		Collision2D& curtColls = m_curtFrameCollisions[i];
+
+		for( int j = 0; j < m_lastFrameCollisions.size(); j++ ) {
+			Collision2D& lastColls = m_lastFrameCollisions[j];
+			if( IsSameCollision( lastColls, curtColls ) ) {
+				collsState = COLLISION_STAY;
+				break;
+			}
+		}
+		InvokeCollisionDelegate( curtColls, collsState );
+	}
+
+	for( int i = 0; i < m_lastFrameCollisions.size(); i++ ) {
+		CollisionState collsState = COLLISION_LEAVE;
+		Collision2D& lastColls = m_lastFrameCollisions[i];
+
+		for( int j = 0; j < m_curtFrameCollisions.size(); j++ ) {
+			Collision2D& curtColls = m_lastFrameCollisions[j];
+			if( IsSameCollision( lastColls, curtColls ) ) {
+				collsState = COLLISION_ENTER;
+				break;
+			}
+		}
+		if( collsState == COLLISION_LEAVE ) {
+			InvokeCollisionDelegate( lastColls, collsState );
+		}
+	}
+}
+
+void Physics2D::InvokeCollisionDelegate( const Collision2D& colls, CollisionState state )
+{
+	Collider2D* colMe = colls.me;
+	Collider2D* colOther = colls.other;
+	switch( state )
+	{
+	case COLLISION_ENTER:
+		if( colMe->m_isTrigger ) {
+			colMe->m_triggerEnterDelegate.invoke( colls );
+		}
+		else {
+			colMe->m_enterDelegate.invoke( colls );
+		}
+
+		if( colOther->m_isTrigger ) {
+			colOther->m_triggerEnterDelegate.invoke( colls );
+		}
+		else {
+			colOther->m_enterDelegate.invoke( colls );
+		}
+		break;
+	case COLLISION_STAY:
+		if( colMe->m_isTrigger ) {
+			colMe->m_triggerStayDelegate.invoke( colls );
+		}
+		else {
+			colMe->m_stayDelegate.invoke( colls );
+		}
+
+		if( colOther->m_isTrigger ) {
+			colOther->m_triggerStayDelegate.invoke( colls );
+		}
+		else {
+			colOther->m_stayDelegate.invoke( colls );
+		}
+		break;
+	case COLLISION_LEAVE:
+		if( colMe->m_isTrigger ) {
+			colMe->m_triggerLeaveDelegate.invoke( colls );
+		}
+		else {
+			colMe->m_leaveDelegate.invoke( colls );
+		}
+		if( colOther->m_isTrigger ) {
+
+		}
+		colOther->m_leaveDelegate.invoke( colls );
+		break;
+	}
+}
+
+void Physics2D::EnableLayerInteraction( uint layerIdx0, uint layerIdx1 )
+{
+	uint layerIdx0Bit = 1 << layerIdx0;
+	uint layerIdx1Bit = 1 << layerIdx1;
+	m_layers[layerIdx0] = m_layers[layerIdx0] | layerIdx1Bit;
+	m_layers[layerIdx1] = m_layers[layerIdx1] | layerIdx0Bit;
+}
+
+void Physics2D::DisableLayerInteraction( uint layerIdx0, uint layerIdx1 )
+{
+	uint layerIdx0Bit = 1 << layerIdx0;
+	uint layerIdx1Bit = 1 << layerIdx1;
+	m_layers[layerIdx0] = m_layers[layerIdx0] & ~layerIdx1Bit;
+	m_layers[layerIdx1] = m_layers[layerIdx1] & ~layerIdx0Bit;
+}
+
+bool Physics2D::IsLayersInteract( uint layerIdx0, uint layerIdx1 ) const
+{
+	uint layerIdx0Bit = 1 << layerIdx0;
+	uint test = m_layers[layerIdx1] & layerIdx0Bit;
+	return ( (m_layers[layerIdx1] & layerIdx0Bit) != 0 );
+}
+
+bool Physics2D::IsRigidBodysAbleInteract( const Rigidbody2D* rb1, const Rigidbody2D* rb2 ) const
+{
+	return IsLayersInteract( rb1->GetLayer(), rb2->GetLayer() );
 }
 
 double Physics2D::GetTimeScale()
@@ -349,6 +475,14 @@ void Physics2D::StartUp()
 	m_timer = new Timer();
 
 	m_timer->SetSeconds( m_clock, s_fixedDeltaTime );
+	InitialLayer();
+}
+
+void Physics2D::InitialLayer()
+{
+	for( int i = 0; i < 32; i++ ) {
+		m_layers[i] = 1 << i;
+	}
 }
 
 Rigidbody2D* Physics2D::CreateRigidbody( Vec2 worldPos /*= Vec2::ZERO */ )
