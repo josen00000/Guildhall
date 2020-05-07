@@ -162,7 +162,6 @@ void App::NamedPropertyTesting()
 	Camera* cameraA = new Camera();
 	Camera* cameraB = new Camera();
 
-	ObjectReader* testReader = new ObjectReader( "Data/Model/planet.obj" );
 
 	testProp->SetValue<float>( "floatA", a );
 	testProp->SetValue<Camera>( "cameraA", *cameraA );

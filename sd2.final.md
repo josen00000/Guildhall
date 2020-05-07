@@ -1,6 +1,7 @@
 C29.SD2.A09 Render Targets
 ======
-
+Have some warning becauase of template testing and eventSystem subscribe method testing.
+Warning is " local variable is initialized but not referenced  
 ## Tasks
 - [x] `NamedProperties`
     - [x] Switch named properties over to use `TypedProperty` instead of just strings

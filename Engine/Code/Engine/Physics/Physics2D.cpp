@@ -389,7 +389,6 @@ void Physics2D::DisableLayerInteraction( uint layerIdx0, uint layerIdx1 )
 bool Physics2D::IsLayersInteract( uint layerIdx0, uint layerIdx1 ) const
 {
 	uint layerIdx0Bit = 1 << layerIdx0;
-	uint test = m_layers[layerIdx1] & layerIdx0Bit;
 	return ( (m_layers[layerIdx1] & layerIdx0Bit) != 0 );
 }
 
