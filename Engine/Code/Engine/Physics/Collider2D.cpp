@@ -42,12 +42,12 @@ void Collider2D::Destroy()
 
 void Collider2D::InitDelegate()
 {
-// 	SubscribeEnterEvent( g_theGame, &Game::OnCollliderEnter );
-// 	SubscribeStayEvent( g_theGame, &Game::OnCollliderStay );
-// 	SubscribeLeaveEvent( g_theGame, &Game::OnCollliderLeave );
-// 	SubscribeTriggerEnterEvent( g_theGame, &Game::OnTriggerEnter );
-// 	SubscribeTriggerStayEvent( g_theGame, &Game::OnTriggerStay );
-// 	SubscribeTriggerLeaveEvent( g_theGame, &Game::OnTriggerLeave );
+ 	SubscribeEnterEvent( g_theGame, &Game::OnCollliderEnter );
+ 	SubscribeStayEvent( g_theGame, &Game::OnCollliderStay );
+ 	SubscribeLeaveEvent( g_theGame, &Game::OnCollliderLeave );
+ 	SubscribeTriggerEnterEvent( g_theGame, &Game::OnTriggerEnter );
+ 	SubscribeTriggerStayEvent( g_theGame, &Game::OnTriggerStay );
+ 	SubscribeTriggerLeaveEvent( g_theGame, &Game::OnTriggerLeave );
 }
 
 bool Collider2D::Intersects( const Collider2D* other ) const

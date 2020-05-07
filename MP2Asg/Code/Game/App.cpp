@@ -175,13 +175,13 @@ void App::BeginFrame()
 	g_thePhysics->BeginFrame();
 	g_theRenderer->BeginFrame();
 	// Debug timer error
- 	float currentTime1 = g_theRenderer->m_clock->GetTotalSeconds();
- 	float currentTime2 = g_thePhysics->m_clock->GetTotalSeconds();
- 	float deltaTime1 = g_theRenderer->m_clock->GetLastDeltaSeconds();
- 	float deltaTime2 = g_thePhysics->m_clock->GetLastDeltaSeconds();
- 	std::string clockString1 =  "render time is " + std::to_string( currentTime1 ) + "   delta time is " + std::to_string( deltaTime1 );
- 	//DebugAddScreenText( Vec4( 0.4f, 0.4f, 10.f, 10.f ), Vec2::ZERO, 3.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, clockString1 );
- 	std::string clockString2 =  "time is " + std::to_string( currentTime2 ) + "  delta time is " + std::to_string( deltaTime2 );
+ 	//float currentTime1 = g_theRenderer->m_clock->GetTotalSeconds();
+ 	//float currentTime2 = g_thePhysics->m_clock->GetTotalSeconds();
+ 	//float deltaTime1 = g_theRenderer->m_clock->GetLastDeltaSeconds();
+ 	//float deltaTime2 = g_thePhysics->m_clock->GetLastDeltaSeconds();
+ 	//std::string clockString1 =  "render time is " + std::to_string( currentTime1 ) + "   delta time is " + std::to_string( deltaTime1 );
+ 	////DebugAddScreenText( Vec4( 0.4f, 0.4f, 10.f, 10.f ), Vec2::ZERO, 3.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, clockString1 );
+ 	//std::string clockString2 =  "time is " + std::to_string( currentTime2 ) + "  delta time is " + std::to_string( deltaTime2 );
  	//DebugAddScreenText( Vec4( 0.4f, 0.4f, 10.f, 15.f ), Vec2::ZERO, 3.f, Rgba8::GREEN, Rgba8::GREEN, 0.f, clockString2 );
 }
 
