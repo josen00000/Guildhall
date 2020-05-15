@@ -15,6 +15,7 @@ class GameObject {
 public:
 	//constructor
 	//GameObject( Vec2 pos, const Vec2* points, int pointCount );
+	GameObject(){}
 	GameObject( Vec2 pos, float radius );
 	GameObject( Polygon2 poly );
 	GameObject( std::vector<Vec2> points );
