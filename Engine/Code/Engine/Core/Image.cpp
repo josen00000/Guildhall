@@ -1,10 +1,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "Image.hpp"
 #include "Engine/stb_image.h"
-#include "Engine/Core/ErrorWarningAssert.hpp"
-#include "Engine/Core/StringUtils.hpp"
-#include "Engine/Renderer/Texture.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Core/Error/ErrorWarningAssert.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
+#include "Engine/Renderer/GPU/Texture.hpp"
+#include "Engine/Renderer/Context/RenderContext.hpp"
 
 
 Image::Image( const char* imageFilePath )

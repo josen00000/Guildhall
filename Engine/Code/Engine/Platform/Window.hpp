@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
 
 class InputSystem;
 struct Vec2;
@@ -18,7 +18,7 @@ public:
 	int GetClientWidth() const;
 	int GetClientHeight() const;
 	Vec2 GetClientCenter() const;
-
+	void* GetHandler() const { return m_hwnd; }
 
 	void SetInputSystem( InputSystem* input );
 	InputSystem* GetInputSystem() const { return m_inputSystem; }

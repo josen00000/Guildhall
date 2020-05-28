@@ -1,5 +1,5 @@
 #include "OBB2.hpp"
-#include "Engine/Core/Vertex_PCU.hpp"
+#include "Engine/Core/Vertex/Vertex_PCU.hpp"
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/MathUtils.hpp"

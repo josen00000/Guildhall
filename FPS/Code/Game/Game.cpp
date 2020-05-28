@@ -8,20 +8,20 @@
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
-#include "Engine/Renderer/Camera.hpp"
-#include "Engine/Renderer/GPUMesh.hpp"
-#include "Engine/Renderer/MeshUtils.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
-#include "Engine/Renderer/Shader.hpp"
-#include "Engine/Renderer/DebugRender.hpp"
-#include "Engine/Renderer/RenderBuffer.hpp"
-#include "Engine/Renderer/ObjectReader.hpp"
+#include "Engine/Renderer/Context/Camera.hpp"
+#include "Engine/Renderer/GPU/GPUMesh.hpp"
+#include "Engine/Core/Utils/MeshUtils.hpp"
+#include "Engine/Renderer/Context/RenderContext.hpp"
+#include "Engine/Renderer/GPU/Shader.hpp"
+#include "Engine/Renderer/Debug/DebugRender.hpp"
+#include "Engine/Renderer/GPU/RenderBuffer.hpp"
+#include "Engine/Renderer/Obj/ObjectReader.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Renderer/ShaderState.hpp"
-#include "Engine/Renderer/Material.hpp"
-#include "Engine/Renderer/Sampler.hpp"
-#include "Engine/Core/Delegate.hpp"
+#include "Engine/Renderer/GPU/ShaderState.hpp"
+#include "Engine/Renderer/GPU/Material.hpp"
+#include "Engine/Renderer/GPU/Sampler.hpp"
+#include "Engine/Core/Event/Delegate.hpp"
 
 
 extern App*				g_theApp;
@@ -70,11 +70,11 @@ void Game::Startup()
 	g_theConsole->AddCommandToCommandList( std::string( "set_ambient_color"), std::string(" set ambient color( color = vec3)" ), SetAmbientColorFuncPtr );
 	g_theConsole->AddCommandToCommandList( std::string( "set_light_color"), std::string(" set light color( color = vec3)" ), SetLightColorFuncPtr );
 
-	g_dissolveBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	g_projectorBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	g_parallaxBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	g_bloomBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	g_grayBuffer =  new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_dissolveBuffer =  new RenderBuffer( g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_projectorBuffer =  new RenderBuffer( g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_parallaxBuffer =  new RenderBuffer( g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_bloomBuffer =  new RenderBuffer( g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	g_grayBuffer =  new RenderBuffer( g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 
 }
 

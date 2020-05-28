@@ -8,7 +8,7 @@
 #include "Engine/Input/KeyBoardController.hpp"
 #include "Engine/input/MouseController.hpp"
 #include "Engine/Platform/Window.hpp"
-#include "Engine/Renderer/Camera.hpp"
+#include "Engine/Renderer/Context/Camera.hpp"
 
 
 void InputSystem::Startup()

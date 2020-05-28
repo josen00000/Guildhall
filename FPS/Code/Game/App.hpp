@@ -1,8 +1,8 @@
 #pragma once
-#include "Engine/Core/EventSystem.hpp"
+#include "Engine/Core/Event/EventSystem.hpp"
 #include "Engine/Math/vec2.hpp"
 #include "Game/GameCommon.hpp"
-#include "Engine/Renderer/ObjectReader.hpp"
+#include "Engine/Renderer/Obj/ObjectReader.hpp"
 
 class Game;
 

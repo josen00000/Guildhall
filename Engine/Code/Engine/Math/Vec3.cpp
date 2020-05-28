@@ -1,5 +1,5 @@
 #include <math.h>
-#include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Math/Vec3.hpp"

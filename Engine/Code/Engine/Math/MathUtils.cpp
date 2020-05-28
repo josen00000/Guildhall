@@ -8,9 +8,9 @@
 #include "Engine/Math/OBB2.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/FloatRange.hpp"
-#include "Engine/Core/Vertex_PCU.hpp"
-#include "Engine/Core/StringUtils.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Core/Vertex/Vertex_PCU.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
+#include "Engine/Renderer/Context/RenderContext.hpp"
 
 
 #define _USE_MATH_DEFINES 

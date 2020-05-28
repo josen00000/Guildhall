@@ -1,5 +1,5 @@
 #include "Vec4.hpp"
-#include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Math/Vec2.hpp"
 

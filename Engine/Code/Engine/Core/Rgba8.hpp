@@ -20,6 +20,7 @@ public:
 
 	// Accessor
 	Vec3 GetVec3Color() const;
+	Vec4 GetVec4Color() const;
 
 	//Mutators
 	void SetFromText(const char* text);

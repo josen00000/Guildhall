@@ -1,5 +1,5 @@
 #include "Rgba8.hpp"
-#include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Math/Vec4.hpp"
 
@@ -49,6 +49,16 @@ Vec3 Rgba8::GetVec3Color() const
 	v3_color.y = RangeMapFloat( 0.f, 255.f, 0.f, 1.f, g );
 	v3_color.z = RangeMapFloat( 0.f, 255.f, 0.f, 1.f, b );
 	return v3_color;
+}
+
+Vec4 Rgba8::GetVec4Color() const
+{
+	Vec4 v4_color;
+	v4_color.x = RangeMapFloat( 0.f, 255.f, 0.f, 1.f, r );
+	v4_color.y = RangeMapFloat( 0.f, 255.f, 0.f, 1.f, g );
+	v4_color.z = RangeMapFloat( 0.f, 255.f, 0.f, 1.f, b );
+	v4_color.w = RangeMapFloat( 0.f, 255.f, 0.f, 1.f, a );
+	return v4_color;
 }
 
 void Rgba8::SetFromText( const char* text )

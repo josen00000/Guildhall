@@ -2,8 +2,8 @@
 #include <string>
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
-#include "Engine/Core/StringUtils.hpp"
-#include "Engine/Core/ErrorWarningAssert.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
+#include "Engine/Core/Error/ErrorWarningAssert.hpp"
 
 IntRange::IntRange( int minAndMax )
 	:minimum(minAndMax)

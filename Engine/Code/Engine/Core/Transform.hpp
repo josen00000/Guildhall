@@ -2,6 +2,16 @@
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Math/Mat44.hpp"
 
+enum RotateOrder {
+	PITCH_ROLL_YAW_ORDER,
+	PITCH_YAW_ROLL_ORDER,
+	ROLL_PITCH_YAW_ORDER,
+	ROLL_YAW_PITCH_ORDER,
+	YAW_PITCH_ROLL_ORDER,
+	YAW_ROLL_PITCH_ORDER,
+	NUM_ORDER
+};
+
 
 class Transform {
 public:
@@ -13,7 +23,7 @@ public:
 	Vec3 GetPosition() const { return m_pos; }
 	Vec3 GetRotationPRYDegrees() const { return m_rotationPRYDegrees; }
 	Vec3 GetScale() const { return m_scale; }
-	Mat44 GetRotationMatrix() const;
+	Mat44 GetRotationMatrix( RotateOrder order = PITCH_ROLL_YAW_ORDER ) const;
 	Mat44 GetMatrix() const { return mat; } // temp using for DebugRender
 
 	// Mutator
@@ -29,7 +39,9 @@ public:
 	Mat44 ToMatrix() const;
 public:
 	Vec3 m_pos					= Vec3::ZERO;
+	// better set pitch roll yaw seperately.
 	Vec3 m_rotationPRYDegrees	= Vec3::ZERO;
 	Vec3 m_scale				= Vec3::ONE;
 	Mat44 mat;
+	RotateOrder m_rotOrder		= PITCH_ROLL_YAW_ORDER;
 };

@@ -34,6 +34,23 @@ Mat44 Transform::GetRotationMatrix() const
 	return rotation;
 }
 
+Mat44 Transform::GetRotationMatrix( RotateOrder order /*= PITCH_ROLL_YAW_ORDER */ ) const
+{
+	Mat44 pitch		= Mat44();
+	Mat44 roll		= Mat44();
+	Mat44 yaw		= Mat44();
+	Mat44 rotation	= Mat44();
+
+	pitch.RotateXDegrees( m_rotationPRYDegrees.x );
+	roll.RotateZDegrees( m_rotationPRYDegrees.y );
+	yaw.RotateYDegrees( m_rotationPRYDegrees.z );
+
+	rotation = yaw;
+	rotation.Multiply( roll );
+	rotation.Multiply( pitch );
+	return rotation;
+}
+
 void Transform::SetPosition( Vec3 pos )
 {
 	m_pos = pos;

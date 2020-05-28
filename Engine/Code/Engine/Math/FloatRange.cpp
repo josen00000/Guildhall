@@ -1,6 +1,6 @@
 #include "FloatRange.hpp"
-#include "Engine/Core/StringUtils.hpp"
-#include "Engine/Core/ErrorWarningAssert.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
+#include "Engine/Core/Error/ErrorWarningAssert.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 

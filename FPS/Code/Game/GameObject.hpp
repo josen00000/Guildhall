@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/Renderer/GPUMesh.hpp"
+#include "Engine/Renderer/GPU/GPUMesh.hpp"
 #include "Engine/Core/Transform.hpp"
 
 struct Vec3;

@@ -1,7 +1,7 @@
 #include "CubeSphere.hpp"
-#include "Engine/Renderer/GPUMesh.hpp"
+#include "Engine/Renderer/GPU/GPUMesh.hpp"
 #include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Renderer/MeshUtils.hpp"
+#include "Engine/Core/Utils/MeshUtils.hpp"
 
 
 CubeSphere::CubeSphere( RenderContext* ctx, int level, AABB3 cube )

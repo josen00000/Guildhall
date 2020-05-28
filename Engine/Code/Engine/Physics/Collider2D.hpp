@@ -2,7 +2,7 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/Disc2.hpp"
 #include "Engine/Physics/PhysicsMaterial.hpp"
-#include "Engine/Core/Delegate.hpp"
+#include "Engine/Core/Event/Delegate.hpp"
 
 class Physics2D;
 class RenderContext;
@@ -19,6 +19,7 @@ enum Collider2DType {
 	COLLIDER2D_POLYGON,
 	NUM_COLLIDER
 };
+
 
 class Collider2D {
 	friend class Physics2D;

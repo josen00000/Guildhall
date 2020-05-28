@@ -28,9 +28,6 @@
     <Filter Include="Math\basic">
       <UniqueIdentifier>{3fc03a6a-ecaf-42bf-a0d9-0247a75a0318}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Renderer\D3DPipeLine">
-      <UniqueIdentifier>{d0e4c9e4-827e-4ea3-9f8d-d2630e7f32b5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Renderer\Sprite">
       <UniqueIdentifier>{cc67e17d-f386-40af-b8a8-eba83ec67077}</UniqueIdentifier>
     </Filter>
@@ -46,21 +43,30 @@
     <Filter Include="Core\VerticesStructure">
       <UniqueIdentifier>{376aac44-a2b7-4486-817b-ab544858a728}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Renderer\Mesh">
-      <UniqueIdentifier>{b9cca59c-b0e8-4959-aa75-b685b030f273}</UniqueIdentifier>
+    <Filter Include="Core\Error">
+      <UniqueIdentifier>{111650fb-b68d-47dd-b589-da1a59b7bbfa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Event">
+      <UniqueIdentifier>{94e001a0-a785-462c-84c8-9f54fc23e7ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\DevConsole">
+      <UniqueIdentifier>{d7545344-6df0-4137-83bc-ee280e950779}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Utils">
+      <UniqueIdentifier>{e4e94c4b-673b-4d29-95c2-f52ae39ecce1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\GPU">
+      <UniqueIdentifier>{d0e4c9e4-827e-4ea3-9f8d-d2630e7f32b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Obj">
+      <UniqueIdentifier>{8bf658d5-79d5-4518-8111-c101ec292db7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Context">
+      <UniqueIdentifier>{9dc57baf-15ea-40e3-9c8e-3105a177cbfd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Renderer\Camera.cpp">
-      <Filter>Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Rgba8.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\ErrorWarningAssert.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\StringUtils.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Input\AnalogJoystick.cpp">
@@ -84,9 +90,6 @@
     <ClCompile Include="Audio\AudioSystem.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
-    <ClCompile Include="Core\DevConsole.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\ThirdParty\TinyXML2\tinyxml2.cpp">
       <Filter>ThirdParty</Filter>
     </ClCompile>
@@ -94,9 +97,6 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Core\EngineCommon.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\EventSystem.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Input\MouseController.cpp">
@@ -162,42 +162,6 @@
     <ClCompile Include="Core\Transform.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\IndexBuffer.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\RenderBuffer.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\Sampler.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\Shader.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\SpriteAnimDefinition.cpp">
-      <Filter>Renderer\Sprite</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\SpriteDefinition.cpp">
-      <Filter>Renderer\Sprite</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\SpriteSheet.cpp">
-      <Filter>Renderer\Sprite</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\SwapChain.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\VertexBuffer.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\BitmapFont.cpp">
-      <Filter>Renderer\Sprite</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\TextureView.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\Texture.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClCompile>
     <ClCompile Include="Core\Time\Clock.cpp">
       <Filter>Core\Time</Filter>
     </ClCompile>
@@ -210,17 +174,8 @@
     <ClCompile Include="Math\AABB3.cpp">
       <Filter>Math\shape</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\RenderContext.cpp">
-      <Filter>Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Math\Cylinder3.cpp">
       <Filter>Math\shape</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\DebugRender.cpp">
-      <Filter>Renderer\DebugRenderSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\DebugRenderObject.cpp">
-      <Filter>Renderer\DebugRenderSystem</Filter>
     </ClCompile>
     <ClCompile Include="Math\Cone3.cpp">
       <Filter>Math\shape</Filter>
@@ -255,26 +210,8 @@
     <ClCompile Include="Math\Algorithm.cpp">
       <Filter>Math\basic</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Vertex_PCU.cpp">
-      <Filter>Core\VerticesStructure</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Vertex_PCUTBN.cpp">
-      <Filter>Core\VerticesStructure</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\GPUMesh.cpp">
-      <Filter>Renderer\Mesh</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\MeshUtils.cpp">
-      <Filter>Renderer\Mesh</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer\ObjectReader.cpp">
-      <Filter>Renderer\Mesh</Filter>
-    </ClCompile>
     <ClCompile Include="Math\IntVec3.cpp">
       <Filter>Math\basic</Filter>
-    </ClCompile>
-    <ClCompile Include="ThirdParty\XmlUtils.cpp">
-      <Filter>ThirdParty</Filter>
     </ClCompile>
     <ClCompile Include="ThirdParty\mikktspace.c">
       <Filter>ThirdParty</Filter>
@@ -282,30 +219,99 @@
     <ClCompile Include="Core\NamedProperties.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\ShaderState.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
+    <ClCompile Include="Core\Error\ErrorWarningAssert.cpp">
+      <Filter>Core\Error</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer\Material.cpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
+    <ClCompile Include="Core\Vertex\Vertex_PCU.cpp">
+      <Filter>Core\VerticesStructure</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Delegate.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="Core\Vertex\Vertex_PCUTBN.cpp">
+      <Filter>Core\VerticesStructure</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Event\Delegate.cpp">
+      <Filter>Core\Event</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Event\EventSystem.cpp">
+      <Filter>Core\Event</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\DevConsole\DevConsole.cpp">
+      <Filter>Core\DevConsole</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Utils\StringUtils.cpp">
+      <Filter>Core\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Utils\XmlUtils.cpp">
+      <Filter>Core\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\GPUMesh.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\IndexBuffer.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\Material.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\RenderBuffer.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\Sampler.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\Shader.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\ShaderState.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\SwapChain.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\Texture.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\TextureView.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\GPU\VertexBuffer.cpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Debug\DebugRender.cpp">
+      <Filter>Renderer\DebugRenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Debug\DebugRenderObject.cpp">
+      <Filter>Renderer\DebugRenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Sprite\BitmapFont.cpp">
+      <Filter>Renderer\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Sprite\SpriteAnimDefinition.cpp">
+      <Filter>Renderer\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Sprite\SpriteDefinition.cpp">
+      <Filter>Renderer\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Sprite\SpriteSheet.cpp">
+      <Filter>Renderer\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Obj\ObjectReader.cpp">
+      <Filter>Renderer\Obj</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Context\Camera.cpp">
+      <Filter>Renderer\Context</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Context\RenderContext.cpp">
+      <Filter>Renderer\Context</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Utils\MeshUtils.cpp">
+      <Filter>Core\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Renderer\Camera.hpp">
-      <Filter>Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Rgba8.hpp">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Core\EngineCommon.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\ErrorWarningAssert.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\StringUtils.hpp">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Input\AnalogJoystick.hpp">
@@ -350,9 +356,6 @@
     <ClInclude Include="..\ThirdParty\fmod\fmod_output.h">
       <Filter>Audio</Filter>
     </ClInclude>
-    <ClInclude Include="Core\DevConsole.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Image.hpp">
       <Filter>Core</Filter>
     </ClInclude>
@@ -360,9 +363,6 @@
       <Filter>ThirdParty</Filter>
     </ClInclude>
     <ClInclude Include="Core\NamedStrings.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\EventSystem.hpp">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Input\MouseController.hpp">
@@ -434,42 +434,6 @@
     <ClInclude Include="Core\Transform.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\IndexBuffer.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\RenderBuffer.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\Sampler.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\Shader.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\SpriteAnimDefinition.hpp">
-      <Filter>Renderer\Sprite</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\SpriteDefinition.hpp">
-      <Filter>Renderer\Sprite</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\SpriteSheet.hpp">
-      <Filter>Renderer\Sprite</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\SwapChain.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\VertexBuffer.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\BitmapFont.hpp">
-      <Filter>Renderer\Sprite</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\TextureView.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\Texture.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Time\Clock.hpp">
       <Filter>Core\Time</Filter>
     </ClInclude>
@@ -482,17 +446,8 @@
     <ClInclude Include="Math\AABB3.hpp">
       <Filter>Math\shape</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\RenderContext.hpp">
-      <Filter>Renderer</Filter>
-    </ClInclude>
     <ClInclude Include="Math\Cylinder3.hpp">
       <Filter>Math\shape</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\DebugRender.hpp">
-      <Filter>Renderer\DebugRenderSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\DebugRenderObject.hpp">
-      <Filter>Renderer\DebugRenderSystem</Filter>
     </ClInclude>
     <ClInclude Include="Math\Cone3.hpp">
       <Filter>Math\shape</Filter>
@@ -527,26 +482,8 @@
     <ClInclude Include="Math\Algorithm.hpp">
       <Filter>Math\basic</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Vertex_PCU.hpp">
-      <Filter>Core\VerticesStructure</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Vertex_PCUTBN.hpp">
-      <Filter>Core\VerticesStructure</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\GPUMesh.hpp">
-      <Filter>Renderer\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\MeshUtils.hpp">
-      <Filter>Renderer\Mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer\ObjectReader.hpp">
-      <Filter>Renderer\Mesh</Filter>
-    </ClInclude>
     <ClInclude Include="Math\IntVec3.hpp">
       <Filter>Math\basic</Filter>
-    </ClInclude>
-    <ClInclude Include="ThirdParty\XmlUtils.hpp">
-      <Filter>ThirdParty</Filter>
     </ClInclude>
     <ClInclude Include="ThirdParty\mikktspace.h">
       <Filter>ThirdParty</Filter>
@@ -554,17 +491,95 @@
     <ClInclude Include="Core\NamedProperties.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\ShaderState.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
+    <ClInclude Include="Core\Error\ErrorWarningAssert.hpp">
+      <Filter>Core\Error</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer\Material.hpp">
-      <Filter>Renderer\D3DPipeLine</Filter>
+    <ClInclude Include="Core\Vertex\Vertex_PCU.hpp">
+      <Filter>Core\VerticesStructure</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Delegate.hpp">
-      <Filter>Core</Filter>
+    <ClInclude Include="Core\Vertex\Vertex_PCUTBN.hpp">
+      <Filter>Core\VerticesStructure</Filter>
     </ClInclude>
-    <ClInclude Include="Core\ConsumableDelegate.hpp">
-      <Filter>Core</Filter>
+    <ClInclude Include="Core\Event\ConsumableDelegate.hpp">
+      <Filter>Core\Event</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Event\Delegate.hpp">
+      <Filter>Core\Event</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Event\EventSystem.hpp">
+      <Filter>Core\Event</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\DevConsole\DevConsole.hpp">
+      <Filter>Core\DevConsole</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utils\StringUtils.hpp">
+      <Filter>Core\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utils\XmlUtils.hpp">
+      <Filter>Core\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\GPUMesh.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\IndexBuffer.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\Material.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\RenderBuffer.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\Sampler.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\Shader.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\ShaderState.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\SwapChain.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\Texture.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\TextureView.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\GPU\VertexBuffer.hpp">
+      <Filter>Renderer\GPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Debug\DebugRender.hpp">
+      <Filter>Renderer\DebugRenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Debug\DebugRenderObject.hpp">
+      <Filter>Renderer\DebugRenderSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Sprite\BitmapFont.hpp">
+      <Filter>Renderer\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Sprite\SpriteAnimDefinition.hpp">
+      <Filter>Renderer\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Sprite\SpriteDefinition.hpp">
+      <Filter>Renderer\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Sprite\SpriteSheet.hpp">
+      <Filter>Renderer\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Obj\ObjectReader.hpp">
+      <Filter>Renderer\Obj</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Context\Camera.hpp">
+      <Filter>Renderer\Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Context\RenderContext.hpp">
+      <Filter>Renderer\Context</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utils\MeshUtils.hpp">
+      <Filter>Core\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

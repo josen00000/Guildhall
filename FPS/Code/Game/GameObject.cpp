@@ -1,5 +1,5 @@
 #include "GameObject.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/Context/RenderContext.hpp"
 #include "Engine/Core/Transform.hpp"
 
 extern RenderContext* g_theRenderer;

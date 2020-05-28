@@ -1,6 +1,6 @@
 #include <math.h>
 #include <cmath>
-#include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
 #include "Engine/Math/Vec2.hpp"
 #include<Engine/Math/Vec3.hpp>
 #include<Engine/Math/IntVec2.hpp>

@@ -1,6 +1,6 @@
 #include "AABB2.hpp"
-#include "Engine/Core/Vertex_PCU.hpp"
-#include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/Vertex/Vertex_PCU.hpp"
+#include "Engine/Core/Utils/StringUtils.hpp"
 #include "Engine/Math/MathUtils.hpp"
 
 
