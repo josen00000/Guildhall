@@ -21,6 +21,19 @@ Transform::Transform( Convention convention )
 	m_mat = ToMatrix( convention );
 }
 
+Vec3 Transform::GetForwardDirt( Convention convention ) const
+{
+	Mat44 transMat = ToMatrix( convention );
+	switch( convention )
+	{
+	case X_FORWARD_Y_LEFT_Z_UP:
+		return transMat.GetIBasis3D();
+	case X_RIGHT_Y_UP_Z_BACKWARD:
+		return -transMat.GetKBasis3D();
+	}
+	return Vec3::ZERO;
+}
+
 Mat44 Transform::GetRotationMatrix( Convention convention ) const
 {
 	Mat44 pitch		= Mat44();

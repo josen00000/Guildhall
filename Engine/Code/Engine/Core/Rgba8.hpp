@@ -31,8 +31,11 @@ public:
 	static Rgba8 WHITE;
 	static Rgba8 BLACK;
 	static Rgba8 RED;
+	static Rgba8 HALFRED;
 	static Rgba8 GREEN;
+	static Rgba8 HALFGREEN;
 	static Rgba8 BLUE;
+	static Rgba8 HALFBLUE;
 	static Rgba8 YELLOW;
 	static Rgba8 GRAY;
 	static Rgba8 DARK_GRAY;

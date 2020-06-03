@@ -66,6 +66,8 @@ private:
 
 	void HandleDevKeyboardInput( float deltaSeconds );
 	void HandleCameraMovement( float deltaSeconds );
+	void HandleAudioKeyboardInput();
+	void PlayerTestSound();
 
 	//Game State Check
 	void CheckIfExit();

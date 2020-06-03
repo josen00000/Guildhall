@@ -163,6 +163,9 @@ Rgba8 DebugRenderObject::GetTintColor( float time )
 {
 	float deltaSeconds = time - (float)m_timer->m_startSeconds;
 	float value = deltaSeconds / (float)m_timer->m_durationSeconds;
+	if( IsFloatMostlyEqual( 0.f, (float)m_timer->m_durationSeconds ) ) {
+		value = 1.f;
+	}
 	Rgba8 tintColor;
 	tintColor = Rgba8::GetLerpColor( m_startPosStartColor, m_startPosEndColor, value );
 	return tintColor;

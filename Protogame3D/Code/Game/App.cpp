@@ -4,17 +4,18 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
-#include "Engine/Core/Time/Clock.hpp"
-#include "Engine/Core/Time/Time.hpp"
+#include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
-#include "Engine/Input/InputSystem.hpp"
-#include "Engine/Renderer/Camera.hpp"
-#include "Engine/Renderer/BitmapFont.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
-#include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Core/Delegate.hpp"
 #include "Engine/Core/NamedProperties.hpp"
+#include "Engine/Core/Time/Clock.hpp"
+#include "Engine/Core/Time/Time.hpp"
+#include "Engine/Input/InputSystem.hpp"
+#include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Renderer/Camera.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 
 
 App*			g_theApp			= nullptr;
@@ -26,6 +27,7 @@ BitmapFont*		g_squirrelFont		= nullptr;
 RenderContext*	g_theRenderer		= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
 EventSystem*	g_theEventSystem	= nullptr;
+AudioSystem*	g_theAudioSystem	= nullptr;
 DevConsole*		g_theConsole		= nullptr;
 Convention		g_convention;
 
@@ -69,6 +71,7 @@ void App::Startup()
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theEventSystem	= new EventSystem();
+	g_theAudioSystem	= new AudioSystem();
 	TemplateTesting();
 
 	Clock::SystemStartUp();
@@ -77,7 +80,7 @@ void App::Startup()
 	g_theRenderer->StartUp( g_theWindow );
 	g_theInputSystem->Startup();
 
-	g_camera			= Camera::CreatePerspectiveCamera( g_theRenderer, 60, -0.1f, -100.f );
+	g_camera			= Camera::CreatePerspectiveCamera( g_theRenderer, 60, -0.09f, -100.f );
 	g_camera->m_debugString = "gamecamera";
 	g_camera->SetClearMode( CLEAR_NONE, Rgba8::DARK_GRAY );
 	g_camera->EnableClearColor( Rgba8::DARK_GRAY );

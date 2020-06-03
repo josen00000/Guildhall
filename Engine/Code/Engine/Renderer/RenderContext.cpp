@@ -1135,8 +1135,8 @@ void RenderContext::CreateBlendState()
 	alphaDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 
 	alphaDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	alphaDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	alphaDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	alphaDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_INV_DEST_ALPHA;
+	alphaDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 	alphaDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
 	m_device->CreateBlendState( &alphaDesc, &m_alphaBlendState );
@@ -1153,7 +1153,7 @@ void RenderContext::CreateBlendState()
 
 	additiveDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	additiveDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	additiveDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	additiveDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 	additiveDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
 	m_device->CreateBlendState( &additiveDesc, &m_additiveBlendState );

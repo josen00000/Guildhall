@@ -129,11 +129,11 @@ void CreateGPUMeshes()
 	Cylinder3 cylinderZ = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, g_basisCylinderLength ), g_basisCylinderRadius );
 
 	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderX, 12, Rgba8::RED, Rgba8::RED );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneX, 12, Rgba8::RED, Rgba8( 255, 0, 0, 0 ) );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneX, 12, Rgba8::HALFRED, Rgba8( 255, 0, 0, 0 ) );
 	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderY, 12, Rgba8::GREEN, Rgba8::GREEN );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneY, 12, Rgba8::GREEN, Rgba8( 0, 255, 0, 0 ) );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneY, 12, Rgba8::HALFGREEN, Rgba8( 0, 255, 0, 0 ) );
 	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderZ, 12, Rgba8::BLUE, Rgba8::BLUE );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneZ, 12, Rgba8::BLUE, Rgba8( 0, 0, 255, 0 ) );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneZ, 12, Rgba8::HALFBLUE, Rgba8( 0, 0, 255, 0 ) );
 
 	g_basisMesh->UpdateVerticesInCPU( basisVertices );
 	g_basisMesh->UpdateIndicesInCPU( basisIndices );
@@ -160,6 +160,9 @@ void DebugRenderAlwaysObjects()
 {
 	g_ctx->DisableDepth();
 	for( int i = 0; i < g_debugAlwaysObject.size(); i++ ) {
+		if( g_debugAlwaysObject.size() == 2 ) {
+			int a = 0;
+		}
 		DebugRenderObject* object = g_debugAlwaysObject[i];
 		if( object == nullptr ) { continue; }
 		DebugRenderOneObject( object );
@@ -816,7 +819,7 @@ void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, Rgba8 color, const char* format,
 	std::string result = Stringv( format, args );
 	va_end( args );
 
-	DebugAddScreenText( pos, pivot, 5.f, color, color, 1.f, result );
+	DebugAddScreenText( pos, pivot, 2.f, color, color, 0.f, result );
 }
 
 void DebugAddScreenBasis( Vec2 screenOriginLocation, Mat44 basisToRender, Rgba8 startTint, Rgba8 endTint, float duration )

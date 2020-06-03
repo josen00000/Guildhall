@@ -56,6 +56,7 @@ void Game::Startup()
 
 	// debug render system
 	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
+	LoadAssets();
 	CreateGameObjects();
 }
 
@@ -69,6 +70,7 @@ void Game::Shutdown()
 void Game::RunFrame( float deltaSeconds )
 {
 	Update( deltaSeconds );
+	HandleAudioKeyboardInput();
 }
 
 void Game::Reset()
@@ -202,7 +204,7 @@ void Game::HandleCameraMovement( float deltaSeconds )
 	m_gameCamera->SetPosition( cameraPos );
 
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
-	DebugAddScreenText( Vec4( 0.f, 0.5f, 0.f, 0.f ), Vec2::ZERO, 5.f, Rgba8::RED, Rgba8::RED, 0.001f, mouseMove.ToString() );
+	//DebugAddScreenText( Vec4( 0.f, 0.5f, 0.f, 0.f ), Vec2::ZERO, 5.f, Rgba8::RED, Rgba8::RED, 0.001f, mouseMove.ToString() );
 	float deltaCameraYaw = -mouseMove.x * baseRotSpeed ;
 	float deltaCameraPitch = mouseMove.y * baseRotSpeed ;
 
@@ -213,7 +215,7 @@ void Game::HandleCameraMovement( float deltaSeconds )
 	cameraYaw += deltaCameraYaw;
 	cameraPitch = ClampFloat( -89.9f, 89.9f, cameraPitch );
 	
-	DebugAddScreenText( Vec4( 0.f, 0.4f, 0.f, 0.f ), Vec2::ZERO, 5.f, Rgba8::RED, Rgba8::RED, 0.001f, std::to_string( deltaCameraYaw ) );
+	//DebugAddScreenText( Vec4( 0.f, 0.4f, 0.f, 0.f ), Vec2::ZERO, 5.f, Rgba8::RED, Rgba8::RED, 0.001f, std::to_string( deltaCameraYaw ) );
 	m_gameCamera->m_transform.SetPitchDegrees( cameraPitch );
 	m_gameCamera->m_transform.SetYawDegrees( cameraYaw );
 
@@ -225,6 +227,20 @@ void Game::HandleCameraMovement( float deltaSeconds )
 //  	m_gameCamera->SetPosition( cameraPos );
 //  	//g_theConsole->PrintString( Rgba8::RED, "mouse move is " + std::to_string( mouseMove.x ) + std::to_string( mouseMove.y ) );
 
+}
+
+void Game::HandleAudioKeyboardInput()
+{
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P ) ) {
+		PlayerTestSound();
+	}
+}
+
+void Game::PlayerTestSound()
+{
+	SoundID testSound = g_theAudioSystem->CreateOrGetSound( "Data/Audio/TestSound.mp3" );
+	g_theAudioSystem->PlaySound( testSound, false, m_rng->RollRandomFloatInRange( 0.5f, 1.f ), m_rng->RollRandomFloatInRange( -1.f, 1.f ), m_rng->RollRandomFloatInRange( 0.5f, 2.f ) );
+//	g_theAudioSystem->SetSoundPlaybackVolume( m_rng->RollRandomFloatInRange( 0.5f, 1.f ) );
 }
 
 void Game::CheckIfExit()
@@ -293,13 +309,30 @@ void Game::RenderGame() const
 
 	g_theRenderer->EndCamera( );
 
+	RenderUI();
+
 	DebugRenderWorldToCamera( m_gameCamera, m_convension );
 	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
 }
 
 void Game::RenderUI() const
 {
-	//g_theRenderer->DrawVertexVector( m_UIVertices );
+	int index = 1;
+	const Transform cameraTrans = m_gameCamera->m_transform;
+	const Vec3 cameraPos = cameraTrans.GetPosition();
+	Mat44 cameraModelMat = cameraTrans.ToMatrix( m_convension );
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 0.f, -index ), Vec2::ZERO, Rgba8::WHITE, "Camera Pitch: %.2f, Roll: %.2f, Yaw: %.2f", cameraTrans.GetPitchDegrees(), cameraTrans.GetRollDegrees(), cameraTrans.GetYawDegrees() );
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 50.f, -index ), Vec2::ZERO, Rgba8::WHITE, "Camera Pos X: %.2f, Roll: %.2f, Yaw: %.2f", cameraPos.x, cameraPos.y, cameraPos.z );
+	index++;
+	Vec3 iBasis = cameraModelMat.GetIBasis3D();
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 0.f, -index ), Vec2::ZERO, Rgba8::WHITE, "IBasis: %.2f, %.2f, %.2f", iBasis.x, iBasis.y, iBasis.z );
+	index++;
+	Vec3 jBasis = cameraModelMat.GetJBasis3D();
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 0.f, -index ), Vec2::ZERO, Rgba8::WHITE, "JBasis: %.2f, %.2f, %.2f", jBasis.x, jBasis.y, jBasis.z );
+	index++;
+	Vec3 kBasis = cameraModelMat.GetKBasis3D();
+	DebugAddScreenTextf( Vec4( 0.f, 1.f, 0.f, -index ), Vec2::ZERO, Rgba8::WHITE, "KBasis: %.2f, %.2f, %.2f", kBasis.x, kBasis.y, kBasis.z );
+	//DebugAddScreenText( Vec4( 0.5f, 0.5f, 0.f, 0.f ), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::RED, 0.f, "screen Test" );
 }
 
 void Game::RenderBasis() const
@@ -309,7 +342,14 @@ void Game::RenderBasis() const
 	basisTrans.SetPitchDegrees( 0.f );
 	basisTrans.SetRollDegrees( 0.f );
 	basisTrans.SetYawDegrees( 0.f );
-	DebugAddWorldBasis( basisTrans.ToMatrix( m_convension ), Rgba8::WHITE, Rgba8::WHITE, 1000.f, DEBUG_RENDER_ALWAYS );
+	DebugAddWorldBasis( basisTrans.ToMatrix( m_convension ), Rgba8::WHITE, Rgba8::WHITE, 0.01f, DEBUG_RENDER_ALWAYS );
+
+	Transform compassTrans;
+	Vec3 cameraPos = m_gameCamera->GetPosition();
+	Vec3 cameraForward = m_gameCamera->m_transform.GetForwardDirt( m_convension );
+	compassTrans.SetPosition( cameraPos + cameraForward * 0.1f );
+	compassTrans.SetScale( Vec3( 0.01f, 0.01f, 0.01f ) );
+	DebugAddWorldBasis( compassTrans.ToMatrix( m_convension ), Rgba8::WHITE, Rgba8::WHITE, 0.f, DEBUG_RENDER_ALWAYS );
 }
 
 void Game::SetConvention( Convention convention )
@@ -322,6 +362,7 @@ void Game::LoadAssets()
 	//g_squirrelFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 	//g_theRenderer->CreateOrGetTextureFromFile("FilePath");
 	//g_theAudioSystem->CreateOrGetSound("FilePath");
+	g_theAudioSystem->CreateOrGetSound( "Data/Audio/TestSound.mp3" );
 }
 
 void Game::CreateGameObjects()
@@ -351,7 +392,7 @@ void Game::CreateGameObjects()
 	// debug render
 	Mat44 basisMat = Mat44::IDENTITY;
 	basisMat.SetTranslation3D( Vec3( 0, 5.f, 0.f ) );
-	DebugAddWorldBasis( basisMat, Rgba8::RED, Rgba8::BLUE, 0.f, DEBUG_RENDER_ALWAYS );
-	//DebugAddScreenText( Vec4( 0.5f, 0.5f, 0.f, 0.f ), Vec2::ZERO, 10.f, Rgba8::RED, Rgba8::RED, 10.f, "screen Test" );
-	AddDebugMessage( "screen test " );
+	//DebugAddWorldBasis( basisMat, Rgba8::RED, Rgba8::BLUE, 0.f, DEBUG_RENDER_ALWAYS );
+	
+	//AddDebugMessage( "screen test " );
 }

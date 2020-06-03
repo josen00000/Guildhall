@@ -7,8 +7,11 @@
 Rgba8 Rgba8::WHITE		= Rgba8( 255, 255, 255 );
 Rgba8 Rgba8::BLACK		= Rgba8( 0, 0, 0 );
 Rgba8 Rgba8::RED		= Rgba8( 255, 0, 0 );
+Rgba8 Rgba8::HALFRED	= Rgba8( 255, 0, 0, 50 );
 Rgba8 Rgba8::GREEN		= Rgba8( 0, 255, 0 );
+Rgba8 Rgba8::HALFGREEN	= Rgba8( 0, 255, 0, 50 );
 Rgba8 Rgba8::BLUE		= Rgba8( 0, 0, 255 );
+Rgba8 Rgba8::HALFBLUE	= Rgba8( 0, 0, 255, 50 );
 Rgba8 Rgba8::YELLOW		= Rgba8( 255, 255, 0 );
 Rgba8 Rgba8::GRAY		= Rgba8( 125, 125, 125, 125 );
 Rgba8 Rgba8::DARK_GRAY	= Rgba8( 50, 50, 50 );

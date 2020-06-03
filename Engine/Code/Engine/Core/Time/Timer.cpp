@@ -45,7 +45,7 @@ bool Timer::HasElapsed() const
 {
 	if( m_durationSeconds < 0 ){ return false; }
 	double currentTime = m_clock->GetTotalSeconds();
-	return ( currentTime > ( m_startSeconds + m_durationSeconds) );
+	return ( currentTime >= ( m_startSeconds + m_durationSeconds) );
 }
 
 bool Timer::CheckAndDecrement()
