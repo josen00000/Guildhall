@@ -2,6 +2,7 @@
 #include <string>
 #include "Engine/Core/EventSystem.hpp"
 #include "Engine/Core/Rgba8.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 class Camera;
 class Texture;
@@ -40,7 +41,7 @@ void ClearDebugRendering();
 
 // output
 void DebugRenderBeginFrame();
-void DebugRenderWorldToCamera( Camera* camera );
+void DebugRenderWorldToCamera( Camera* camera, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
 void DebugRenderScreenTo( Texture* output );
 void DebugRenderEndFrame();
 

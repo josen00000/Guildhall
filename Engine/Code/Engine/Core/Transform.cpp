@@ -1,59 +1,91 @@
 #include "Transform.hpp"
 
 
-Transform::Transform( Vec3 pos, Vec3 rotation, Vec3 scale )
+Transform::Transform( Vec3 pos, float pitch, float roll, float yaw, Vec3 scale, Convention convention )
 	:m_pos(pos)
-	,m_rotationPRYDegrees(rotation)
 	,m_scale(scale)
 {
-	mat = ToMatrix();
+	m_mat = ToMatrix( convention );
+	SetPitchDegrees( pitch );
+	SetRollDegrees( roll );
+	SetYawDegrees( yaw );
 }
 
-Transform::Transform()
+Transform::Transform( Convention convention )
 {
 	m_pos = Vec3::ZERO;
-	m_rotationPRYDegrees = Vec3::ZERO;
+	m_pitchDegrees = 0.f;
+	m_rollDegrees = 0.f;
+	m_yawDegrees = 0.f;
 	m_scale = Vec3::ONE;
-	mat = ToMatrix();
+	m_mat = ToMatrix( convention );
 }
 
-Mat44 Transform::GetRotationMatrix() const
+Mat44 Transform::GetRotationMatrix( Convention convention ) const
 {
 	Mat44 pitch		= Mat44();
 	Mat44 roll		= Mat44();
 	Mat44 yaw		= Mat44();
 	Mat44 rotation	= Mat44();
 
-	pitch.RotateXDegrees( m_rotationPRYDegrees.x );
-	roll.RotateZDegrees( m_rotationPRYDegrees.y );
-	yaw.RotateYDegrees( m_rotationPRYDegrees.z );
+	switch( convention )
+	{
+	case X_FORWARD_Y_LEFT_Z_UP:
+		roll	= GetRotationMatrixAlongAxis( Axis_X, m_rollDegrees );
+		pitch	= GetRotationMatrixAlongAxis( Axis_Y, m_pitchDegrees );
+		yaw		= GetRotationMatrixAlongAxis( Axis_Z, m_yawDegrees );
+		break;
+	case X_RIGHT_Y_UP_Z_BACKWARD:
+		pitch	= GetRotationMatrixAlongAxis( Axis_X, m_pitchDegrees );
+		yaw		= GetRotationMatrixAlongAxis( Axis_Y, m_yawDegrees );
+		roll	= GetRotationMatrixAlongAxis( Axis_Z, m_rollDegrees );
+		break;
+	}
 
-	rotation = yaw;
-	rotation.Multiply( roll );
+	rotation = roll;
 	rotation.Multiply( pitch );
+	rotation.Multiply( yaw );
+
 	return rotation;
 }
+
+Mat44 Transform::GetRotationMatrixAlongAxis( Axis corrAxis, float rotDeg ) const
+{
+	Mat44 result = Mat44::IDENTITY;
+
+ 	switch( corrAxis )
+ 	{
+ 	case Axis_X: result.RotateXDegrees( rotDeg ); 
+ 		break;
+ 	case Axis_Y: result.RotateYDegrees( rotDeg ); 
+ 		break;
+ 	case Axis_Z: result.RotateZDegrees( rotDeg );
+ 		break;
+ 	default:
+ 		break;
+ 	}
+	return result;
+}
+
 
 void Transform::SetPosition( Vec3 pos )
 {
 	m_pos = pos;
 }
 
-void Transform::SetRotationFromPitchRollYawDegrees( float pitch, float roll, float yaw )
+void Transform::SetPitchDegrees( float pitch )
 {
-	pitch = ClampFloat( -90.f, 90.f, pitch );
-	roll = ClampDegressTo360( roll );
-	yaw = ClampDegressTo360( yaw );
-	//roll = RangeMapFloat( 0.f, 360.f, -180.f, 180.f, roll );
-	//yaw = RangeMapFloat( 0.f, 360.f, -180.f, 180.f, yaw );
-	//roll = ClampFloat( -180.f, 180.f, roll );
-	//yaw = ClampFloat( -180.f, 180.f, yaw );
-	m_rotationPRYDegrees = Vec3( pitch, roll, yaw );
+	m_pitchDegrees = ClampFloat( -90.f, 90.f, pitch );
 }
 
-void Transform::SetRotationFromPitchRollYawDegrees( Vec3 rotation )
+void Transform::SetRollDegrees( float roll )
 {
-	SetRotationFromPitchRollYawDegrees( rotation.x, rotation.y, rotation.z );
+	m_rollDegrees = ClampDegressTo360( roll );
+}
+
+void Transform::SetYawDegrees( float yaw )
+{
+	m_yawDegrees = ClampDegressTo360( yaw );
 }
 
 void Transform::SetScale( Vec3 scale )
@@ -68,8 +100,8 @@ void Transform::LookAt( Vec3 pos, Vec3 target, Vec3 worldUp /*= Vec3( 0.f, 1.f, 
 	Mat44 scale = Mat44();
 	scale.ScaleNonUniform3D( m_scale ); 
 
-	mat = lookat;
-	mat.Multiply( scale );
+	m_mat = lookat;
+	m_mat.Multiply( scale );
 }
 
 void Transform::LookAt( Vec3 pos, Vec3 direction, float dist, Vec3 worldUp /*= Vec3( 0.f, 1.f, 0.f ) */ )
@@ -80,8 +112,8 @@ void Transform::LookAt( Vec3 pos, Vec3 direction, float dist, Vec3 worldUp /*= V
 	Mat44 scale = Mat44();
 	scale.ScaleNonUniform3D( m_scale );
 
-	mat = lookat;
-	mat.Multiply( scale );
+	m_mat = lookat;
+	m_mat.Multiply( scale );
 }
 
 void Transform::LookAtStable( Vec3 target, Vec3 worldUp /*= Vec3( 0.f, 1.f, 0.f ) */ )
@@ -92,15 +124,15 @@ void Transform::LookAtStable( Vec3 target, Vec3 worldUp /*= Vec3( 0.f, 1.f, 0.f 
 
 void Transform::SetMatrix( Mat44 matrix )
 {
-	mat = matrix;
+	m_mat = matrix;
 }
 
-void Transform::UpdateMatrix()
+void Transform::UpdateMatrix( Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD*/ )
 {
-	mat = ToMatrix();
+	m_mat = ToMatrix( convention );
 }
 
-Mat44 Transform::ToMatrix() const
+Mat44 Transform::ToMatrix( Convention convention  ) const
 {
 	// Calculate Transalation matrix times rotation matrix
 	Mat44 translation = Mat44();
@@ -112,10 +144,11 @@ Mat44 Transform::ToMatrix() const
 	translation.SetTranslation3D( m_pos );
 	
 	// calculate rotation matrix
-	rotation = GetRotationMatrix();
+	rotation = GetRotationMatrix( convention );
 
 	model = translation;
 	model.Multiply( rotation );
 	model.Multiply( scale );
 	return model;
 }
+

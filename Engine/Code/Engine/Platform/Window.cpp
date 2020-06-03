@@ -42,11 +42,17 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			switch( wParam )
 			{
 				case WA_ACTIVE: {
-					input->ClipSystemCursor();
+					if( input != nullptr ){
+						input->ClipSystemCursor();
+						input->HideSystemCursor();
+						input->SetCursorMode( CURSOR_RELATIVE );
+					}
 					break;
 				}
 				case WA_INACTIVE: {
 					input->UnClipSystemCursor();
+					input->ShowSystemCursor();
+					input->SetCursorMode( CURSOR_ABSOLUTE );
 					break;
 				}
 				default:
@@ -280,6 +286,11 @@ Vec2 Window::GetClientCenter() const
 	RECT clientRect;
 	GetClientRect( static_cast<HWND>(m_hwnd), &clientRect );
 	return Vec2( (float)clientRect.right / 2, (float)clientRect.bottom / 2 );
+}
+
+void* Window::GetHandle() const
+{
+	return m_hwnd;
 }
 
 void Window::SetInputSystem( InputSystem* input )

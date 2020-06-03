@@ -24,17 +24,45 @@ void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound
 	vertices.push_back( rightup );
 }
 
-void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor )
+void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD*/ )
 {
-	Vec3 frontLeftdownPos	= box.min;
-	Vec3 frontRightupPos	= Vec3( box.max.x, box.max.y, box.min.z );
-	Vec3 frontLeftupPos		= Vec3( box.min.x, box.max.y, box.min.z );
-	Vec3 frontRightdownPos	= Vec3( box.max.x, box.min.y, box.min.z );
+	// front facing far from camera.
+	Vec3 frontLeftdownPos   = Vec3::ZERO;
+	Vec3 frontRightupPos	= Vec3::ZERO;
+	Vec3 frontLeftupPos		= Vec3::ZERO;
+	Vec3 frontRightdownPos	= Vec3::ZERO;
 
-	Vec3 backLeftdownPos	= Vec3( box.max.x, box.min.y, box.max.z );
-	Vec3 backRightupPos		= Vec3( box.min.x, box.max.y, box.max.z );
-	Vec3 backLeftupPos		= box.max;
-	Vec3 backRightdownPos	= Vec3( box.min.x, box.min.y, box.max.z );
+	Vec3 backLeftdownPos	= Vec3::ZERO;
+	Vec3 backRightupPos		= Vec3::ZERO;
+	Vec3 backLeftupPos		= Vec3::ZERO;
+	Vec3 backRightdownPos	= Vec3::ZERO;
+
+	switch ( convention )
+	{
+	case X_RIGHT_Y_UP_Z_BACKWARD:
+		// front facing along forward direction look from outside to inside
+		frontLeftdownPos	= box.min;
+		frontRightupPos		= Vec3( box.max.x, box.max.y, box.min.z );
+		frontLeftupPos		= Vec3( box.min.x, box.max.y, box.min.z );
+		frontRightdownPos	= Vec3( box.max.x, box.min.y, box.min.z );
+
+		backLeftdownPos		= Vec3( box.max.x, box.min.y, box.max.z );
+		backRightupPos		= Vec3( box.min.x, box.max.y, box.max.z );
+		backLeftupPos		= box.max;
+		backRightdownPos	= Vec3( box.min.x, box.min.y, box.max.z );
+		break;
+	case X_FORWARD_Y_LEFT_Z_UP:
+		frontLeftdownPos	= Vec3( box.max.x, box.min.y, box.min.z );
+		frontRightupPos		= box.max;
+		frontLeftupPos		= Vec3( box.max.x, box.min.y, box.max.z );
+		frontRightdownPos	= Vec3( box.max.x, box.max.y, box.min.z );
+
+		backLeftdownPos		= Vec3( box.min.x, box.max.y, box.min.z );
+		backRightupPos		= Vec3( box.min.x, box.min.y, box.max.z );
+		backLeftupPos		= Vec3( box.min.x, box.max.y, box.max.z ); 
+		backRightdownPos	= box.min;
+	}
+
 
 	// front face
 	Vertex_PCU frontLeftdown	= Vertex_PCU( frontLeftdownPos, tintColor, Vec2::ZERO );
@@ -60,7 +88,8 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 	Vertex_PCU rightLeftup		= Vertex_PCU( frontRightupPos, tintColor, Vec2( 0.f, 1.f ) );
 	Vertex_PCU rightRightdown	= Vertex_PCU( backLeftdownPos, tintColor, Vec2( 1.f, 0.f ) );
 
-	// top face
+	// old convention
+	/*// top face
 	Vertex_PCU topLeftdown		= Vertex_PCU( frontLeftupPos, tintColor, Vec2::ZERO );
 	Vertex_PCU topRightup		= Vertex_PCU( backLeftupPos, tintColor, Vec2::ONE );
 	Vertex_PCU topLeftup		= Vertex_PCU( backRightupPos, tintColor, Vec2( 0.f, 1.f ) );
@@ -71,6 +100,19 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 	Vertex_PCU bottomRightup	= Vertex_PCU( frontRightdownPos, tintColor, Vec2::ONE );
 	Vertex_PCU bottomLeftup		= Vertex_PCU( frontLeftdownPos, tintColor, Vec2( 0.f, 1.f ) );
 	Vertex_PCU bottomRightdown	= Vertex_PCU( backLeftdownPos, tintColor, Vec2( 1.f, 0.f ) );
+*/
+	// new convention
+	// top face
+	Vertex_PCU topLeftdown		= Vertex_PCU( backRightupPos, tintColor, Vec2::ZERO );
+	Vertex_PCU topRightup		= Vertex_PCU( frontRightupPos, tintColor, Vec2::ONE );
+	Vertex_PCU topLeftup		= Vertex_PCU( backLeftupPos, tintColor, Vec2( 0.f, 1.f ) );
+	Vertex_PCU topRightdown		= Vertex_PCU( frontLeftupPos, tintColor, Vec2( 1.f, 0.f ) );
+	
+	// bottom face
+	Vertex_PCU bottomLeftdown	= Vertex_PCU( backLeftdownPos, tintColor, Vec2::ZERO );
+	Vertex_PCU bottomRightup	= Vertex_PCU( frontLeftdownPos, tintColor, Vec2::ONE );
+	Vertex_PCU bottomLeftup		= Vertex_PCU( backRightdownPos, tintColor, Vec2( 0.f, 1.f ) );
+	Vertex_PCU bottomRightdown	= Vertex_PCU( frontRightdownPos, tintColor, Vec2( 1.f, 0.f ) );
 
 	vertices.reserve( 36 );
 	// front triangles
@@ -82,7 +124,7 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 	vertices.push_back( frontRightup );
 	vertices.push_back( frontLeftup );
 
-	// back triangles
+	//back triangles
 	vertices.push_back( backLeftdown );
 	vertices.push_back( backRightdown );
 	vertices.push_back( backRightup );
@@ -90,42 +132,63 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 	vertices.push_back( backLeftdown );
 	vertices.push_back( backRightup );
 	vertices.push_back( backLeftup );
-
+	
 	// left triangles
 	vertices.push_back( leftLeftdown );
 	vertices.push_back( leftRightdown );
 	vertices.push_back( leftRightup );
-
+	
 	vertices.push_back( leftLeftdown );
 	vertices.push_back( leftRightup );
 	vertices.push_back( leftLeftup );
-
+	
 	// right triangles
 	vertices.push_back( rightLeftdown );
 	vertices.push_back( rightRightdown );
 	vertices.push_back( rightRightup );
-
+	
 	vertices.push_back( rightLeftdown );
 	vertices.push_back( rightRightup );
 	vertices.push_back( rightLeftup );
 
-	// top triangles
+//	old convention
+// 	top triangles
+// 		vertices.push_back( topLeftdown );
+// 		vertices.push_back( topRightdown );
+// 		vertices.push_back( topRightup );
+// 		
+// 		vertices.push_back( topLeftdown );
+// 		vertices.push_back( topRightup );
+// 		vertices.push_back( topLeftup );
+// 		
+// 		// bottom triangles
+// 		vertices.push_back( bottomLeftdown );
+// 		vertices.push_back( bottomRightdown );
+// 		vertices.push_back( bottomRightup );
+// 		
+// 		vertices.push_back( bottomLeftdown );
+// 		vertices.push_back( bottomRightup );
+// 		vertices.push_back( bottomLeftup );
+
+	// for new convention
+	//top triangles
 	vertices.push_back( topLeftdown );
 	vertices.push_back( topRightdown );
 	vertices.push_back( topRightup );
-
+	
 	vertices.push_back( topLeftdown );
 	vertices.push_back( topRightup );
 	vertices.push_back( topLeftup );
-
+	
 	// bottom triangles
 	vertices.push_back( bottomLeftdown );
 	vertices.push_back( bottomRightdown );
 	vertices.push_back( bottomRightup );
-
+	
 	vertices.push_back( bottomLeftdown );
 	vertices.push_back( bottomRightup );
 	vertices.push_back( bottomLeftup );
+
 }
 
 void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
@@ -431,7 +494,7 @@ void AppendVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, Cylinder3 cyli
 	}
 }
 
-void AppendVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, Cylinder3 cylinder, int level, Rgba8& startTintColor, Rgba8& endTintColor )
+void AppendVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, Cylinder3 cylinder, int level, const Rgba8& startTintColor, const Rgba8& endTintColor )
 {
 	Mat44 lookatMat = Mat44::GetLookAtMatrix( cylinder.GetStartPos(), cylinder.GetEndPos() );
 
@@ -476,7 +539,7 @@ void AppendVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, Cylinder3 cyli
 	}
 }
 
-void AppendVertsForCone3D( std::vector<Vertex_PCU>& vertices, Cone3 cone, int level, Rgba8& tintColor )
+void AppendVertsForCone3D( std::vector<Vertex_PCU>& vertices, Cone3 cone, int level, const Rgba8& startTintColor, const Rgba8& endTintColor )
 {
 	Mat44 lookatMat = Mat44::GetLookAtMatrix( cone.GetStartPos(), cone.GetEndPos() );
 
@@ -484,16 +547,16 @@ void AppendVertsForCone3D( std::vector<Vertex_PCU>& vertices, Cone3 cone, int le
 	float deltaThetaDeg = 360.f / level;
 	float radius = cone.GetRadius();
 
-	Vertex_PCU start	= Vertex_PCU( cone.GetStartPos(), tintColor, Vec2::ZERO );
-	Vertex_PCU end		= Vertex_PCU( cone.GetEndPos(), tintColor, Vec2::ZERO );
+	Vertex_PCU start	= Vertex_PCU( cone.GetStartPos(), startTintColor, Vec2::ZERO );
+	Vertex_PCU end		= Vertex_PCU( cone.GetEndPos(), endTintColor, Vec2::ZERO );
 	for( int i = 0; i < level; i++ ) {
 		float cosThetaDeg = CosDegrees( thetaDeg );
 		float sinThetaDeg = SinDegrees( thetaDeg );
 		float cosNextThetaDeg = CosDegrees( thetaDeg + deltaThetaDeg );
 		float sinNextThetaDeg = SinDegrees( thetaDeg + deltaThetaDeg );
 
-		Vertex_PCU startCurrent	= Vertex_PCU( cone.GetStartPos() + ( cosThetaDeg * lookatMat.GetIBasis3D() * radius ) + ( sinThetaDeg * lookatMat.GetJBasis3D() * radius ), tintColor, Vec2::ZERO );
-		Vertex_PCU startNext	= Vertex_PCU( cone.GetStartPos() + ( cosNextThetaDeg * lookatMat.GetIBasis3D() * radius ) + ( sinNextThetaDeg * lookatMat.GetJBasis3D() * radius ), tintColor, Vec2::ZERO );
+		Vertex_PCU startCurrent	= Vertex_PCU( cone.GetStartPos() + (cosThetaDeg * lookatMat.GetIBasis3D() * radius) + (sinThetaDeg * lookatMat.GetJBasis3D() * radius), startTintColor, Vec2::ZERO );
+		Vertex_PCU startNext	= Vertex_PCU( cone.GetStartPos() + (cosNextThetaDeg * lookatMat.GetIBasis3D() * radius) + (sinNextThetaDeg * lookatMat.GetJBasis3D() * radius), startTintColor, Vec2::ZERO );
 
 		// start disc
 		vertices.push_back( start );
@@ -508,7 +571,6 @@ void AppendVertsForCone3D( std::vector<Vertex_PCU>& vertices, Cone3 cone, int le
 		thetaDeg = thetaDeg + deltaThetaDeg;
 	}
 }
-
 
 // Append TBN Verts 
 void AppendTBNVertsForAABB2D( std::vector<Vertex_PCUTBN>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
@@ -746,10 +808,10 @@ void AppendIndexedVertsForSphere3D( std::vector<Vertex_PCU>& vertices, std::vect
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 
-void AppendIndexedVertsForAABB3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, AABB3 box, Rgba8& tintColor )
+void AppendIndexedVertsForAABB3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, AABB3 box, Rgba8& tintColor, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD */ )
 {
 	std::vector<Vertex_PCU>verticesNotIndexed;
-	AppendVertsForAABB3D( verticesNotIndexed, box, tintColor );
+	AppendVertsForAABB3D( verticesNotIndexed, box, tintColor, convention );
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 
@@ -767,20 +829,24 @@ void AppendIndexedVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, std::ve
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 
-void AppendIndexedVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, Cylinder3 cylinder, int level, Rgba8& startTintColor, Rgba8& endTintColor )
+void AppendIndexedVertsForCylinder3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, Cylinder3 cylinder, int level, const Rgba8& startTintColor, const Rgba8& endTintColor )
 {
 	std::vector<Vertex_PCU> verticesNotIndexed;
 	AppendVertsForCylinder3D( verticesNotIndexed, cylinder, level, startTintColor, endTintColor );
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 
-void AppendIndexedVertsForCone3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, Cone3 cone, int level, Rgba8& tintColor )
+void AppendIndexedVertsForCone3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, Cone3 cone, int level, const Rgba8& startTintColor, const Rgba8& endTintColor )
 {
 	std::vector<Vertex_PCU> verticesNotIndexed;
-	AppendVertsForCone3D( verticesNotIndexed, cone, level, tintColor );
+	AppendVertsForCone3D( verticesNotIndexed, cone, level, startTintColor, endTintColor );
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
 }
 
+void AppendIndexedVertsForCone3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, Cone3 cone, int level, const Rgba8& tintColor )
+{
+	AppendIndexedVertsForCone3D( vertices, index, cone, level, tintColor, tintColor );
+}
 
 // append indexed tbn verts
 void AppendIndexedTBNVerts( std::vector<Vertex_PCUTBN>& dest, std::vector<uint>& index, const std::vector<Vertex_PCUTBN> source )

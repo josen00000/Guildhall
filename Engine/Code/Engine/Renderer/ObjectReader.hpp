@@ -44,7 +44,7 @@ public:
 	void DisableTransform();
 	void SetPostTrans( Transform trans );
 	void SetPostTransPos( Vec3 pos );
-	void SetPostTransRot( Vec3 rot );
+	void SetPostTransRot( float pitch, float roll, float yaw );
 	void SetPostTransScale( Vec3 scale );
 
 private:

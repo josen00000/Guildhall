@@ -130,7 +130,7 @@ void RenderContext::EndFrame()
 	Prensent();
 }
 
-void RenderContext::BeginCamera( Camera* camera )
+void RenderContext::BeginCamera( Camera* camera, Convention convention )
 {
 #if defined(RENDER_DEBUG)
 	ClearState();
@@ -149,7 +149,7 @@ void RenderContext::BeginCamera( Camera* camera )
 	BindRasterState();
 
 	// Bind and set uniform buffer
-	RenderBuffer* cameraUBO = camera->GetOrCreateCameraBuffer( this );
+	RenderBuffer* cameraUBO = camera->GetOrCreateCameraBuffer( this, convention );
 
 	SetModelAndSpecular( Mat44(), 1.f, 1.f );
 	
@@ -315,7 +315,7 @@ void RenderContext::StartEffect( Texture* dst, Texture* src, Shader* shader, Ren
 {
 	m_effectCamera->SetColorTarget( dst );
 	//m_effectCamera->DisableClearColor();
-	BeginCamera( m_effectCamera );
+	BeginCamera( m_effectCamera, g_convention );
 	BindShader( shader );
 	SetMaterialBuffer( ubo );
 	SetDiffuseTexture( src );
@@ -325,7 +325,7 @@ void RenderContext::StartBloomEffect( Texture* dst, Texture* src, Texture* color
 {
 	m_effectCamera->SetColorTarget( dst );
 	//m_effectCamera->DisableClearColor();
-	BeginCamera( m_effectCamera );
+	BeginCamera( m_effectCamera, g_convention );
 	BindShader( shader );
 	SetMaterialBuffer( ubo );
 	SetDiffuseTexture( src );
@@ -614,9 +614,8 @@ void RenderContext::SetBlendMode( BlendMode blendMode )
 
 void RenderContext::SetModelMatrix( Mat44 model )
 {
-	m_model.model = model;
+	m_model.modelMat = model;
 	m_modelHasChanged = true;
-	//m_modelUBO->Update( &modelData, sizeof( modelData ), sizeof( modelData ) );
 }
 
 void RenderContext::SetSpecularFactor( float factor )

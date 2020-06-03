@@ -1,4 +1,5 @@
 #pragma once
+#include "Engine/Core/Convention.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/EventSystem.hpp"
@@ -19,6 +20,7 @@ extern DevConsole* g_theConsole;
 extern EventSystem* g_theEventSystem;
 extern BitmapFont* g_defaultFont;
 extern NamedStrings g_gameConfigBlackboard;
+extern Convention g_convention;
 
 const Vec2 ALIGN_BOTTOM_LEFT	= Vec2( 0.f, 0.f);
 const Vec2 ALIGN_BOTTOM_CENTER	= Vec2( 0.5f, 0.f);

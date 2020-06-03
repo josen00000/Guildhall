@@ -18,7 +18,7 @@ public:
 	int GetClientWidth() const;
 	int GetClientHeight() const;
 	Vec2 GetClientCenter() const;
-
+	void* GetHandle() const;
 
 	void SetInputSystem( InputSystem* input );
 	InputSystem* GetInputSystem() const { return m_inputSystem; }

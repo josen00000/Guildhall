@@ -9,6 +9,10 @@ constexpr int MAX_XBOX_CONTROLLERS = 4;
 
 class Camera;
 
+enum Cursor_bit {
+	CURSOR_HIDE = ( 1 << 0 ),
+	CURSOR_CLIP = ( 1 << 1 )
+};
 
 enum CursorMode {
 	CURSOR_ABSOLUTE,
@@ -77,6 +81,7 @@ private:
 	MouseController* m_mouseController			= nullptr;
 
 	CursorMode m_cursorMode = CURSOR_ABSOLUTE;
+	//uint m_cursorState;
 
 	Window* m_topWindow;
 	std::queue<char> m_characters;

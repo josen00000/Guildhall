@@ -1,10 +1,12 @@
 #include <math.h>
 #include <cmath>
+#include <sstream>
 #include "Engine/Core/StringUtils.hpp"
+#include "Engine/Math/IntVec2.hpp"
+#include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/Vec2.hpp"
-#include<Engine/Math/Vec3.hpp>
-#include<Engine/Math/IntVec2.hpp>
-#include<Engine/Math/MathUtils.hpp>
+#include "Engine/Math/Vec3.hpp"
+#include <sstream>
 
 #define _USE_MATH_DEFINES 
 #ifndef M_PI
@@ -145,6 +147,11 @@ const Vec2 Vec2::GetReflected( const Vec2& normal ) const
 	Vec2 vec2T = *this - normalProjectedVec2;
 	Vec2 result = vec2T - normalProjectedVec2 ;
 	return result;
+}
+
+std::string Vec2::ToString()
+{	
+	return std::string( "Vec2 x: " + std::to_string( x ) + ".  y: " + std::to_string( y ) );
 }
 
 float Vec2::NormalizeAndGetPreviousLength()

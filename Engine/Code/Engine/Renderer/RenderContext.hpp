@@ -40,6 +40,8 @@ struct IDXGIDebug;
 typedef std::map<std::string, Shader*>::iterator ShaderMapIterator;
 typedef Vec4 color_intensity;
 
+
+
 enum BlendMode
 {
 	BLEND_ALPHA,
@@ -131,7 +133,7 @@ struct time_data_t {
 };
 
 struct model_t {
-	Mat44 model;
+	Mat44 modelMat;
 	float specularFactor;
 	float specularPow;
 	float padding[2];
@@ -212,7 +214,7 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	
-	void BeginCamera( Camera* camera);
+	void BeginCamera( Camera* camera, Convention convention );
 	void EndCamera();
 
 	void ClearState();
@@ -307,6 +309,7 @@ public:
 	void EnableDirectionLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 attenuation );
 	void EnableSpotLight( int index, Vec3 position, Rgba8 color, float intensity, Vec3 attenuation, Vec3 direction, float halfInnerDegrees, float halfOuterDegrees );
 	void DisableLight( int index );
+
 
 	// end 
 	void Prensent();

@@ -13,60 +13,46 @@
 extern RenderContext* g_theRenderer;
 
 
-Camera::Camera( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio )
+Camera::Camera( RenderContext* ctx, float nZ, float fZ, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
+{
+	m_transform = Transform();
+	SetOrthoView( bottomLeft, topRight, nZ, fZ, aspectRatio );
+	m_projectionType = PROJECTION_ORTHOGRAPHIC;
+	m_rctx = ctx;
+}
+
+Camera::Camera( RenderContext* ctx, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
 {
 	m_transform = Transform();
 	SetOrthoView( bottomLeft, topRight, aspectRatio );
 	m_projectionType = PROJECTION_ORTHOGRAPHIC;
+	m_rctx = ctx;
 }
 
-Camera::Camera( float fov/*=60.f*/, float nearZ/*=-0.1*/, float farZ/*=-100*/, Vec3 pos, Vec3 rotPRY, Vec3 scale, const char* debugMsg )
+Camera::Camera( RenderContext* ctx, float fov/*60.f*/, float nearZ/*=-0.1*/, float farZ/*=-100*/, Vec3 pos/*=Vec3::ZERO*/, Vec3 rotPRY/*=Vec3::ZERO*/, Vec3 scale/*=Vec3::ONE */, Convention convention )
 {
-	m_transform = Transform( pos, rotPRY, scale );
+	m_transform = Transform( pos, rotPRY.x, rotPRY.y, rotPRY.z, scale, convention );
 	SetProjectionPerspective( fov, nearZ, farZ );
 	m_projectionType = PROJECTION_PERSPECTIVE;
-	m_debugString = debugMsg;
+	m_rctx = ctx;
 }
 
-Camera::Camera( float nZ, float fZ, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
+Camera* Camera::CreateOrthographicCamera( RenderContext* ctx, const Vec2& bottomLeft, const Vec2& topRight )
 {
-	m_transform = Transform();
-	SetOrthoView( bottomLeft, topRight, nZ, fZ, aspectRatio );
-	m_projectionType = PROJECTION_ORTHOGRAPHIC;
-}
-
-Camera::Camera( float nZ, float fZ, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1*/, const char* debugMsg /*= "" */ )
-{
-	m_transform = Transform();
-	SetOrthoView( bottomLeft, topRight, nZ, fZ, aspectRatio );
-	m_debugString = debugMsg;
-	m_projectionType = PROJECTION_ORTHOGRAPHIC;
-}
-
-Camera::Camera( const char* debugMsg, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
-{
-	m_transform = Transform();
-	SetOrthoView( bottomLeft, topRight, aspectRatio );
-	m_debugString = debugMsg;
-	m_projectionType = PROJECTION_ORTHOGRAPHIC;
-}
-
-Camera* Camera::CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& topRight )
-{
-	Camera* result = new Camera( bottomLeft, topRight );
+	Camera* result = new Camera( ctx, bottomLeft, topRight, 1 );
 	return result;
 }
 
-Camera* Camera::CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos, Vec3 rotPRY, Vec3 scale )
+Camera* Camera::CreatePerspectiveCamera( RenderContext* ctx, float fov, float nearZ, float farZ, Vec3 pos, Vec3 rotPRY, Vec3 scale )
 {
-	Camera* result = new Camera( fov, nearZ, farZ, pos, rotPRY, scale );
+	Camera* result = new Camera( ctx, fov, nearZ, farZ, pos, rotPRY, scale );
 	return result;
 }
 
-Camera* Camera::CreatePerspectiveCamera( const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos/*=Vec3::ZERO*/, Vec3 rotPRY/*=Vec3::ZERO*/, Vec3 scale/*=Vec3::ONE */ )
+Camera* Camera::CreatePerspectiveCamera( RenderContext* ctx, const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos/*=Vec3::ZERO*/, Vec3 rotPRY/*=Vec3::ZERO*/, Vec3 scale/*=Vec3::ONE */ )
 {
 	UNUSED(debugMsg);
-	Camera* result = new Camera( fov, nearZ, farZ, pos, rotPRY, scale );
+	Camera* result = new Camera( ctx, fov, nearZ, farZ, pos, rotPRY, scale );
 	return result;
 }
 
@@ -132,15 +118,15 @@ AABB2 Camera::GetCameraAsBox() const
 	return result;
 }
 
-Mat44 Camera::GetUpdatedViewMatrix()
+Mat44 Camera::GetUpdatedViewMatrix( Convention convention )
 {
-	UpdateViewMatrix();
+	UpdateViewMatrix( convention );
 	return m_view;
 }
 
-Mat44 Camera::GetModelMatrix() const
+Mat44 Camera::GetModelMatrix( Convention convention ) const
 {
-	return m_transform.ToMatrix();
+	return m_transform.ToMatrix( convention );
 }
 
 bool Camera::IsClearColor() const
@@ -239,7 +225,9 @@ void Camera::SetDepthStencilTarget( Texture* texture )
 
 void Camera::SetPitchRollYawRotation( float pitch, float roll, float yaw )
 {
-	m_transform.SetRotationFromPitchRollYawDegrees( pitch, roll, yaw );
+	m_transform.SetPitchDegrees( pitch );
+	m_transform.SetRollDegrees( roll );
+	m_transform.SetYawDegrees( yaw );
 }
 
 void Camera::SetProjectionPerspective( float fov/*=60*/, float nearZ/*=-0.1*/, float farZ/*=-100 */ )
@@ -272,7 +260,7 @@ Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext* ctx )
 	return m_depthStencilTarget;
 }
 
-RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx )
+RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx, Convention convention )
 {
 	static int i = 0;
 	i++;
@@ -280,28 +268,43 @@ RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx )
 	if( m_cameraUBO == nullptr ) {
 		m_cameraUBO = new RenderBuffer( m_debugString.c_str(), ctx, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	}
-	UpdateCameraUBO();
+	UpdateCameraUBO( convention );
 	return m_cameraUBO;
 }
 
-void Camera::UpdateCameraUBO()
+void Camera::UpdateCameraUBO( Convention convention )
 {
 	camera_ortho_t cameraData;
 	cameraData.projection = m_projection; 
-	UpdateViewMatrix();
+	UpdateViewMatrix( convention );
 	cameraData.view = m_view;
 	cameraData.position = m_transform.GetPosition();
 	m_cameraUBO->Update( &cameraData, sizeof( cameraData ), sizeof( cameraData ) );
 }
 
-
-void Camera::UpdateCameraRotation( Vec3 deltaRot )
+void Camera::UpdateCameraPitch( float deltaPitch )
 {
-	Vec3 cameraRot = m_transform.GetRotationPRYDegrees();
-	cameraRot += deltaRot;
-	cameraRot.x = ClampFloat( -85.f ,85.f, cameraRot.x );
-	//cameraRot.x = ClampFloat();
-	m_transform.SetRotationFromPitchRollYawDegrees( cameraRot );
+	float cameraPitch = m_transform.GetPitchDegrees();
+	cameraPitch += deltaPitch;
+	cameraPitch = ClampFloat( -85.f, 85.f, cameraPitch );
+	m_transform.SetPitchDegrees( cameraPitch );
+}
+
+void Camera::UpdateCameraRoll( float deltaRoll )
+{
+	float cameraRoll = m_transform.GetRollDegrees();
+	cameraRoll += deltaRoll;
+	m_transform.SetRollDegrees( cameraRoll );
+
+}
+
+void Camera::UpdateCameraYaw( float deltaYaw )
+{
+	float cameraYaw = m_transform.GetYawDegrees();
+	cameraYaw += deltaYaw;
+	m_transform.SetYawDegrees( cameraYaw );
+
+
 }
 
 Vec3 Camera::ClientToWorld( Vec2 client, float ndcZ )const
@@ -334,16 +337,50 @@ Vec3 Camera::WorldToClient( Vec3 worldPos )
 	return Vec3::ZERO;
 }
 
-void Camera::UpdateViewMatrix()
+void Camera::UpdateViewMatrix( Convention convention )
 {
-	// same as invertOrthonormal
-	m_view = GetModelMatrix();
-	m_view.SetTranslation3D( Vec3::ZERO );
-	m_view.TransposeMatrix();
+	// forseth way
+ 
+ 	switch( convention )
+ 	{
+ 	case X_RIGHT_Y_UP_Z_BACKWARD:
+ 		m_view = Mat44();
+ 		break;
+ 	case X_FORWARD_Y_LEFT_Z_UP:
+ 		m_view =  Mat44( Vec3( 0.f, 0.f, -1.f ), Vec3( -1.f, 0.f, 0.f ), Vec3( 0.f, 1.f, 0.f ) );
+ 		break;
+ 	}
 
-	Vec3 translation = m_transform.GetPosition();
-	Vec3 inverse_translation = m_view.TransformPosition3D( -translation );
-	m_view.SetTranslation3D( inverse_translation );
+	// forseth way wrong. Need to figure out why
+// 	Mat44 forsethTest = m_view;
+//  	Mat44 cameraViewMat;
+//  	cameraViewMat = GetModelMatrix( convention );
+//  	cameraViewMat.SetTranslation3D( Vec3::ZERO );
+//  	cameraViewMat.TransposeMatrix();
+//  	
+//  	Vec3 translation = m_transform.GetPosition();
+//  	
+//  	Vec3 inverse_translation = cameraViewMat.TransformPosition3D( -translation );
+//  	cameraViewMat.SetTranslation3D( inverse_translation );
+//  	
+//  	forsethTest.Multiply( cameraViewMat );
+	
+
+
+	// squirrel way
+	//m_view = Mat44( Vec3( 0.f, 0.f, -1.f ), Vec3( -1.f, 0.f, 0.f ), Vec3( 0.f, 1.f, 0.f ) );
+	// Apply (anti-)transforms from camera, in reverse order (simulate camera by moving the world oppositely)
+	m_view.RotateXDegrees( -m_transform.GetRollDegrees() );
+	m_view.RotateYDegrees( -m_transform.GetPitchDegrees() );
+	m_view.RotateZDegrees( -m_transform.GetYawDegrees() );
+
+	m_view.Translate3D( -m_transform.GetPosition() );
+// 	if( IsMat44MostlyEqual( m_view, forsethTest ) ) {
+// 		int a = 0;
+// 	}
+// 	else {
+// 		int b = 0;
+// 	}
 }
 
 // Private

@@ -33,7 +33,7 @@ public:
 	const Vec3 GetClamped( float maxLength )const;
 	const Vec3 GetNormalized() const;
 
-	std::string GetText();
+	std::string ToString();
 
 	// Mutator
 	void Normalize();

@@ -380,6 +380,27 @@ void Mat44::SetBasisVectors4D( const Vec4& iBasis4D, const Vec4& jBasis4D, const
 	m_values[Tw] = translation4D.w;
 }
 
+void Mat44::SetIBasis3D( const Vec3& iBasis3D )
+{
+	m_values[Ix] = iBasis3D.x;
+	m_values[Iy] = iBasis3D.y;
+	m_values[Iz] = iBasis3D.z;
+}
+
+void Mat44::SetJBasis3D( const Vec3& jBasis3D )
+{
+	m_values[Jx] = jBasis3D.x;
+	m_values[Jy] = jBasis3D.y;
+	m_values[Jz] = jBasis3D.z;
+}
+
+void Mat44::SetKBasis3D( const Vec3& kBasis3D )
+{
+	m_values[Kx] = kBasis3D.x;
+	m_values[Ky] = kBasis3D.y;
+	m_values[Kz] = kBasis3D.z;
+}
+
 void Mat44::RotateXDegrees( float degreesAboutX )
 {
 	float cosDegrees = CosDegrees(degreesAboutX);

@@ -10,7 +10,7 @@ DebugRenderObject::~DebugRenderObject()
 	SELF_SAFE_RELEASE(m_timer);
 }
 
-DebugRenderObject* DebugRenderObject::CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD*/ )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_timer = new Timer();
@@ -22,10 +22,11 @@ DebugRenderObject* DebugRenderObject::CreateObjectWithPosAndSize( Vec3 pos, Vec3
 	object->m_endPosStartColor = startColor;
 	object->m_endPosEndColor = endColor;
 	object->m_startPosEndColor = endColor;
+	object->m_convention = convention;
 	return object;
 }
 
-DebugRenderObject* DebugRenderObject::CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, GPUMesh* mesh, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, GPUMesh* mesh, Clock* clock, float duration, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD*/ )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_timer = new Timer();
@@ -37,24 +38,26 @@ DebugRenderObject* DebugRenderObject::CreateObjectWithPosAndSize( Vec3 pos, Vec3
 	object->m_endPosStartColor = endPosStartColor;
 	object->m_endPosEndColor = endPosEndColor;
 	object->m_startPosEndColor = startPosEndColor;
+	object->m_convention = convention;
 	return object;
 }
 
-DebugRenderObject* DebugRenderObject::CreateObjectWithMatrix( Mat44 mat, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithMatrix( Mat44 mat, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD */)
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_timer = new Timer();
 	object->m_timer->SetSeconds( clock, duration );
 	object->m_mesh = mesh;
-	object->m_transform.mat = mat;
+	object->m_transform.m_mat = mat;
 	object->m_startPosStartColor = startColor;
 	object->m_endPosStartColor = startColor;
 	object->m_endPosEndColor = endColor;
 	object->m_startPosEndColor = endColor;
+	object->m_convention = convention;
 	return object;
 }
 
-DebugRenderObject* DebugRenderObject::CreateObjectWithVertices( std::vector<Vertex_PCU> vertices, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithVertices( std::vector<Vertex_PCU> vertices, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD*/ )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_vertices = vertices;
@@ -64,10 +67,11 @@ DebugRenderObject* DebugRenderObject::CreateObjectWithVertices( std::vector<Vert
 	object->m_endPosStartColor = endPosStartColor;
 	object->m_endPosEndColor = endPosEndColor;
 	object->m_startPosEndColor = startPosEndColor;
+	object->m_convention = convention;
 	return object;
 }
 
-DebugRenderObject* DebugRenderObject::CreateObjectWithVerticesAndTrans( std::vector<Vertex_PCU> vertices, Transform trans, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration )
+DebugRenderObject* DebugRenderObject::CreateObjectWithVerticesAndTrans( std::vector<Vertex_PCU> vertices, Transform trans, Rgba8 startPosStartColor, Rgba8 endPosStartColor, Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD*/ )
 {
 	DebugRenderObject* object = new DebugRenderObject();
 	object->m_vertices = vertices;
@@ -78,6 +82,7 @@ DebugRenderObject* DebugRenderObject::CreateObjectWithVerticesAndTrans( std::vec
 	object->m_endPosStartColor = endPosStartColor;
 	object->m_endPosEndColor = endPosEndColor;
 	object->m_startPosEndColor = startPosEndColor;
+	object->m_convention = convention;
 	return object;
 }
 
@@ -150,6 +155,7 @@ void DebugRenderObject::RenderObject( RenderContext* ctx )
 	default:
 		break;
 	}
+
 	ctx->SetFillMode( RASTER_FILL_SOLID );
 }
 

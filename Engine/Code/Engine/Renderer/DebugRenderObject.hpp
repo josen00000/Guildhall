@@ -30,11 +30,11 @@ public:
 	DebugRenderObject(){}
 	~DebugRenderObject();
 	
-	static DebugRenderObject* CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration );
-	static DebugRenderObject* CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, GPUMesh* mesh, Clock* clock, float duration );
-	static DebugRenderObject* CreateObjectWithMatrix( Mat44 mat, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration );
-	static DebugRenderObject* CreateObjectWithVertices( std::vector<Vertex_PCU> vertices, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration );
-	static DebugRenderObject* CreateObjectWithVerticesAndTrans( std::vector<Vertex_PCU> vertices, Transform trans, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration );
+	static DebugRenderObject* CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
+	static DebugRenderObject* CreateObjectWithPosAndSize( Vec3 pos, Vec3 size, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, GPUMesh* mesh, Clock* clock, float duration, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
+	static DebugRenderObject* CreateObjectWithMatrix( Mat44 mat, Rgba8 startColor, Rgba8 endColor, GPUMesh* mesh, Clock* clock, float duration, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
+	static DebugRenderObject* CreateObjectWithVertices( std::vector<Vertex_PCU> vertices, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
+	static DebugRenderObject* CreateObjectWithVerticesAndTrans( std::vector<Vertex_PCU> vertices, Transform trans, Rgba8 startPosStartColor, Rgba8 endPosStartColor,Rgba8 startPosEndColor, Rgba8 endPosEndColor, Clock* clock, float duration, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
 	
 	bool IsReadyToBeCulled() const;
 	bool CheckIfOld();
@@ -57,4 +57,6 @@ public:
 	Timer* m_timer;
 	RenderObjectType m_type;
 	std::vector<Vertex_PCU> m_vertices;
+
+	Convention m_convention = X_RIGHT_Y_UP_Z_BACKWARD;
 };

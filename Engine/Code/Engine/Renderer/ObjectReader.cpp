@@ -127,9 +127,11 @@ void ObjectReader::SetPostTransPos( Vec3 pos )
 	EnableTransform();
 }
 
-void ObjectReader::SetPostTransRot( Vec3 rot )
+void ObjectReader::SetPostTransRot( float pitch, float roll, float yaw )
 {
-	m_trans.SetRotationFromPitchRollYawDegrees( rot );
+	m_trans.SetPitchDegrees( pitch );
+	m_trans.SetRollDegrees( roll );
+	m_trans.SetYawDegrees( yaw );
 	EnableTransform();
 }
 

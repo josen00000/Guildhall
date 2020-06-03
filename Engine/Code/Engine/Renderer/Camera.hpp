@@ -1,6 +1,8 @@
 #pragma once
+#include "Engine/Core/Convention.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/Rgba8.hpp"
+#include "Engine/Core/Convention.hpp"
 #include "Engine/Core/Transform.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Vec2.hpp"
@@ -37,14 +39,12 @@ public:
 	~Camera();
 
 	//Camera( const Camera& camera ) = delete;
-	explicit Camera( const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
-	explicit Camera(  const char* debugMsg, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
-	explicit Camera(  float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1 );
-	explicit Camera(  float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1, const char* debugMsg = "" );
-	explicit Camera( float fov/*60.f*/, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE, const char* debugMsg = "" );
-	static Camera* CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& topRight );
-	static Camera* CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
-	static Camera* CreatePerspectiveCamera( const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
+	explicit Camera( RenderContext* ctx, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
+	explicit Camera( RenderContext* ctx, float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1 );
+	explicit Camera( RenderContext* ctx, float fov/*60.f*/, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE, Convention convention = X_RIGHT_Y_UP_Z_BACKWARD );
+	static Camera* CreateOrthographicCamera( RenderContext* ctx, const Vec2& bottomLeft, const Vec2& topRight );
+	static Camera* CreatePerspectiveCamera( RenderContext* ctx, float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
+	static Camera* CreatePerspectiveCamera( RenderContext* ctx, const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
 	void Translate( const Vec3& translation );
 
 public:
@@ -62,9 +62,9 @@ public:
 	ProjectionType GetCameraProjectionType() const{ return m_projectionType; }
 
 	Mat44	GetViewMatrix() const { return m_view; }
-	Mat44	GetUpdatedViewMatrix();
+	Mat44	GetUpdatedViewMatrix( Convention convention );
 	Mat44	GetProjectionMatrix() const { return m_projection; }
-	Mat44	GetModelMatrix() const;
+	Mat44	GetModelMatrix( Convention convention ) const;
 
 	bool	IsUseDepth() const { return m_useDepth; }
 	bool	IsClearColor() const;
@@ -79,7 +79,7 @@ public:
 	Texture*		GetColorTarget( uint slot=0 ) const;
 	Texture*		GetDepthStencilTarget() const { return m_depthStencilTarget; }
 	Texture*		GetOrCreateDepthStencilTarget( RenderContext* ctx );
-	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx );
+	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx, Convention convention );
 
 		// Mutator
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio );
@@ -106,14 +106,17 @@ public:
 
 	void SetProjectionPerspective( float fov=60, float nearZ=-0.1, float farZ=-100 );
 
-	void UpdateCameraUBO();
+	void UpdateCameraUBO( Convention convention );
 	void UpdateCameraRotation( Vec3 deltaRot );
+	void UpdateCameraPitch( float deltaPitch );
+	void UpdateCameraRoll( float deltaRoll );
+	void UpdateCameraYaw( float deltaYaw );
 
 	// Helper
 	Vec3 ClientToWorld( Vec2 client, float ndcZ ) const;
 	Vec3 WorldToClient( Vec3 worldPos );
 
-	void UpdateViewMatrix();
+	void UpdateViewMatrix( Convention convention );
 
 private:
 

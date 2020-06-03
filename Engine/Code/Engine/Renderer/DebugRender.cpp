@@ -25,6 +25,11 @@ static float g_sizeScale = 0.1f;
 static float g_uiSizeCoe = 5.f;
 static float g_2dZ = -10.f;
 static float g_aspectRatio = 1.f;
+static float g_basisCylinderLength = 0.7f;
+static float g_basisConeLength = 0.3f;
+static float g_basisCylinderRadius = 0.01f;
+static float g_basisConeRadius = 0.05f;
+
 static Vec2 g_screenMax = Vec2( 1.f, 1.f );
 static Vec2 g_screenMin = Vec2::ZERO;
 
@@ -47,6 +52,8 @@ static std::vector<DebugRenderObject*> g_debugAlwaysObject;
 static std::vector<DebugRenderObject*> g_debugDepthObject;
 static std::vector<DebugRenderObject*> g_debugXrayObject;
 static std::vector<DebugRenderObject*> g_debugScreenObject;
+
+static Convention g_worldConvention = X_FORWARD_Y_LEFT_Z_UP;
 
 // Decleration
 void CreateGPUMeshes();
@@ -114,19 +121,19 @@ void CreateGPUMeshes()
 	// basis
 	std::vector<Vertex_PCU> basisVertices;
 	std::vector<uint> basisIndices;
-	Cone3 coneX = Cone3( Vec3( 5.f, 0.f, 0.f ), Vec3( 6.f, 0.f, 0.f ), 2.f );
-	Cone3 coneY = Cone3( Vec3( 0.f, 5.f, 0.f ), Vec3( 0.f, 6.f, 0.f ), 2.f );
-	Cone3 coneZ = Cone3( Vec3( 0.f, 0.f, 5.f ), Vec3( 0.f, 0.f, 5.5f ), 2.f );
-	Cylinder3 cylinderX = Cylinder3( Vec3::ZERO, Vec3( 5.f, 0.f, 0.f ), 1.f );
-	Cylinder3 cylinderY = Cylinder3( Vec3::ZERO, Vec3( 0.f, 5.f, 0.f ), 1.f );
-	Cylinder3 cylinderZ = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 5.f ), 1.f );
+	Cone3 coneX = Cone3( Vec3( g_basisCylinderLength, 0.f, 0.f ), Vec3( ( g_basisCylinderLength + g_basisConeLength ), 0.f, 0.f ), g_basisConeRadius );
+	Cone3 coneY = Cone3( Vec3( 0.f, g_basisCylinderLength, 0.f ), Vec3( 0.f, ( g_basisCylinderLength + g_basisConeLength ), 0.f ), g_basisConeRadius );
+	Cone3 coneZ = Cone3( Vec3( 0.f, 0.f, g_basisCylinderLength ), Vec3( 0.f, 0.f, ( g_basisCylinderLength + g_basisConeLength ) ), g_basisConeRadius );
+	Cylinder3 cylinderX = Cylinder3( Vec3::ZERO, Vec3( g_basisCylinderLength, 0.f, 0.f ), g_basisCylinderRadius );
+	Cylinder3 cylinderY = Cylinder3( Vec3::ZERO, Vec3( 0.f, g_basisCylinderLength, 0.f ), g_basisCylinderRadius );
+	Cylinder3 cylinderZ = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, g_basisCylinderLength ), g_basisCylinderRadius );
 
 	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderX, 12, Rgba8::RED, Rgba8::RED );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneX, 12, Rgba8::RED, Rgba8( 255, 0, 0, 0 ) );
 	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderY, 12, Rgba8::GREEN, Rgba8::GREEN );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneY, 12, Rgba8::GREEN, Rgba8( 0, 255, 0, 0 ) );
 	AppendIndexedVertsForCylinder3D( basisVertices, basisIndices, cylinderZ, 12, Rgba8::BLUE, Rgba8::BLUE );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneX, 12, Rgba8::RED );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneY, 12, Rgba8::GREEN );
-	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneZ, 12, Rgba8::BLUE );
+	AppendIndexedVertsForCone3D( basisVertices, basisIndices, coneZ, 12, Rgba8::BLUE, Rgba8( 0, 0, 255, 0 ) );
 
 	g_basisMesh->UpdateVerticesInCPU( basisVertices );
 	g_basisMesh->UpdateIndicesInCPU( basisIndices );
@@ -203,7 +210,9 @@ void DebugRenderOneObject( DebugRenderObject* object, float xrayTint )
 	if( object->m_type == OBJECT_BILLBOARD_TEXT ) {
 		Texture* textTex = g_defaultDebugFont->GetTexture();
 		g_ctx->SetDiffuseTexture( textTex );
-		object->m_transform.SetRotationFromPitchRollYawDegrees( g_camera->m_transform.GetRotationPRYDegrees() );
+		object->m_transform.SetPitchDegrees( g_camera->m_transform.GetPitchDegrees() );
+		object->m_transform.SetRollDegrees( g_camera->m_transform.GetRollDegrees() );
+		object->m_transform.SetYawDegrees( g_camera->m_transform.GetYawDegrees() );
 	}
 	if( object->m_type == OBJECT_QUAD && object->m_texture != nullptr ) {
 		g_ctx->SetDiffuseTexture( object->m_texture );
@@ -329,14 +338,14 @@ void DebugRenderBeginFrame()
 
 }
 
-void DebugRenderWorldToCamera( Camera* camera )
+void DebugRenderWorldToCamera( Camera* camera, Convention convention )
 {
 	if( !g_ableDebug ) { return; }
 
 	g_camera = camera;
 	uint clearState = g_camera->m_clearState;
 	g_camera->SetClearMode( CLEAR_NONE );
-	g_ctx->BeginCamera( g_camera );
+	g_ctx->BeginCamera( g_camera, convention );
 
 	DebugRenderDepthObjects();
 	DebugRenderXraysObjects();
@@ -351,14 +360,14 @@ void DebugRenderScreenTo( Texture* output )
 	if( !g_ableDebug ){ return; }
 
 	// !!! not create every frame. create a new at start up.
-	Camera* screenCamera = new Camera( 0.f, -100.f, g_screenMin, g_screenMax, g_aspectRatio, "debug screen cam" );
+	Camera* screenCamera = new Camera( g_ctx, 0.f, -100.f, g_screenMin, g_screenMax, g_aspectRatio );
 	screenCamera->SetColorTarget( output );
 	screenCamera->SetDepthStencilTarget( nullptr ); // don't need depth stencil target set target to nullptr
 	screenCamera->SetClearMode( CLEAR_NONE );
 	screenCamera->m_transform = Transform();
 	screenCamera->SetUseDepth( false );
 
-	g_ctx->BeginCamera( screenCamera );
+	g_ctx->BeginCamera( screenCamera, g_convention );
 	DebugRenderScreenObjects();
 	g_ctx->EndCamera();
 	delete screenCamera;
@@ -490,7 +499,9 @@ void DebugAddWorldWireSphere( Vec3 pos, float radius, Rgba8 startColor, Rgba8 en
 {
 	Transform trans;
 	trans.SetPosition( pos );
-	trans.SetRotationFromPitchRollYawDegrees( Vec3::ZERO );
+	trans.SetPitchDegrees( 0 );
+	trans.SetYawDegrees( 0 );
+	trans.SetRollDegrees( 0 );
 	trans.SetScale( Vec3( radius ) );
 	DebugAddWireMeshToWorld( trans.ToMatrix(), g_sphereMesh, startColor, endColor, duration, mode ); 
 }
@@ -761,7 +772,6 @@ void DebugAddScreenText( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rgb
 	DebugRenderObject* textObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
 	textObject->m_type = OBJECT_SCREEN_TEXT;
 	AddObjectToVectors( textObject, DEBUG_RENDER_SCREEN );
-
 }
 
 void DebugAddScreenText( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rgba8 endColor, float duration, std::string text )

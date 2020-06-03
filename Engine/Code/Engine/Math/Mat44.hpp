@@ -29,7 +29,7 @@ public:
 	Mat44();
 	explicit Mat44( float* sixteenValuesBasisMajor );
 	explicit Mat44( const Vec2& iBasis2D, const Vec2& jBasis2D, const Vec2& translation2D );
-	explicit Mat44( const Vec3& iBasis3D, const Vec3& jBasis3D, const Vec3& kBasis3D, const Vec3& translation3D );
+	explicit Mat44( const Vec3& iBasis3D, const Vec3& jBasis3D, const Vec3& kBasis3D, const Vec3& translation3D=Vec3::ZERO );
 	explicit Mat44( const Vec4& iBasisHomogeneous, const Vec4& jBasisHomogeneous, const Vec4& kBasisHomogeneous, const Vec4& translationHomogeneous );
 
 
@@ -63,30 +63,33 @@ public:
 	void SetBasisVectors3D( const Vec3& iBasis3D, const Vec3& jBasis3D, const Vec3& kBasis3D);
 	void SetBasisVectors3D( const Vec3& iBasis3D, const Vec3& jBasis3D, const Vec3& kBasis3D, const Vec3& translation3D);
 	void SetBasisVectors4D( const Vec4& iBasis4D, const Vec4& jBasis4D, const Vec4& kBasis4D, const Vec4& translation4D);
+	void SetIBasis3D( const Vec3& iBasis3D );
+	void SetJBasis3D( const Vec3& jBasis3D );
+	void SetKBasis3D( const Vec3& kBasis3D );
 
 	//Transformation mutators; append (concatenate) a new transform to this matrix
-	void RotateXDegrees(float degreesAboutX);
-	void RotateYDegrees(float degreesAboutY);
-	void RotateZDegrees(float degreesAboutZ);
-	void Translate2D( const Vec2& translationXY);
-	void Translate3D( const Vec3& translation3D);
-	void ScaleUniform2D( float uniformScaleXY);
-	void ScaleNonUniform2D( const Vec2& ScaleFactorsXY);
-	void ScaleUniform3D( float uniformScaleXYZ);
-	void ScaleNonUniform3D( const Vec3& scaleFactorsXYZ);
-	void Multiply(const Mat44& arbitraryTransFormationToAppend);
+	void RotateXDegrees( float degreesAboutX );
+	void RotateYDegrees( float degreesAboutY );
+	void RotateZDegrees( float degreesAboutZ );
+	void Translate2D( const Vec2& translationXY );
+	void Translate3D( const Vec3& translation3D );
+	void ScaleUniform2D( float uniformScaleXY );
+	void ScaleNonUniform2D( const Vec2& ScaleFactorsXY );
+	void ScaleUniform3D( float uniformScaleXYZ );
+	void ScaleNonUniform3D( const Vec3& scaleFactorsXYZ );
+	void Multiply( const Mat44& arbitraryTransFormationToAppend );
 	
 	// Static creation methods to create a matrix of a certain transformation type
-	static const Mat44		CreateXRotationDegrees( float degreesAboutX);
-	static const Mat44		CreateYRotationDegrees( float degreesAboutY);
-	static const Mat44		CreateZRotationDegrees( float degreesAboutZ);
-	static const Mat44		CreateTranslationXY( const Vec2& translationXY);
-	static const Mat44		CreateTranslation3D( const Vec3& translation3D);
-	static const Mat44		CreateUniformScaleXY( float uniformScaleXY);
-	static const Mat44		CreateNonUniformScaleXY( const Vec2& scaleFactorsXY);
-	static const Mat44		CreateUniformScale3D( float uniformScale3D);
-	static const Mat44		CreateNonUniformScale3D( const Vec3& scaleFactorsXYZ);
-	static Mat44 GetLookAtMatrix( Vec3 pos, Vec3 target, Vec3 worldUp= Vec3( 0.f, 1.f, 0.f ) );		
+	static const Mat44		CreateXRotationDegrees( float degreesAboutX );
+	static const Mat44		CreateYRotationDegrees( float degreesAboutY );
+	static const Mat44		CreateZRotationDegrees( float degreesAboutZ );
+	static const Mat44		CreateTranslationXY( const Vec2& translationXY );
+	static const Mat44		CreateTranslation3D( const Vec3& translation3D );
+	static const Mat44		CreateUniformScaleXY( float uniformScaleXY );
+	static const Mat44		CreateNonUniformScaleXY( const Vec2& scaleFactorsXY );
+	static const Mat44		CreateUniformScale3D( float uniformScale3D );
+	static const Mat44		CreateNonUniformScale3D( const Vec3& scaleFactorsXYZ );
+	static Mat44 GetLookAtMatrix( Vec3 pos, Vec3 target, Vec3 worldUp = Vec3( 0.f, 1.f, 0.f ) );		
 
 	// Transpose and Invert
 	void TransposeMatrix();

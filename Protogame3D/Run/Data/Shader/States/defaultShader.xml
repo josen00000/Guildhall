@@ -1,0 +1,11 @@
+<ShaderState>
+
+	<ShaderDefinition name="Default" path="Data/Shader/lit.hlsl">
+		<Blend mode="alpha"/>
+		<Depth isAble="true" compFunc="less_equal" writeDepth="true"/>
+		<Cull mode="back"/>
+		<Fill mode="solid"/>
+	</ShaderDefinition>
+</ShaderState>
+
+

@@ -62,7 +62,7 @@ void Game::Startup()
 	LoadObjects();
 	//CreateTestMaterial();
 	CreateImageEffectObj();
-	//CreateDebugRenderObjects();
+	CreateDebugRenderObjects();
 
 	EventCallbackFunctionPtr SetAmbientColorFuncPtr			= LightCommandSetAmbientColor;
 	EventCallbackFunctionPtr SetLightColorFuncPtr			= LightCommandSetLightColor;
@@ -509,7 +509,7 @@ void Game::HandleCameraMovement( float deltaSeconds )
 	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 15;
 	m_gameCamera->UpdateCameraRotation( rotation );
 	
-	Mat44 rotationMatrix = m_gameCamera->m_transform.GetRotationMatrix();
+	Mat44 rotationMatrix = m_gameCamera->m_transform.GetRotationMatrix( PITCH_ROLL_YAW_ORDER );
 	float temY = movement.y;
 	movement.y = 0.0f;
 	Vec3 cameraPos = m_gameCamera->GetPosition();
@@ -583,11 +583,11 @@ void Game::Render() const
 	Texture* albedoTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	Texture* tangentTarget		= g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 
-	m_gameCamera->SetColorTarget( colorTarget, 0 );
-	m_gameCamera->SetColorTarget( bloomTarget, 1 );
-	m_gameCamera->SetColorTarget( normalTarget, 2 );
-	m_gameCamera->SetColorTarget( albedoTarget, 3 );
-	m_gameCamera->SetColorTarget( tangentTarget, 4 );
+	//m_gameCamera->SetColorTarget( colorTarget, 0 );
+	//m_gameCamera->SetColorTarget( bloomTarget, 1 );
+	//m_gameCamera->SetColorTarget( normalTarget, 2 );
+	//m_gameCamera->SetColorTarget( albedoTarget, 3 );
+	//m_gameCamera->SetColorTarget( tangentTarget, 4 );
 
 
  	Rgba8 tempColor = Rgba8::DARK_GRAY;
@@ -615,41 +615,41 @@ void Game::Render() const
 	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
 	// image effect
 	// sd a09
-	if( m_isUsingGrayEffect ) {
-		g_grayBuffer->Update( &m_colorData, sizeof(Mat44), sizeof(Mat44) );
-		//g_theRenderer->BindUniformBuffer( 6, g_grayBuffer);
-		//g_theRenderer->SetMaterialBuffer( g_grayBuffer );
-		TestImageEffect( grayScaleTex, colorTarget, m_grayShader, g_grayBuffer );
-	}
-	if( m_isUsingBloomEffect ) {
-		
-		float data[4];
-		data[0] = (float)bloomTarget->GetTexelSize().x;
-		data[1] = (float)bloomTarget->GetTexelSize().y;
-		data[2] = 0.f;
-		data[3] = 0.f;
-
-		g_bloomBuffer->Update( &data, sizeof(ColorData), sizeof(ColorData) );
-		g_theRenderer->SetMaterialBuffer( g_bloomBuffer );
-		TestBloomImageEffect( bloomTex, colorTarget, bloomTarget, m_bloomShader, g_bloomBuffer );
-	}
-	//TestImageEffect( tempRT );
-
-	//GUARANTEE_OR_DIE( g_theRenderer->m_totalRenderTargetMade < 10, "leaking " );
-	
-	// setup camera 
-	// bind shader for effect
-	// render full screen image
-	
-	if( m_isUsingBloomEffect ) {
-		g_theRenderer->CopyTexture( backBuffer, bloomTex );
-	}
-	else if( m_isUsingGrayEffect ) {
-		g_theRenderer->CopyTexture( backBuffer, grayScaleTex );
-	}
-	else {
-		g_theRenderer->CopyTexture( backBuffer, colorTarget );
-	}
+// 	if( m_isUsingGrayEffect ) {
+// 		g_grayBuffer->Update( &m_colorData, sizeof(Mat44), sizeof(Mat44) );
+// 		//g_theRenderer->BindUniformBuffer( 6, g_grayBuffer);
+// 		//g_theRenderer->SetMaterialBuffer( g_grayBuffer );
+// 		TestImageEffect( grayScaleTex, colorTarget, m_grayShader, g_grayBuffer );
+// 	}
+// 	if( m_isUsingBloomEffect ) {
+// 		
+// 		float data[4];
+// 		data[0] = (float)bloomTarget->GetTexelSize().x;
+// 		data[1] = (float)bloomTarget->GetTexelSize().y;
+// 		data[2] = 0.f;
+// 		data[3] = 0.f;
+// 
+// 		g_bloomBuffer->Update( &data, sizeof(ColorData), sizeof(ColorData) );
+// 		g_theRenderer->SetMaterialBuffer( g_bloomBuffer );
+// 		TestBloomImageEffect( bloomTex, colorTarget, bloomTarget, m_bloomShader, g_bloomBuffer );
+// 	}
+// 	//TestImageEffect( tempRT );
+// 
+// 	//GUARANTEE_OR_DIE( g_theRenderer->m_totalRenderTargetMade < 10, "leaking " );
+// 	
+// 	// setup camera 
+// 	// bind shader for effect
+// 	// render full screen image
+// 	
+// 	if( m_isUsingBloomEffect ) {
+// 		g_theRenderer->CopyTexture( backBuffer, bloomTex );
+// 	}
+// 	else if( m_isUsingGrayEffect ) {
+// 		g_theRenderer->CopyTexture( backBuffer, grayScaleTex );
+// 	}
+// 	else {
+// 		g_theRenderer->CopyTexture( backBuffer, colorTarget );
+// 	}
 
 	g_theRenderer->ReleaseRenderTarget( colorTarget );
 	g_theRenderer->ReleaseRenderTarget( normalTarget );
