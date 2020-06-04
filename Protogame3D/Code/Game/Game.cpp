@@ -32,10 +32,10 @@ extern DevConsole*		g_theConsole;
 extern Game*			g_theGame;
 
 
-static void AddDebugMessage( std::string msg ) {
-	static int index = 0;
-	//DebugAddScreenText( Vec4( 0.f, 0.f, 50.f, index * 3.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.f, msg );
-}
+// static void AddDebugMessage( std::string msg ) {
+// 	static int index = 0;
+// 	//DebugAddScreenText( Vec4( 0.f, 0.f, 50.f, index * 3.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.f, msg );
+// }
 
 Game::Game( Camera* gameCamera, Camera* UICamera )
 	:m_gameCamera(gameCamera)
@@ -89,6 +89,7 @@ void Game::Update( float deltaSeconds )
 
 void Game::UpdateUI( float deltaSeconds )
 {
+	UNUSED(deltaSeconds);
 	//DebugAddScreenText( Vec4( 0.5f, 0.5f, 0.f, 0.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.1f, std::string( "camera Pos" + m_gameCamera->GetPosition().ToString() ) );
 }
 
@@ -99,6 +100,7 @@ void Game::UpdateCamera( float deltaSeconds )
 
 void Game::UpdateLighting( float deltaSeconds )
 {
+	UNUSED(deltaSeconds);
 // 	static float animationSeconds = 0.f;
 // 	float theta = animationSeconds * 30.f;
 // 	float dist = 8.f;
@@ -154,12 +156,12 @@ void Game::HandleDevKeyboardInput( float deltaSeconds )
 {
 	CheckIfExit();
 	HandleCameraMovement( deltaSeconds );
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ) {
-		g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
-	}
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P ) ) {
-		g_theInputSystem->SetCursorMode( CURSOR_ABSOLUTE );
-	}
+// 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ) {
+// 		g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
+// 	}
+// 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P ) ) {
+// 		g_theInputSystem->SetCursorMode( CURSOR_ABSOLUTE );
+// 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_C ) ) {
 		g_theInputSystem->ClipSystemCursor();
 	}
@@ -294,7 +296,9 @@ void Game::RenderGame() const
 	g_theRenderer->EnableDepth( COMPARE_DEPTH_LESS, true );
 	g_theRenderer->SetCullMode( RASTER_CULL_BACK );
 	g_theRenderer->SetTintColor( Rgba8::WHITE );
- 	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
+ 	g_theRenderer->BindShader( "Data/Shader/WorldOpaque.hlsl" );
+	
+	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
 
  	g_theRenderer->SetDiffuseTexture( temp );
 	m_cubeObj->Render();
@@ -304,6 +308,8 @@ void Game::RenderGame() const
 
 	g_theRenderer->SetCullMode( RASTER_CULL_NONE );
 	g_theRenderer->DisableDepth();
+	g_theRenderer->BindShader( static_cast<Shader*>(nullptr) );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 	RenderBasis();
 
 
@@ -317,7 +323,7 @@ void Game::RenderGame() const
 
 void Game::RenderUI() const
 {
-	int index = 1;
+	float index = 1;
 	const Transform cameraTrans = m_gameCamera->m_transform;
 	const Vec3 cameraPos = cameraTrans.GetPosition();
 	Mat44 cameraModelMat = cameraTrans.ToMatrix( m_convension );

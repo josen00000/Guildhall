@@ -54,11 +54,14 @@ Mat44 Transform::GetRotationMatrix( Convention convention ) const
 		roll	= GetRotationMatrixAlongAxis( Axis_Z, m_rollDegrees );
 		break;
 	}
-
-	rotation = roll;
-	rotation.Multiply( pitch );
-	rotation.Multiply( yaw );
-
+	rotation.RotateZDegrees( m_yawDegrees );
+	rotation.RotateYDegrees( m_pitchDegrees );
+	rotation.RotateXDegrees( m_rollDegrees );
+	//Mat44 test = Mat44();
+	//test = roll;
+	//test.Multiply( pitch );
+	//test.Multiply( yaw );
+	// Need to debug
 	return rotation;
 }
 

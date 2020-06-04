@@ -99,6 +99,8 @@ $RECYCLE.BIN/
 
 # Data Directorys
 # TODO - ADD IGNORE PATTERNS
+*.zip
+*.mp4
 
 # EXAMPLES
 # Don't ignore all files with `obj` extension underneat `build` folder, including subfolders

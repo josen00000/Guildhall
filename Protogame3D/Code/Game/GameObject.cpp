@@ -9,12 +9,11 @@ extern Game* g_theGame;
 
 void GameObject::Update( float deltaSeconds )
 {
-
+	UNUSED(deltaSeconds);
 }
 
 void GameObject::Render() const
 {
-	Convention gameConvention = g_theGame->GetConvention();
 	g_theRenderer->SetModelMatrix( m_trans.ToMatrix( g_theGame->GetConvention() ) );
 	g_theRenderer->DrawMesh( m_mesh );
 }

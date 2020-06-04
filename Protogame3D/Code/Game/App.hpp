@@ -27,6 +27,7 @@ public:
 	void HandleQuitRequested();
 	void HandleDevConsoleInput();
 	void ResetGame();
+	std::string GetWindowsName() const { return m_windowName; }
 
 private:
 	void Update( float deltaSeconds );
@@ -37,6 +38,7 @@ private:
 	bool m_isQuitting		= false;
 	float m_deltaTime		= 0;
 	float m_timeFraction	= 1.f;
+	std::string m_windowName;
 };
 
 bool HelpCommandEvent( EventArgs& args );

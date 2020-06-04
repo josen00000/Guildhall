@@ -100,7 +100,7 @@ void DevConsole::EndDevConcole()
 void DevConsole::Render( RenderContext& renderer ) const
 {
 	if( !m_isOpen ) { return; }
-	m_camera->EnableClearColor( Rgba8::BLACK );
+	m_camera->SetClearMode( CLEAR_NONE );
 	m_camera->SetUseDepth( false );
 	g_theRenderer->BeginCamera( m_camera, g_convention );
 

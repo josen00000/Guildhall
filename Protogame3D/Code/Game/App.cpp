@@ -34,34 +34,34 @@ Convention		g_convention;
 #include <vector>
 #include <functional>
 
-void SubscribeTest( float t ) {
-	DebuggerPrintf( "test in subscribe %f", t );
-}
+// void SubscribeTest( float t ) {
+// 	DebuggerPrintf( "test in subscribe %f", t );
+// }
+// 
+// void AddTest( int a, int b ) {
+// 	int c = a + b;
+// 	DebuggerPrintf( "result %i = %i + %i" , a, b, c );
+// }
 
-void AddTest( int a, int b ) {
-	int c = a + b;
-	DebuggerPrintf( "result %i = %i + %i" , a, b, c );
-}
-
-class TestClass {
-public:
-	TestClass( int v)
-		:m_value(v){}
-
-	void SomeMethod( int a, int b ) {
-		int c = a + b;
-		DebuggerPrintf( "method %i = %i + %i", c, a, b );
-	}
-	void SomeMethod1( EventArgs& args ) {
-		int a = args.GetValue( "int test", 1 );
-	}
-	bool EventTest( EventArgs& args ) {
-		int a = args.GetValue<int>( "int test" , 1 );
-		return true;
-	}
-private:
-	int m_value;
-};
+// class TestClass {
+// public:
+// 	TestClass( int v)
+// 		:m_value(v){}
+// 
+// 	void SomeMethod( int a, int b ) {
+// 		int c = a + b;
+// 		DebuggerPrintf( "method %i = %i + %i", c, a, b );
+// 	}
+// 	void SomeMethod1( EventArgs& args ) {
+// 		int a = args.GetValue( "int test", 1 );
+// 	}
+// 	bool EventTest( EventArgs& args ) {
+// 		int a = args.GetValue<int>( "int test" , 1 );
+// 		return true;
+// 	}
+// private:
+// 	int m_value;
+// };
 
 
 void App::Startup()
@@ -79,6 +79,11 @@ void App::Startup()
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );
 	g_theInputSystem->Startup();
+
+	g_gameConfigBlackboard.PopulateFromXmlFile( "Data/GameConfig.xml" );
+	m_windowName = g_gameConfigBlackboard.GetValue( "WindowName", "default name " );
+	HWND hWnd = (HWND)g_theWindow->GetHandle();
+	SetWindowTextA( hWnd, m_windowName.c_str() );
 
 	g_camera			= Camera::CreatePerspectiveCamera( g_theRenderer, 60, -0.09f, -100.f );
 	g_camera->m_debugString = "gamecamera";
@@ -124,18 +129,18 @@ void App::Startup()
 
 void App::TemplateTesting()
 {
-	TestClass obj( 7 );
-	g_theEventSystem->SubscribeEvent( "test", eventTest );
-	g_theEventSystem->SubscribeMethodToEvent( "test1", &obj, &TestClass::EventTest );
-	EventArgs args;
-	args.SetValue<float>( "float test", 1 );
-	args.SetValue<int>( "int test", 10 );
-	g_theEventSystem->FireEvent( "test", args );
-	g_theEventSystem->FireEvent( "test1", args );
-
-	Delegate<int, int> intDele;
-	intDele.subscribe_method( &obj, &TestClass::SomeMethod );
-	//intDele.subscribe_method( &obj, &TestClass::SomeMethod1 );
+// 	TestClass obj( 7 );
+// 	g_theEventSystem->SubscribeEvent( "test", eventTest );
+// 	g_theEventSystem->SubscribeMethodToEvent( "test1", &obj, &TestClass::EventTest );
+// 	EventArgs args;
+// 	args.SetValue<float>( "float test", 1 );
+// 	args.SetValue<int>( "int test", 10 );
+// 	g_theEventSystem->FireEvent( "test", args );
+// 	g_theEventSystem->FireEvent( "test1", args );
+// 
+// 	Delegate<int, int> intDele;
+// 	intDele.subscribe_method( &obj, &TestClass::SomeMethod );
+// 	//intDele.subscribe_method( &obj, &TestClass::SomeMethod1 );
 
 }
 
@@ -163,18 +168,18 @@ void App::StringTesting()
 
 void App::NamedPropertyTesting()
 {
-	NamedProperties* testProp = new NamedProperties();
-	float a = 10.f;
-	Camera* cameraA = new Camera();
-	Camera* cameraB = new Camera();
-
-
-	testProp->SetValue<float>( "floatA", a );
-	testProp->SetValue<Camera>( "cameraA", *cameraA );
-	//testProp->SetValue<ObjectReader>( "ReaderA", *testReader );
-
-	float b = testProp->GetValue<float>( "floatA", 20.f );
-	Camera cameraC = testProp->GetValue<Camera>( "cameraA", *cameraB );
+// 	NamedProperties* testProp = new NamedProperties();
+// 	float a = 10.f;
+// 	Camera* cameraA = new Camera();
+// 	Camera* cameraB = new Camera();
+// 
+// 
+// 	testProp->SetValue<float>( "floatA", a );
+// 	testProp->SetValue<Camera>( "cameraA", *cameraA );
+// 	//testProp->SetValue<ObjectReader>( "ReaderA", *testReader );
+// 
+// 	float b = testProp->GetValue<float>( "floatA", 20.f );
+// 	Camera cameraC = testProp->GetValue<Camera>( "cameraA", *cameraB );
 	
 }
 
@@ -262,6 +267,7 @@ void App::BeginFrame()
 	Clock::BeginFrame();
 	g_theInputSystem->BeginFrame();
 	g_theRenderer->BeginFrame();
+	g_theAudioSystem->BeginFrame();
 }
 
 void App::Update( float deltaSeconds )
@@ -321,7 +327,8 @@ bool HelpCommandEvent( EventArgs& args )
 	return true;
 }
 
+/*
 bool eventTest( EventArgs& args ) {
 	float a = args.GetValue<float>( "float test", 0 );
 	return true;
-}
+}*/

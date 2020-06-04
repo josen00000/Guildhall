@@ -160,9 +160,6 @@ void DebugRenderAlwaysObjects()
 {
 	g_ctx->DisableDepth();
 	for( int i = 0; i < g_debugAlwaysObject.size(); i++ ) {
-		if( g_debugAlwaysObject.size() == 2 ) {
-			int a = 0;
-		}
 		DebugRenderObject* object = g_debugAlwaysObject[i];
 		if( object == nullptr ) { continue; }
 		DebugRenderOneObject( object );
