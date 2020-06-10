@@ -14,11 +14,12 @@ public: // NOTE: this is one of the few cases where we break both the "m_" namin
 
 public:
 	// Construction/Destruction
-	~Vec2() {}											// destructor (do nothing)
-	Vec2() {}												// default constructor (do nothing)
+	~Vec2() {}														// destructor (do nothing)
+	Vec2() {}														// default constructor (do nothing)
 	Vec2( const Vec2& copyFrom );
+	Vec2( const Vec3& copyFrom );									// copy constructor (from another vec2)
+	explicit Vec2( float XY );
 	explicit Vec2(const IntVec2& copyFrom);
-	Vec2( const Vec3& copyFrom );	// copy constructor (from another vec2)
 	explicit Vec2(const float initialX, const float initialY );		// explicit constructor (from x, y)
 		
 	// Static method(e.g. creation functions)

@@ -49,6 +49,12 @@ Vec2::Vec2( const IntVec2& copyFrom )
 	y=(float)copyFrom.y;
 }
 
+Vec2::Vec2( float XY )
+	:x(XY)
+	,y(XY)
+{
+}
+
 const Vec2 Vec2::MakeFromPolarRadians( float directionRadians, float length )
 {
 	const Vec2 tem_Vec2=Vec2(length*cos(directionRadians),length*sin(directionRadians));

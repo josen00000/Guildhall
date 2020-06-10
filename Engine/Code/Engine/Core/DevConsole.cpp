@@ -3,6 +3,7 @@
 #include <windows.h>
 #include "DevConsole.hpp"
 #include "Engine/Core/Rgba8.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"

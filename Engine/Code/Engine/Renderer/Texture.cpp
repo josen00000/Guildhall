@@ -62,11 +62,6 @@ Texture* Texture::CreateDepthStencilBuffer( RenderContext* ctx, int width, int h
 	return depthBuffer;
 }
 
-void Texture::SetTextureID( int textureID )
-{
-	m_textureID=textureID;
-}
-
 TextureView* Texture::GetOrCreateRenderTargetView()
 {
 	if( m_renderTargetView ){

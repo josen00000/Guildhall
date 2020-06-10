@@ -107,7 +107,7 @@ RenderContext* Camera::GetRenderContext() const
 
 float Camera::GetOutputAspectRatio()
 {
-	IntVec2 outputSize = GetColorTarget()->GetTexelSize();
+	IntVec2 outputSize = GetColorTarget()->GetSize();
 	float ratio = ( (float)outputSize.x / (float)outputSize.y );
 	return ratio;
 }
@@ -256,7 +256,7 @@ Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext* ctx )
 	}
 	Texture* colorTarget = GetColorTarget();
 
-	m_depthStencilTarget = Texture::CreateDepthStencilBuffer( ctx, colorTarget->GetTexelSize().x, colorTarget->GetTexelSize().y );
+	m_depthStencilTarget = Texture::CreateDepthStencilBuffer( ctx, colorTarget->GetSize().x, colorTarget->GetSize().y );
 	return m_depthStencilTarget;
 }
 

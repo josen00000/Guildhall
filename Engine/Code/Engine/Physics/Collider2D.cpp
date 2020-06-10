@@ -9,6 +9,7 @@
 #include "Engine/Physics/DiscCollider2D.hpp"
 #include "Engine/Physics/PolygonCollider2D.hpp"
 #include "Engine/Physics/RigidBody2D.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
 #include "Game/Game.hpp"
 
 extern Game* g_theGame;

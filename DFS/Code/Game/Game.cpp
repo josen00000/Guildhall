@@ -1,0 +1,137 @@
+#include <windows.h>
+#include "Game.hpp"
+#include "Game/App.hpp"
+#include "Game/GameObject.hpp"
+#include "Game/MapDefinition.hpp"
+#include "Game/World.hpp"
+#include "Engine/Audio/AudioSystem.hpp"
+#include "Engine/Core/DevConsole.hpp"
+#include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Input/InputSystem.hpp"
+#include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Math/Vec4.hpp"
+#include "Engine/Physics/Collider2D.hpp"
+#include "Engine/Physics/Physics2D.hpp"
+#include "Engine/Physics/PolygonCollider2D.hpp"
+#include "Engine/Physics/RigidBody2D.hpp"
+#include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Renderer/Camera.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Platform/Window.hpp"
+
+extern App*				g_theApp;
+extern BitmapFont*		g_squirrelFont;	
+extern RenderContext*	g_theRenderer;
+extern InputSystem*		g_theInputSystem;
+extern DevConsole*		g_theConsole;
+extern Physics2D*		g_thePhysics;
+extern Window*			g_theWindow;
+
+Game::Game( Camera* gameCamera, Camera* UICamera )
+	:m_gameCamera(gameCamera)
+	,m_UICamera(UICamera)
+{
+	m_rng = new RandomNumberGenerator( 0 );
+}
+
+void Game::Startup()
+{
+	m_isAppQuit		= false;
+	LoadAssets();
+
+	m_world = World::CreateWorld( 1 );
+}
+
+void Game::Shutdown()
+{
+	delete m_rng;
+	delete m_gameCamera;
+}
+
+void Game::RunFrame( float deltaSeconds )
+{
+	UpdateGame( deltaSeconds );
+}
+
+void Game::UpdateGame( float deltaSeconds )
+{
+
+	CheckIfExit();
+	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
+	CleanDestroyedObjects();
+}
+
+void Game::UpdateUI( float deltaSeconds )
+{
+	UNUSED( deltaSeconds );
+}
+
+
+void Game::CheckIfExit()
+{
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) ){
+		g_theApp->HandleQuitRequested();
+	}
+}
+
+
+void Game::HandleKeyboardInput()
+{
+}
+
+
+void Game::RenderGame() const
+{
+	m_world->RenderWorld();
+}
+
+void Game::RenderUI() const
+{
+}
+
+
+void Game::DeleteGameObject( GameObject* obj )
+{
+	if( obj == nullptr ) { return; }
+
+	for( int objIndex = 0; objIndex < m_gameObjects.size(); objIndex++ ) {
+		if( m_gameObjects[objIndex] == obj ) {
+			delete m_gameObjects[objIndex];
+			m_gameObjects[objIndex] = nullptr;
+		}
+	}
+}
+
+void Game::CleanDestroyedObjects()
+{
+
+}
+
+void Game::LoadAssets()
+{
+	g_squirrelFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+}
+
+void Game::LoadDefs()
+{
+	// load map def
+	XmlDocument mapDefFile;
+	mapDefFile.LoadFile( MAP_DEF_FILE_PATH );
+	XmlElement* mapRootELement = mapDefFile.RootElement();
+	XmlElement* mapDefElement = mapDefFile.FirstChildElement();
+	while( mapDefElement ) {
+		MapDefinition::PopulateDefinitionFromXmlElement( *mapDefElement );
+	}
+
+	// load tile def
+	XmlDocument tileDefFile;
+	tileDefFile.LoadFile( TILE_DEF_FILE_PATH );
+	XmlElement* tileRootELement = tileDefFile.RootElement();
+	XmlElement* tileDefElement = tileDefFile.FirstChildElement();
+	while( tileDefElement ) {
+		MapDefinition::PopulateDefinitionFromXmlElement( *tileDefElement );
+	}
+	
+}
+

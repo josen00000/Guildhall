@@ -49,13 +49,13 @@ public:
 	void UpdateAttractScene( float deltaSeconds );
 	
 	//Render
-	void Render() const;
-	void RenderUI() const;
-	void RenderCursor() const;
-	void RenderDisplay() const;
-	void RenderLoadingScene() const;
-	void RenderAttractScene() const;
-	void RenderPauseScene() const;
+	void Render() ;
+	void RenderUI() ;
+	void RenderCursor() ;
+	void RenderDisplay();
+	void RenderLoadingScene() ;
+	void RenderAttractScene() ;
+	void RenderPauseScene() ;
 
 	//Load
 	void LoadGameAsset();
@@ -72,6 +72,7 @@ private:
 	//void TestDevConsole();
 	void UpdateDisplayCursorInfo( Map* map );
 public:
+	bool m_isAppQuit = false;
 	bool m_developMode = false;
 	bool m_noClip = false;
 	bool m_isPause = false;

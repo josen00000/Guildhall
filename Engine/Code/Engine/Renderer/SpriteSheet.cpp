@@ -1,13 +1,13 @@
 #include "SpriteSheet.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/vec2.hpp"
+#include "Engine/Renderer/Texture.hpp"
 
 
-
-SpriteSheet::SpriteSheet( Texture& texture, const IntVec2& simpleGridLayout )
+SpriteSheet::SpriteSheet( Texture* texture, const IntVec2& simpleGridLayout )
 	:m_texture(texture)
 {
-	CreateSpriteDefinitions(simpleGridLayout);
+	CreateSpriteDefinitions( simpleGridLayout );
 }
 
 const SpriteDefinition& SpriteSheet::GetSpriteDefinition( int spriteIndex ) const
@@ -30,9 +30,10 @@ void SpriteSheet::CreateSpriteDefinitions( const IntVec2 simpleGridLayout )
 	for( int spriteY = 0; spriteY < simpleGridLayout.y; spriteY++ ) {
 		for( int spriteX = 0; spriteX < simpleGridLayout.x; spriteX++ ) {
 			int spriteIndex = spriteX + spriteY * simpleGridLayout.x;
-			Vec2 uvAtMins = Vec2( temWidth * spriteX , 1- temHeight * (spriteY + 1));
-			Vec2 uvAtMaxs = Vec2( temWidth * (spriteX + 1) , 1- temHeight * spriteY);
-			const SpriteDefinition tem= SpriteDefinition(*this, spriteIndex, uvAtMins, uvAtMaxs );
+			Vec2 uvAtMins = Vec2( temWidth * spriteX , 1 - ( temHeight * (spriteY + 1)));
+			Vec2 uvAtMaxs = Vec2( temWidth * (spriteX + 1) , 1- ( temHeight * spriteY ));
+			IntVec2 textureSize = m_texture->GetSize();
+			const SpriteDefinition tem = SpriteDefinition( textureSize, uvAtMins, uvAtMaxs );
 			m_spriteDefs.push_back(tem);
 		}
 	}

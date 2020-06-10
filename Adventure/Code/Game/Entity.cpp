@@ -27,7 +27,7 @@ void Entity::Update(float deltaTime)
 	Rgba8 cyan = Rgba8( 0, 255, 255 );
 	Rgba8 yellow = Rgba8( 255, 255, 0 );
 
-	g_theRenderer->BindTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 	g_theRenderer->DrawCircle( m_position, m_cosmeticRadius, 0.05f, magenta );
 	g_theRenderer->DrawCircle( m_position, m_physicsRadius, 0.05f, cyan );
 	Vec2 endPoint = m_position + m_velocity;

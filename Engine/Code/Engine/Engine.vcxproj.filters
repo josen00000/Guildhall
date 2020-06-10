@@ -291,9 +291,6 @@
     <ClCompile Include="Core\Delegate.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Convention.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
@@ -567,9 +564,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Core\ConsumableDelegate.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Convention.hpp">
       <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>

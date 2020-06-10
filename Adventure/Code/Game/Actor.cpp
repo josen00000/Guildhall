@@ -40,8 +40,8 @@ void Actor::Update( float deltaSeconds )
 		Entity::Render();
 	}
 	Texture* actorTexture = g_theRenderer->CreateOrGetTextureFromFile( m_definition->m_spriteFilePath.c_str() );
-	g_theRenderer->BindTexture( actorTexture );
-	const std::vector<Vertex_PCU> actorVerticesInWorld = TransformVertexArray( m_vertices, 1, m_orientationDegrees, m_position );
+	g_theRenderer->SetDiffuseTexture( actorTexture );
+	std::vector<Vertex_PCU> actorVerticesInWorld = TransformVertexArray( m_vertices, 1, m_orientationDegrees, m_position );
 	g_theRenderer->DrawVertexVector( actorVerticesInWorld );
 }
 
@@ -61,12 +61,12 @@ void Actor::TakeDamage()
 void Actor::UpdateByXboxInput( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
-	const XboxController xboxController = g_theInputSystem->GetXboxController(0);
+	const XboxController* xboxController = g_theInputSystem->GetXboxController(0);
 
 	float magnitude = 0.f;
 	float turningDegrees = 0.f;
-	if(xboxController.isConnected()){
-		AnalogJoystick leftJoystick =xboxController.GetLeftJoystick();
+	if( xboxController->isConnected() ){
+		AnalogJoystick leftJoystick =xboxController->GetLeftJoystick();
 		magnitude = leftJoystick.GetMagnitude();
 		turningDegrees = leftJoystick.GetAngleDegrees();
 		Vec2 moveDirection = Vec2::ONE;

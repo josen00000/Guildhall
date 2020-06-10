@@ -1,5 +1,4 @@
 #pragma once
-#include "Engine/Core/Convention.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/EventSystem.hpp"
@@ -8,10 +7,15 @@
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Math/MathUtils.hpp"
-#include "Engine/Renderer/DebugRender.hpp"
 
 #define UNUSED(x) (void)(x);
 #define SELF_SAFE_RELEASE(ptr) if(nullptr !=ptr) { delete ptr; ptr = nullptr; } 
+
+enum Convention
+{
+	X_FORWARD_Y_LEFT_Z_UP,
+	X_RIGHT_Y_UP_Z_BACKWARD
+};
 
 typedef unsigned int uint;
 typedef unsigned char byte;

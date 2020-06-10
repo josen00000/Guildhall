@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Math/Mat44.hpp"
-#include "Engine/Core/Convention.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 enum Axis {
 	Axis_X,

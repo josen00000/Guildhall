@@ -37,7 +37,6 @@ struct TileAttributeInMap {
 	bool m_isExit = false;
 	bool m_isWormed = false;
 	bool m_isReachable = false;
-
 };
 
 
@@ -45,8 +44,8 @@ class Map {
 public:
 	Map(){}
 	~Map(){}
-	explicit Map( World* world, std::string name, MapDefinition* definition);
-	void Render() const;
+	explicit Map( World* world, std::string name, MapDefinition* definition );
+	void Render();
 	void Update( float deltaSeconds);
 	void DestroyEntities();
 
@@ -86,7 +85,7 @@ private:
 	
 	//Render
 	//////////////////////////////////////////////////////////////////////////
-	void RenderTiles() const;
+	void RenderTiles();
 	void AddVerticesForAABB2(std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2 minUV, const Vec2 maxUV);
 
 	//Update
