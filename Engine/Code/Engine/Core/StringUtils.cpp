@@ -1,6 +1,7 @@
 #include "StringUtils.hpp"
 #include <stdarg.h>
 #include <algorithm>
+#include <io.h>
 #include "Engine/Core/ErrorWarningAssert.hpp"
 
 //-----------------------------------------------------------------------------------------------
@@ -162,6 +163,24 @@ std::string TrimStringWithOneSpace( std::string originalString )
 Strings GetStringsWithoutSpace( std::string originalString )
 {
 	return SplitStringOnDelimiter( originalString, ' ' );
+}
+
+Strings GetFileNamesInFolder( const std::string& folderPath, const char* filePattern )
+{
+	Strings fileNamesInFolder;
+	std::string fileNamePattern = filePattern ? filePattern : "*";
+	std::string filePath = folderPath + "/" + fileNamePattern;
+	_finddata_t fileInfo;
+	intptr_t searchHandle = _findfirst( filePath.c_str(), &fileInfo );
+	while( searchHandle != -1 ) {
+		fileNamesInFolder.push_back( fileInfo.name );
+		int errorCode = _findnext( searchHandle, &fileInfo );
+		if( errorCode != 0 ) {
+			break;
+		}
+	}
+
+	return fileNamesInFolder;
 }
 
 bool GetBoolFromText( const char* text )

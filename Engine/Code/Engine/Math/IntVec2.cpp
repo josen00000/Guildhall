@@ -2,15 +2,17 @@
 #include <cmath>
 #include "IntVec2.hpp"
 #include "Engine/Core/StringUtils.hpp"
-#include<Engine/Math/Vec3.hpp>
-#include<Engine/Math/vec2.hpp>
-#include<Engine/Math/MathUtils.hpp>
+#include "Engine/Math/Vec3.hpp"
+#include "Engine/Math/vec2.hpp"
+#include "Engine/Math/MathUtils.hpp"
 
 #define _USE_MATH_DEFINES 
 #ifndef M_PI
 #define  M_PI  3.1415926f 
 
 #endif
+
+const IntVec2 IntVec2::ZERO;
 
 //-----------------------------------------------------------------------------------------------
 IntVec2::IntVec2( const IntVec2& copy )

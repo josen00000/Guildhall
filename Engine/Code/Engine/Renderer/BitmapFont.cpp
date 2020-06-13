@@ -96,6 +96,14 @@ Vec2 BitmapFont::GetDimensionsForText2D( float cellHeight, const std::string& te
 	return result;
 }
 
+float BitmapFont::GetWidthForText2D( float cellHeight, const std::string& text, float cellAspect /*= 1.f */ )
+{
+	float glyphAspect = GetGlyphAspect( 1 );
+	float cellWidth = cellHeight * glyphAspect * cellAspect;
+	float textWidth = cellWidth * text.size();
+	return textWidth;
+}
+
 float BitmapFont::GetCellWidth( float cellHeight, float cellAspect )
 {
 	float glyphAspect = GetGlyphAspect( 1 );
