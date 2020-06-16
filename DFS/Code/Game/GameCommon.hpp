@@ -21,9 +21,9 @@ constexpr float MAX_TURNING_DIFFERENCE = 3.f;
 
 //Camera
 constexpr float GAME_CAMERA_MIN_X	= 0;
-constexpr float GAME_CAMERA_MIN_Y	= 0;
-constexpr float GAME_CAMERA_MAX_X	= 160;
-constexpr float GAME_CAMERA_MAX_Y	= 90;
+constexpr float GAME_CAMERA_MIN_Y	= 0.25f;
+constexpr float GAME_CAMERA_MAX_X	= 40;
+constexpr float GAME_CAMERA_MAX_Y	= 22.25f;
 
 constexpr float UI_CAMERA_MIN_X		= 0;
 constexpr float UI_CAMERA_MIN_Y		= 0;
@@ -35,6 +35,6 @@ constexpr float DEV_CAMERA_MIN_Y	= 0;
 constexpr float DEV_CAMERA_MAX_X	= 30;
 constexpr float DEV_CAMERA_MAX_Y	= 20;
 
-const char* MAP_DEF_FILE_PATH	= "Data/Definitions/Maps.xml";
-const char* TILE_DEF_FILE_PATH	= "Data/Definitions/Tile.xml";
-const char* ACTOR_DEF_FILE_PATH = "Data/Definitions/Maps.xml";
+constexpr char MAP_DEF_FILE_PATH[]	= "Data/Definitions/Maps.xml";
+constexpr char TILE_DEF_FILE_PATH[]	= "Data/Definitions/Tiles.xml";
+constexpr char ACTOR_DEF_FILE_PATH[] = "Data/Definitions/Maps.xml";

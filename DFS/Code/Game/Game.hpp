@@ -22,6 +22,7 @@ public:
 
 	//basic
 	void Startup();
+	void RestartGame();
 	void Shutdown();
 	void RunFrame( float deltaSeclnds );
 	void RenderGame() const;

@@ -1,6 +1,6 @@
 #include "World.hpp"
-#include "Game/Map.hpp"
-#include "Game/MapDefinition.hpp"
+#include "Game/Map/Map.hpp"
+#include "Game/Map/MapDefinition.hpp"
 
 World::~World()
 {
@@ -17,8 +17,10 @@ World* World::CreateWorld( int totalMapIndex )
 
 void World::CreateMaps()
 {
+	m_maps.clear();
 	for( int i = 0; i < m_totalMapIndex; i++ ) {
-		Map::CreateMap( "dungeon", MapDefinition::s_definitions["dungeon"] );
+		Map* temMap = Map::CreateMap( "level1", MapDefinition::s_definitions["level1"] );
+		m_maps.push_back( temMap );
 	}
 }
 

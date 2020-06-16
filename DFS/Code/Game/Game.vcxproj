@@ -201,10 +201,15 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Main_Windows.cpp" />
-    <ClCompile Include="Map.cpp" />
-    <ClCompile Include="MapDefinition.cpp" />
-    <ClCompile Include="Tile.cpp" />
-    <ClCompile Include="TileDefinition.cpp" />
+    <ClCompile Include="Map\CellularAutomata.cpp" />
+    <ClCompile Include="Map\Map.cpp" />
+    <ClCompile Include="Map\MapDefinition.cpp" />
+    <ClCompile Include="Map\MapGenStep.cpp" />
+    <ClCompile Include="Map\Mutator.cpp" />
+    <ClCompile Include="Map\GenRooms.cpp" />
+    <ClCompile Include="Map\Room.cpp" />
+    <ClCompile Include="Map\Tile.cpp" />
+    <ClCompile Include="Map\TileDefinition.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -213,10 +218,15 @@
     <ClInclude Include="GameObject.hpp" />
     <ClInclude Include="Game.hpp" />
     <ClInclude Include="GameCommon.hpp" />
-    <ClInclude Include="Map.hpp" />
-    <ClInclude Include="MapDefinition.hpp" />
-    <ClInclude Include="Tile.hpp" />
-    <ClInclude Include="TileDefinition.hpp" />
+    <ClInclude Include="Map\CellularAutomata.hpp" />
+    <ClInclude Include="Map\Map.hpp" />
+    <ClInclude Include="Map\MapDefinition.hpp" />
+    <ClInclude Include="Map\MapGenStep.hpp" />
+    <ClInclude Include="Map\Mutator.hpp" />
+    <ClInclude Include="Map\GenRooms.hpp" />
+    <ClInclude Include="Map\Room.hpp" />
+    <ClInclude Include="Map\Tile.hpp" />
+    <ClInclude Include="Map\TileDefinition.hpp" />
     <ClInclude Include="World.hpp" />
   </ItemGroup>
   <ItemGroup>

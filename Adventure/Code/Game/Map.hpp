@@ -24,7 +24,6 @@ class FromImage;
 struct IntVec2;
 
 
-
 struct TileAttributeInMap {
 	TileAttributeInMap(){};
 	~TileAttributeInMap(){};

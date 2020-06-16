@@ -15,11 +15,30 @@ TileDefinition::TileDefinition( const XmlElement& tileDefElement )
 	m_spriteCoords		= ParseXmlAttribute( tileDefElement, "spriteCoords", IntVec2( 0, 0 ) );
 	m_tintColor			= ParseXmlAttribute( tileDefElement, "spriteTint", Rgba8::WHITE );
 	m_allowsWalk 		= ParseXmlAttribute( tileDefElement, "allowsWalk", true );	
+
 	if( s_spriteFilePath == "" ) {
 		ERROR_AND_DIE( "Try to load sprite file with empty path in tiledefinition!" );
 	}
+
 	Texture* tileTexture = g_theRenderer->CreateOrGetTextureFromFile( s_spriteFilePath.c_str() );
 	SpriteSheet spriteSheet = SpriteSheet( tileTexture, s_spriteLayout ); 
-	//int spriteSheet.GetSpriteUVS( m_uvatma)
+	spriteSheet.GetSpriteUVsWithCoords( m_uvAtMins, m_uvAtMaxs, m_spriteCoords );
+}
+
+void TileDefinition::PopulateDefinitionFromXmlFile( const char* filePath )
+{
+	XmlDocument tileDefFile;
+	tileDefFile.LoadFile( filePath );
+	XmlElement* tileRootELement = tileDefFile.RootElement();
+	s_spriteFilePath	= ParseXmlAttribute( *tileRootELement, "spriteSheet", "" );
+	s_spriteLayout		= ParseXmlAttribute( *tileRootELement, "spriteLayout", IntVec2( 0, 0 ) );
+	
+	XmlElement* tileDefElement = tileRootELement->FirstChildElement();
+
+	while( tileDefElement ) {
+		TileDefinition* tileDef = new TileDefinition( *tileDefElement );
+		s_definitions[tileDef->m_name] = tileDef;
+		tileDefElement = tileDefElement->NextSiblingElement();
+	}
 }
 

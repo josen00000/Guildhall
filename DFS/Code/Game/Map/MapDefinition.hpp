@@ -16,8 +16,8 @@ public:
 
 	static void PopulateDefinitionFromXmlElement( XmlElement& tileDefElement );
 	static void PopulateDefinitionsFromXmlFile( const char* filepath );
-	void ParseMapGenSteps( XmlElement& mapGenElement );
-	void CreateMapGenStep( XmlElement& mapGenStepElement );
+	void ParseMapGenSteps( const XmlElement& mapGenStepsElement );
+	void CreateMapGenStep( const XmlElement& mapGenStepElement );
 
 	// Accessor
 	std::string GetName() const { return m_name; }
@@ -25,6 +25,7 @@ public:
 	int GetHeight() const { return m_height; }
 	TileType GetFillType() const { return m_fillTileType; }
 	TileType GetEdgeType() const { return m_edgeTileType; }
+	const std::vector<MapGenStep*>& GetMapGenSteps() const { return m_mapGenSteps; }
 
 private:
 	std::string										m_name = "";
@@ -34,6 +35,7 @@ private:
 	TileType										m_fillTileType = "";
 	TileType										m_edgeTileType = "";
 	std::vector<MapGenStep*>						m_mapGenSteps;
+
 public:
 	static std::map<std::string, MapDefinition*>	s_definitions;
 };

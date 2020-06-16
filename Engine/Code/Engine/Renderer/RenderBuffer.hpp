@@ -4,8 +4,6 @@
 class RenderContext;
 struct ID3D11Buffer;
 
-#define BIT_FLAG(b)		(1 << (b))
-
 // what we use it for
 // naming. bit shows only one
 enum RenderBufferUsageBit : uint {

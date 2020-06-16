@@ -22,9 +22,7 @@ public:
 	Vec2	RollRandomVec2InRange(const Vec2& minInclusive, const Vec2& maxInclusive );
 
 
-
+public:
 	int m_seed = 0;
 	int m_position = 0;
-
-
 };

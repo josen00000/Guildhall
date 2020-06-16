@@ -8,10 +8,11 @@
 // Append PCU Verts
 void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
 {
-	Vertex_PCU leftdown		= Vertex_PCU( Vec3( bound.mins, -5.f ) , tintColor, uvAtMins );
-	Vertex_PCU rightup		= Vertex_PCU( Vec3( bound.maxs, -5.f ), tintColor, uvAtMaxs );
-	Vertex_PCU leftup		= Vertex_PCU( Vec3( bound.mins.x, bound.maxs.y, -5.f ), tintColor, Vec2( uvAtMins.x, uvAtMaxs.y ) );
-	Vertex_PCU rightdown	= Vertex_PCU( Vec3( bound.maxs.x, bound.mins.y, -5.f ), tintColor, Vec2( uvAtMaxs.x, uvAtMins.y ) );
+	float posZ = 0.f;
+	Vertex_PCU leftdown		= Vertex_PCU( Vec3( bound.mins, posZ ) , tintColor, uvAtMins );
+	Vertex_PCU rightup		= Vertex_PCU( Vec3( bound.maxs, posZ ), tintColor, uvAtMaxs );
+	Vertex_PCU leftup		= Vertex_PCU( Vec3( bound.mins.x, bound.maxs.y, posZ ), tintColor, Vec2( uvAtMins.x, uvAtMaxs.y ) );
+	Vertex_PCU rightdown	= Vertex_PCU( Vec3( bound.maxs.x, bound.mins.y, posZ ), tintColor, Vec2( uvAtMaxs.x, uvAtMins.y ) );
 
 	// left up triangle
 	vertices.push_back( leftdown );

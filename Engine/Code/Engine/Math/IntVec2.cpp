@@ -12,6 +12,9 @@
 
 #endif
 
+const IntVec2 IntVec2::ZERO = IntVec2( 0, 0 );
+const IntVec2 IntVec2::ONE = IntVec2( 1, 1 );
+
 //-----------------------------------------------------------------------------------------------
 IntVec2::IntVec2( const IntVec2& copy )
 	: x( copy.x )

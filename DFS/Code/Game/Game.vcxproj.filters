@@ -11,6 +11,12 @@
     <Filter Include="Data">
       <UniqueIdentifier>{e98e7bd5-fec2-46a8-8ec4-c45c65611ec1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game\Map">
+      <UniqueIdentifier>{24469075-9003-4795-8e1a-2744720fec42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Map\MapGenerator">
+      <UniqueIdentifier>{1edc4308-9088-487b-a700-35454c1cc489}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -28,17 +34,32 @@
     <ClCompile Include="World.cpp">
       <Filter>Game</Filter>
     </ClCompile>
-    <ClCompile Include="Map.cpp">
-      <Filter>Game</Filter>
+    <ClCompile Include="Map\MapGenStep.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
     </ClCompile>
-    <ClCompile Include="MapDefinition.cpp">
-      <Filter>Game</Filter>
+    <ClCompile Include="Map\Mutator.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
     </ClCompile>
-    <ClCompile Include="Tile.cpp">
-      <Filter>Game</Filter>
+    <ClCompile Include="Map\MapDefinition.cpp">
+      <Filter>Game\Map</Filter>
     </ClCompile>
-    <ClCompile Include="TileDefinition.cpp">
-      <Filter>Game</Filter>
+    <ClCompile Include="Map\Tile.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\TileDefinition.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\CellularAutomata.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\GenRooms.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\Map.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\Room.cpp">
+      <Filter>Game\Map</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,17 +81,32 @@
     <ClInclude Include="World.hpp">
       <Filter>Game</Filter>
     </ClInclude>
-    <ClInclude Include="Map.hpp">
-      <Filter>Game</Filter>
+    <ClInclude Include="Map\MapGenStep.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
     </ClInclude>
-    <ClInclude Include="MapDefinition.hpp">
-      <Filter>Game</Filter>
+    <ClInclude Include="Map\Mutator.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
     </ClInclude>
-    <ClInclude Include="Tile.hpp">
-      <Filter>Game</Filter>
+    <ClInclude Include="Map\MapDefinition.hpp">
+      <Filter>Game\Map</Filter>
     </ClInclude>
-    <ClInclude Include="TileDefinition.hpp">
-      <Filter>Game</Filter>
+    <ClInclude Include="Map\Tile.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\TileDefinition.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\CellularAutomata.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\GenRooms.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\Map.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\Room.hpp">
+      <Filter>Game\Map</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

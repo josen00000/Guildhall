@@ -10,6 +10,7 @@
 
 #define UNUSED(x) (void)(x);
 #define SELF_SAFE_RELEASE(ptr) if(nullptr !=ptr) { delete ptr; ptr = nullptr; } 
+#define BIT_FLAG(b)	(1 << (b))
 
 enum Convention
 {

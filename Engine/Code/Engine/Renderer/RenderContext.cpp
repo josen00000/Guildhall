@@ -850,6 +850,9 @@ void RenderContext::DrawMesh( GPUMesh* mesh )
 
 void RenderContext::DrawVertexVector( std::vector<Vertex_PCU>& vertices )
 {
+	if( vertices.size() == 0 ) {
+		return;
+	}
 	size_t elementSize = sizeof( Vertex_PCU );
 	size_t bufferByteSize = vertices.size() * elementSize;
 	m_immediateVBO->Update( &vertices[0], bufferByteSize, elementSize );

@@ -2,7 +2,8 @@
 #include "Game.hpp"
 #include "Game/App.hpp"
 #include "Game/GameObject.hpp"
-#include "Game/MapDefinition.hpp"
+#include "Game/Map/MapDefinition.hpp"
+#include "Game/Map/TileDefinition.hpp"
 #include "Game/World.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/DevConsole.hpp"
@@ -43,6 +44,11 @@ void Game::Startup()
 	m_world = World::CreateWorld( 1 );
 }
 
+void Game::RestartGame()
+{
+	m_world->CreateMaps();
+}
+
 void Game::Shutdown()
 {
 	delete m_rng;
@@ -52,11 +58,12 @@ void Game::Shutdown()
 void Game::RunFrame( float deltaSeconds )
 {
 	UpdateGame( deltaSeconds );
+	HandleKeyboardInput();
 }
 
 void Game::UpdateGame( float deltaSeconds )
 {
-
+	UNUSED(deltaSeconds);
 	CheckIfExit();
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 	CleanDestroyedObjects();
@@ -78,6 +85,9 @@ void Game::CheckIfExit()
 
 void Game::HandleKeyboardInput()
 {
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F5 ) ) {
+		RestartGame();
+	}
 }
 
 
@@ -111,6 +121,7 @@ void Game::CleanDestroyedObjects()
 void Game::LoadAssets()
 {
 	g_squirrelFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+	LoadDefs();
 }
 
 void Game::LoadDefs()
@@ -119,19 +130,13 @@ void Game::LoadDefs()
 	XmlDocument mapDefFile;
 	mapDefFile.LoadFile( MAP_DEF_FILE_PATH );
 	XmlElement* mapRootELement = mapDefFile.RootElement();
-	XmlElement* mapDefElement = mapDefFile.FirstChildElement();
+	XmlElement* mapDefElement = mapRootELement->FirstChildElement();
 	while( mapDefElement ) {
 		MapDefinition::PopulateDefinitionFromXmlElement( *mapDefElement );
+		mapDefElement = mapDefElement->NextSiblingElement();
 	}
 
 	// load tile def
-	XmlDocument tileDefFile;
-	tileDefFile.LoadFile( TILE_DEF_FILE_PATH );
-	XmlElement* tileRootELement = tileDefFile.RootElement();
-	XmlElement* tileDefElement = tileDefFile.FirstChildElement();
-	while( tileDefElement ) {
-		MapDefinition::PopulateDefinitionFromXmlElement( *tileDefElement );
-	}
-	
+	TileDefinition::PopulateDefinitionFromXmlFile( TILE_DEF_FILE_PATH );
 }
 

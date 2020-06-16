@@ -13,6 +13,8 @@ class TileDefinition {
 public:
 	explicit TileDefinition( const XmlElement& tileDefElement );
 
+	static void PopulateDefinitionFromXmlFile( const char* filePath );
+
 public:
 	// Accessor
 	bool		DoesAllowWalk() const { return m_allowsWalk; }

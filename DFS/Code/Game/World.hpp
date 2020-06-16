@@ -1,10 +1,10 @@
 #pragma once
 #include <vector>
 #include "Game/Game.hpp"
-#include "Game/Map.hpp"
+#include "Game/Map/Map.hpp"
 
 class World {
-private:
+public:
 	World(){}
 	~World();
 
