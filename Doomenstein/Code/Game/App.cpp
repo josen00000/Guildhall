@@ -57,26 +57,28 @@ void App::Startup()
 	HWND hWnd = (HWND)g_theWindow->GetHandle();
 	SetWindowTextA( hWnd, m_windowName.c_str() );
 
+
 	g_camera			= Camera::CreatePerspectiveCamera( g_theRenderer, 60, -0.09f, -100.f );
 	g_camera->m_debugString = "gamecamera";
 	g_camera->SetClearMode( CLEAR_NONE, Rgba8::DARK_GRAY );
 	g_camera->EnableClearColor( Rgba8::DARK_GRAY );
 	g_camera->EnableClearDepth( 1 );
 	g_camera->SetRenderContext( g_theRenderer );
+
 	g_UICamera			= new Camera( g_theRenderer, Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
 	g_devCamera			= new Camera( g_theRenderer, Vec2( -32, -18 ), Vec2( 32, 18 ) );
-	g_theGame			= new Game( g_camera, g_UICamera );
 
+	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
+	g_theConsole->Startup();
+
+	g_theGame			= new Game( g_camera, g_UICamera );
 	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP ); // basis currently not use
 	g_convention = X_RIGHT_Y_UP_Z_BACKWARD;
 
 	g_theGame->Startup();
 	EnableDebugRendering();
 	g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
-	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
-	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
-	g_theConsole->PrintString( Rgba8::RED, std::string( "test ") );
-	g_theConsole->Startup();
 
 	std::string helpComd = std::string( "help" ); 
 	std::string quitComd = std::string( "quit" );
@@ -188,7 +190,7 @@ void App::Shutdown()
 void App::RunFrame()
 {
 	BeginFrame();
-	Update( m_clock->GetLastDeltaSeconds() );
+	Update( (float)m_clock->GetLastDeltaSeconds() );
 	Render();
 	EndFrame();
 

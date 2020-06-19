@@ -1,0 +1,17 @@
+
+windowAspect="2.0"
+fovDegreesY="70"
+fullscreen="false"
+dpiAware="true"
+
+moveForward="e"
+moveLeft="s"
+moveBack="d"
+moveRight="f"
+moveUp="r"
+moveDown="w"
+
+attractFadeOutSeconds="0.1"
+playingFadeInSeconds="0.2"
+
+startMap="TestRoom"

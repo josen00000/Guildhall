@@ -20,7 +20,8 @@ public:
 
 	explicit MaterialDefinition( const XmlElement& MaterialElement );
 
-
+	//
+	bool isSpriteCoordsValid( IntVec2 spriteCoords );
 
 public:
 	std::string m_name = "";

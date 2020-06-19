@@ -131,7 +131,7 @@ std::string GetStringWithoutSpace( const char* originalString )
 
 std::string GetStringWithoutSpace( std::string originalString )
 {
-	return std::string();
+	return GetStringWithoutSpace( originalString.c_str() );
 }
 
 std::string TrimStringWithOneSpace( std::string originalString )

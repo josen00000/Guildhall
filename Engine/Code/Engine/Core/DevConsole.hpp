@@ -27,26 +27,26 @@ struct ColoredLine {
 	std::string text;
 };
 
-class DevConsole
-{
+class DevConsole{
 public:
 	explicit DevConsole( BitmapFont* font, Camera* camera );
+
+	static DevConsole* InitialDevConsole( BitmapFont* font, Camera* camera );
+	static bool CheckIfCommandExist( std::string comd );
+	static void AddCommandToCommandList( std::string comd, std::string desc, EventCallbackFunctionPtr funcPtr );
+public:
 	void Startup();
 	void BeginFrame();
 	void EndFrame();
 	void Shutdown();
 	void Update( float deltaSeconds );
 
-	void PrintString( const Rgba8& textColor, const std::string& devConsolePrintString);
 	void StartDevConcole();
 	void EndDevConcole();
-	void SetIsOpen( bool isOpen );
-	bool IsOpen() const;
-	static DevConsole* InitialDevConsole( BitmapFont* font, Camera* camera );
 
+	// render
+	void PrintString( const Rgba8& textColor, const std::string& devConsolePrintString );
 	void Render( RenderContext& renderer ) const;
-	void AddVertForInput() const;
-	void AddVertForContent() const;
 	
 	// Input & control
 	void CheckIfConsoleOpen();
@@ -56,16 +56,36 @@ public:
 	void AddCharToInput( char c );
 	void DeleteCharFromInput( bool isBefore );
 	void ClearInput();
-	bool HasInput();
 
 	// Command
 	void SubmitCommand();
 	void ExecuteCommand( std::string comd, EventArgs& args );
-	static bool CheckIfCommandExist( std::string comd );
-	static void AddCommandToCommandList( std::string comd, std::string desc, EventCallbackFunctionPtr funcPtr );
 	void ExecuteQuitFunction();
 	void LogErrorMessage();
 
+	// ClipBoard
+	bool SendSelectedStringToClipBoard();
+	bool ReceiveStringFromClipBoard();
+	void InputCopyedString( std::string copyed );
+
+	// Accessor
+	bool IsOpen() const;
+	bool HasInput() const;
+	int GetMaxLinesNum() const;
+	float GetLineAlignmentY() const;
+
+	// Mutator
+	void SetIsOpen( bool isOpen );
+	
+
+	// helper function
+	void DebugLog( std::string debugMsg, Rgba8 color = Rgba8::WHITE );
+	void DebugLog( Strings debugMsgs, Rgba8 color = Rgba8::WHITE );
+	void DebugLogf( const char* text, ... );
+	void DebugError( std::string errorMsg );
+	void DebugErrorf( const char* text, ... );
+
+private:
 	// Caret
 	void ResetCaretIndex();
 	void UpdateCaretIndex( int deltaIndex );
@@ -87,16 +107,9 @@ public:
 	void LoadHistory();
 	void SaveHistoryToFile();
 
-	// ClipBoard
-	bool SendSelectedStringToClipBoard();
-	bool ReceiveStringFromClipBoard();
-	void InputCopyedString( std::string copyed );
-
-	// Accessor
-	int GetMaxLinesNum() const;
-	float GetLineAlignmentY() const;
-
-private:
+	// Render
+	void AddVertForInput() const;
+	void AddVertForContent() const;
 
 public:
 	bool m_ableRenderCaret = true;
@@ -106,7 +119,7 @@ public:
 	int m_caretIndex;
 	int m_historyCommandIndex;
 	Vec2 m_caretPos;
-	float m_lineHeight = 1.f;
+	float m_lineHeight = 0.7f;
 	Rgba8 m_defaultColor = Rgba8::WHITE;
 	BitmapFont* m_font	= nullptr;
 	Camera* m_camera	= nullptr;

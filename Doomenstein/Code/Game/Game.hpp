@@ -2,11 +2,14 @@
 #include <vector>
 #include "Game/GameCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
+#include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/Transform.hpp"
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Math/Mat44.hpp"
+#include "Engine/Renderer/SpriteSheet.hpp"
+#include "Engine/Core/DevConsole.hpp"
 
 class Camera;
 class World;
@@ -24,6 +27,8 @@ class RenderBuffer;
 
 struct Vertex_PCU;
 struct Mat44;
+
+extern DevConsole*		g_theConsole;
 
 enum GameState {
 	GAME_STATE_NULL = -1,
@@ -54,10 +59,22 @@ public:
 	void RenderGame() const;
 	void RenderUI() const;
 	void RenderBasis() const;
+	
+	// UI
+	void RenderBaseHud() const;
+	void RenderGun() const;
+
+
+	// map
+	bool LoadMapWithName( std::string mapName );
+	Strings GetAllMaps() const;
 
 	// convension
 	const Convention GetConvention() const{ return m_convension; }
 	void SetConvention( Convention convention ); 
+
+	void SetCameraPos( Vec3 pos );
+	void SetCameraYaw( float yaw );
 	
 private:
 	void Update( float deltaSeconds );
@@ -86,7 +103,7 @@ private:
 	//Load
 	void LoadAssets();
 	void LoadDefinitions();
-	void LoadMaps( const char* mapFolderPath );
+	void LoadMapsDefinitions( const char* mapFolderPath );
 	template<typename T>
 	void LoadFileDefinition( T t, const char* path );
 
@@ -121,6 +138,8 @@ public:
 
 	World* m_world = nullptr;
 
+	SpriteSheet* m_viewModelSpriteSheet;
+
 private:
 	float m_DebugDeltaSeconds = 0.f;
 };
@@ -130,7 +149,15 @@ template<typename T>
 void Game::LoadFileDefinition( T t, const char* path )
 {
 	XmlDocument defFile;
-	defFile.LoadFile( path );
+	if( defFile.LoadFile( path ) != 0 ) {
+		ERROR_AND_DIE( Stringf(  "Cannot Open xml file with path:%s.", path ));
+		//g_theConsole->DebugErrorf( "Cannot Open xml file with path:%s.", path );
+		return;
+	}
 	const XmlElement* mapRootElement = defFile.RootElement();
 	t( *mapRootElement );
 }
+
+// Map Command
+bool MapCommandLoadMap( EventArgs& args );
+bool MapCommandWarp( EventArgs& args );

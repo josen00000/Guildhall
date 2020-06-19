@@ -1,4 +1,4 @@
-SD:ST Assignment 1 - Protogame3D demo
+SD:ST Assignment 2 - Doomenstein
 
 Controls:
 - P to play test sound
@@ -7,5 +7,7 @@ Controls:
 - ESDF fly around horizontally; RW fly up/down vertically
 - ESC quits
 
-Known issues:
-In demo video, the button p is occupied by show cursor function. Already delete in project.
+DevConsole:
+command:
+load_map: <map_name>
+

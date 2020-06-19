@@ -1,37 +1,35 @@
 #pragma once
-#include<engine/Math/vec2.hpp>
-#include<engine/Math/IntVec2.hpp>
 #include<vector>
-#include<Engine/Core/Vertex_PCU.hpp>
-#include<Engine/Core/Rgba8.hpp>
-
+#include "Game/RegionDefinition.hpp"
+#include "Engine/Math/vec2.hpp"
+#include "Engine/Math/AABB3.hpp"
+#include "Engine/Math/IntVec2.hpp"
+#include "Engine/Core/Vertex_PCU.hpp"
+#include "Engine/Core/Rgba8.hpp"
+#include "Engine/Renderer/SpriteSheet.hpp"
 
 struct AABB2;
-class Entity;
-
-
-enum TileType {
-	TILE_TYPE_NULL,
-	TILE_TYPE_GRASS,
-	TILE_TYPE_STONE,
-	NUM_TILE_TYPES
-};
 
 
 class Tile {
 public:
-	Tile(int tileX,int tileY);
+	Tile(){}
 	~Tile(){}
 	Tile(const Tile& copyFrom);
 	//explicit
-	explicit Tile( IntVec2& tileCoords);
-	void Update(float deltaSeconds);
-	void Render()const;
-	void DebugRender()const;
-	AABB2 GetBounds() const;
-	void SetTileType(const TileType tileType);
+	explicit Tile( IntVec2 tileCoords, RegionDefinition* refionDef );
+	
+public:
+	// Accessor
+	bool IsSolid() const;
+	AABB3 GetBox() const { return m_box; }
+	void GetSideUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const;
+	void GetFloorUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const;
+	void GetCeilingUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const;
+	SpriteSheet* GetTileSpriteSheet() const;
 
 public:	
-	TileType m_type=TILE_TYPE_GRASS;
-	IntVec2 m_tileCoords=IntVec2(0,0);
+	IntVec2					m_tileCoords = IntVec2( 0, 0 );
+	RegionDefinition*		m_regDef = nullptr;
+	AABB3					m_box;
 };

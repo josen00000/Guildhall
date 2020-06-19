@@ -1,62 +1,60 @@
-#include"Tile.hpp"
-#include<Engine/Math/Vec3.hpp>
+#include "Tile.hpp"
 #include "Engine/Math/AABB2.hpp"
-#include<Game/App.hpp>
-#include<Engine/Renderer/RenderContext.hpp>
-#include<Engine/core/EngineCommon.hpp>
+#include "Engine/Renderer/SpriteSheet.hpp"
+#include "Engine/Math/IntVec2.hpp"
+#include "Game/MaterialDefinition.hpp"
 
-
-extern RenderContext* g_theRenderer;
-
+Tile::Tile( IntVec2 tileCoords, RegionDefinition* regionDef )
+	:m_tileCoords(tileCoords)
+	,m_regDef(regionDef)
+{
+	m_box = AABB3( Vec3( (float)tileCoords.x, (float)tileCoords.y, 0 ), Vec3( (float)tileCoords.x + 1, (float)tileCoords.y + 1, 1 ) );
+}
 
 Tile::Tile( const Tile& copyFrom )
-	:m_tileCoords(copyFrom.m_tileCoords)
-	,m_type(copyFrom.m_type)
-{	
-}
-
-Tile::Tile( IntVec2& tileCoords )
-	:m_tileCoords(tileCoords)
 {
-	m_type=TILE_TYPE_GRASS;
+	m_tileCoords = copyFrom.m_tileCoords;
+	m_regDef = copyFrom.m_regDef;
+	m_box = copyFrom.m_box;
 }
 
-Tile::Tile( int tileX, int tileY )
+bool Tile::IsSolid() const
 {
-	m_tileCoords=IntVec2(tileX,tileY);
+	return m_regDef->IsSolid();
 }
 
-void Tile::Update( float deltaSeconds )
+
+
+void Tile::GetSideUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const
 {
-	UNUSED(deltaSeconds);
+	SpriteSheet* tileSheet = GetTileSpriteSheet();
+	MaterialDefinition sideMaterial = m_regDef->m_materials["Side"];
+	IntVec2 sideCoords = sideMaterial.m_spriteCoords;
+
+	tileSheet->GetSpriteUVs( uvAtMins, uvAtMax, sideCoords );
 }
 
-void Tile::Render()const 
+void Tile::GetFloorUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const
 {
-	Rgba8 tileColor;
-	if(m_type==TILE_TYPE_GRASS){
-		tileColor=Rgba8(0,100,0);
-	}
-	else{
-		tileColor=Rgba8(211,211,211);
-	}
-	AABB2 temAABB2=GetBounds();
-	g_theRenderer->DrawAABB2D(temAABB2,tileColor);
+	SpriteSheet* tileSheet = GetTileSpriteSheet();
+	MaterialDefinition floorMaterial = m_regDef->m_materials["Floor"];
+	IntVec2 floorCoords = floorMaterial.m_spriteCoords;
+
+	tileSheet->GetSpriteUVs( uvAtMins, uvAtMax, floorCoords );
 }
 
-void Tile::DebugRender() const
+void Tile::GetCeilingUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const
 {
+	SpriteSheet* tileSheet = GetTileSpriteSheet();
+	MaterialDefinition ceilingMaterial = m_regDef->m_materials["Ceiling"];
+	IntVec2 ceilingCoords = ceilingMaterial.m_spriteCoords;
 
+	tileSheet->GetSpriteUVs( uvAtMins, uvAtMax, ceilingCoords );
 }
 
-AABB2 Tile::GetBounds() const
+SpriteSheet* Tile::GetTileSpriteSheet() const
 {
-	Vec2 mins((float)m_tileCoords.x,(float)m_tileCoords.y);
-	Vec2 maxs(mins.x+1.f, mins.y+1.f);
-	return AABB2(mins, maxs);
+	SpriteSheet* materialSheet = MaterialDefinition::s_sheet.m_sheet;
+	return materialSheet;
 }
 
-void Tile::SetTileType( const TileType tileType )
-{
-	m_type=tileType;
-}

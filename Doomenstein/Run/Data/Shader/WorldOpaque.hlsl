@@ -97,10 +97,10 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 {
 	float4 targetColor = float4( 0, 0, 0, 0 );
 	float4 color = tDiffuse.Sample( sSampler, input.uv );
-	if( color.r * color.g * color.b * color.a > 0.9 ) {
-		float value = sin( SYSTEM_TIME_SECONDS * 10 + 30 );
-		color = lerp( color, targetColor, value );
-	}
+	//if( color.r * color.g * color.b * color.a > 0.9 ) {
+	//	float value = sin( SYSTEM_TIME_SECONDS * 10 + 30 );
+	//	color = lerp( color, targetColor, value );
+	//}
 	if( color.a - 0.01 < 0 ) {
 		discard;
 	}

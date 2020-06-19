@@ -5,14 +5,19 @@
 #include "Game/World.hpp"
 #include "Game/EntityDefinition.hpp"
 #include "Game/MapDefinition.hpp"
+#include "Game/TileMap.hpp"
 #include "Game/MaterialDefinition.hpp"
 #include "Game/RegionDefinition.hpp"
+#include "Engine/Core/Delegate.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
+#include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/XmlUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
+#include "Engine/Math/IntVec2.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/GPUMesh.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
@@ -21,12 +26,9 @@
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/ObjectReader.hpp"
-#include "Engine/Math/IntVec2.hpp"
-#include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Renderer/ShaderState.hpp"
 #include "Engine/Renderer/Material.hpp"
 #include "Engine/Renderer/Sampler.hpp"
-#include "Engine/Core/Delegate.hpp"
 
 
 extern App*				g_theApp;
@@ -66,6 +68,12 @@ void Game::Startup()
 	CreateGameObjects();
 	// create world
 	m_world = new World();
+	std::string startMapName = g_gameConfigBlackboard.GetValue( "StartMap", "" );
+	LoadMapsDefinitions( "Data/Maps" );
+
+	m_world->LoadMap( startMapName );
+	// command
+	g_theConsole->AddCommandToCommandList( std::string( "load_map" ), std::string( "Load one map with name." ), MapCommandLoadMap );
 }
 
 void Game::Shutdown()
@@ -73,6 +81,7 @@ void Game::Shutdown()
 	delete m_rng;
 	SELF_SAFE_RELEASE(m_world);
 	SELF_SAFE_RELEASE(m_cubeMesh);
+	SELF_SAFE_RELEASE(m_viewModelSpriteSheet);
 	DebugRenderSystemShutdown();
 }
 
@@ -92,6 +101,7 @@ void Game::Update( float deltaSeconds )
 {
 	UpdateLighting( deltaSeconds );
 	UpdateUI( deltaSeconds );
+	m_world->Update( deltaSeconds );
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -204,6 +214,9 @@ void Game::HandleKeyboardInput( float deltaSeconds )
 	CheckIfExit();
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F1 ) ) {
 		m_debugMode = !m_debugMode;
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ) {
+		g_theConsole->DebugError( "testing!!!" );
 	}
 }
 
@@ -327,9 +340,9 @@ void Game::RenderGame() const
 
  	g_theRenderer->SetDiffuseTexture( temp );
 
-	m_cubeObj->Render();
-	m_cubeObj1->Render();
-	m_cubeObj2->Render();
+	//m_cubeObj->Render();
+	//m_cubeObj1->Render();
+	//m_cubeObj2->Render();
 
 	m_world->Render();
 
@@ -357,6 +370,20 @@ void Game::RenderUI() const
 	}
 	RenderFPSInfo();
 	
+	m_UICamera->SetDepthStencilTarget( nullptr ); // don't need depth stencil target set target to nullptr
+	m_UICamera->SetClearMode( CLEAR_NONE );
+	m_UICamera->SetUseDepth( false );
+	m_UICamera->SetColorTarget( m_gameCamera->GetColorTarget() );
+	//Sampler* uiSampler = new Sampler( g_theRenderer, SAMPLER_POINT );
+	//g_theRenderer->BindSampler( uiSampler );
+	g_theRenderer->BeginCamera( m_UICamera, X_RIGHT_Y_UP_Z_BACKWARD );
+
+	RenderBaseHud();
+	RenderGun();
+	
+	g_theRenderer->EndCamera();
+	//delete uiSampler;
+
 }
 
 void Game::RenderBasis() const
@@ -376,9 +403,46 @@ void Game::RenderBasis() const
 	DebugAddWorldBasis( compassTrans.ToMatrix( m_convension ), Rgba8::WHITE, Rgba8::WHITE, 0.f, DEBUG_RENDER_ALWAYS );
 }
 
+void Game::RenderBaseHud() const
+{
+	Texture* hudTexture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Hud_Base.png" );
+	g_theRenderer->SetDiffuseTexture( hudTexture );
+	AABB2 hudBox = AABB2( Vec2::ZERO, Vec2( 160.f, 11.7f ) );
+	g_theRenderer->DrawAABB2D( hudBox, Rgba8::WHITE );
+}
+
+void Game::RenderGun() const
+{
+	Texture* gunTexture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/ViewModelsSpriteSheet_8x8.png" );
+	g_theRenderer->SetDiffuseTexture( gunTexture );
+	Vertex_PCU vertices[6];
+	Vec2 gunUVAtMax;
+	Vec2 gunUVAtMin;
+	m_viewModelSpriteSheet->GetSpriteUVs( gunUVAtMin, gunUVAtMax ,IntVec2( 0, 0 ) );
+	vertices[0] = Vertex_PCU( Vec3( 55.f, 11.7f, 0.f), Rgba8::WHITE, gunUVAtMin );
+	vertices[1] = Vertex_PCU( Vec3( 105.f, 11.7f, 0.f), Rgba8::WHITE, Vec2( gunUVAtMax.x, gunUVAtMin.y ) );
+	vertices[2] = Vertex_PCU( Vec3( 105.f, 61.7f, 0.f), Rgba8::WHITE, gunUVAtMax );
+
+	vertices[3] = Vertex_PCU( Vec3( 55.f, 11.7f, 0.f), Rgba8::WHITE, gunUVAtMin );
+	vertices[4] = Vertex_PCU( Vec3( 105.f, 61.7f, 0.f), Rgba8::WHITE, gunUVAtMax );
+	vertices[5] = Vertex_PCU( Vec3( 55.f, 61.7f, 0.f), Rgba8::WHITE, Vec2( gunUVAtMin.x, gunUVAtMax.y ) );
+
+	g_theRenderer->DrawVertexArray( 6, vertices );
+}
+
 void Game::SetConvention( Convention convention )
 {
 	m_convension = convention;
+}
+
+void Game::SetCameraPos( Vec3 pos )
+{
+	m_gameCamera->SetPosition( pos );
+}
+
+void Game::SetCameraYaw( float yaw )
+{
+	m_gameCamera->SetYawRotation( yaw );
 }
 
 void Game::LoadAssets()
@@ -387,33 +451,67 @@ void Game::LoadAssets()
 	g_theAudioSystem->CreateOrGetSound( "Data/Audio/Teleporter.wav" );
 	g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png");
 	g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Terrain_8x8.png");
+	g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Hud_Base.png" );
+	Texture* modelSpriteSheet = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/ViewModelsSpriteSheet_8x8.png" );
+	m_viewModelSpriteSheet = new SpriteSheet( *modelSpriteSheet, IntVec2( 8 ) );
 
 	LoadDefinitions();
-	LoadMaps( "Data/Maps" );
 }
 
 void Game::LoadDefinitions()
 {
 	// load material def
+	g_theConsole->DebugLogf( "Parsing map materials from \"%s\"...", "Data/Definitions/MapMaterialTypes.xml"   );
 	LoadFileDefinition( MaterialDefinition::LoadMapMaterialDefinitions, "Data/Definitions/MapMaterialTypes.xml" );
+	g_theConsole->DebugLogf( "Parsing map region types from \"%s\"...", "Data/Definitions/MapRegionTypes.xml"   );
 	LoadFileDefinition( RegionDefinition::LoadMapRegionDefinitions, "Data/Definitions/MapRegionTypes.xml" );
 	LoadFileDefinition( EntityDefinition::LoadEntityDefinitions, "Data/Definitions/EntityTypes.xml" );
 }
 
-void Game::LoadMaps( const char* mapFolderPath )
+void Game::LoadMapsDefinitions( const char* mapFolderPath )
 {
+	g_theConsole->DebugLogf( "Loading 5 map files from \"%s\"",mapFolderPath );
 	Strings mapPaths = GetFileNamesInFolder( mapFolderPath, "*.xml" );
 	for( int i = 0; i < mapPaths.size(); i++ ) {
 		XmlDocument mapFile;
 		char mapFilePath[100];
+// 		if( mapPaths[i].compare( "TestRoom.xml" ) != 0 ) {
+// 			continue;
+// 		}
 		strcpy_s( mapFilePath, mapFolderPath );
 		strcat_s( mapFilePath, "/" );
 		strcat_s( mapFilePath, mapPaths[i].c_str() );
 		mapFile.LoadFile( mapFilePath );
 		const XmlElement* mapElement = mapFile.RootElement();
-		MapDefinition mapDef = MapDefinition( *mapElement );
-		MapDefinition::s_definitions[mapPaths[i]] = mapDef;
+		
+		g_theConsole->DebugLogf( "Loading map files from \"%s\"", mapPaths[i].c_str() );
+
+		std::string mapType = ParseXmlAttribute( *mapElement, "type", "TileMap" );
+		Map* tempMap = nullptr;
+		if( mapType == "TileMap" )	{ tempMap = new TileMap( *mapElement ); }
+
+		tempMap->m_name = mapPaths[i];
+		if( tempMap ) {
+			m_world->AddMap( tempMap );
+		}
 	}
+
+}
+
+bool Game::LoadMapWithName( std::string mapName )
+{
+	//std::string pureMapname = std::string( mapName, 0, mapName.size()-4 );
+	if( m_world->LoadMap( mapName ) ) {
+		g_theConsole->DebugLogf( "Entering map \"%s\"", mapName.c_str() );
+		return true;
+	}
+	
+	return false;
+}
+
+Strings Game::GetAllMaps() const
+{
+	return m_world->GetAllMaps();
 }
 
 void Game::CreateGameObjects()
@@ -443,4 +541,31 @@ void Game::CreateGameObjects()
 	// debug render
 	Mat44 basisMat = Mat44::IDENTITY;
 	basisMat.SetTranslation3D( Vec3( 0, 5.f, 0.f ) );
+}
+
+
+// command
+bool MapCommandLoadMap( EventArgs& args )
+{
+	std::string mapName = args.GetValue( std::to_string( 0 ), "" );
+	if( !g_theGame->LoadMapWithName( mapName ) ) {
+		Strings mapNames = g_theGame->GetAllMaps();
+		g_theConsole->DebugLog( mapNames );
+		std::string exampleMapName = std::string( mapNames[0], 0, mapNames[0].size() - 4 );
+		
+		std::string mapExample( "For example: load_map: " + exampleMapName );
+		g_theConsole->DebugLog( mapExample );
+	}
+	return true;
+}
+
+bool MapCommandWarp( EventArgs& args )
+{
+// 	IntVec2 startPos = args.GetValue( std::to_string( 0 ), IntVec2::ZERO );
+// 	float startYaw = args.GetValue( std::to_string( 0 ), 0.f );
+
+	//g_theGame->SetStartPos();
+	//g_theGame->SetStartYaw();
+	UNUSED(args);
+	return true;
 }

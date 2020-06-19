@@ -8,12 +8,16 @@ static void LoadRegion( const XmlElement& regionElement );
 
 void LoadRegion( const XmlElement& regionElement )
 {
-	RegionDefinition RegionDef = RegionDefinition( regionElement );
-	RegionDefinition::s_definitions[RegionDef.m_name] = RegionDef;
+	RegionDefinition* RegionDef = new RegionDefinition( regionElement );
+	RegionDefinition::s_definitions[RegionDef->m_name] = RegionDef;
 }
 
 void RegionDefinition::LoadMapRegionDefinitions( const XmlElement& mapRegionElement )
 {
+	std::string elementName = mapRegionElement.Name();
+	if( elementName.compare( "MapRegionTypes" ) != 0 ) {
+		g_theConsole->DebugErrorf( "Root Name Error. %s should be %s", elementName.c_str(), "MapRegionTypes" );
+	}
 	const XmlElement* regionElement = mapRegionElement.FirstChildElement();
 	std::string defaultRegionType = ParseXmlAttribute( mapRegionElement, "default", "" );
 
@@ -21,7 +25,13 @@ void RegionDefinition::LoadMapRegionDefinitions( const XmlElement& mapRegionElem
 		LoadRegion( *regionElement );
 		regionElement = regionElement->NextSiblingElement();
 	}
-	s_defaultRegion = s_definitions[defaultRegionType];
+	s_defaultRegion = *s_definitions[defaultRegionType];
+}
+
+bool RegionDefinition::IsRegionTypeValid( std::string regionType )
+{
+	auto iter = s_definitions.find( regionType );
+	return ( iter != s_definitions.end());
 }
 
 RegionDefinition::RegionDefinition( const XmlElement& regionElement )
@@ -35,9 +45,13 @@ RegionDefinition::RegionDefinition( const XmlElement& regionElement )
 		std::string regionType = materialElement->Name();
 		std::string materialName = ParseXmlAttribute( *materialElement, "material", "" );
 		if( MaterialDefinition::s_definitions.find( materialName ) == MaterialDefinition::s_definitions.end() ) {
-			ERROR_AND_DIE( "Try to load region with invalid material type! " );
+			m_materials[regionType] = MaterialDefinition::s_defaultMaterial;
+			g_theConsole->DebugErrorf( " Try to load region \"%s\" with invalid material type \"%s\"!", regionType.c_str(), materialName.c_str() );
+			//ERROR_AND_DIE( "Try to load region with invalid material type! " );
 		}
-		m_materials[regionType] = MaterialDefinition::s_definitions[materialName];
+		else {
+			m_materials[regionType] = MaterialDefinition::s_definitions[materialName];
+		}
 		materialElement = materialElement->NextSiblingElement();
 	}
 }

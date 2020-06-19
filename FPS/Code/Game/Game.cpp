@@ -1099,3 +1099,8 @@ bool LightCommandSetLightColor( EventArgs& args )
 	g_theGame->m_lightColor = Rgba8::GetColorFromVec4( v4_color );
 	return true;
 }
+
+bool MapCommandLoadMap( EventArgs& args )
+{
+	std::string mapName = args.GetValue( std::to_string( 0 ), "" );
+}

@@ -4,6 +4,7 @@
 struct AABB3 
 {
 public:
+	AABB3(){}
 	AABB3( Vec3 minimum, Vec3 maximum );
 
 public:

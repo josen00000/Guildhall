@@ -15,7 +15,6 @@ Sampler::Sampler( RenderContext* ctx, SamplerType type )
 	}
 	else if( type == SAMPLER_BILINEAR ) {
 		desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-
 	}
 	desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
 	desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;

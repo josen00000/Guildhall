@@ -103,6 +103,7 @@ public:
 	void SetColorTarget( Texture* colorTarget, uint slot=0 );
 	void SetDepthStencilTarget( Texture* texture );
 	void SetPitchRollYawRotation( float pitch, float roll, float yaw );
+	void SetYawRotation( float yaw );
 
 	void SetProjectionPerspective( float fov=60, float nearZ=-0.1, float farZ=-100 );
 

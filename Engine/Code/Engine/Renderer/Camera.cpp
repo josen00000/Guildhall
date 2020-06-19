@@ -230,6 +230,11 @@ void Camera::SetPitchRollYawRotation( float pitch, float roll, float yaw )
 	m_transform.SetYawDegrees( yaw );
 }
 
+void Camera::SetYawRotation( float yaw )
+{
+	m_transform.SetYawDegrees( yaw );
+}
+
 void Camera::SetProjectionPerspective( float fov/*=60*/, float nearZ/*=-0.1*/, float farZ/*=-100 */ )
 {
 	float aspect = GetOutputAspectRatio();

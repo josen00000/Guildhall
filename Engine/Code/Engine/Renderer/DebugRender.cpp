@@ -836,7 +836,7 @@ void DebugAddScreenLeftAlignTextf( float relativeY, float absoluteY, Vec2 pivot,
 	va_start( args, format );
 	std::string result = Stringv( format, args );
 	va_end( args );
-	float textWidth = g_defaultDebugFont->GetWidthForText2D( g_defaultTextSize, result );
+	//float textWidth = g_defaultDebugFont->GetWidthForText2D( g_defaultTextSize, result );
 	DebugAddScreenText( Vec4( 0.f, relativeY, 0.f, absoluteY ), pivot, g_defaultTextSize, color, color, 0.f, result );
 }
 

@@ -208,3 +208,6 @@ public:
 // Light Command
 bool LightCommandSetAmbientColor( EventArgs& args );
 bool LightCommandSetLightColor( EventArgs& args );
+
+// Map Command
+bool MapCommandLoadMap( EventArgs& args );

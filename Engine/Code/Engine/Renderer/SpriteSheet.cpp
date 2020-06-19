@@ -6,6 +6,7 @@
 
 SpriteSheet::SpriteSheet( Texture& texture, const IntVec2& simpleGridLayout )
 	:m_texture(texture)
+	,m_layout(simpleGridLayout)
 {
 	CreateSpriteDefinitions(simpleGridLayout);
 }
@@ -22,6 +23,13 @@ void SpriteSheet::GetSpriteUVs( Vec2& out_uvAtMins, Vec2& out_uvAtMaxs, int spri
 	tem.GetUVs(out_uvAtMins, out_uvAtMaxs);
 }
 
+
+void SpriteSheet::GetSpriteUVs( Vec2& out_uvAtMins, Vec2& out_uvAtMaxs, IntVec2 spriteCoords ) const
+{
+	int spriteIndex = spriteCoords.x + spriteCoords.y * m_layout.x;
+	const SpriteDefinition& tem = GetSpriteDefinition( spriteIndex );
+	tem.GetUVs( out_uvAtMins, out_uvAtMaxs );
+}
 
 void SpriteSheet::CreateSpriteDefinitions( const IntVec2 simpleGridLayout )
 {

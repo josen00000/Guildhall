@@ -1,4 +1,7 @@
 #include "MaterialDefinition.hpp"
+#include "Engine/Core/DevConsole.hpp"
+
+extern DevConsole* g_theConsole;
 
 static void LoadMaterialsSheet( const XmlElement& sheetElement );
 static void LoadMaterialTypes( const XmlElement& materialElement );
@@ -21,6 +24,11 @@ void LoadMaterialTypes( const XmlElement& materialElement )
 
 void MaterialDefinition::LoadMapMaterialDefinitions( const XmlElement& mapMaterialElement )
 {
+	std::string elementName = mapMaterialElement.Name();
+	if( elementName.compare( "MapMaterialTypes" ) != 0 ) {
+		g_theConsole->DebugErrorf( "Root Name Error. %s should be %s", elementName.c_str(), "MapMaterialTypes" );
+	}
+
 	std::string defaultTypeName = ParseXmlAttribute( mapMaterialElement, "default", "" );
 	const XmlElement* sheetElement = mapMaterialElement.FirstChildElement();
 	LoadMaterialsSheet( *sheetElement );
@@ -37,6 +45,15 @@ MaterialDefinition::MaterialDefinition( const XmlElement& materialElement )
 	m_name			= ParseXmlAttribute( materialElement, "name", "" );
 	m_sheetName		= ParseXmlAttribute( materialElement, "sheet", "" );
 	m_spriteCoords	= ParseXmlAttribute( materialElement, "spriteCoords", IntVec2::ZERO );
+	if( !isSpriteCoordsValid( m_spriteCoords ) ) {
+		g_theConsole->DebugErrorf( "material \"%s\" sprite coords invalid!", m_name.c_str() );
+		*this = s_defaultMaterial;
+	}
+
 }
 
+bool MaterialDefinition::isSpriteCoordsValid( IntVec2 spriteCoords )
+{
+	return ( spriteCoords.x >= 0 && spriteCoords.x < s_sheet.m_layout.x && spriteCoords.y >= 0 && spriteCoords.y < s_sheet.m_layout.y );
+}
 

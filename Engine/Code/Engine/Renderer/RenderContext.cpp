@@ -59,7 +59,7 @@ void RenderContext::StartUp( Window* window )
 	m_sceneDataUBO		= new RenderBuffer( "test3", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	m_dissolveUBO		= new RenderBuffer( "test4", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 
-	m_defaultSampler = new Sampler( this, SAMPLER_BILINEAR );
+	m_defaultSampler = new Sampler( this, SAMPLER_POINT );
 
 	m_texDefaultColor = CreateTextureFromColor( Rgba8::WHITE );
 	m_texDefaultNormal = CreateTextureFromVec4( Vec4( 0.5f, 0.5f, 1.f, 1.f ) );
@@ -848,8 +848,11 @@ void RenderContext::DrawMesh( GPUMesh* mesh )
 	}
 }
 
-void RenderContext::DrawVertexVector( std::vector<Vertex_PCU>& vertices )
+void RenderContext::DrawVertexVector( const std::vector<Vertex_PCU>& vertices )
 {
+	if( vertices.size() == 0 ) {
+		return;
+	}
 	size_t elementSize = sizeof( Vertex_PCU );
 	size_t bufferByteSize = vertices.size() * elementSize;
 	m_immediateVBO->Update( &vertices[0], bufferByteSize, elementSize );

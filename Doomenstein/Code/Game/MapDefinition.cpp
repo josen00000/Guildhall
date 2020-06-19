@@ -1,4 +1,5 @@
 #include "MapDefinition.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 MapDefMap MapDefinition::s_definitions;
 
@@ -6,6 +7,7 @@ void MapDefinition::LoadMapDefinition( const XmlElement& mapElement )
 {
 	//MapDefinition mapDef = MapDefinition( mapElement );
 	//s_definitions
+	UNUSED(mapElement);
 }
 
 MapDefinition::MapDefinition( const XmlElement& mapElement )

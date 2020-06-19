@@ -58,6 +58,9 @@
     <ClCompile Include="EntityDefinition.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="Tile.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp">
@@ -97,6 +100,9 @@
       <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="EntityDefinition.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Tile.hpp">
       <Filter>Game</Filter>
     </ClInclude>
   </ItemGroup>

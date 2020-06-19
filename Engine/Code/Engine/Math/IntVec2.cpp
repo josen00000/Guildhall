@@ -36,6 +36,12 @@ IntVec2::IntVec2( const Vec2 vec2 )
 	y=(int)vec2.y;
 }
 
+IntVec2::IntVec2( int XY )
+{
+	x = XY;
+	y = XY;
+}
+
 float IntVec2::GetLength() const
 {
 	return sqrtf((float)(x*x+y*y));

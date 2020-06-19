@@ -19,6 +19,7 @@ public:
 	~AABB2()=default;
 	AABB2(const AABB2& copyFrom);
 	explicit AABB2(const Vec2& mins, const Vec2& maxs);
+	explicit AABB2(const IntVec2& intMins, const IntVec2& intMaxs);
 	explicit AABB2(float minX,float minY, float maxX,float maxY);
 
 	//Accessors(const methods)

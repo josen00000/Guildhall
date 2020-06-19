@@ -1,4 +1,5 @@
 #include "AABB2.hpp"
+#include "Engine/Math/IntVec2.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Math/MathUtils.hpp"
@@ -25,6 +26,15 @@ AABB2::AABB2( float minX, float minY, float maxX, float maxY )
 	maxs.x=maxX;
 	maxs.y=maxY;
 
+}
+
+
+AABB2::AABB2( const IntVec2& intMins, const IntVec2& intMaxs )
+{
+	mins.x = (float)intMins.x;
+	mins.y = (float)intMins.y;
+	maxs.x = (float)intMaxs.x;
+	maxs.y = (float)intMaxs.y;
 }
 
 bool AABB2::IsPointInside( const Vec2& point ) const

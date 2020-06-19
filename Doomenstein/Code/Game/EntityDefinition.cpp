@@ -1,11 +1,19 @@
 #include "EntityDefinition.hpp"
 #include "Engine/Core/XmlUtils.hpp"
+#include "Engine/Core/DevConsole.hpp"
+
+extern DevConsole* g_theConsole;
 
 EntityTypeMap EntityDefinition::s_definitions;
 
-void EntityDefinition::LoadEntityDefinitions( const XmlElement& EntityTypesElement )
+void EntityDefinition::LoadEntityDefinitions( const XmlElement& entityTypesElement )
 {
-	const XmlElement* entityTypeElement = EntityTypesElement.FirstChildElement();
+	const XmlElement* entityTypeElement = entityTypesElement.FirstChildElement();
+	std::string elementName = entityTypesElement.Name();
+	if( elementName.compare( "EntityTypes" ) != 0 ) {
+		g_theConsole->DebugErrorf( "Root Name Error. %s should be %s", elementName.c_str(), "EntityTypes" );
+	}
+
 
 	while( entityTypeElement ) {
 		EntityDefinition entityDef = EntityDefinition( *entityTypeElement );

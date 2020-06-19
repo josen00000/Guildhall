@@ -1,4 +1,8 @@
 #include "MaterialsSheet.hpp"
+#include "Engine/Renderer/Texture.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
+
+extern RenderContext* g_theRenderer;
 
 MaterialsSheet::MaterialsSheet( const XmlElement& materialSheetElement )
 {
@@ -12,4 +16,8 @@ MaterialsSheet::MaterialsSheet( const XmlElement& materialSheetElement )
 		m_sheetTextures[textureName] = texturePath;
 		textureElement = textureElement->NextSiblingElement();
 	}
+
+	Texture* tempSheetTexture = g_theRenderer->CreateOrGetTextureFromFile( m_sheetTextures["Diffuse"].c_str() );
+	m_diffuseTexture = tempSheetTexture;
+	m_sheet = new SpriteSheet( *tempSheetTexture, m_layout );
 }

@@ -17,7 +17,7 @@ public:
 	IntVec2( const IntVec2& copyFrom );
 	explicit IntVec2(const Vec2 vec2);
 	explicit IntVec2(const int initialX,const int initialY );		// explicit constructor (from x, y)
-
+	explicit IntVec2( int XY );
 															// Static method(e.g. creation functions)
 
 

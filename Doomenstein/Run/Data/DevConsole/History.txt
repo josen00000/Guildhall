@@ -10,3 +10,4 @@ debug_add_screen_point
 set_ambient_color
 set_light_color
 help
+load_map

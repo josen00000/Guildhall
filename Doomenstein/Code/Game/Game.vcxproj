@@ -211,6 +211,7 @@
     <ClCompile Include="MaterialDefinition.cpp" />
     <ClCompile Include="MaterialsSheet.cpp" />
     <ClCompile Include="RegionDefinition.cpp" />
+    <ClCompile Include="Tile.cpp" />
     <ClCompile Include="TileMap.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
@@ -226,6 +227,7 @@
     <ClInclude Include="MaterialDefinition.hpp" />
     <ClInclude Include="MaterialsSheet.hpp" />
     <ClInclude Include="RegionDefinition.hpp" />
+    <ClInclude Include="Tile.hpp" />
     <ClInclude Include="TileMap.hpp" />
     <ClInclude Include="World.hpp" />
   </ItemGroup>

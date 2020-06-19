@@ -278,7 +278,7 @@ public:
 	void DrawIndexed( int indexCount, int indexOffset = 0, int vertexOffset = 0 );
 	void DrawMesh( GPUMesh* mesh );
 
-	void DrawVertexVector( std::vector<Vertex_PCU>& vertices );
+	void DrawVertexVector( const std::vector<Vertex_PCU>& vertices );
 	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
 	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
 	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );

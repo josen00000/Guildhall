@@ -1,11 +1,14 @@
 #include "XmlUtils.hpp"
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Core/StringUtils.hpp"
+#include "Engine/Core/DevConsole.hpp"
 #include "Engine/Math/IntRange.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/MathUtils.hpp"
+
+extern DevConsole* g_theConsole;
 
 /*
 std::vector<XmlElement> PopulateXmlDefinitionElementsFromXmlFiles( const char* xmlFilePath )
@@ -38,6 +41,9 @@ std::string ParseXmlAttribute( const XmlElement& element, const char* attributeN
 	if(attributeValueText){
 		value = attributeValueText;
 	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
+	}
 	return value;
 }
 
@@ -47,6 +53,9 @@ int ParseXmlAttribute( const XmlElement& element, const char* attributeName, int
 	int value = defaultValue;
 	if( attributeValueText ) {
 		value = GetIntFromText(attributeValueText);
+	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
 	}
 	return value;
 }
@@ -58,6 +67,9 @@ char ParseXmlAttribute( const XmlElement& element, const char* attributeName, ch
 	if( attributeValueText ) {
 		value = attributeValueText[0];
 	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
+	}
 	return value;
 }
 
@@ -67,6 +79,9 @@ bool ParseXmlAttribute( const XmlElement& element, const char* attributeName, bo
 	bool value = defaultValue;
 	if( attributeValueText ) {
 		value = GetBoolFromText( attributeValueText );
+	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
 	}
 	return value;
 }
@@ -78,6 +93,9 @@ float ParseXmlAttribute( const XmlElement& element, const char* attributeName, f
 	if( attributeValueText ) {
 		value = GetFloatFromText( attributeValueText ); 
 	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
+	}
 	return value;
 }
 
@@ -87,6 +105,9 @@ Rgba8 ParseXmlAttribute( const XmlElement& element, const char* attributeName, c
 	Rgba8 value = defaultValue;
 	if( attributeValueText ) {
 		value.SetFromText(attributeValueText);
+	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
 	}
 	return value;
 }
@@ -98,6 +119,9 @@ Vec2 ParseXmlAttribute( const XmlElement& element, const char* attributeName, co
 	if( attributeValueText ) {
 		value.SetFromText( attributeValueText );
 	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
+	}
 	return value;
 }
 
@@ -107,6 +131,9 @@ IntVec2 ParseXmlAttribute( const XmlElement& element, const char* attributeName,
 	IntVec2 value = defaultValue;
 	if( attributeValueText ) {
 		value.SetFromText( attributeValueText );
+	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
 	}
 	return value;
 }
@@ -118,6 +145,9 @@ Strings ParseXmlAttribute( const XmlElement& element, const char* attributeName,
 	if( attributeValueText ) {
 		value = SplitStringOnDelimiter( attributeValueText, delimiter );
 	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
+	}
 	return value;
 }
 
@@ -127,6 +157,9 @@ std::string ParseXmlAttribute( const XmlElement& element, const char* attributeN
 	std::string value = defaultValue;
 	if( attributeValueText ) {
 		value = attributeValueText;
+	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
 	}
 	return value;
 }
@@ -138,6 +171,9 @@ FloatRange ParseXmlAttribute( const XmlElement& element, const char* attributeNa
 	if( attributeValueText ){
 		value.SetFromText( attributeValueText );
 	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
+	}
 	return value;
 }
 
@@ -147,6 +183,9 @@ IntRange ParseXmlAttribute( const XmlElement& element, const char* attributeName
 	IntRange value = defaultValue;
 	if( attributeValueText ) {
 		value.SetFromText( attributeValueText );
+	}
+	else {
+		g_theConsole->DebugErrorf( "Attribute does not exist, expecting: %s", attributeName );
 	}
 	return value;
 }
