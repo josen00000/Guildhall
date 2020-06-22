@@ -8,14 +8,13 @@
 #include "Game/TileMap.hpp"
 #include "Game/MaterialDefinition.hpp"
 #include "Game/RegionDefinition.hpp"
+#include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/Delegate.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/XmlUtils.hpp"
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/Vec4.hpp"
-#include "Engine/Audio/AudioSystem.hpp"
-#include "Engine/Core/EngineCommon.hpp"
-#include "Engine/Core/XmlUtils.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -74,6 +73,10 @@ void Game::Startup()
 	m_world->LoadMap( startMapName );
 	// command
 	g_theConsole->AddCommandToCommandList( std::string( "load_map" ), std::string( "Load one map with name." ), MapCommandLoadMap );
+
+	m_billBoardEntity = new Entity();
+	m_billBoardEntity->m_cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.5f );
+
 }
 
 void Game::Shutdown()
@@ -102,12 +105,13 @@ void Game::Update( float deltaSeconds )
 	UpdateLighting( deltaSeconds );
 	UpdateUI( deltaSeconds );
 	m_world->Update( deltaSeconds );
+
+	UpdateBillboardTest();
 }
 
 void Game::UpdateUI( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
-	//DebugAddScreenText( Vec4( 0.5f, 0.5f, 0.f, 0.f ), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.1f, std::string( "camera Pos" + m_gameCamera->GetPosition().ToString() ) );
 }
 
 void Game::UpdateCamera( float deltaSeconds )
@@ -149,6 +153,12 @@ void Game::UpdateLighting( float deltaSeconds )
 // 	}
 }
 
+void Game::UpdateBillboardTest()
+{
+	m_billBoardEntity->UpdateTexCoords( m_gameCamera, m_billboardMode, m_convension );
+	m_billBoardEntity->UpdateVerts();
+}
+
 void Game::RenderDebugInfo() const
 {
 	float index = 1;
@@ -169,6 +179,28 @@ void Game::RenderDebugInfo() const
 	index++;
 	Vec3 kBasis = cameraModelMat.GetKBasis3D();
 	DebugAddScreenLeftAlignTextf( 1.f, -index * 2 , Vec2::ZERO, Rgba8::WHITE, "KBasis: %.2f, %.2f, %.2f", kBasis.x, kBasis.y, kBasis.z );
+	index++;
+ 	std::string billBoardMsg;
+	switch( m_billboardMode )
+	{
+	case BILLBOARD_MODE_CAMERA_FACING_XY:
+		billBoardMsg = "CAMERA FACING XY";
+		break;
+	case BILLBOARD_MODE_CAMERA_OPPOSING_XY:
+		billBoardMsg = "CAMERA OPPOSING XY";
+		break;
+	case BILLBOARD_MODE_CAMERA_FACING_XYZ:
+		billBoardMsg = "CAMERA FACING XYZ";
+		break;
+	case BILLBOARD_MODE_CAMERA_OPPOSING_XYZ:
+		billBoardMsg = "CAMERA OPPOSING XYZ";
+		break;
+	case NUM_BILLBOARD_MODES:
+		break;
+	default:
+		break;
+	}
+	DebugAddScreenLeftAlignText( 1.f, -index * 2, Vec2::ZERO, Rgba8::WHITE, 0.f, billBoardMsg );
 }
 
 void Game::RenderFPSInfo() const
@@ -177,6 +209,16 @@ void Game::RenderFPSInfo() const
 	int FPS = (int)( 1.0f / m_DebugDeltaSeconds );
 	DebugAddScreenRightAlignTextf( 1.f, -2.f, Vec2::ZERO, Rgba8::WHITE, "ms/frame = %d ( %.d FPS)\n", ms, FPS );
 	//DebugAddScreenLine( Vec2( 110.f, 50.f), Vec2( 140.f, 50.f ), Rgba8::RED, 0.f );
+}
+
+void Game::RenderBillboardTest() const
+{
+	g_theRenderer->SetCullMode( RASTER_CULL_BACK );
+	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
+	g_theRenderer->SetDiffuseTexture( temp );
+	g_theRenderer->DrawVertexVector( m_billBoardEntity->m_verts );
+	DebugAddWorldArrow( m_billBoardEntity->GetPosition(), m_billBoardEntity->GetPosition() + ( m_billBoardEntity->m_texForward * 2.f ), Rgba8::RED, 0.0f, DEBUG_RENDER_ALWAYS );
+	//DebugAddWorldPoint( m_billBoardEntity->GetPosition(), 3.f, Rgba8::RED, 0.f, DEBUG_RENDER_ALWAYS );
 }
 
 void Game::HandleInput( float deltaSeconds )
@@ -215,9 +257,17 @@ void Game::HandleKeyboardInput( float deltaSeconds )
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F1 ) ) {
 		m_debugMode = !m_debugMode;
 	}
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_O ) ) {
-		g_theConsole->DebugError( "testing!!!" );
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_PLUS ) ) {
+		if( m_billboardMode < NUM_BILLBOARD_MODES ) {
+			m_billboardMode = (BillboardMode)(m_billboardMode + 1);
+		}
 	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_MINUS ) ) {
+		if( m_billboardMode > 0  ) {
+			m_billboardMode = (BillboardMode)(m_billboardMode - 1);
+		}
+	}
+
 }
 
 void Game::HandleCameraMovement( float deltaSeconds )
@@ -345,6 +395,7 @@ void Game::RenderGame() const
 	//m_cubeObj2->Render();
 
 	m_world->Render();
+	RenderBillboardTest();
 
 	g_theRenderer->SetCullMode( RASTER_CULL_NONE );
 	g_theRenderer->DisableDepth();

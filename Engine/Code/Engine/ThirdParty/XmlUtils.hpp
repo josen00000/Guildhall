@@ -9,6 +9,8 @@ struct IntVec2;
 struct FloatRange;
 struct IntRange;
 
+/*extern DevConsole* g_theConsole;*/
+
 typedef	tinyxml2::XMLElement XmlElement;
 typedef	tinyxml2::XMLDocument XmlDocument;
 typedef tinyxml2::XMLAttribute XmlAttribute;

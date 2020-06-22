@@ -20,6 +20,9 @@
     <Filter Include="Data\Map">
       <UniqueIdentifier>{f5324086-9c22-4d99-973e-7330f13b40f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game\Entity">
+      <UniqueIdentifier>{c2214c6c-a870-437c-8c57-fe0c79408e3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -55,11 +58,23 @@
     <ClCompile Include="MapDefinition.cpp">
       <Filter>Game</Filter>
     </ClCompile>
-    <ClCompile Include="EntityDefinition.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Tile.cpp">
       <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Entity.cpp">
+      <Filter>Game\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Game\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>Game\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="Portal.cpp">
+      <Filter>Game\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityDefinition.cpp">
+      <Filter>Game\Entity</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -99,11 +114,23 @@
     <ClInclude Include="MapDefinition.hpp">
       <Filter>Game</Filter>
     </ClInclude>
-    <ClInclude Include="EntityDefinition.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="Tile.hpp">
       <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.hpp">
+      <Filter>Game\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.hpp">
+      <Filter>Game\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.hpp">
+      <Filter>Game\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="Portal.hpp">
+      <Filter>Game\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityDefinition.hpp">
+      <Filter>Game\Entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

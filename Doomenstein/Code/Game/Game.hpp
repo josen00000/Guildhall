@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "Game/Entity.hpp"
 #include "Game/GameCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
@@ -82,6 +83,10 @@ private:
 	void UpdateCamera(float deltaSeconds );
 	void UpdateLighting( float deltaSeconds );
 
+	// billboard test
+	void UpdateBillboardTest();
+	void RenderBillboardTest() const;
+
 	// render
 	void RenderDebugInfo() const;
 	void RenderFPSInfo() const;
@@ -130,6 +135,10 @@ public:
 	GameObject* m_cubeObj = nullptr;
 	GameObject* m_cubeObj1 = nullptr;
 	GameObject* m_cubeObj2 = nullptr;
+
+	// billboard Test
+	Entity* m_billBoardEntity = nullptr;
+	BillboardMode m_billboardMode = BILLBOARD_MODE_CAMERA_FACING_XY;
 	
 	std::vector<Vertex_PCU> m_vertices;
 	std::vector<Vertex_PCU> m_UIVertices;

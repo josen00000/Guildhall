@@ -34,6 +34,32 @@ Vec3 Transform::GetForwardDirt( Convention convention ) const
 	return Vec3::ZERO;
 }
 
+Vec3 Transform::GetLeftDirt( Convention convention ) const
+{
+	Mat44 transMat = ToMatrix( convention );
+	switch( convention )
+	{
+	case X_FORWARD_Y_LEFT_Z_UP:
+		return transMat.GetJBasis3D();
+	case X_RIGHT_Y_UP_Z_BACKWARD:
+		return -transMat.GetIBasis3D();
+	}
+	return Vec3::ZERO;
+}
+
+Vec3 Transform::GetUpDirt( Convention convention ) const
+{
+	Mat44 transMat = ToMatrix( convention );
+	switch( convention )
+	{
+	case X_FORWARD_Y_LEFT_Z_UP:
+		return transMat.GetKBasis3D();
+	case X_RIGHT_Y_UP_Z_BACKWARD:
+		return transMat.GetJBasis3D();
+	}
+	return Vec3::ZERO;
+}
+
 Mat44 Transform::GetRotationMatrix( Convention convention ) const
 {
 	Mat44 pitch		= Mat44();

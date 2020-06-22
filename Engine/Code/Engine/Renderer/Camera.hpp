@@ -55,6 +55,9 @@ public:
 	Vec2	GetOrthoMin() const;
 	Vec2	GetOrthoMax() const;
 	Vec3	GetPosition() const;
+	Vec3	GetForwardDirt( Convention convension ) const;
+	Vec3	GetLeftDirt( Convention convension ) const;
+	Vec3	GetUpDirt( Convention convension ) const;
 
 	RenderContext* GetRenderContext() const;
 

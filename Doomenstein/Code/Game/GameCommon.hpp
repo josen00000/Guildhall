@@ -29,3 +29,11 @@ constexpr float UI_CAMERA_MIN_X		= 0;
 constexpr float UI_CAMERA_MIN_Y		= 0;
 constexpr float UI_CAMERA_MAX_X		= 160;
 constexpr float UI_CAMERA_MAX_Y		= 90;
+
+enum BillboardMode : unsigned int {
+	BILLBOARD_MODE_CAMERA_FACING_XY,
+	BILLBOARD_MODE_CAMERA_OPPOSING_XY,
+	BILLBOARD_MODE_CAMERA_FACING_XYZ,
+	BILLBOARD_MODE_CAMERA_OPPOSING_XYZ, // Screen-aligned
+	NUM_BILLBOARD_MODES
+};

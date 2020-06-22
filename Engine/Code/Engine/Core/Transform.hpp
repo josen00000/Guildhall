@@ -23,6 +23,8 @@ public:
 	float GetYawDegrees() const { return m_yawDegrees; }
 	Vec3 GetScale() const { return m_scale; }
 	Vec3 GetForwardDirt( Convention convention ) const;
+	Vec3 GetLeftDirt( Convention convention ) const;
+	Vec3 GetUpDirt( Convention convention ) const;
 
 	Mat44 GetRotationMatrix( Convention convention=X_RIGHT_Y_UP_Z_BACKWARD ) const;
 	Mat44 GetMatrix() const { return m_mat; } // temp using for DebugRender

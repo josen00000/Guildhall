@@ -176,3 +176,8 @@ bool IfLoadXmlFileSucceed( const XmlDocument& xmlDocument )
 	}
 	return true;
 }
+
+bool IsElementNameValid( const XmlElement& element, std::string eleName )
+{
+	return eleName.compare( element.Name() ) == 0;
+}

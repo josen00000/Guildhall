@@ -147,6 +147,9 @@ void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rg
 void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 color, float duration, const char* format, ... );
 void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, float size, Rgba8 color, const char* format, ... );
 void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, Rgba8 color, const char* format, ... );
+
+// align text
+void DebugAddScreenLeftAlignText( float relativeY, float absoluteY, Vec2 pivot, Rgba8 color, float duration, std::string text );
 void DebugAddScreenRightAlignTextf( float relativeY, float absoluteY, Vec2 pivot, Rgba8 color, const char* format, ... );
 void DebugAddScreenLeftAlignTextf( float relativeY, float absoluteY, Vec2 pivot, Rgba8 color, const char* format, ... );
 

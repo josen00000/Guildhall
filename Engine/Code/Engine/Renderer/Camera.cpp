@@ -100,6 +100,21 @@ Vec3 Camera::GetPosition() const
 	return m_transform.GetPosition();
 }
 
+Vec3 Camera::GetForwardDirt( Convention convension ) const
+{
+	return m_transform.GetForwardDirt( convension );
+}
+
+Vec3 Camera::GetLeftDirt( Convention convension ) const
+{
+	return m_transform.GetLeftDirt( convension );
+}
+
+Vec3 Camera::GetUpDirt( Convention convension ) const
+{
+	return m_transform.GetUpDirt( convension );
+}
+
 RenderContext* Camera::GetRenderContext() const
 {
 	return m_rctx;
