@@ -42,11 +42,11 @@ void CellularAutomata::RunStepOnce( Map* map ) const
 {
 	std::vector<Tile>& mapTiles = map->GetTiles();
 	static std::vector<bool> ifChangingTiles = std::vector<bool>( mapTiles.size(), false );
-	RandomNumberGenerator* mapRNG = map->GetRNG();
+	//RandomNumberGenerator* mapRNG = map->GetRNG();
 
 	for( int i = 0; i < mapTiles.size(); i++ ) {
 		IntVec2 tileCoords = map->GetTileCoordsWithTileIndex( i );
-		if( IsNeighborsEnough( map, i ) && !map->IsTileEdge( tileCoords ) ) {
+		if( IsNeighborsEnough( map, i ) && map->IsTileCoordsInside( tileCoords ) ) {
 			ifChangingTiles[i] = true;
 		}
 		else {

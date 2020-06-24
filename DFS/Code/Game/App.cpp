@@ -22,6 +22,7 @@ Game*			g_theGame			= nullptr;
 // Engine
 BitmapFont*		g_squirrelFont		= nullptr;
 Camera*			g_gameCamera		= nullptr;
+Camera*			g_debugCamera		= nullptr;
 Camera*			g_UICamera			= nullptr;
 Camera*			g_devCamera			= nullptr;
 DevConsole*		g_theConsole		= nullptr;
@@ -64,6 +65,7 @@ void App::StartupStage2()
 void App::StartupStage3()
 {
 	g_gameCamera		= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_debugCamera		= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
 	g_UICamera			= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) ); 
 	g_devCamera			= Camera::CreateOrthographicCamera( g_theRenderer, Vec2::ZERO, Vec2( 30, 20 ) ); 
 

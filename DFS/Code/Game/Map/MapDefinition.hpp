@@ -25,6 +25,8 @@ public:
 	int GetHeight() const { return m_height; }
 	TileType GetFillType() const { return m_fillTileType; }
 	TileType GetEdgeType() const { return m_edgeTileType; }
+	TileType GetStartType() const { return m_startTileType; }
+	TileType GetEndType() const { return m_endTileType; }
 	const std::vector<MapGenStep*>& GetMapGenSteps() const { return m_mapGenSteps; }
 
 private:
@@ -34,6 +36,8 @@ private:
 	int												m_edgeThick = 1;
 	TileType										m_fillTileType = "";
 	TileType										m_edgeTileType = "";
+	TileType										m_startTileType = "";
+	TileType										m_endTileType = "";
 	std::vector<MapGenStep*>						m_mapGenSteps;
 
 public:

@@ -29,6 +29,16 @@
        spriteCoords="6,7"
        allowsWalk="true"
 	/>
+  <TileDefinition
+       name="Entry"
+       spriteCoords="0,7"
+       allowsWalk="true"
+	/>
+  <TileDefinition
+      name="Exit"
+      spriteCoords="1,7"
+      allowsWalk="true"
+	/>
 
   <TileDefinition
       name="OpenDoor"

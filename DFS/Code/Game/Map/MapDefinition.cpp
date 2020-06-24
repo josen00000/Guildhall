@@ -14,6 +14,9 @@ MapDefinition::MapDefinition( XmlElement& mapDefElement )
 	m_height						= ParseXmlAttribute( mapDefElement, "height", m_height );
 	m_fillTileType  				= ParseXmlAttribute( mapDefElement, "fillTile", "Floor" );
 	m_edgeTileType  				= ParseXmlAttribute( mapDefElement, "edgeTile", "Wall" );
+	m_startTileType  				= ParseXmlAttribute( mapDefElement, "startTile", "Entry" );
+	m_endTileType  					= ParseXmlAttribute( mapDefElement, "endTile", "Exit" );
+
 
 	const XmlElement* mapGenStepsElement = mapDefElement.FirstChildElement();
 	ParseMapGenSteps( *mapGenStepsElement );

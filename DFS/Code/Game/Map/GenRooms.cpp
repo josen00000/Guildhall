@@ -21,6 +21,7 @@ void GenRooms::RunStepOnce( Map* map ) const
 	int roomNum = m_roomsNumRange.GetRandomInRange( *mapRNG );
 	for( int i = 0; i < roomNum; i++ ) {
 		CreateRoom( map, *mapRNG );
+		map->m_mazeAndRoomCurrentLayer++;
 	}
 	map->AddRoomNum( roomNum );
 }
@@ -32,6 +33,12 @@ void GenRooms::CreateRoom( Map* map, RandomNumberGenerator rng ) const
 	int roomHeight = m_widthRange.GetRandomInRange( rng );
 	IntVec2 startTileCoords = map->GetRandomInsideTileCoords();
 	IntVec2 endTileCoords;
+
+	Room* tempRoom = new Room();
+	tempRoom->m_width = roomWidth;
+	tempRoom->m_height = roomHeight;
+	tempRoom->m_edgeTileCoords.resize( roomWidth * roomHeight );
+	tempRoom->SetLayer( map->m_mazeAndRoomCurrentLayer );
 	
 	while( !isStartTileValid ) {
 		isStartTileValid = true;
@@ -68,69 +75,48 @@ void GenRooms::CreateRoom( Map* map, RandomNumberGenerator rng ) const
 	}
 
 	// room floor
-	for( int tileX = startTileCoords.x; tileX <= endTileCoords.x; tileX++ ) {
-		for( int tileY = startTileCoords.y; tileY <= endTileCoords.y; tileY++ ) {
-			map->SetTileType( tileX, tileY, m_floorType );
-			map->SetTileRoom( IntVec2( tileX, tileY), true );
+	for( int tileX = startTileCoords.x + 1; tileX <= endTileCoords.x - 1; tileX++ ) {
+		for( int tileY = startTileCoords.y + 1; tileY <= endTileCoords.y - 1; tileY++ ) {
+			IntVec2 tileCoords = IntVec2( tileX, tileY );
+			map->SetTileType( tileCoords, m_floorType );
+			map->SetTileRoom( tileCoords, true );
+			tempRoom->AddRoomFloorTileCoords( tileCoords );
 		}
 	}
 
 	// room edge
 	for( int tileX = startTileCoords.x; tileX <= endTileCoords.x; tileX++ ) {
-		map->SetTileType( tileX, startTileCoords.y, m_wallType );
-		map->SetTileRoom( IntVec2( tileX, startTileCoords.y ), true );
-		map->SetTileEdge( IntVec2( tileX, startTileCoords.y ), true );
-		map->SetTileSolid( IntVec2( tileX, startTileCoords.y ), true );
+		IntVec2 startYCoords = IntVec2( tileX, startTileCoords.y );
+		IntVec2 endYCoords = IntVec2( tileX, endTileCoords.y );
+		map->SetTileType( startYCoords, m_wallType );
+		map->SetTileRoom( startYCoords, true );
+		map->SetTileSolid( startYCoords, true );
+		tempRoom->AddRoomEdgeTileCoords( startYCoords );
 		
-		map->SetTileType( tileX, endTileCoords.y, m_wallType );
-		map->SetTileRoom( IntVec2( tileX, endTileCoords.y ), true );
-		map->SetTileEdge( IntVec2( tileX, endTileCoords.y ), true );
-		map->SetTileSolid( IntVec2( tileX, endTileCoords.y ), true );
+		map->SetTileType( endYCoords, m_wallType );
+		map->SetTileRoom( endYCoords, true );
+		map->SetTileSolid( endYCoords, true );
+		tempRoom->AddRoomEdgeTileCoords( endYCoords );
 	}
 
 	for( int tileY = startTileCoords.y; tileY <= endTileCoords.y; tileY++ ) {
-		map->SetTileType( startTileCoords.x, tileY, m_wallType );
-		map->SetTileRoom( IntVec2( startTileCoords.x, tileY ), true );
-		map->SetTileEdge( IntVec2( startTileCoords.x, tileY ), true );
-		map->SetTileSolid( IntVec2( startTileCoords.x, tileY ), true );
+		IntVec2 startXCoords = IntVec2( startTileCoords.x, tileY );
+		IntVec2 endXCoords = IntVec2( endTileCoords.x, tileY );
 
-		map->SetTileType( endTileCoords.x, tileY, m_wallType );
-		map->SetTileRoom( IntVec2( endTileCoords.x, tileY ), true );
-		map->SetTileEdge( IntVec2( endTileCoords.x, tileY ), true );
-		map->SetTileSolid( IntVec2( endTileCoords.x, tileY ), true );
+		map->SetTileType( startXCoords, m_wallType );
+		map->SetTileRoom( startXCoords, true );
+		map->SetTileSolid( startXCoords, true );
+		tempRoom->AddRoomEdgeTileCoords( startXCoords );
+
+		map->SetTileType( endXCoords, m_wallType );
+		map->SetTileRoom( endXCoords, true );
+		map->SetTileSolid( endXCoords, true );
+		tempRoom->AddRoomEdgeTileCoords( endXCoords );
 	}
 	
-	Room tempRoom = Room();
-	tempRoom.m_width = roomWidth;
-	tempRoom.m_height = roomHeight;
-	tempRoom.m_floorType = m_floorType;
-	tempRoom.m_map = map;
-	tempRoom.m_startCoords = startTileCoords;
-	tempRoom.m_doorType = m_doorType;
+	tempRoom->m_floorType = m_floorType;
+	tempRoom->m_map = map;
+	tempRoom->m_startCoords = startTileCoords;
+	tempRoom->m_doorType = m_doorType;
 	map->AddRoom( tempRoom );
-
-// 	room door
-// 		IntVec2 doorCoords = IntVec2();
-// 		int randAxis = rng.RollRandomIntInRange( 0, 1 );
-// 		if( randAxis == 0 ) {
-// 			doorCoords.x = rng.RollRandomIntInRange( startTileCoords.x, endTileCoords.x );
-// 			int randY = rng.RollRandomIntInRange( 0, 1 );
-// 			if( randY == 0 ) {
-// 				doorCoords.y = startTileCoords.y;
-// 			}
-// 			else {
-// 				doorCoords.y = endTileCoords.y;
-// 			}
-// 		}
-// 		else {
-// 			doorCoords.y = rng.RollRandomIntInRange( startTileCoords.y, endTileCoords.y );
-// 			int randX = rng.RollRandomIntInRange( 0, 1 );
-// 			if( randX == 0 ) {
-// 				doorCoords.x = startTileCoords.x;
-// 			}
-// 			else{
-// 				doorCoords.x = endTileCoords.x;
-// 			}
-// 		}
-// 		map->SetTileType( doorCoords, m_doorType );
 }

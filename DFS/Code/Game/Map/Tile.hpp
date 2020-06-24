@@ -11,7 +11,7 @@ struct AABB2;
 typedef	std::string TileType;
 typedef Strings	TileTypes;
 
-enum ConnectStateBit {
+enum ConnectStateBit: uint {
 	CONNECT_NONE_BIT	= 0,
 	CONNECT_UP_BIT		= BIT_FLAG( 0 ),
 	CONNECT_DOWN_BIT	= BIT_FLAG( 1 ),

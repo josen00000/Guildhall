@@ -28,7 +28,7 @@ AABB2 Tile::GetTileBounds() const
 
 Vec2 Tile::GetWorldPos() const
 {
-	Vec2 tileCoords_v2 = Vec2( m_tileCoords.x, m_tileCoords.y );
+	Vec2 tileCoords_v2 = Vec2( (float)m_tileCoords.x, (float)m_tileCoords.y );
 	return tileCoords_v2 + Vec2( 0.5f );
 }
 
@@ -97,4 +97,5 @@ ConnectStateBit Tile::GetConnectStateBitFormConnectState( ConnectState state )
 	case CONNECT_TO_UP:			return CONNECT_UP_BIT;
 	case CONNECT_TO_DOWN:		return CONNECT_DOWN_BIT;
 	}
+	return CONNECT_NONE_BIT;
 }

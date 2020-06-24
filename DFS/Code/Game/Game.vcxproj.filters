@@ -61,6 +61,9 @@
     <ClCompile Include="Map\Room.cpp">
       <Filter>Game\Map</Filter>
     </ClCompile>
+    <ClCompile Include="Map\Maze.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp">
@@ -106,6 +109,9 @@
       <Filter>Game\Map</Filter>
     </ClInclude>
     <ClInclude Include="Map\Room.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\Maze.hpp">
       <Filter>Game\Map</Filter>
     </ClInclude>
   </ItemGroup>

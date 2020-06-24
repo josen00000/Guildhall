@@ -1,6 +1,6 @@
 <MapDefinitions>
 
-  <MapDefinition name="level1" width="40" height="22" fillTile="Grass" edgeTile="Wall">
+  <MapDefinition name="level1" width="40" height="22" fillTile="Grass" edgeTile="Wall" startTile="Entry" endTile ="Exit">
     <MapGenerateSteps>
       <Mutate chanceToRun="1" iterations="1" chancePerTile="0.05" ifType="Grass" setType="Water"/>
       <Mutate chanceToRun="1" iterations="1" chancePerTile="0.05" ifType="Grass" setType="Lava"/>
