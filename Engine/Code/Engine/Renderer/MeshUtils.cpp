@@ -24,6 +24,24 @@ void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound
 	vertices.push_back( rightup );
 }
 
+void AppendVertsForAABB2DWithHeight( std::vector<Vertex_PCU>& vertices, const AABB2& bound, float height, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
+{
+	Vertex_PCU leftdown		= Vertex_PCU( Vec3( bound.mins, height ), tintColor, uvAtMins );
+	Vertex_PCU rightup		= Vertex_PCU( Vec3( bound.maxs, height ), tintColor, uvAtMaxs );
+	Vertex_PCU leftup		= Vertex_PCU( Vec3( bound.mins.x, bound.maxs.y, height ), tintColor, Vec2( uvAtMins.x, uvAtMaxs.y ) );
+	Vertex_PCU rightdown	= Vertex_PCU( Vec3( bound.maxs.x, bound.mins.y, height ), tintColor, Vec2( uvAtMaxs.x, uvAtMins.y ) );
+
+	// left up triangle
+	vertices.push_back( leftdown );
+	vertices.push_back( rightup );
+	vertices.push_back( leftup );
+
+	// right down triangle
+	vertices.push_back( leftdown );
+	vertices.push_back( rightdown );
+	vertices.push_back( rightup );
+}
+
 void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD*/ )
 {
 	// front facing far from camera.
@@ -191,10 +209,8 @@ void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& 
 
 }
 
-void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
+void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor )
 {
-	UNUSED(uvAtMins);
-	UNUSED(uvAtMaxs);
 	OBB2 capsuleOBB = bound.GetCapsuleOBB2();
 	AppendVertsForOBB2D( vertices, capsuleOBB, tintColor, Vec2::ZERO, Vec2::ZERO );
 	Vec2 direction = bound.GetNormalizedDirection();
@@ -205,7 +221,20 @@ void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2&
 	orientationDegrees += 180;
 	orientationDegrees = ClampDegressTo360( orientationDegrees );
 	AppendVertsForHalfCircle2D( vertices, bound.m_end, orientationDegrees, bound.m_radius, tintColor );
+}
 
+void AppendVertsForCapsule2DWithHeight( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor )
+{
+	OBB2 capsuleOBB = bound.GetCapsuleOBB2();
+	AppendVertsForOBB2D( vertices, capsuleOBB, tintColor, Vec2::ZERO, Vec2::ZERO );
+	Vec2 direction = bound.GetNormalizedDirection();
+	float orientationDegrees = direction.GetAngleDegrees();
+	orientationDegrees += 90;
+	orientationDegrees = ClampDegressTo360( orientationDegrees );
+	AppendVertsForHalfCircle2D( vertices, bound.m_start, orientationDegrees, bound.m_radius, tintColor );
+	orientationDegrees += 180;
+	orientationDegrees = ClampDegressTo360( orientationDegrees );
+	AppendVertsForHalfCircle2D( vertices, bound.m_end, orientationDegrees, bound.m_radius, tintColor );
 }
 
 void AppendVertsForOBB2D( std::vector<Vertex_PCU>& vertices, const OBB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
@@ -214,6 +243,40 @@ void AppendVertsForOBB2D( std::vector<Vertex_PCU>& vertices, const OBB2& bound, 
 	Vertex_PCU leftUp = Vertex_PCU( bound.GetLeftUpCornerForIBasis(), tintColor, Vec2( uvAtMins.x, uvAtMaxs.y ) );
 	Vertex_PCU rightDown = Vertex_PCU( bound.GetRightDownCornerForIBasis(), tintColor, Vec2( uvAtMaxs.x, uvAtMins.y ) );
 	Vertex_PCU rightUp = Vertex_PCU( bound.GetrightUpCornerForIBasis(), tintColor, uvAtMaxs );
+
+	//triangle 1
+	vertices.push_back( leftDown );
+	vertices.push_back( rightUp );
+	vertices.push_back( leftUp );
+	//triangle 2
+	vertices.push_back( leftDown );
+	vertices.push_back( rightDown );
+	vertices.push_back( rightUp );
+}
+
+void AppendVertsForOBB2DWithHeight( std::vector<Vertex_PCU>& vertices, const OBB2& bound, float height, const Rgba8& tintColor, const Vec2& uvAtMins/*=Vec2::ZERO*/, const Vec2& uvAtMaxs/*=Vec2::ONE */ )
+{
+	Vertex_PCU leftDown		= Vertex_PCU( Vec3( bound.GetLeftDownCornerForIBasis(), height ), tintColor, uvAtMins );
+	Vertex_PCU leftUp		= Vertex_PCU( Vec3( bound.GetLeftUpCornerForIBasis(), height ), tintColor, Vec2( uvAtMins.x, uvAtMaxs.y ) );
+	Vertex_PCU rightDown	= Vertex_PCU( Vec3( bound.GetRightDownCornerForIBasis(), height ), tintColor, Vec2( uvAtMaxs.x, uvAtMins.y ) );
+	Vertex_PCU rightUp		= Vertex_PCU( Vec3( bound.GetrightUpCornerForIBasis(), height ), tintColor, uvAtMaxs );
+
+	//triangle 1
+	vertices.push_back( leftDown );
+	vertices.push_back( rightUp );
+	vertices.push_back( leftUp );
+	//triangle 2
+	vertices.push_back( leftDown );
+	vertices.push_back( rightDown );
+	vertices.push_back( rightUp );
+}
+
+void AppendVertsForOBB2DWithHeight( std::vector<Vertex_PCU>& vertices, const OBB2& bound, float height, const Rgba8& startColor, const Rgba8& endColor, const Vec2& uvAtMins/*=Vec2::ZERO*/, const Vec2& uvAtMaxs/*=Vec2::ONE */ )
+{
+	Vertex_PCU leftDown		= Vertex_PCU( Vec3( bound.GetLeftDownCornerForIBasis(), height ), startColor, uvAtMins );
+	Vertex_PCU leftUp		= Vertex_PCU( Vec3( bound.GetLeftUpCornerForIBasis(), height ), startColor, Vec2( uvAtMins.x, uvAtMaxs.y ) );
+	Vertex_PCU rightDown	= Vertex_PCU( Vec3( bound.GetRightDownCornerForIBasis(), height ), endColor, Vec2( uvAtMaxs.x, uvAtMins.y ) );
+	Vertex_PCU rightUp		= Vertex_PCU( Vec3( bound.GetrightUpCornerForIBasis(), height ), endColor, uvAtMaxs );
 
 	//triangle 1
 	vertices.push_back( leftDown );

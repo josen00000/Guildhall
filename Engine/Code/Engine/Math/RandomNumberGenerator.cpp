@@ -84,8 +84,16 @@ float RandomNumberGenerator::RollRandomFloatLessThan( float maxNotInclusive )
 
  Vec2 RandomNumberGenerator::RollRandomVec2InRange( const Vec2& minInclusive, const Vec2& maxInclusive )
  {
-		float tempX = RollRandomFloatInRange(minInclusive.x, maxInclusive.x);
-		float tempY = RollRandomFloatInRange(minInclusive.y, maxInclusive.y);
-		return Vec2( tempX, tempY );
+	 float tempX = RollRandomFloatInRange( minInclusive.x, maxInclusive.x );
+	 float tempY = RollRandomFloatInRange( minInclusive.y, maxInclusive.y );
+	 return Vec2( tempX, tempY );
+ }
+
+ Vec3 RandomNumberGenerator::RollRandomVec3InRange( const Vec3& minInclusive, const Vec3& maxInclusive )
+ {
+	 float tempX = RollRandomFloatInRange( minInclusive.x, maxInclusive.x );
+	 float tempY = RollRandomFloatInRange( minInclusive.y, maxInclusive.y );
+	 float tempZ = RollRandomFloatInRange( minInclusive.z, maxInclusive.z );
+	 return Vec3( tempX, tempY, tempZ );
  }
 

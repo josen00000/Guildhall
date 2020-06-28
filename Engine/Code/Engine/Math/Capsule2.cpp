@@ -48,7 +48,7 @@ Vec2 Capsule2::GetNormalizedDirection() const
 float Capsule2::GetlengthSquared() const
 {
 	Vec2 capsuleDisp = m_end - m_start;
-	float lengthSquared = capsuleDisp.GetLengthSquared();
+	float lengthSquared = capsuleDisp.GetSquaredLength();
 	return lengthSquared;
 }
 
@@ -94,12 +94,12 @@ bool Capsule2::IsPointInSide( const Vec2& refPos ) const
 	else{
 		float radiusSquare = m_radius * m_radius;
 		Vec2 tempDisp = refPos - m_start;
-		if( tempDisp.GetLengthSquared() < radiusSquare ){
+		if( tempDisp.GetSquaredLength() < radiusSquare ){
 			return true;
 		}
 		else{
 			Vec2 tempDisp2 = refPos - m_end;
-			if( tempDisp2.GetLengthSquared() < radiusSquare){
+			if( tempDisp2.GetSquaredLength() < radiusSquare){
 				return true;
 			}
 			else{

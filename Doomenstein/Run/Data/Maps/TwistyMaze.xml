@@ -1,4 +1,4 @@
-<MapDefinition type="TileMap" version="1" dimensions="8,8">
+<MapDefinition type="TileMap" version="2" dimensions="8,8">
 
 	<Legend>
 		<Tile glyph="#" regionType="CobblestoneWall"/>

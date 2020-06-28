@@ -49,6 +49,12 @@ Vec2::Vec2( const IntVec2& copyFrom )
 	y=(float)copyFrom.y;
 }
 
+Vec2::Vec2( float XY )
+{
+	x = XY;
+	y = XY;
+}
+
 const Vec2 Vec2::MakeFromPolarRadians( float directionRadians, float length )
 {
 	const Vec2 tem_Vec2=Vec2(length*cos(directionRadians),length*sin(directionRadians));
@@ -67,7 +73,7 @@ float Vec2::GetLength() const
 	return sqrtf(x*x+y*y);
 }
 
-float Vec2::GetLengthSquared() const
+float Vec2::GetSquaredLength() const
 {
 	return (x*x+y*y);
 }
@@ -82,8 +88,6 @@ float Vec2::GetAngleDegrees() const
 	const float tem_Degrees = ConvertRadiansToDegrees( GetAngleRadians() );
 	return tem_Degrees;
 }
-
-
 
 const Vec2 Vec2::GetRotated90Degrees() const
 {	

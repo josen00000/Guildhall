@@ -5,11 +5,21 @@
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
 #include "Engine/Math/AABB2.hpp"
+#include "Engine/Math/RandomNumberGenerator.hpp"
 
 
 extern RenderContext* g_theRenderer;
 extern Game* g_theGame;
 
+static float g_debugHeight		= 1.5f;
+static float g_debugSideLength	= 0.05f;
+static float g_debugLineWidth	= 0.05f;
+static Rgba8 g_debugColorX		= Rgba8( 255, 0, 0 );
+static Rgba8 g_debugColorY		= Rgba8( 0, 255, 0 );
+static Rgba8 g_debugLineColor	= Rgba8( 50, 0, 0 );
+static Rgba8 g_debugImpactColor = Rgba8( 0, 0, 0 );
+// static float g_debugHeight = 1.5f;
+// static float g_debugHeight = 1.5f;
 
 TileMap::TileMap( const XmlElement& mapElement )
 {
@@ -20,17 +30,19 @@ TileMap::TileMap( const XmlElement& mapElement )
 void TileMap::RenderMap() const
 {
 	Texture* mapTexture = MaterialDefinition::s_sheet.m_diffuseTexture;
-	//Sampler* mapSampler = new Sampler( g_theRenderer, SAMPLER_POINT );
-	//g_theRenderer->BindSampler( mapSampler );
 	g_theRenderer->EnableDepth( COMPARE_DEPTH_LESS, true );
 	g_theRenderer->SetDiffuseTexture( mapTexture );
 	g_theRenderer->DrawVertexVector( m_meshes );
-	//delete mapSampler;
+
+	if( m_isDebug ) {
+		DebugDrawRaycast();
+	}
 }
 
 void TileMap::UpdateMeshes()
 {
 	m_meshes.clear();
+	m_raycastDebugVerts.clear();
 	for( int i = 0; i < m_tiles.size(); i++ ) {
 		const Tile& tempTile = m_tiles[i];
 		if( tempTile.IsSolid() ) {
@@ -40,6 +52,16 @@ void TileMap::UpdateMeshes()
 			AddVertsForNonSolidTile( m_meshes, tempTile );
 		}
 	}
+	RandomNumberGenerator test = RandomNumberGenerator( m_version );
+	static Vec3 startPos1	= test.RollRandomVec3InRange( Vec3::ZERO, Vec3( Vec2( m_dimensions ), 3) );
+	static Vec3 endPos1		= test.RollRandomVec3InRange( Vec3::ZERO, Vec3( Vec2( m_dimensions ), 3) );
+	static Vec3 startPos2	= test.RollRandomVec3InRange( Vec3::ZERO, Vec3( Vec2( m_dimensions ), 3 ) );
+	static Vec3 endPos2		= test.RollRandomVec3InRange( Vec3::ZERO, Vec3( Vec2( m_dimensions ), 3 ) );
+	static Vec3 startPos3	= test.RollRandomVec3InRange( Vec3::ZERO, Vec3( Vec2( m_dimensions ), 3 ) );
+	static Vec3 endPos3		= test.RollRandomVec3InRange( Vec3::ZERO, Vec3( Vec2( m_dimensions ), 3 ) );
+	MapRaycastResult testResult1 = RayCast( startPos1, endPos1  );
+	MapRaycastResult testResult2 = RayCast( startPos2, endPos2  );
+	MapRaycastResult testResult3 = RayCast( startPos3, endPos3  );
 }
 
 void TileMap::Update( float deltaSeconds )
@@ -53,6 +75,37 @@ void TileMap::PrepareCamera()
 	Vec3 cameraPos = Vec3( m_playerStartPos.x, m_playerStartPos.y, 0.5f );
 	g_theGame->SetCameraPos( cameraPos );
 	g_theGame->SetCameraYaw( m_playerStartYaw );
+}
+
+MapRaycastResult TileMap::RayCast( Vec3 startPos, Vec3 forwardNormal, float maxDistance )
+{
+	MapRaycastResult result[4];
+	for( int i = 0; i < 4; i++ ) {
+		result[i].startPosition = startPos;
+		result[i].forwardNormal = forwardNormal;
+		result[i].maxDistance = maxDistance;
+	}
+
+	Vec2 startPosXY = startPos.GetXYVector();
+	Vec2 forwardNormalXY = forwardNormal.GetXYVector();
+	float maxDistanceXY = maxDistance * forwardNormalXY.GetLength();
+	forwardNormalXY.Normalize();
+
+	float startPosZ = startPos.z;
+	float maxDistanceZ = maxDistance * forwardNormal.z;
+
+	//Capsule2 raycastLine = Capsule2( startPos.GetXYVector(), ( startPos + forwardNormal * maxDistance )
+	float tileRaycastDistXY = GetTileXYRaycastDist( startPosXY, forwardNormalXY, maxDistanceXY );
+	float tileRaycastDistZ = GetTileZRaycastDist( startPosZ, maxDistanceZ );
+// 	EntityXYRaycast( result[2] );
+// 	EntityZRaycast( result[3] );
+// 	IntegrateResults( result );
+	return result[0];
+}
+
+MapRaycastResult TileMap::RayCast( Vec3 startPos, Vec3 endPos )
+{
+	return __super::RayCast(startPos, endPos);
 }
 
 Tile TileMap::GetTileWithCoords( IntVec2 tileCoords ) const
@@ -136,6 +189,225 @@ void TileMap::LoadMapDefinitions( const XmlElement& mapElement )
 	m_playerStartYaw = ParseXmlAttribute( *playerStartElement, "yaw", m_playerStartYaw );
 }
 
+
+void TileMap::EntityXYRaycast( MapRaycastResult& result )
+{
+
+}
+
+void TileMap::EntityZRaycast( MapRaycastResult& result )
+{
+
+}
+
+// float TileMap::GetTileXYRaycastDist( MapRaycastResult& result )
+// {
+// 	// Calculate first check x and y
+// 	// while maxdistance < check x and check y keep check and update
+// 	Vec2 forwardNormalXY = Vec2( result.forwardNormal.x, result.forwardNormal.y );
+// 	forwardNormalXY.Normalize();
+// 
+// 	Vec2 deltaPos = forwardNormalXY * result.maxDistance;
+// 	Vec2 lastPos = result.startPosition + forwardNormalXY * result.maxDistance;
+// 	float deltaTPerTileX = result.maxDistance / abs( forwardNormalXY.x * result.maxDistance );
+// 	float deltaTPerTileY = result.maxDistance / abs( forwardNormalXY.y * result.maxDistance );
+// 
+// 	float currentTImpactInX = 0;
+// 	float currentTImpactInY = 0;
+// 	int xForwardSign = 0;
+// 	int yForwardSign = 0;
+// 	IntVec2 currentTileCoords = IntVec2( (int)floorf( result.startPosition.x ), (int)floorf( result.startPosition.y ) );
+// 
+// 	if( forwardNormalXY.x > 0 ) {
+// 		xForwardSign = 1;
+// 		currentTImpactInX = ( currentTileCoords.x + 1 - result.startPosition.x ) * deltaTPerTileX;
+// 	}
+// 	else {
+// 		xForwardSign = -1;
+// 		currentTImpactInX = ( result.startPosition.x - currentTileCoords.x ) * deltaTPerTileX;
+// 	}
+// 	if( forwardNormalXY.y > 0 ) {
+// 		yForwardSign = 1;
+// 		currentTImpactInY = ( currentTileCoords.y + 1 - result.startPosition.y ) * deltaTPerTileY;
+// 	}
+// 	else {
+// 		yForwardSign = -1;
+// 		currentTImpactInY = ( result.startPosition.y - currentTileCoords.y ) * deltaTPerTileY;
+// 	}
+// 
+// 	while( true ) {
+// 		if( currentTImpactInY > result.maxDistance && currentTImpactInX > result.maxDistance ) { 
+// 			result.didImpact = false;
+// 			break; 
+// 		}
+// 		bool isImpactInX = false;
+// 		if( currentTImpactInX < currentTImpactInY ) {
+// 			isImpactInX = true;
+// 			currentTileCoords = currentTileCoords + IntVec2( xForwardSign, 0 );
+// 		}
+// 		else {
+// 			currentTileCoords = currentTileCoords + IntVec2( yForwardSign, 0 );
+// 		}
+// 
+// 		if( m_isDebug ) {
+// 				Vec3 debugPos;
+// 			if( isImpactInX ) {
+// 				debugPos = result.startPosition + Vec3( forwardNormalXY, 0.f ) * currentTImpactInX;
+// 			}
+// 			else {
+// 				debugPos = result.startPosition + Vec3( forwardNormalXY, 0.f ) * currentTImpactInY;
+// 			}
+// 				Vec2 debugPosXY = debugPos.GetXYVector();
+// 				AABB2 debugBox = AABB2(( debugPosXY - Vec2( g_debugSideLength )), ( debugPosXY + Vec2( g_debugSideLength )));
+// 				AppendVertsForAABB2DWithHeight( m_raycastDebugVerts, debugBox, g_debugHeight, g_debugColor, Vec2::ZERO, Vec2::ONE );
+// 		}
+// 		if( IsTileCoordsSolid( currentTileCoords ) ){ 
+// 			result.didImpact = true;				
+// 			if( isImpactInX ) {
+// 				result.impactPosition = result.startPosition + Vec3( forwardNormalXY, 0.f ) * currentTImpactInX ;			
+// 				result.impactDistance = currentTImpactInX;		
+// 				result.impactSurfaceNormal = Vec3( (float)-xForwardSign, 0.f, 0.f );
+// 			}
+// 			else {
+// 				result.impactPosition = result.startPosition + Vec3( forwardNormalXY, 0.f ) * currentTImpactInY;
+// 				result.impactDistance = currentTImpactInY;
+// 				result.impactSurfaceNormal = Vec3( (float)-yForwardSign, 0.f, 0.f );
+// 			}
+// 			break; 
+// 		}
+// 		if( isImpactInX ) {
+// 			currentTImpactInX += deltaTPerTileX;
+// 		}
+// 		else {
+// 			currentTImpactInY += deltaTPerTileY;
+// 		}
+// 	}
+// 	if( result.didImpact ) {
+// 		Vec2 impactPos = result.impactPosition.GetXYVector();
+// 		AABB2 debugBox{ ( impactPos - Vec2( g_debugSideLength ) ), ( impactPos + Vec2( g_debugSideLength ) ) };
+// 		AppendVertsForAABB2DWithHeight( m_raycastDebugVerts, debugBox, g_debugHeight, g_debugImpactColor );
+// 	}
+// }
+
+float TileMap::GetTileXYRaycastDist( Vec2 startPosXY, Vec2 forwardNormalXY, float maxDistXY )
+{
+	OBB2 debugLine = OBB2( Vec2( maxDistXY, g_debugLineWidth), Vec2( startPosXY + ( forwardNormalXY * maxDistXY / 2 ) ), forwardNormalXY );
+	AppendVertsForOBB2DWithHeight( m_raycastDebugVerts, debugLine, g_debugHeight, g_debugLineColor, g_debugColorX );
+
+	Vec2 raycastDisp = forwardNormalXY * maxDistXY;
+	float deltaTPerTileX = 1.f / abs( forwardNormalXY.x );
+	float deltaTPerTileY = 1.f / abs( forwardNormalXY.y );
+	float currentTImpactInX = 0.f;
+	float currentTImpactInY = 0.f;
+	int xForwardSign = 0;
+	int yForwardSign = 0;
+	IntVec2 currentTileCoords = IntVec2( (int)floorf( startPosXY.x ), (int)floorf( startPosXY.y ) );
+
+	if( IsTileCoordsSolid( currentTileCoords ) ){ 
+		AABB2 debugBox = AABB2( (startPosXY - Vec2( g_debugSideLength )), ( startPosXY + Vec2( g_debugSideLength )) );
+		AppendVertsForAABB2DWithHeight( m_raycastDebugVerts, debugBox, g_debugHeight, g_debugImpactColor, Vec2::ZERO, Vec2::ONE );
+		return 0.f; 
+	}
+
+
+	if( forwardNormalXY.x > 0 ) {
+		xForwardSign = 1;
+		currentTImpactInX = ( currentTileCoords.x + 1 - startPosXY.x ) * deltaTPerTileX;
+	}
+	else {
+		xForwardSign = -1;
+		currentTImpactInX = ( startPosXY.x - currentTileCoords.x ) * deltaTPerTileX;
+	}
+	if( forwardNormalXY.y > 0 ) {
+		yForwardSign = 1;
+		currentTImpactInY = ( currentTileCoords.y + 1 - startPosXY.y ) * deltaTPerTileY;
+	}
+	else {
+		yForwardSign = -1;
+		currentTImpactInY = ( startPosXY.y - currentTileCoords.y ) * deltaTPerTileY;
+	}
+
+	while( true ) {
+		if( currentTImpactInY > maxDistXY && currentTImpactInX > maxDistXY ) {
+			return maxDistXY;			
+		}
+
+		bool isCurrentImpactInX = false;
+		if( currentTImpactInX < currentTImpactInY ) {
+			isCurrentImpactInX = true;
+			currentTileCoords = currentTileCoords + IntVec2( xForwardSign, 0 );
+		}
+		else {
+			currentTileCoords = currentTileCoords + IntVec2( 0, yForwardSign );
+		}
+
+		// debug raycast
+		if( m_isDebug ) {
+			Vec2 debugPosXY;
+			if( isCurrentImpactInX ) {
+				debugPosXY = startPosXY + ( forwardNormalXY * currentTImpactInX );
+				/*AppendVertsForAABB2DWithHeight( m_raycastDebugVerts,)*/
+				AABB2 debugBox = AABB2( (debugPosXY - Vec2( g_debugSideLength )), (debugPosXY + Vec2( g_debugSideLength )) );
+				AppendVertsForAABB2DWithHeight( m_raycastDebugVerts, debugBox, g_debugHeight, g_debugColorX, Vec2::ZERO, Vec2::ONE );
+			}
+			else {
+				debugPosXY = startPosXY + ( forwardNormalXY * currentTImpactInY );
+				AABB2 debugBox = AABB2( (debugPosXY - Vec2( g_debugSideLength )), (debugPosXY + Vec2( g_debugSideLength )) );
+				AppendVertsForAABB2DWithHeight( m_raycastDebugVerts, debugBox, g_debugHeight, g_debugColorY, Vec2::ZERO, Vec2::ONE );
+			}
+		}
+
+		if( IsTileCoordsSolid( currentTileCoords ) ) {
+			if( isCurrentImpactInX ) {
+				Vec2 debugPosXY = startPosXY + (forwardNormalXY * currentTImpactInX);
+				AABB2 debugBox = AABB2( (debugPosXY - Vec2( g_debugSideLength )), (debugPosXY + Vec2( g_debugSideLength )) );
+				AppendVertsForAABB2DWithHeight( m_raycastDebugVerts, debugBox, g_debugHeight, g_debugImpactColor, Vec2::ZERO, Vec2::ONE );
+				return currentTImpactInX;
+			}
+			else {
+				Vec2 debugPosXY = startPosXY + (forwardNormalXY * currentTImpactInX);
+				AABB2 debugBox = AABB2( (debugPosXY - Vec2( g_debugSideLength )), (debugPosXY + Vec2( g_debugSideLength )) );
+				AppendVertsForAABB2DWithHeight( m_raycastDebugVerts, debugBox, g_debugHeight, g_debugImpactColor, Vec2::ZERO, Vec2::ONE );
+				return currentTImpactInY;
+			}
+		}
+
+		if( isCurrentImpactInX ) {
+			currentTImpactInX += deltaTPerTileX;
+		}
+		else {
+			currentTImpactInY += deltaTPerTileY;
+		}
+	}
+}
+
+float TileMap::GetTileZRaycastDist( float startPosZ, float maxDistZ )
+{
+	if( startPosZ <= 0 || startPosZ >=1 ) {
+		return 0;
+	}
+	
+	float endPosZ = startPosZ + maxDistZ;
+	if( endPosZ > 0 || endPosZ < 1 ) {
+		return maxDistZ;
+	}
+	
+	if( maxDistZ > 0 ){ return (1 - startPosZ); }
+	else{ return (startPosZ - 0); }
+}
+
+MapRaycastResult TileMap::GetIntegrateResults( MapRaycastResult* results )
+{
+	return MapRaycastResult();
+}
+
+void TileMap::DebugDrawRaycast() const
+{
+	g_theRenderer->SetDiffuseTexture( nullptr ); 
+	g_theRenderer->SetCullMode( RASTER_CULL_NONE );
+	g_theRenderer->DisableDepth();
+	g_theRenderer->DrawVertexVector( m_raycastDebugVerts );
+}
 
 void TileMap::MapRowCharacterChecking( std::string mapRow )
 {

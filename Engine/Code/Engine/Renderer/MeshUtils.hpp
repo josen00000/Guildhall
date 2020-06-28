@@ -13,10 +13,14 @@
 struct OBB3;
 
 //Append Vertices for Vertex_PCU
-void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs );
+void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
+void AppendVertsForAABB2DWithHeight( std::vector<Vertex_PCU>& vertices, const AABB2& bound, float height, const Rgba8& tintColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
 void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
-void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs );
-void AppendVertsForOBB2D( std::vector<Vertex_PCU>& vertices, const OBB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs );
+void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor );
+void AppendVertsForCapsule2DWithHeight( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor );
+void AppendVertsForOBB2D( std::vector<Vertex_PCU>& vertices, const OBB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
+void AppendVertsForOBB2DWithHeight( std::vector<Vertex_PCU>& vertices, const OBB2& bound, float height, const Rgba8& tintColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
+void AppendVertsForOBB2DWithHeight( std::vector<Vertex_PCU>& vertices, const OBB2& bound, float height, const Rgba8& startColor, const Rgba8& endColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
 //void AppendVertsForOBB3D( std::vector<Vertex_PCU>& vertices, const OBB3& bound, const Rgba8& tintColor );
 void AppendVertsForCircle2D( std::vector<Vertex_PCU>& vertices, const Vec2& center, float radius, const Rgba8& tintColor );
 void AppendVertsForHalfCircle2D( std::vector<Vertex_PCU>& vertices, const Vec2& center, float orientationDegrees, float radius, const Rgba8& tintColor );

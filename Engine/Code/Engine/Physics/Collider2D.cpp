@@ -180,7 +180,7 @@ bool DiscVSDiscCollisionCheck( const Collider2D* colA, const Collider2D* colB )
 	Vec2 dispAB = centerA - centerB;
 	float radiusA = discColA->m_radius;
 	float radiusB = discColB->m_radius;
-	float distSqr = dispAB.GetLengthSquared();
+	float distSqr = dispAB.GetSquaredLength();
 	if( distSqr <= (radiusA + radiusB) * (radiusB + radiusA) ) {
 		return true;
 	}

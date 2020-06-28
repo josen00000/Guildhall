@@ -19,6 +19,9 @@ public:
 	virtual void UpdateMeshes() override;
 	virtual void Update( float deltaSeconds ) override;
 	virtual void PrepareCamera() override;
+	virtual MapRaycastResult RayCast( Vec3 startPos, Vec3 forwardNormal, float maxDistance ) override;
+	virtual MapRaycastResult RayCast( Vec3 startPos, Vec3 endPos );
+
 
 	Tile GetTileWithCoords( IntVec2 tileCoords )const;
 	int GetTileIndexWithCoords( IntVec2 tileCoords )const;
@@ -27,6 +30,14 @@ public:
 
 private:
 	void LoadMapDefinitions( const XmlElement& mapElement );
+	void EntityXYRaycast( MapRaycastResult& result );
+	void EntityZRaycast( MapRaycastResult& result );
+	float GetTileXYRaycastDist( Vec2 startPosXY, Vec2 forwardNormalXY, float maxDistXY );
+	float GetTileZRaycastDist( float startPosZ, float maxDistZ  );
+	MapRaycastResult GetIntegrateResults( MapRaycastResult* results );
+
+
+	void DebugDrawRaycast() const;
 
 	// validation
 	void MapRowCharacterChecking( std::string mapRow );
@@ -46,4 +57,8 @@ public:
 	float	m_playerStartYaw = 0.f;		   // temp without using entity
 	std::vector<Vertex_PCU> m_meshes;
 	std::vector<Tile> m_tiles;
+
+	// raycast debug
+	std::vector<Vertex_PCU> m_raycastDebugVerts;
 };
+

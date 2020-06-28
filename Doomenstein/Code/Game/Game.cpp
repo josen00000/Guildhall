@@ -254,9 +254,7 @@ void Game::HandleKeyboardInput( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
 	CheckIfExit();
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F1 ) ) {
-		m_debugMode = !m_debugMode;
-	}
+	CheckGameStates();
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_PLUS ) ) {
 		if( m_billboardMode < NUM_BILLBOARD_MODES ) {
 			m_billboardMode = (BillboardMode)(m_billboardMode + 1);
@@ -361,6 +359,7 @@ void Game::CheckIfDeveloped()
 {
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F1 )){
 		m_debugMode = !m_debugMode;
+		m_world->SetDebugMode( m_debugMode );
 	}
 }
 

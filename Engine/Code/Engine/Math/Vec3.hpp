@@ -5,9 +5,9 @@
 
 struct Vec3 {
 public:
-	float x=0.f;
-	float y=0.f;
-	float z=0.f;
+	float x = 0.f;
+	float y = 0.f;
+	float z = 0.f;
 
 public:
 	//Construction
@@ -32,6 +32,8 @@ public:
 	const Vec3 GetRotatedAboutZDegrees( float deltaDegrees ) const;
 	const Vec3 GetClamped( float maxLength )const;
 	const Vec3 GetNormalized() const;
+
+	Vec2 GetXYVector() const;
 
 	std::string ToString();
 

@@ -11,3 +11,4 @@ set_ambient_color
 set_light_color
 help
 load_map
+raycast

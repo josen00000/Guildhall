@@ -6,6 +6,7 @@
 #include "Game/TileMap.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Core/EventSystem.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 extern Game* g_theGame;
 
@@ -13,6 +14,7 @@ World::World()
 {
 	//LoadMap();
 	//CreateMaps();
+	g_theConsole->AddCommandToCommandList( std::string( "raycast" ), std::string( "add raycast with start pos and end pos" ), MapCommandRaycast );
 }
 
 void World::Update( float deltaSeconds )
@@ -53,3 +55,22 @@ Strings World::GetAllMaps() const
 	return resultMaps;
 }
 
+Map* World::GetCurrentMap()
+{
+	return m_maps[m_currentMapIndex];
+}
+
+void World::SetDebugMode( bool isDebug )
+{
+	m_isDebugMode = isDebug;
+	m_maps[m_currentMapIndex]->SetDebugMode( isDebug );
+}
+
+bool MapCommandRaycast( EventArgs& args )
+{
+	Vec3 startPos = args.GetValueByString( std::to_string( 0 ), Vec3::ZERO );
+	Vec3 endPos = args.GetValueByString( std::to_string( 1 ), Vec3::ONE );
+	Map* currentMap = g_theGame->m_world->GetCurrentMap();
+	currentMap->RayCast( startPos, endPos );
+	return true;
+}

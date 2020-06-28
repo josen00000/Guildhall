@@ -36,6 +36,8 @@ public:
 	void SetValue( const std::string& keyName, const T& value );
 	template<typename T>
 	T GetValue( std::string const& keyName, T const& defValue ) const;
+	template<typename T>
+	T GetValueByString( std::string const& keyName, T const& defValue ) const;
 
 private:
 	std::map<std::string, TypedPropertyBase*> m_keyValuePairs;
@@ -65,6 +67,23 @@ T NamedProperties::GetValue( std::string const& keyName, T const& defValue ) con
 		}
 	}
 
+	return defValue;
+}
+
+template<typename T>
+T NamedProperties::GetValueByString( std::string const& keyName, T const& defValue ) const
+{
+	TypedPropertyBase* base = nullptr;
+	auto iter = m_keyValuePairs.find( keyName );
+	if( iter != m_keyValuePairs.end() ) {
+		base = iter->second;
+		TypedProperty<std::string>* prop = dynamic_cast<TypedProperty<std::string>*>(base);
+
+		if( prop != nullptr ) {
+			T result;
+			result.SetFromText( prop->m_value );
+		}
+	}
 	return defValue;
 }
 

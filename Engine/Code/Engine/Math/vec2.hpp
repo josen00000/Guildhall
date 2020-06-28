@@ -18,6 +18,7 @@ public:
 	Vec2() {}												// default constructor (do nothing)
 	Vec2( const Vec2& copyFrom );
 	explicit Vec2(const IntVec2& copyFrom);
+	explicit Vec2( float XY );
 	Vec2( const Vec3& copyFrom );	// copy constructor (from another vec2)
 	explicit Vec2(const float initialX, const float initialY );		// explicit constructor (from x, y)
 		
@@ -29,7 +30,7 @@ public:
 
 	// Accessor(const methods)
 	float GetLength() const;
-	float GetLengthSquared() const;
+	float GetSquaredLength() const;
 	float GetAngleRadians() const;
 	float GetAngleDegrees() const;
 

@@ -8,6 +8,15 @@ void Map::PrepareCamera()
 
 }
 
+MapRaycastResult Map::RayCast( Vec3 startPos, Vec3 endPos )
+{
+	Vec3 raycastDisp = endPos - startPos;
+	Vec3 forwardNormal = raycastDisp.GetNormalized();
+	float maxdist = raycastDisp.GetLength();
+
+	return RayCast( startPos, forwardNormal, maxdist );
+}
+
 Entity* Map::SpawnNewEntityOfType( std::string const& entityDefName )
 {
 	Entity* spawnedEntity;
@@ -22,4 +31,9 @@ Entity* Map::SpawnNewEntityOfType( EntityDefinition const& entityDef )
 {
 	//Entity*
 	return nullptr;
+}
+
+void Map::SetDebugMode( bool isDebug )
+{
+	m_isDebug = isDebug;
 }
