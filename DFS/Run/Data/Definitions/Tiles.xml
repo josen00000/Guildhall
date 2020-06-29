@@ -48,7 +48,7 @@
   <TileDefinition
       name="LockedDoor"
       spriteCoords="0,5"
-      allowsWalk="true"
+      allowsWalk="false"
 	/>
 
 </TileDefinitions>

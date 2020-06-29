@@ -24,6 +24,11 @@ void World::CreateMaps()
 	}
 }
 
+void World::UpdateWorld( float deltaSeconds )
+{
+	m_maps[m_currentMapIndex]->UpdateMap( deltaSeconds );
+}
+
 void World::RenderWorld() const
 {
 	m_maps[m_currentMapIndex]->RenderMap();

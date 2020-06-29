@@ -1,6 +1,7 @@
 #include <windows.h>
 #include "Game.hpp"
 #include "Game/App.hpp"
+#include "Game/ActorDefinition.hpp"
 #include "Game/GameObject.hpp"
 #include "Game/Map/MapDefinition.hpp"
 #include "Game/Map/TileDefinition.hpp"
@@ -67,6 +68,7 @@ void Game::UpdateGame( float deltaSeconds )
 	CheckIfExit();
 	m_gameCamera->SetClearMode( CLEAR_COLOR_BIT, Rgba8::RED, 0.0f, 0 );
 	CleanDestroyedObjects();
+	m_world->UpdateWorld( deltaSeconds );
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -88,6 +90,9 @@ void Game::HandleKeyboardInput()
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F5 ) ) {
 		RestartGame();
 	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F1 ) ) {
+		m_isDebug = !m_isDebug;
+	}
 }
 
 
@@ -98,8 +103,17 @@ void Game::RenderGame() const
 
 void Game::RenderUI() const
 {
+	if( m_isDebug ) {
+		int index = 0;
+		DebugAddScreenText( Vec4( 0, 0.5, 0, -2 * index ), Vec2::ZERO, 5.f, Rgba8::WHITE, Rgba8::WHITE, 0.f, "debug mode is " + GetStringFromBool( m_isDebug ) );
+	}
 }
 
+
+void Game::SetIsDebug( bool isDebug )
+{
+	m_isDebug = isDebug;
+}
 
 void Game::DeleteGameObject( GameObject* obj )
 {
@@ -138,5 +152,8 @@ void Game::LoadDefs()
 
 	// load tile def
 	TileDefinition::PopulateDefinitionFromXmlFile( TILE_DEF_FILE_PATH );
+
+	// load actor def
+	ActorDefinition::PopulateDefinitionFromXmlFile( ACTOR_DEF_FILE_PATH );
 }
 

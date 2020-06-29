@@ -28,6 +28,11 @@ public:
 	void RenderGame() const;
 	void RenderUI() const;
 
+	// Accessor
+	bool GetIsDebug() const { return m_isDebug; }
+
+	// mutator
+	void SetIsDebug( bool isDebug );
 	// game object
 	void DeleteGameObject( GameObject* obj );
 	void CleanDestroyedObjects();
@@ -48,6 +53,7 @@ private:
 
 public:
 	bool m_isAppQuit		= false;
+	bool m_isDebug			= false;
 
 	World* m_world			= nullptr;
 

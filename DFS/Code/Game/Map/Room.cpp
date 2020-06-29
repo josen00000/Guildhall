@@ -26,6 +26,13 @@ IntVec2 Room::GetRandomEdgeTileCoord() const
 	return m_edgeTileCoords[edgeTileIndex];
 }
 
+IntVec2 Room::GetRandomFloorTileCoord() const
+{
+	RandomNumberGenerator* mapRNG = m_map->GetRNG();
+	int floorTileIndex = mapRNG->RollRandomIntInRange( 0, (int)m_floorTileCoords.size() - 1 );
+	return m_floorTileCoords[floorTileIndex];
+}
+
 void Room::AddRoomEdgeTileCoords( IntVec2 tileCoords )
 {
 	m_edgeTileCoords.push_back( tileCoords );

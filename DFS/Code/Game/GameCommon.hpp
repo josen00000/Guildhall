@@ -37,4 +37,4 @@ constexpr float DEV_CAMERA_MAX_Y	= 20;
 
 constexpr char MAP_DEF_FILE_PATH[]	= "Data/Definitions/Maps.xml";
 constexpr char TILE_DEF_FILE_PATH[]	= "Data/Definitions/Tiles.xml";
-constexpr char ACTOR_DEF_FILE_PATH[] = "Data/Definitions/Maps.xml";
+constexpr char ACTOR_DEF_FILE_PATH[] = "Data/Definitions/Actors.xml";

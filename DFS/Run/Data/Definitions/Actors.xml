@@ -1,0 +1,27 @@
+<ActorDefinitions>
+
+	<ActorDefinition name="Player" >
+		<Size physicsRadius="0.25" />
+		<Movement speed="5.0"/>
+		<Health max="100"/>
+    <Fight attackStrength ="10"/>
+		<SpriteAnimSet spriteSheet="Data/Images/KushnariovaCharacters_12x53.png" spriteLayout="12,53" >
+			<SpriteAnim name="MoveEast"		spriteIndexes="3,4,5,4"/>
+			<SpriteAnim name="MoveWest"		spriteIndexes="9,10,11,10"/>
+			<SpriteAnim name="MoveNorth"	spriteIndexes="0,1,2,1"/>
+			<SpriteAnim name="MoveSouth"	spriteIndexes="6,7,8,7"/>
+			<SpriteAnim name="Idle"				spriteIndexes="6,7,8,7"/>
+		</SpriteAnimSet>
+	</ActorDefinition>
+  <ActorDefinition name="Enemy" >
+    <Size physicsRadius="0.25" />
+    <Movement speed="5.0"/>
+    <Health max="100"/>
+    <Fight attackStrength ="10"/>
+    <SpriteAnimSet spriteSheet="Data/Images/KushnariovaCharacters_12x53.png" spriteLayout="12,53" >
+      <SpriteAnim name="Idle"				spriteIndexes="54,55,56,55"/>
+    </SpriteAnimSet>
+  </ActorDefinition>
+</ActorDefinitions>
+
+

@@ -177,13 +177,14 @@ const void App::Render() const
 	g_theGame->RenderGame();
 	g_theRenderer->EndCamera();
 
-	// debug render
-	DebugRenderScreenTo( g_gameCamera->GetColorTarget() );
-	DebugRenderWorldToCamera( g_gameCamera );
 
 	g_theRenderer->BeginCamera( g_UICamera );
 	g_theGame->RenderUI();
 	g_theRenderer->EndCamera();
+
+	// debug render
+	DebugRenderScreenTo( g_gameCamera->GetColorTarget() );
+	DebugRenderWorldToCamera( g_gameCamera );
 
 	g_theRenderer->BeginCamera( g_devCamera );
 	g_theConsole->Render( *g_theRenderer );

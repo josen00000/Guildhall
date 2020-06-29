@@ -64,6 +64,18 @@
     <ClCompile Include="Map\Maze.cpp">
       <Filter>Game\Map</Filter>
     </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="ActorDefinition.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Item.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp">
@@ -114,12 +126,27 @@
     <ClInclude Include="Map\Maze.hpp">
       <Filter>Game\Map</Filter>
     </ClInclude>
+    <ClInclude Include="Actor.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="ActorDefinition.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Item.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\..\Run\Data\Definitions\Tiles.xml">
       <Filter>Data</Filter>
     </Xml>
     <Xml Include="..\..\Run\Data\Definitions\Maps.xml">
+      <Filter>Data</Filter>
+    </Xml>
+    <Xml Include="..\..\Run\Data\Definitions\Actors.xml">
       <Filter>Data</Filter>
     </Xml>
   </ItemGroup>

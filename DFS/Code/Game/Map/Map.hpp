@@ -8,7 +8,9 @@
 #include "Engine/Math/RandomNumberGenerator.hpp"
 
 class MapDefinition;
-
+class Player;
+class Actor;
+class Item;
 
 enum TileAttributeBitFlag: uint {
 	TILE_NON_ATTR_BIT		= 0,
@@ -17,6 +19,7 @@ enum TileAttributeBitFlag: uint {
 	TILE_IS_ROOM_BIT		= BIT_FLAG( 2 ),
 	TILE_IS_SOLID_BIT		= BIT_FLAG( 3 ),
 	TILE_IS_VISITED_BIT		= BIT_FLAG( 4 ),
+	TILE_IS_DOOR_BIT		= BIT_FLAG( 5 ),
 };
 
 enum TileAttribute {
@@ -25,6 +28,7 @@ enum TileAttribute {
 	TILE_IS_ROOM,
 	TILE_IS_SOLID,
 	TILE_IS_VISITED,
+	TILE_IS_DOOR,
 	NUM_TILE_ATTRS
 };
 
@@ -51,6 +55,8 @@ public:
 	std::string GetName() const { return m_name; }
 	int GetWidth() const { return m_width; }
 	int GetHeight() const { return m_height; }
+	Vec2 GetWorldPosWithTileCoords( IntVec2 tileCoords );
+
 	RandomNumberGenerator* GetRNG()const { return m_rng; }
 
 	TileDirection GetRevertTileDirection( TileDirection dirt );
@@ -77,7 +83,8 @@ public:
 	bool IsTileSolid( int tileIndex ) const;
 	bool IsTileVisited( IntVec2 tileCoords ) const;
 	bool IsTileVisited( int tileIndex ) const;
-
+	bool IsTileDoor( IntVec2 tileCoords ) const;
+	bool IsTileDoor( int tileIndex ) const;
 
 	// Mutator
 	void SetName( std::string name );
@@ -106,6 +113,8 @@ public:
 	void SetTileSolid( int tileIndex, bool isSolid );
 	void SetTileVisited( IntVec2 tileCoords, bool isVisited );
 	void SetTileVisited( int tileIndex, bool isVisited );
+	void SetTileDoor( IntVec2 tileCoords, bool isDoor );
+	void SetTileDoor( int tileIndex, bool isDoor );
 
 	// Tiles
 	IntVec2 GetTileCoordsWithTileIndex( int tileIndex ) const;
@@ -148,6 +157,22 @@ private:
 	bool isTileAttrs( int tileIndex, TileAttribute attr ) const;
 	TileAttributeBitFlag GetTileAttrBitFlagWithAttr( TileAttribute attr ) const; 
 
+	// Actor
+	void CreateActors();
+	void CreatePlayer();
+	void CreateEnemies();
+
+	// item
+	void CreateKey();
+	void CheckIfCollectKey();
+
+	// Collision
+	void CheckCollision();
+	void CheckEntitiesCollision();
+	void CheckTileCollision();
+	void CheckPlayerTileCollision();
+	void CheckActorTileCollisionWithTileCoords( Actor* actor,  IntVec2 tileCoords );
+
 	// helper function
 	void DebugDrawTiles();
 
@@ -174,10 +199,15 @@ private:
 	std::vector<Room*>				m_rooms;
 	std::vector<Maze*>				m_mazes;
 
-
 	RandomNumberGenerator*			m_rng;
 
 	TileType						m_mazeFloorType = "";
 	TileType						m_mazeWallType	= "";
 
+	// Actor
+	Player*							m_player = nullptr;
+	std::vector<Actor*>				m_enemies;
+
+	// item
+	Item*							m_key = nullptr;
 };

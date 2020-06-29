@@ -1,5 +1,8 @@
 #include "Map.hpp"
 #include <stack>
+#include <time.h>
+#include "Game/Player.hpp"
+#include "Game/Item.hpp"
 #include "Game/Map/MapDefinition.hpp"
 #include "Game/Map/MapGenStep.hpp"
 #include "Game/Map/TileDefinition.hpp"
@@ -24,6 +27,7 @@ Map::Map( std::string name, MapDefinition* definition )
 	m_rng = new RandomNumberGenerator( seed );
 	seed++;
 	CreateMapFromDefinition();
+	CreateActors();
 }
 
 Map* Map::CreateMap( std::string name, MapDefinition* definition )
@@ -32,15 +36,42 @@ Map* Map::CreateMap( std::string name, MapDefinition* definition )
 	return newMap;
 }
 
-void Map::RenderMap()
+void Map::UpdateMap( float deltaSeconds )
 {
+	CheckCollision();
+	m_player->UpdatePlayer( deltaSeconds );	
+	CheckIfCollectKey();
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+		m_enemies[i]->UpdateActor( deltaSeconds );
+		m_enemies[i]->UpdateActorAnimation( deltaSeconds );
+	}
+}
+
+void Map::RenderMap()
+ {
 	Texture* tileTexture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Terrain_8x8.png" );
 	g_theRenderer->SetDiffuseTexture( tileTexture );
 	g_theRenderer->DrawVertexVector( m_tilesVertices );
 	
 	g_theRenderer->SetDiffuseTexture( nullptr );
 	g_theRenderer->DrawVertexVector( m_mazeVertices );
-	//g_theRenderer->DrawAABB2D( AABB2( Vec2::ZERO, Vec2( 15 ) ), Rgba8::RED );
+
+ 	m_player->RenderPlayer();
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+		m_enemies[i]->RenderActor();
+	}
+
+
+	if( !m_player->GetHasKey() ) {
+		Texture* playerTexture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/key.png" );
+		g_theRenderer->SetDiffuseTexture( playerTexture );
+		m_key->RenderItem();
+	}
+}
+
+Vec2 Map::GetWorldPosWithTileCoords( IntVec2 tileCoords )
+{
+	return Vec2( tileCoords );
 }
 
 TileDirection Map::GetRevertTileDirection( TileDirection dirt )
@@ -192,6 +223,18 @@ bool Map::IsTileVisited( int tileIndex ) const
 	return isTileAttrs( tileIndex, TILE_IS_VISITED );
 }
 
+bool Map::IsTileDoor( IntVec2 tileCoords ) const
+{
+	if( !IsTileCoordsValid( tileCoords ) ){ return false; }
+	int tileIndex = GetTileIndexWithTileCoords( tileCoords );
+	return IsTileDoor( tileIndex );
+}
+
+bool Map::IsTileDoor( int tileIndex ) const
+{
+	return isTileAttrs( tileIndex, TILE_IS_DOOR );
+}
+
 void Map::SetName( std::string name ) 
 {
 	m_name = name;
@@ -325,6 +368,16 @@ void Map::SetTileVisited( int tileIndex, bool isVisited )
 	SetTileAttrs( tileIndex, TILE_IS_VISITED, isVisited );
 }
 
+void Map::SetTileDoor( IntVec2 tileCoords, bool isDoor )
+{
+	SetTileAttrs( tileCoords, TILE_IS_DOOR, isDoor );
+}
+
+void Map::SetTileDoor( int tileIndex, bool isDoor )
+{
+	SetTileAttrs( tileIndex, TILE_IS_DOOR, isDoor );
+}
+
 IntVec2 Map::GetTileCoordsWithTileIndex( int tileIndex ) const
 {
 	IntVec2 tileCoords;
@@ -420,11 +473,15 @@ void Map::CreateMapFromDefinition()
 	m_mazeFloorType = m_definition->GetFillType();
 	m_mazeWallType = m_definition->GetEdgeType();
 
+	clock_t start = clock();
+
 	bool isValidMap = false;
 	while( !isValidMap ){
 		PopulateTiles();
 		isValidMap = true;
 	}
+	clock_t end = clock();
+	double time_taken = double( (end - start)/CLOCKS_PER_SEC );
 }
 
 void Map::PopulateTiles()
@@ -432,11 +489,12 @@ void Map::PopulateTiles()
 	InitializeTiles();
 	GenerateEdgeTiles( 1 );
 	RunMapGenSteps();
-	RandomGenerateStartAndExitCoords();
-	GenerateMazeTiles();
-	GenerateDoorTiles();
-	EliminateDeadEnds();
-	CheckTilesReachability();
+ 	RandomGenerateStartAndExitCoords();
+ 	GenerateMazeTiles();
+ 	GenerateDoorTiles();
+ 	EliminateDeadEnds();
+ 	CreateKey();
+ 	CheckTilesReachability();
 	
 	PushTileVertices();
 }
@@ -512,12 +570,6 @@ void Map::GenerateMazeTiles()
 
 			if( IsTileCoordsDeadEnd( tempTileCoords ) ){
 				mazeStack.pop();
-				if( tempTileCoords.x == 33 && tempTileCoords.y == 16 ) {
-					int a =0;
-					if( IsTileSolid( IntVec2( 33, 15 ) ) ){
-						int b = 0;
-					}
-				}
 				if( IsTileCoordsWalkableDeadEnd( tempTileCoords ) ) {
 					tempMaze->m_deadEndtileCoords.push( tempTileCoords );
 				}
@@ -526,10 +578,10 @@ void Map::GenerateMazeTiles()
 
  			TileDirection validNeighborTileDirt = GetValidNeighborDirection( tempTileCoords );
  			IntVec2 neighborCoords = GetNeighborTileCoordsInDirection( tempTileCoords, validNeighborTileDirt );
-			SetTileConnectTo( tempTileCoords, validNeighborTileDirt );
+			//SetTileConnectTo( tempTileCoords, validNeighborTileDirt );
 			//SetTileNeighborsSolidWithDirt( tempTileCoords, validNeighborTileDirt );
 			TileDirection revertNeighborTileDirt = GetRevertTileDirection( validNeighborTileDirt );
-			SetTileConnectTo( neighborCoords, revertNeighborTileDirt );
+			//SetTileConnectTo( neighborCoords, revertNeighborTileDirt );
 			
 
 			if( m_rng->RollPercentChance( m_mazeEdgePercentage ) ) {
@@ -589,7 +641,7 @@ void Map::GenerateDoorTiles()
 			}
 			if( isMazeConnectToRoom ) {
 				if( doorNum != 0 && tempMaze->Getlayer() == 0 ) {
-					if( m_rng->RollPercentChance( 0.5f ) >= 0.5f ) {
+					if( m_rng->RollPercentChance( 0.5f ) ) {
 						break;
 					}
 				}
@@ -600,13 +652,7 @@ void Map::GenerateDoorTiles()
 					if( IsEdgeConnectToMazeAndFloor( randomDoorCoords, tempRoom, tempMaze ) ) {
 						isDoorValid = true;
 						SetTileType( randomDoorCoords, tempRoom->m_doorType );
-						if( randomDoorCoords == IntVec2( 33, 15 ) ) {
-							int a = 0;
-
-							if( IsTileSolid( randomDoorCoords ) ) {
-								int b = 0;
-							}
-						}
+						SetTileDoor( randomDoorCoords, true );
 						doorNum++;
 						tempMaze->SetLayer( 0 );
 					}
@@ -615,17 +661,10 @@ void Map::GenerateDoorTiles()
 		}
 		leftRooms.pop();
 	}
-	if( IsTileSolid( IntVec2( 33, 15 ) )) {
-		int a  = 0;
-	}
-	
 }
 
 void Map::EliminateDeadEnds()
 {
-	if( IsTileSolid( IntVec2( 33, 15 ) ) ) {
-		int a  = 0;
-	}
 	for( int i = 0; i < m_mazes.size(); i++ ) {
 		Maze* tempMaze = m_mazes[i];
 		std::stack<IntVec2> deadEnds = tempMaze->m_deadEndtileCoords;
@@ -635,9 +674,6 @@ void Map::EliminateDeadEnds()
 			if( !IsTileCoordsWalkableDeadEnd( deadEndTileCoods ) ){ continue; }
 			SetTileType( deadEndTileCoods, m_mazeWallType );
 			SetTileSolid( deadEndTileCoods, true );
-			if( deadEndTileCoods == IntVec2( 33, 16 ) ) {
-				int b = 0;
-			}
 			IntVec2 neighborCoords[4];
 			GetNeighborsCoords( deadEndTileCoods, neighborCoords );
 			for( int j = 0; j < 4; j++ ) {
@@ -682,7 +718,7 @@ bool Map::IsTileCoordsWalkableDeadEnd( IntVec2 tileCoords )
 
 	int solidNeighborNum = 0;
 	for( int i = 0; i < 4; i++ ) {
-		if( IsTileSolid( neighborCoords[i] ) ){ solidNeighborNum++; }
+		if( IsTileSolid( neighborCoords[i] ) && !IsTileDoor( neighborCoords[i] ) ){ solidNeighborNum++; }
 	}
 	return ( solidNeighborNum == 3 );
 }
@@ -861,9 +897,102 @@ TileAttributeBitFlag Map::GetTileAttrBitFlagWithAttr( TileAttribute attr ) const
 	case TILE_IS_ROOM:		return TILE_IS_ROOM_BIT;
 	case TILE_IS_SOLID:		return TILE_IS_SOLID_BIT;
 	case TILE_IS_VISITED:	return TILE_IS_VISITED_BIT;
+	case TILE_IS_DOOR:		return TILE_IS_DOOR_BIT;
 	}
 	ERROR_RECOVERABLE( "no attribute!" );
 	return TILE_NON_ATTR_BIT;
+}
+
+void Map::CreateActors()
+{
+	CreatePlayer();
+	CreateEnemies();
+}
+
+void Map::CreatePlayer()
+{
+	m_player = Player::SpawnPlayerWithPos( ActorDefinition::s_definitions["Player"], Vec2( m_startCoords ) );
+}
+
+void Map::CreateEnemies()
+{
+	for( int i = 0; i < m_roomNum; i++ ) {
+		IntVec2 pos_int = m_rooms[i]->GetRandomFloorTileCoord();
+		Vec2 pos = Vec2( pos_int ) + Vec2( 0.5f );
+		Actor* tempActor = Actor::SpawnActorWithPos( ActorDefinition::s_definitions["Enemy"], pos );
+		m_enemies.push_back( tempActor );
+	}
+}
+
+void Map::CreateKey()
+{
+	IntVec2 tileCoords = GetRandomInsideWalkableTileCoords();
+	m_key = new Item( Vec2( tileCoords ) + Vec2( 0.5f ) );
+}
+
+void Map::CheckIfCollectKey()
+{
+	if( m_player->GetHasKey() ){ return; }
+	Vec2 playerPos = m_player->GetPosition();
+	Vec2 keyPos = m_key->GetPosition();
+	Vec2 disp = playerPos - keyPos;
+	float length = disp.GetLength();
+	if( length < m_player->GetPhysicRadius() ) {
+		m_player->SetHasKey( true );
+	}
+}
+
+void Map::CheckCollision()
+{
+	CheckTileCollision();
+}
+
+void Map::CheckTileCollision()
+{
+	CheckPlayerTileCollision();
+}
+
+void Map::CheckPlayerTileCollision()
+{
+	if( m_player == nullptr ){ return; }
+	IntVec2 playerTileCoords = IntVec2( m_player->GetPosition() );
+
+	IntVec2 downTileCoords	= playerTileCoords + IntVec2( 0, -1 );
+	IntVec2 upTileCoords	= playerTileCoords + IntVec2( 0, 1 );
+	IntVec2 leftTileCoords	= playerTileCoords + IntVec2( -1, 0 );
+	IntVec2 rightTileCoords	= playerTileCoords + IntVec2( 1, 0 );
+	
+	IntVec2 leftDownTileCoords	= playerTileCoords + IntVec2( -1, -1 );
+	IntVec2 leftUpTileCoords	= playerTileCoords + IntVec2( -1, 1 );
+	IntVec2 rightDownTileCoords	= playerTileCoords + IntVec2( 1, -1 );
+	IntVec2 rightUpTileCoords	= playerTileCoords + IntVec2( 1, 1 );
+
+	CheckActorTileCollisionWithTileCoords( m_player, downTileCoords );
+	CheckActorTileCollisionWithTileCoords( m_player, upTileCoords );
+	CheckActorTileCollisionWithTileCoords( m_player, leftTileCoords );
+	CheckActorTileCollisionWithTileCoords( m_player, rightTileCoords );
+
+	CheckActorTileCollisionWithTileCoords( m_player, leftDownTileCoords );
+	CheckActorTileCollisionWithTileCoords( m_player, leftUpTileCoords );
+	CheckActorTileCollisionWithTileCoords( m_player, rightDownTileCoords );
+	CheckActorTileCollisionWithTileCoords( m_player, rightUpTileCoords );
+}
+
+void Map::CheckActorTileCollisionWithTileCoords( Actor* actor, IntVec2 tileCoords )
+{
+	if( !IsTileCoordsValid( tileCoords ) ){ return; }
+	if( !IsTileSolid( tileCoords ) ){ return; }
+	Player* player = dynamic_cast<Player*>(actor);
+	if( player ) {
+		if( player->GetHasKey() && IsTileDoor( tileCoords ) ){ return; }
+	}
+
+	int tileIndex = GetTileIndexWithTileCoords( tileCoords );
+	Tile const& tempTile = m_tiles[tileIndex];
+	AABB2 tileBound = tempTile.GetTileBounds();
+	Vec2 actorPos = actor->GetPosition(); 
+	PushDiscOutOfAABB2D( actorPos, actor->GetPhysicRadius(), tileBound );
+	actor->SetPosition( actorPos );
 }
 
 void Map::DebugDrawTiles()
