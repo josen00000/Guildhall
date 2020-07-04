@@ -55,7 +55,7 @@ void Game::Startup()
 {
 	m_gameState = GAME_STATE_LOADING;
 	m_debugMode		= false;
-	m_noClip		= false;
+	m_ghostMode		= false;
 	m_isPause		= false;
 	m_debugCamera	= false;
 	m_isAppQuit		= false;
@@ -65,18 +65,22 @@ void Game::Startup()
 	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
 	LoadAssets();
 	CreateGameObjects();
+
 	// create world
+	m_player = new Entity( EntityDefinition::s_definitions["Player"]);
+	m_player->SetIsPlayer( true );
 	m_world = new World();
 	std::string startMapName = g_gameConfigBlackboard.GetValue( "StartMap", "" );
 	LoadMapsDefinitions( "Data/Maps" );
 
 	m_world->LoadMap( startMapName );
+	Map* currentMap = m_world->GetCurrentMap();
+	currentMap->m_actors.push_back( m_player );
 	// command
 	g_theConsole->AddCommandToCommandList( std::string( "load_map" ), std::string( "Load one map with name." ), MapCommandLoadMap );
 
 	m_billBoardEntity = new Entity();
-	m_billBoardEntity->m_cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.5f );
-
+ 	m_billBoardEntity->m_cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.5f );
 }
 
 void Game::Shutdown()
@@ -106,7 +110,10 @@ void Game::Update( float deltaSeconds )
 	UpdateUI( deltaSeconds );
 	m_world->Update( deltaSeconds );
 
+	UpdatePlayer( deltaSeconds );
 	UpdateBillboardTest();
+
+	//RaycastTest( Vec3::ZERO, Vec3::ZERO, 1.f );
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -156,7 +163,7 @@ void Game::UpdateLighting( float deltaSeconds )
 void Game::UpdateBillboardTest()
 {
 	m_billBoardEntity->UpdateTexCoords( m_gameCamera, m_billboardMode, m_convension );
-	m_billBoardEntity->UpdateVerts();
+	m_billBoardEntity->UpdateVerts( Vec2::ZERO, Vec2::ONE );
 }
 
 void Game::RenderDebugInfo() const
@@ -219,6 +226,68 @@ void Game::RenderBillboardTest() const
 	g_theRenderer->DrawVertexVector( m_billBoardEntity->m_verts );
 	DebugAddWorldArrow( m_billBoardEntity->GetPosition(), m_billBoardEntity->GetPosition() + ( m_billBoardEntity->m_texForward * 2.f ), Rgba8::RED, 0.0f, DEBUG_RENDER_ALWAYS );
 	//DebugAddWorldPoint( m_billBoardEntity->GetPosition(), 3.f, Rgba8::RED, 0.f, DEBUG_RENDER_ALWAYS );
+}
+
+
+void Game::RaycastTest( Vec3 startPos, Vec3 forwardNormal, float maxDist )
+{
+	Map* currentMap = m_world->GetCurrentMap();
+		Vec3 startPos1 = Vec3( 3.57f, 3.87f, 0.5f );
+		Vec3 forwardNormal1 = Vec3( -0.087f, 0.938f, -0.334f );
+// 	static Vec3 startPos1 = startPos;
+// 	static Vec3 forwardNormal1 = forwardNormal;
+	forwardNormal1.Normalize();
+	static float maxDist1 = maxDist;
+	currentMap->RayCast( startPos1, forwardNormal1, maxDist1 );
+}
+
+void Game::UpdatePlayer( float delteSeconds )
+{
+	static Vec3 testPos = Vec3::ZERO;
+	static Vec3 forward = Vec3::ZERO;
+	static float maxDist = 0.f;
+	if( m_player ) {
+		testPos = m_player->GetPosition();
+		forward =m_gameCamera->GetForwardDirt( m_convension );
+		maxDist = 1.f;
+	}
+	//RaycastTest( testPos, forward, maxDist );
+	if( !m_player ){ return; }
+
+	float baseRotSpeed = 30.f;
+	float playerOrientation = m_player->m_orientation;
+
+	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
+	float deltaPlayerOrientation = -mouseMove.x * baseRotSpeed;
+
+	playerOrientation += deltaPlayerOrientation;
+	m_gameCamera->m_transform.SetYawDegrees( playerOrientation );
+
+	bool isMoving = false;
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_E ) ) {
+		isMoving = true;
+		m_player->SetMoveDirt( Vec2( 1.f, 0.f ) );
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
+		isMoving = true;
+		m_player->SetMoveDirt( Vec2( -1.f, 0.f ) );
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_F ) ) {
+		isMoving = true;
+		m_player->SetMoveDirt( Vec2( 0.f, -1.f ) );
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
+		isMoving = true;
+		m_player->SetMoveDirt( Vec2( 0.f, 1.f ) );
+	}
+	m_player->SetIsMoving( isMoving );
+	m_player->SetOrientation( playerOrientation );
+	m_player->Update( delteSeconds );
+
+	m_gameCamera->SetPosition( m_player->GetPosition() );
+
+	Map* currentMap = m_world->GetCurrentMap();
+	currentMap->RayCast( m_player->GetPosition() + m_gameCamera->GetForwardDirt( m_convension ) * m_player->GetRadius() * 1.5f, m_gameCamera->GetForwardDirt( m_convension ), 1.f );
 }
 
 void Game::HandleInput( float deltaSeconds )
@@ -301,7 +370,9 @@ void Game::HandleCameraMovement( float deltaSeconds )
 
 	Vec3 cameraPos = m_gameCamera->GetPosition();
 	cameraPos += movement;
-	m_gameCamera->SetPosition( cameraPos );
+	if( m_ghostMode ) {
+		m_gameCamera->SetPosition( cameraPos );
+	}
 
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
 	float deltaCameraYaw = -mouseMove.x * baseRotSpeed ;
@@ -345,7 +416,7 @@ void Game::CheckGameStates()
 {
 	CheckIfPause();
 	CheckIfDeveloped();
-	CheckIfNoClip();
+	CheckIfGhost();
 }
 
 void Game::CheckIfPause()
@@ -363,12 +434,21 @@ void Game::CheckIfDeveloped()
 	}
 }
 
-void Game::CheckIfNoClip()
+void Game::CheckIfGhost()
 {
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F3 )){
-		m_noClip = !m_noClip;
+		m_ghostMode = !m_ghostMode;
+		if( m_ghostMode ) {
+			m_player->SetIsPlayer( false );
+			m_player = nullptr;
+		}
+		else {
+			PossessEntityAsPlayer();
+		}
 	}
 }
+
+
 
 void Game::RenderGame() const
 {
@@ -515,6 +595,7 @@ void Game::LoadDefinitions()
 	LoadFileDefinition( MaterialDefinition::LoadMapMaterialDefinitions, "Data/Definitions/MapMaterialTypes.xml" );
 	g_theConsole->DebugLogf( "Parsing map region types from \"%s\"...", "Data/Definitions/MapRegionTypes.xml"   );
 	LoadFileDefinition( RegionDefinition::LoadMapRegionDefinitions, "Data/Definitions/MapRegionTypes.xml" );
+	g_theConsole->DebugLogf( "Parsing entity types from \"%s\"...", "Data/Definitions/MapRegionTypes.xml"   );
 	LoadFileDefinition( EntityDefinition::LoadEntityDefinitions, "Data/Definitions/EntityTypes.xml" );
 }
 
@@ -538,7 +619,7 @@ void Game::LoadMapsDefinitions( const char* mapFolderPath )
 
 		std::string mapType = ParseXmlAttribute( *mapElement, "type", "TileMap" );
 		Map* tempMap = nullptr;
-		if( mapType == "TileMap" )	{ tempMap = new TileMap( *mapElement ); }
+		if( mapType == "TileMap" )	{ tempMap = new TileMap( *mapElement, mapFilePath ); }
 
 		tempMap->m_name = mapPaths[i];
 		if( tempMap ) {
@@ -593,6 +674,40 @@ void Game::CreateGameObjects()
 	basisMat.SetTranslation3D( Vec3( 0, 5.f, 0.f ) );
 }
 
+
+void Game::PossessEntityAsPlayer()
+{
+	Map* currentMap = m_world->GetCurrentMap();
+	Vec3 cameraPos = m_gameCamera->GetPosition();
+	Vec3 cameraForward = m_gameCamera->GetForwardDirt( m_convension );
+	Vec2 cameraPosXY = cameraPos.GetXYVector();
+	Vec2 cameraForwardXY = cameraForward.GetXYVector();
+	float dist = 2.f;
+	Entity* tempPlayer = nullptr;
+
+	std::vector<Entity*> mapEntities = currentMap->m_actors;
+	for( int i = 0; i < mapEntities.size(); i++ ) {
+		Entity* tempEntity = mapEntities[i];
+		Vec2 entityPosXY = tempEntity->Get2DPosition();
+		Vec2 cameraToEntityXY = entityPosXY - cameraPosXY;
+		Vec3 cameraToEntity = tempEntity->GetPosition() - cameraPos;
+		float angleDegrees = GetAngleDegreesBetweenVectors2D( cameraToEntityXY, cameraForwardXY );
+		if( angleDegrees < 45 ) {
+			float cameraToEntityDist = cameraToEntity.GetLength();
+			if( cameraToEntityDist < dist ) {
+				dist = cameraToEntityDist;
+				tempPlayer = tempEntity;
+			}
+		}
+	}
+	if( tempPlayer ) {
+		m_player = tempPlayer;
+		m_player->SetIsPlayer( true );
+	}
+	else {
+		m_ghostMode = true;
+	}
+}
 
 // command
 bool MapCommandLoadMap( EventArgs& args )

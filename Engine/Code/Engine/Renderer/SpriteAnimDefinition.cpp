@@ -2,38 +2,38 @@
 #include "Engine/Renderer/SpriteSheet.hpp"
 #include "Engine/Math/MathUtils.hpp"
 
-SpriteAnimDefinition::SpriteAnimDefinition( const SpriteSheet& sheet, int startSpriteIndex, int endSpriteIndex, float durationSeconds, SpriteAnimPlaybackType playbackType /*= SpriteAnimPlaybackType::LOOP*/ )
-	:m_spriteSheet(sheet)
-	,m_startSpriteIndex(startSpriteIndex)
-	,m_endSpriteIndex(endSpriteIndex)
-	,m_durationSeconds(durationSeconds)
-	,m_playbackType(playbackType)
+SpriteAnimDefinition::SpriteAnimDefinition( const SpriteSheet& sheet, int* spriteIndexes, int spriteIndexNum, float durationSeconds, SpriteAnimPlaybackType playbackType /*= SpriteAnimPlaybackType::LOOP*/ )
+	:m_spriteSheet( sheet )
+	, m_durationSeconds( durationSeconds )
+	, m_playbackType( playbackType )
 {
-
+	for( int i = 0; i < spriteIndexNum; i++ ) {
+		m_animFrames.push_back( spriteIndexes[i] );
+	}
+	m_framesNum = (int) m_animFrames.size();
 }
 
 const SpriteDefinition& SpriteAnimDefinition::GetSpriteDefAtTime( float seconds ) const
 {
-	int totalIndex = m_endSpriteIndex - m_startSpriteIndex;
-	float totalDurationSeconds = (totalIndex + 1) * m_durationSeconds;
+	int totalIndex = GetAnimFramesNum();
+	float totalDurationSeconds = totalIndex * m_durationSeconds;
 	switch (m_playbackType)
 	{
 		case SpriteAnimPlaybackType::ONCE :
 		{
 			if(seconds < 0){
-				const SpriteDefinition&	result = m_spriteSheet.GetSpriteDefinition(m_startSpriteIndex);
+				const SpriteDefinition&	result = m_spriteSheet.GetSpriteDefinition( m_animFrames[0] );
 				return result;
 			}
 			else{
 				float temIndexFloat =  seconds / m_durationSeconds; 
 				int temIndex = RoundDownToInt(temIndexFloat);
-				temIndex += m_startSpriteIndex;
-				if(temIndex < m_endSpriteIndex){
-					const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(temIndex);
+				if(temIndex < m_framesNum){
+					const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(m_animFrames[temIndex]);
 					return result;
 				}
 				else{
-					const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(m_endSpriteIndex);
+					const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(m_animFrames.back());
 					return result;
 				}
 			}
@@ -49,8 +49,7 @@ const SpriteDefinition& SpriteAnimDefinition::GetSpriteDefAtTime( float seconds 
 
 			float temIndexFloat = seconds / m_durationSeconds;
 			int temIndex = RoundDownToInt(temIndexFloat);
-			temIndex += m_startSpriteIndex;
-			const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(temIndex);
+			const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(m_animFrames[temIndex]);
 			return result;
 		}
 		case SpriteAnimPlaybackType::PINGPONG:
@@ -67,19 +66,19 @@ const SpriteDefinition& SpriteAnimDefinition::GetSpriteDefAtTime( float seconds 
 
 			float temIndexFloat = seconds / m_durationSeconds;
 			int temIndex = RoundDownToInt(temIndexFloat);
-			temIndex += m_startSpriteIndex;
-			if(temIndex < m_endSpriteIndex){
-				const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(temIndex);
+
+			if(temIndex < m_framesNum){
+				const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(m_animFrames[temIndex]);
 				return result;
 			}
 			else{
-				temIndex -= m_endSpriteIndex;
-				int nextIndex = m_endSpriteIndex - temIndex;
-				const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(nextIndex);
+				temIndex -= m_framesNum;
+				int nextIndex = m_framesNum - temIndex;
+				const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition(m_animFrames[nextIndex]);
 				return result;
 			}
 		}
 	}
-	const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition( 0 );
+	const SpriteDefinition& result = m_spriteSheet.GetSpriteDefinition( m_animFrames[0] );
 	return result;
 }

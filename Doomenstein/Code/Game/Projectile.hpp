@@ -2,7 +2,7 @@
 #include "Game/Entity.hpp"
 
 
-class Projectile : Entity {
+class Projectile : public Entity {
 public:	
 	Projectile(){}
 	~Projectile(){}

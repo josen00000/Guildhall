@@ -21,6 +21,7 @@ public:
 	bool		IsFloatInRange( float value ) const;
 	bool		IsInRange( FloatRange range ) const;
 	bool		DoesOverlap( const FloatRange& otherRange ) const;
+	bool		IsFloat() const { return minimum == maximum; }
 	std::string	GetAsString() const;
 	float		GetRandomInRange( RandomNumberGenerator& rng ) const;
 

@@ -2,7 +2,7 @@
 #include "Game/Entity.hpp"
 
 
-class Portal : Entity {
+class Portal : public Entity {
 public:	
 	Portal(){}
 	~Portal(){}

@@ -13,15 +13,16 @@ enum class SpriteAnimPlaybackType {
 class SpriteAnimDefinition
 {
 public:
-	SpriteAnimDefinition(const SpriteSheet& sheet, int startSpriteIndex, int endSpriteIndex, float durationSeconds, SpriteAnimPlaybackType playbackType = SpriteAnimPlaybackType::LOOP);
+	SpriteAnimDefinition(const SpriteSheet& sheet, int* spriteIndexes, int spriteIndexNum, float durationSeconds, SpriteAnimPlaybackType playbackType = SpriteAnimPlaybackType::LOOP);
 	const SpriteSheet& GetSpriteSheet()const {return m_spriteSheet;}
 	const SpriteDefinition& GetSpriteDefAtTime(float seconds) const;
+	// Accessor
+	int GetAnimFramesNum() const { return (int)m_animFrames.size(); }
 
 private:
 	std::vector<int>		m_animFrames;				// need to implement
+	int						m_framesNum;
 	const SpriteSheet&		m_spriteSheet;
-	int						m_startSpriteIndex = -1;	// need delete
-	int						m_endSpriteIndex = -1;		// need delete
 	float					m_durationSeconds = 1.f;
 	SpriteAnimPlaybackType	m_playbackType = SpriteAnimPlaybackType::LOOP;
 };

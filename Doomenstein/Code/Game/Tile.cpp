@@ -25,6 +25,14 @@ bool Tile::IsSolid() const
 
 
 
+AABB2 Tile::GetBox2D() const
+{
+	AABB2 result;
+	result.mins = m_box.min.GetXYVector();
+	result.maxs = m_box.max.GetXYVector();
+	return result;
+}
+
 void Tile::GetSideUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const
 {
 	SpriteSheet* tileSheet = GetTileSpriteSheet();

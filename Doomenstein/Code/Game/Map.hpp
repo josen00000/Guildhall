@@ -26,11 +26,15 @@ public:
 	~Map(){}
 
 	virtual void RenderMap() const = 0;
+	virtual void RenderEntities() const;
 	virtual void UpdateMeshes() = 0;
 	virtual void Update( float delteSeconds ) = 0;
-	virtual void PrepareCamera();
+	virtual void CheckCollision();
+	virtual void PreparePlayer();
 	virtual MapRaycastResult RayCast( Vec3 startPos, Vec3 forwardNormal, float maxDistance ) = 0;
 	virtual MapRaycastResult RayCast( Vec3 startPos, Vec3 endPos );
+
+	virtual void UpdateEntities( float deltaSeconds );
 
 	// Entity
 	virtual Entity* SpawnNewEntityOfType( std::string const& entityDefName );

@@ -31,3 +31,4 @@ const XmlElement* FindXmlChildElementWithName( const XmlElement& parentElement, 
 
 bool IfLoadXmlFileSucceed(const XmlDocument& xmlDocument);
 bool IsElementNameValid( const XmlElement& element, std::string eleName );
+bool IsElementNameValidWithStrings( const XmlElement& element, Strings eleNames );

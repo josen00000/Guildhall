@@ -25,6 +25,7 @@ class Window;
 class Material;
 
 struct AABB2;
+struct Cylinder3;
 struct D3D11_RASTERIZER_DESC;
 struct ID3D11BlendState;
 struct ID3D11Buffer;
@@ -283,8 +284,12 @@ public:
 	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
 	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );
 	void DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor );
+	void DrawLineWithHeight( const LineSegment2& lineSeg, float height, float thick, const Rgba8& lineColor );
 	void DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor );
 	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
+
+	// 3d Draw
+	void DrawCylinder( const Cylinder3& cylinder, int level, const Rgba8& tintColor );
 	
 	// Database( resource management )
 	BitmapFont* CreateOrGetBitmapFontFromFile( const char* fontName, const char* fontFilePath );

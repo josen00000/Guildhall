@@ -40,7 +40,7 @@ bool World::LoadMap( std::string mapName )
 		if( m_maps[i]->m_name == mapName ){ 
 			m_currentMapIndex = i;
 			isValidMap = true;
-			m_maps[i]->PrepareCamera();
+			m_maps[i]->PreparePlayer();
 		}
 	}
 	return isValidMap;

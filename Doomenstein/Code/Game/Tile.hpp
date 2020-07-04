@@ -23,6 +23,7 @@ public:
 	// Accessor
 	bool IsSolid() const;
 	AABB3 GetBox() const { return m_box; }
+	AABB2 GetBox2D() const;
 	void GetSideUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const;
 	void GetFloorUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const;
 	void GetCeilingUVs( Vec2& uvAtMax, Vec2& uvAtMins ) const;

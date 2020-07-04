@@ -22,6 +22,7 @@ extern DevConsole* g_theConsole;
 // static variable
 static bool g_ableDebug = false;
 static float g_sizeScale = 0.1f;
+static float g_lineSize = 0.1f;
 static float g_uiSizeCoe = 5.f;
 static float g_2dZ = -10.f;
 static float g_aspectRatio = 1.f;
@@ -425,7 +426,7 @@ void DebugAddWorldPoint( Vec3 pos, Rgba8 color, float duration /*= 0.0f*/, Debug
 void DebugAddWorldLine( Vec3 p0, Rgba8 p0_startColor, Rgba8 p0_endColor, Vec3 p1, Rgba8 p1_startColor, Rgba8 p1_endColor, float duration, DebugRenderMode mode )
 {
 	Cylinder3 cylinder = Cylinder3( p0, p1, 1.f );
-	Vec3 size = Vec3( 1.f ) * g_sizeScale;
+	Vec3 size = Vec3( 1.f ) * g_sizeScale * g_lineSize;
 	size.z = cylinder.GetLength();
 	//Mat44 lookAtMat = Mat44::GetLookAtMatrix( p0, p1 );
 

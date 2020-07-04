@@ -37,3 +37,4 @@ enum BillboardMode : unsigned int {
 	BILLBOARD_MODE_CAMERA_OPPOSING_XYZ, // Screen-aligned
 	NUM_BILLBOARD_MODES
 };
+

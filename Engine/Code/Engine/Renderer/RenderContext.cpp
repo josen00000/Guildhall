@@ -6,6 +6,7 @@
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Math/LineSegment2.hpp"
+#include "Engine/Math/Cylinder3.hpp"
 #include "Engine/Platform/Window.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -20,6 +21,7 @@
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
+#include "Engine/Renderer/MeshUtils.hpp"
 #include "Engine/Core/Image.hpp"
 #include "Engine/Renderer/Material.hpp"
 //third party library
@@ -926,6 +928,30 @@ void RenderContext::DrawLine( const LineSegment2& lineSeg, float thick, const Rg
 	DrawVertexArray( 6, line );
 }
 
+void RenderContext::DrawLineWithHeight( const LineSegment2& lineSeg, float height, float thick, const Rgba8& lineColor )
+{
+	float halfThick = thick / 2;
+	Vec2 direction = lineSeg.GetDirection();
+	direction.SetLength( halfThick );
+	Vec2 tem_position = lineSeg.GetEndPos() + direction;
+	Vec2 rightTop = tem_position + (Vec2( -direction.y, direction.x ));
+	Vec2 rightdown = tem_position + (Vec2( direction.y, -direction.x ));
+	Vec2 tem_position1 = lineSeg.GetStartPos() - direction;
+	Vec2 leftTop = tem_position1 + (Vec2( -direction.y, direction.x ));
+	Vec2 leftdown = tem_position1 + (Vec2( direction.y, -direction.x ));
+	Vec2 tem_uv = Vec2( 0.f, 0.f );
+	Vertex_PCU line[6]={
+		Vertex_PCU( Vec3( rightTop.x,rightTop.y,height ),	Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y,height ),	Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y,height ),		Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y, height ),		Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( leftdown.x,leftdown.y, height ),	Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y, height ), Rgba8( lineColor.r,lineColor.g,lineColor.b ),	Vec2( 0, 0 ) )
+	};
+
+	DrawVertexArray( 6, line );
+}
+
 void RenderContext::DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor )
 {
 	float degree = 0;
@@ -950,7 +976,7 @@ void RenderContext::DrawFilledCircle( Vec3 center, float radiu, const Rgba8& fil
 	float nextDegree = 0;
 	const int vertexNum = 32;
 	std::vector<Vertex_PCU> circleVertices;
-	circleVertices.reserve( vertexNum * sizeof( Vertex_PCU ) );
+	circleVertices.reserve( vertexNum  );
 	for( int i = 0; i < vertexNum; i++ ) {
 		nextDegree = (i + 1) * (360.f / vertexNum);
 		Vec2 startPoint = Vec2();
@@ -965,6 +991,14 @@ void RenderContext::DrawFilledCircle( Vec3 center, float radiu, const Rgba8& fil
 		circleVertices.push_back( Vertex_PCU( Vec3( endPoint ), filledColor, Vec2::ZERO ) );
 	}
 	DrawVertexVector( circleVertices );
+}
+
+void RenderContext::DrawCylinder( const Cylinder3& cylinder, int level, const Rgba8& tintColor )
+{
+	std::vector<Vertex_PCU> cylinderVertices;
+	cylinderVertices.reserve( 100 );
+	AppendVertsForCylinder3D( cylinderVertices, cylinder, level, tintColor, tintColor );
+	DrawVertexVector( cylinderVertices );
 }
 
 Texture* RenderContext::GetSwapChainBackBuffer()

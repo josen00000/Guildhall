@@ -87,6 +87,11 @@ private:
 	void UpdateBillboardTest();
 	void RenderBillboardTest() const;
 
+	// raycast test
+	void RaycastTest( Vec3 startPos, Vec3 forwardNormal, float maxDist );
+
+	void UpdatePlayer( float delteSeconds );
+
 	// render
 	void RenderDebugInfo() const;
 	void RenderFPSInfo() const;
@@ -103,7 +108,7 @@ private:
 	void CheckGameStates();
 	void CheckIfPause();
 	void CheckIfDeveloped();
-	void CheckIfNoClip();
+	void CheckIfGhost();
 
 	//Load
 	void LoadAssets();
@@ -115,10 +120,13 @@ private:
 	// Mesh
 	void CreateGameObjects();
 
+	// player
+	void PossessEntityAsPlayer();
+
 
 public:
 	bool m_debugMode		= false;
-	bool m_noClip			= false;
+	bool m_ghostMode		= false;
 	bool m_isPause			= false;
 	bool m_debugCamera		= false;
 	bool m_isAppQuit		= false;
@@ -138,6 +146,7 @@ public:
 
 	// billboard Test
 	Entity* m_billBoardEntity = nullptr;
+	Entity* m_player		= nullptr;
 	BillboardMode m_billboardMode = BILLBOARD_MODE_CAMERA_FACING_XY;
 	
 	std::vector<Vertex_PCU> m_vertices;

@@ -181,3 +181,11 @@ bool IsElementNameValid( const XmlElement& element, std::string eleName )
 {
 	return eleName.compare( element.Name() ) == 0;
 }
+
+bool IsElementNameValidWithStrings( const XmlElement& element, Strings eleNames )
+{
+	for( int i = 0; i < eleNames.size(); i++ ) {
+		if( eleNames[i].compare( element.Name() ) == 0 ){ return true; }
+	}
+	return false;
+}
