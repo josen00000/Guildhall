@@ -4,7 +4,7 @@
 class Timer {
 public:
 	void SetSeconds( Clock* clock, double timeToWait );
-	void Setseconds( double timeToWait );
+	void SetSeconds( double timeToWait );
 
 	void Reset();
 	void Stop();

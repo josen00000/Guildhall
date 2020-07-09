@@ -18,6 +18,7 @@ public:
 
 	// Accessor
 	int GetTotalMapIndex() const { return m_totalMapIndex; }
+	Map* GetCurrentMap();
 
 	// Mutator
 	void SetTotalMapIndex( int totalMapIndex );

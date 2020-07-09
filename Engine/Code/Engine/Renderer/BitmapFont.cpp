@@ -81,7 +81,6 @@ void BitmapFont::AddVertsForTextInBox2D( std::vector<Vertex_PCU>& vertexArray, c
 		vertexArray.push_back( leftDown );
 		vertexArray.push_back( rightDown );
 		vertexArray.push_back( rightUp );
-
 	}
 }
 

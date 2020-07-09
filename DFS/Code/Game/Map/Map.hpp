@@ -11,6 +11,7 @@ class MapDefinition;
 class Player;
 class Actor;
 class Item;
+class Clock;
 
 enum TileAttributeBitFlag: uint {
 	TILE_NON_ATTR_BIT		= 0,
@@ -57,6 +58,7 @@ public:
 	int GetHeight() const { return m_height; }
 	Vec2 GetWorldPosWithTileCoords( IntVec2 tileCoords );
 
+	Player* GetPlayer(){ return m_player; };
 	RandomNumberGenerator* GetRNG()const { return m_rng; }
 
 	TileDirection GetRevertTileDirection( TileDirection dirt );
@@ -168,10 +170,14 @@ private:
 
 	// Collision
 	void CheckCollision();
-	void CheckEntitiesCollision();
 	void CheckTileCollision();
 	void CheckPlayerTileCollision();
 	void CheckActorTileCollisionWithTileCoords( Actor* actor,  IntVec2 tileCoords );
+
+	// Fight
+	void CheckFight();
+	void StartFight( Actor* enemy );
+	void UpdateFight();
 
 	// helper function
 	void DebugDrawTiles();
@@ -180,11 +186,14 @@ public:
 	int								m_mazeAndRoomCurrentLayer = 1;
 
 private:
+	bool							m_isFighting = false;
+	
 	int								m_width = 0;
 	int								m_height = 0;
 	int								m_roomNum = 0;
 
 	float							m_mazeEdgePercentage = 0.9f;
+	float							m_fightDeltaSecondsEachTurn = 0.5f;
 
 	IntVec2							m_startCoords = IntVec2::ZERO;
 	IntVec2							m_endCoords = IntVec2::ZERO;
@@ -210,4 +219,7 @@ private:
 
 	// item
 	Item*							m_key = nullptr;
+
+	Timer*							m_fightTimer = nullptr;
+	Actor*							m_fightEnemy = nullptr;
 };

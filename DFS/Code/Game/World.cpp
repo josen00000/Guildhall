@@ -34,6 +34,11 @@ void World::RenderWorld() const
 	m_maps[m_currentMapIndex]->RenderMap();
 }
 
+Map* World::GetCurrentMap()
+{
+	return m_maps[m_currentMapIndex];
+}
+
 void World::SetTotalMapIndex( int totalMapIndex )
 {
 	m_totalMapIndex = totalMapIndex;

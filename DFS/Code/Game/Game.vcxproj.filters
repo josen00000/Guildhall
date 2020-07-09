@@ -76,6 +76,9 @@
     <ClCompile Include="Item.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="UIButton.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp">
@@ -137,6 +140,9 @@
     </ClInclude>
     <ClInclude Include="Item.hpp">
       <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="UIButton.hpp">
+      <Filter>Game\Map</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,7 @@
 #include "Game/Map/MapGenStep.hpp"
 #include "Game/Map/TileDefinition.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Core/Time/Timer.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Physics/Physics2D.hpp"
 #include "Engine/Physics/RigidBody2D.hpp"
@@ -28,6 +29,7 @@ Map::Map( std::string name, MapDefinition* definition )
 	seed++;
 	CreateMapFromDefinition();
 	CreateActors();
+	m_fightTimer = new Timer();
 }
 
 Map* Map::CreateMap( std::string name, MapDefinition* definition )
@@ -39,6 +41,8 @@ Map* Map::CreateMap( std::string name, MapDefinition* definition )
 void Map::UpdateMap( float deltaSeconds )
 {
 	CheckCollision();
+	CheckFight();
+	UpdateFight();
 	m_player->UpdatePlayer( deltaSeconds );	
 	CheckIfCollectKey();
 	for( int i = 0; i < m_enemies.size(); i++ ) {
@@ -563,7 +567,6 @@ void Map::GenerateMazeTiles()
 			}
 		}
 		mazeNum++;
-		if( mazeNum == 7 ){ break; }
 
 		while( !mazeStack.empty() ) {
 			IntVec2 tempTileCoords = mazeStack.top();
@@ -578,12 +581,8 @@ void Map::GenerateMazeTiles()
 
  			TileDirection validNeighborTileDirt = GetValidNeighborDirection( tempTileCoords );
  			IntVec2 neighborCoords = GetNeighborTileCoordsInDirection( tempTileCoords, validNeighborTileDirt );
-			//SetTileConnectTo( tempTileCoords, validNeighborTileDirt );
-			//SetTileNeighborsSolidWithDirt( tempTileCoords, validNeighborTileDirt );
 			TileDirection revertNeighborTileDirt = GetRevertTileDirection( validNeighborTileDirt );
-			//SetTileConnectTo( neighborCoords, revertNeighborTileDirt );
 			
-
 			if( m_rng->RollPercentChance( m_mazeEdgePercentage ) ) {
 				// new version
 				if( validNeighborTileDirt == DIRECTION_UP || validNeighborTileDirt == DIRECTION_DOWN ) {
@@ -993,6 +992,42 @@ void Map::CheckActorTileCollisionWithTileCoords( Actor* actor, IntVec2 tileCoord
 	Vec2 actorPos = actor->GetPosition(); 
 	PushDiscOutOfAABB2D( actorPos, actor->GetPhysicRadius(), tileBound );
 	actor->SetPosition( actorPos );
+}
+
+void Map::CheckFight()
+{
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+	 	Vec2 playerPos = m_player->GetPosition();
+		Actor* tempEnemy = m_enemies[i];
+		Vec2 enemyPos = tempEnemy->GetPosition();
+		Vec3 disp = playerPos - enemyPos;
+		if( disp.GetLengthSquared() < (m_player->GetPhysicRadius() * m_player->GetPhysicRadius()) + (tempEnemy->GetPhysicRadius() * tempEnemy->GetPhysicRadius()) ) {
+			StartFight( tempEnemy );
+		}
+	}
+}
+
+void Map::StartFight( Actor* enemy )
+{
+	m_isFighting = true;
+	m_player->SetDisableInput( true );
+	if( m_fightTimer == nullptr ) {
+		m_fightTimer = new Timer();
+	}
+	m_fightTimer->SetSeconds( m_fightDeltaSecondsEachTurn );
+	m_fightEnemy = enemy;
+}
+
+void Map::UpdateFight()
+{
+	static bool isPlayerAttack = true;
+	if( m_fightTimer->CheckAndDecrement() ) {
+		isPlayerAttack != isPlayerAttack;
+		
+		if( isPlayerAttack ) {
+
+		}
+	}
 }
 
 void Map::DebugDrawTiles()

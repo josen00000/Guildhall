@@ -20,7 +20,9 @@ Player* Player::SpawnPlayerWithPos( ActorDefinition const& def, Vec2 pos )
 
 void Player::UpdatePlayer( float deltaSeconds )
 {
-	HandleInput( deltaSeconds );
+	if( !m_disableInput ) {
+		HandleInput( deltaSeconds );
+	}
 	__super::UpdateActor( deltaSeconds );
 	UpdateAnimation( deltaSeconds );
 }
@@ -73,6 +75,11 @@ void Player::RenderPlayer()
 void Player::SetHasKey( bool hasKey )
 {
 	m_hasKey = hasKey;
+}
+
+void Player::SetDisableInput( bool disableInput )
+{
+	m_disableInput = disableInput;
 }
 
 std::string Player::GetMoveDirtInString( MoveDirection moveDirt ) const

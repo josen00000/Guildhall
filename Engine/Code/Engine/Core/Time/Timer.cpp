@@ -8,7 +8,7 @@ void Timer::SetSeconds( Clock* clock, double timeToWait )
 	m_durationSeconds = timeToWait;
 }
 
-void Timer::Setseconds( double timeToWait )
+void Timer::SetSeconds( double timeToWait )
 {
 	m_clock = Clock::GetMaster();
 	m_startSeconds = m_clock->GetTotalSeconds();

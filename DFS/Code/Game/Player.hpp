@@ -29,15 +29,19 @@ public:
 	void HandleInput( float deltaSeconds );
 	void RenderPlayer();
 
+	// Accessor
 	bool GetHasKey() const { return m_hasKey; }
+	bool GetDisableInput() const { return m_disableInput; }
 
+	// Mutator
 	void SetHasKey( bool hasKey );
-
+	void SetDisableInput( bool disableInput );
 private:
 	std::string GetMoveDirtInString( MoveDirection moveDirt ) const;
 
 public:
-	bool m_hasKey = false;
+	bool m_hasKey		= false;
+	bool m_disableInput = false;
 	float m_hp = 0.f;
 	MoveDirection m_moveDirt = IDLE;
 };
