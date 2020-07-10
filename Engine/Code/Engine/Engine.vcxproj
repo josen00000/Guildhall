@@ -192,6 +192,9 @@
     <ClCompile Include="Input\KeyButtonState.cpp" />
     <ClCompile Include="Input\MouseController.cpp" />
     <ClCompile Include="Input\XboxController.cpp" />
+    <ClCompile Include="Job\Job.cpp" />
+    <ClCompile Include="Job\JobSystem.cpp" />
+    <ClCompile Include="Job\JobSystemWorkerThread.cpp" />
     <ClCompile Include="Math\AABB2.cpp" />
     <ClCompile Include="Math\AABB3.cpp" />
     <ClCompile Include="Math\Algorithm.cpp" />
@@ -284,6 +287,9 @@
     <ClInclude Include="Input\KeyButtonState.hpp" />
     <ClInclude Include="Input\MouseController.hpp" />
     <ClInclude Include="Input\XboxController.hpp" />
+    <ClInclude Include="Job\Job.hpp" />
+    <ClInclude Include="Job\JobSystem.hpp" />
+    <ClInclude Include="Job\JobSystemWorkerThread.hpp" />
     <ClInclude Include="Math\AABB2.hpp" />
     <ClInclude Include="Math\AABB3.hpp" />
     <ClInclude Include="Math\Algorithm.hpp" />
