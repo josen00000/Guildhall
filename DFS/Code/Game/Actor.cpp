@@ -64,6 +64,16 @@ void Actor::UpdateActorAnimation( float deltaSeconds )
 	UpdateActorVerts( uvAtMin, uvAtMax );
 }
 
+void Actor::TakeDamage( float damage )
+{
+	m_hp -= damage;
+}
+
+std::string Actor::GetType() const
+{
+	return m_definition.m_name;
+}
+
 void Actor::SetOrientationDegrees( float orientationDegrees )
 {
 	m_orientationDegrees = orientationDegrees;

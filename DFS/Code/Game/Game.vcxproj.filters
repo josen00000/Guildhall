@@ -77,7 +77,10 @@
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="UIButton.cpp">
-      <Filter>Game\Map</Filter>
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="UIHUD.cpp">
+      <Filter>Game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -142,7 +145,10 @@
       <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="UIButton.hpp">
-      <Filter>Game\Map</Filter>
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="UIHUD.hpp">
+      <Filter>Game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

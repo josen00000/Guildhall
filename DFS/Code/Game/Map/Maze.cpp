@@ -1,4 +1,11 @@
 #include "Maze.hpp"
+#include "Game/Map/Map.hpp"
+#include "Engine/Math/RandomNumberGenerator.hpp"
+
+Maze::Maze( Map* map )
+{
+	m_map = map;
+}
 
 bool Maze::isTileOfMaze( IntVec2 tileCoords ) const
 {
@@ -8,6 +15,13 @@ bool Maze::isTileOfMaze( IntVec2 tileCoords ) const
 		}
 	}
 	return false;
+}
+
+IntVec2 Maze::GetRandomTileCoords() const
+{
+	RandomNumberGenerator* mapRNG = m_map->GetRNG();	
+	int randomTileIndex = mapRNG->RollRandomIntLessThan( (int)m_tileCoords.size() );
+	return m_tileCoords[randomTileIndex];
 }
 
 void Maze::AddMazeTileCoords( IntVec2 tileCoords )

@@ -13,13 +13,24 @@
 			<SpriteAnim name="Idle"				spriteIndexes="6,7,8,7"/>
 		</SpriteAnimSet>
 	</ActorDefinition>
-  <ActorDefinition name="Enemy" >
+  
+  <ActorDefinition name="Clown" >
     <Size physicsRadius="0.25" />
     <Movement speed="5.0"/>
-    <Health max="100"/>
-    <Fight attackStrength ="10"/>
+    <Health max="30"/>
+    <Fight attackStrength ="5"/>
     <SpriteAnimSet spriteSheet="Data/Images/KushnariovaCharacters_12x53.png" spriteLayout="12,53" >
       <SpriteAnim name="Idle"				spriteIndexes="54,55,56,55"/>
+    </SpriteAnimSet>
+  </ActorDefinition>
+
+  <ActorDefinition name="Ghost" >
+    <Size physicsRadius="0.25" />
+    <Movement speed="5.0"/>
+    <Health max="40"/>
+    <Fight attackStrength ="50"/>
+    <SpriteAnimSet spriteSheet="Data/Images/KushnariovaCharacters_12x53.png" spriteLayout="12,53" >
+      <SpriteAnim name="Idle"				spriteIndexes="66,67,68,67"/>
     </SpriteAnimSet>
   </ActorDefinition>
 </ActorDefinitions>

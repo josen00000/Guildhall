@@ -3,6 +3,7 @@
 #include <time.h>
 #include "Game/Player.hpp"
 #include "Game/Item.hpp"
+#include "Game/Game.hpp"
 #include "Game/Map/MapDefinition.hpp"
 #include "Game/Map/MapGenStep.hpp"
 #include "Game/Map/TileDefinition.hpp"
@@ -13,10 +14,13 @@
 #include "Engine/Physics/RigidBody2D.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
 
 extern RenderContext*	g_theRenderer;
 extern Physics2D*		g_thePhysics;
+extern AudioSystem*		g_theAudioSystem;
+extern Game*			g_theGame;
 extern Camera* g_debugCamera;
 extern Camera* g_gameCamera;
 
@@ -42,13 +46,19 @@ void Map::UpdateMap( float deltaSeconds )
 {
 	CheckCollision();
 	CheckFight();
-	UpdateFight();
+	if( m_fightEnemy && m_isFighting ) {
+		UpdateFight( m_fightEnemy, deltaSeconds );
+	}
 	m_player->UpdatePlayer( deltaSeconds );	
 	CheckIfCollectKey();
 	for( int i = 0; i < m_enemies.size(); i++ ) {
 		m_enemies[i]->UpdateActor( deltaSeconds );
 		m_enemies[i]->UpdateActorAnimation( deltaSeconds );
 	}
+	if( m_enemies.size() == 0 ) {
+		g_theGame->SetGameEnd();
+	}
+	CheckPlayerOnLava();
 }
 
 void Map::RenderMap()
@@ -70,6 +80,10 @@ void Map::RenderMap()
 		Texture* playerTexture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/key.png" );
 		g_theRenderer->SetDiffuseTexture( playerTexture );
 		m_key->RenderItem();
+	}
+
+	if( m_isFighting ) {
+		RenderFightAnimation();
 	}
 }
 
@@ -476,6 +490,11 @@ void Map::CreateMapFromDefinition()
 	m_height = m_definition->GetHeight();
 	m_mazeFloorType = m_definition->GetFillType();
 	m_mazeWallType = m_definition->GetEdgeType();
+	Texture* fightTexture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Explosion_5x5.png" );
+	m_fightSpriteSheet = new SpriteSheet( fightTexture, IntVec2( 5, 5 ) );
+	int fightSpriteIndexes[6]{ 0, 1, 2, 3, 23, 24 };
+	m_fightAnimDef = new SpriteAnimDefinition( *m_fightSpriteSheet, fightSpriteIndexes, 6, 0.001f );
+
 
 	clock_t start = clock();
 
@@ -560,7 +579,7 @@ void Map::GenerateMazeTiles()
 				SetTileVisited( startCoords, true );
 				mazeStack.push( startCoords );
 				isAbleMaze = true;
-				tempMaze = new Maze();
+				tempMaze = new Maze( this );
 				tempMaze->SetLayer( m_mazeAndRoomCurrentLayer );
 				m_mazeAndRoomCurrentLayer++;
 				break;
@@ -581,7 +600,7 @@ void Map::GenerateMazeTiles()
 
  			TileDirection validNeighborTileDirt = GetValidNeighborDirection( tempTileCoords );
  			IntVec2 neighborCoords = GetNeighborTileCoordsInDirection( tempTileCoords, validNeighborTileDirt );
-			TileDirection revertNeighborTileDirt = GetRevertTileDirection( validNeighborTileDirt );
+			//TileDirection revertNeighborTileDirt = GetRevertTileDirection( validNeighborTileDirt );
 			
 			if( m_rng->RollPercentChance( m_mazeEdgePercentage ) ) {
 				// new version
@@ -631,7 +650,7 @@ void Map::GenerateDoorTiles()
 			Maze* tempMaze = m_mazes[j];
 
 			bool isMazeConnectToRoom = false;
-			IntVec2 randomEdgeCoords = tempRoom->GetRandomEdgeTileCoord();
+
 			for( int k = 0; k < edgeTileCoords.size(); k++ ) {
 				if( IsEdgeConnectToMazeAndFloor( edgeTileCoords[k], tempRoom, tempMaze ) ) {
 					isMazeConnectToRoom = true;
@@ -918,15 +937,47 @@ void Map::CreateEnemies()
 	for( int i = 0; i < m_roomNum; i++ ) {
 		IntVec2 pos_int = m_rooms[i]->GetRandomFloorTileCoord();
 		Vec2 pos = Vec2( pos_int ) + Vec2( 0.5f );
-		Actor* tempActor = Actor::SpawnActorWithPos( ActorDefinition::s_definitions["Enemy"], pos );
+		Actor* tempActor = nullptr;
+		if( m_rng->RollPercentChance( 0.05f ) ) {
+			tempActor = Actor::SpawnActorWithPos( ActorDefinition::s_definitions["Ghost"], pos );
+		}
+		else {
+			tempActor = Actor::SpawnActorWithPos( ActorDefinition::s_definitions["Clown"], pos );
+		}
 		m_enemies.push_back( tempActor );
 	}
 }
 
+void Map::DeleteEnemy( Actor* enemy )
+{
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+		if( enemy == m_enemies[i] ) {
+			m_enemies[i] = m_enemies.back();
+			break;
+		}
+	}
+	m_enemies.pop_back();
+	delete enemy;
+}
+
 void Map::CreateKey()
 {
-	IntVec2 tileCoords = GetRandomInsideWalkableTileCoords();
-	m_key = new Item( Vec2( tileCoords ) + Vec2( 0.5f ) );
+	Maze* startMaze = nullptr;
+	for( int i = 0; i < m_mazes.size(); i++ ) {
+		Maze* tempMaze = m_mazes[i];
+		if( tempMaze->isTileOfMaze( m_startCoords ) ) {
+			startMaze = tempMaze;
+			break;
+		}
+	}
+
+	while( true ) {
+		IntVec2 tileCoords = startMaze->GetRandomTileCoords();
+		if( !IsTileSolid( tileCoords ) ) {
+			m_key = new Item( Vec2( tileCoords ) + Vec2( 0.5f ) );
+			break;
+		}
+	}
 }
 
 void Map::CheckIfCollectKey()
@@ -938,6 +989,10 @@ void Map::CheckIfCollectKey()
 	float length = disp.GetLength();
 	if( length < m_player->GetPhysicRadius() ) {
 		m_player->SetHasKey( true );
+		EventArgs args;
+		std::string resultString = "Find Key.";
+		args.SetValue( "message", resultString );
+		g_theEventSystem->FireEvent( "DebugMessage", args );
 	}
 }
 
@@ -994,15 +1049,48 @@ void Map::CheckActorTileCollisionWithTileCoords( Actor* actor, IntVec2 tileCoord
 	actor->SetPosition( actorPos );
 }
 
+void Map::CheckPlayerOnLava()
+{
+	Vec2 playerPos = m_player->GetPosition();
+	IntVec2 playerTileCoords = IntVec2( (int)playerPos.x, (int)playerPos.y );
+	if( IsTileOfTypeWithCoords( "Lava", playerTileCoords ) ) {
+		m_player->SetIsOnLava( true );
+	}
+	else {
+		m_player->SetIsOnLava( false );
+	}
+}
+
 void Map::CheckFight()
 {
-	for( int i = 0; i < m_enemies.size(); i++ ) {
-	 	Vec2 playerPos = m_player->GetPosition();
-		Actor* tempEnemy = m_enemies[i];
-		Vec2 enemyPos = tempEnemy->GetPosition();
-		Vec3 disp = playerPos - enemyPos;
-		if( disp.GetLengthSquared() < (m_player->GetPhysicRadius() * m_player->GetPhysicRadius()) + (tempEnemy->GetPhysicRadius() * tempEnemy->GetPhysicRadius()) ) {
-			StartFight( tempEnemy );
+	if( m_isFighting ){
+		if( m_player->GetHealth() <= 0  ) {
+			// End Game;
+			g_theGame->SetGameEnd();
+			EndFight();
+		}
+		else if( m_fightEnemy->GetHealth() <= 0 ) {
+			EventArgs args;
+			std::string resultString = m_fightEnemy->GetType() + " is defeated.";
+			args.SetValue( "message", resultString );
+			g_theEventSystem->FireEvent( "DebugMessage", args );
+			DeleteEnemy( m_fightEnemy );
+			m_fightEnemy = nullptr;
+			EndFight();
+		}
+	}
+	else {
+		for( int i = 0; i < m_enemies.size(); i++ ) {
+		 	Vec2 playerPos = m_player->GetPosition();
+			Actor* tempEnemy = m_enemies[i];
+			Vec2 enemyPos = tempEnemy->GetPosition();
+			Vec3 disp = playerPos - enemyPos;
+// 			float test1 =  disp.GetLengthSquared();
+// 			float test2 = (m_player->GetPhysicRadius() * m_player->GetPhysicRadius()) + (tempEnemy->GetPhysicRadius() * tempEnemy->GetPhysicRadius());
+			if( disp.GetLengthSquared() < (m_player->GetPhysicRadius() * m_player->GetPhysicRadius()) + (tempEnemy->GetPhysicRadius() * tempEnemy->GetPhysicRadius()) ) {
+				StartFight( tempEnemy );
+				break;
+			}
 		}
 	}
 }
@@ -1011,23 +1099,70 @@ void Map::StartFight( Actor* enemy )
 {
 	m_isFighting = true;
 	m_player->SetDisableInput( true );
+	m_player->SetDisableMove( true );
 	if( m_fightTimer == nullptr ) {
 		m_fightTimer = new Timer();
 	}
 	m_fightTimer->SetSeconds( m_fightDeltaSecondsEachTurn );
 	m_fightEnemy = enemy;
+	m_fightVerts.clear();
+	m_fightBox = AABB2( m_player->GetPosition() - Vec2( 0.5f ), m_player->GetPosition() + Vec2( 0.5f ) );
 }
 
-void Map::UpdateFight()
+void Map::UpdateFight( Actor* enemy, float deltaSeconds )
 {
 	static bool isPlayerAttack = true;
 	if( m_fightTimer->CheckAndDecrement() ) {
-		isPlayerAttack != isPlayerAttack;
+		isPlayerAttack = !isPlayerAttack;
 		
 		if( isPlayerAttack ) {
-
+			enemy->TakeDamage( m_player->GetAttackStrength() ); 
 		}
+		else {
+			m_player->TakeDamage( enemy->GetAttackStrength() );
+		}
+		SoundID fightSound = g_theAudioSystem->CreateOrGetSound( "Data/Audio/SwordHit.mp3" );
+		g_theAudioSystem->PlaySound( fightSound, false, g_theGame->m_volume );
+		UpdateFightAnimation( deltaSeconds );
 	}
+}
+
+void Map::EndFight()
+{
+	m_isFighting = false;
+	m_player->SetDisableInput( false );
+	m_player->SetDisableMove( false );
+	m_fightEnemy = nullptr;
+}
+
+void Map::UpdateFightAnimation( float deltaSeconds )
+{
+	static float totalSeconds = 0.f;
+	totalSeconds += deltaSeconds;
+	const SpriteDefinition& currentSpriteDef = m_fightAnimDef->GetSpriteDefAtTime( totalSeconds );
+	Vec2 uvAtMin;
+	Vec2 uvAtMax;
+	m_fightTexture = m_fightAnimDef->GetSpriteSheet().GetTexture();
+	currentSpriteDef.GetUVs( uvAtMin, uvAtMax );
+	m_fightVerts.clear();
+	AppendVertsForAABB2D( m_fightVerts, m_fightBox, Rgba8::WHITE, uvAtMin, uvAtMax );
+}
+
+void Map::RenderFightAnimation()
+{
+	g_theRenderer->SetDiffuseTexture( m_fightTexture );
+	g_theRenderer->DrawVertexVector( m_fightVerts );
+	g_theRenderer->SetDiffuseTexture( nullptr );
+}
+
+bool Map::GetIsFighting() const
+{
+	return m_isFighting;
+}
+
+const Actor* Map::GetFightEnemy() const
+{
+	return m_fightEnemy;
 }
 
 void Map::DebugDrawTiles()

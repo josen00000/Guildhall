@@ -19,7 +19,7 @@ public:
 	Player(){}
 	~Player(){}
 	explicit Player( ActorDefinition const& definition );
-
+	
 public:
 	static Player* SpawnPlayerWithPos( ActorDefinition const& def, Vec2 pos );
 
@@ -32,17 +32,23 @@ public:
 	// Accessor
 	bool GetHasKey() const { return m_hasKey; }
 	bool GetDisableInput() const { return m_disableInput; }
+	bool GetDisableMove() const { return m_disableMove; }
 
 	// Mutator
 	void SetHasKey( bool hasKey );
 	void SetDisableInput( bool disableInput );
+	void SetDisableMove( bool disableMove );
+	void SetIsOnLava( bool onLava );
+	
 private:
 	std::string GetMoveDirtInString( MoveDirection moveDirt ) const;
+	void PlayWalkSound( float deltaSeconds );
 
 public:
 	bool m_hasKey		= false;
 	bool m_disableInput = false;
-	float m_hp = 0.f;
+	bool m_disableMove	= false;
+	bool m_isOnLava		= false;
 	MoveDirection m_moveDirt = IDLE;
 };
 

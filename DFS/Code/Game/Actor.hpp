@@ -13,11 +13,14 @@ public:
 	~Actor(){}
 	explicit Actor( ActorDefinition const& definition );
 	static Actor* SpawnActorWithPos( ActorDefinition const& definition, Vec2 pos );
+
 public:
 	virtual void UpdateActor( float deltaSeconds );
 	virtual void UpdateActorVerts( Vec2 uvAtMin, Vec2 uvAtMax );
 	virtual void RenderActor();
 	void UpdateActorAnimation( float deltaSeconds );
+
+	void TakeDamage( float damage );
 
 public:
 	// Accessor
@@ -26,6 +29,7 @@ public:
 	float GetPhysicRadius() const { return m_physicsRadius; }
 	float GetHealth() const { return m_hp; }
 	float GetAttackStrength() const { return m_attackStrength; }
+	std::string GetType() const;
 
 	Vec2 GetPosition() const { return m_position; }
 	AABB2 GetShape() const { return m_shape; }

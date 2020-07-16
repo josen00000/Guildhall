@@ -4,14 +4,19 @@
 #include "Game/Map/Tile.hpp"
 #include "Game/Map/Room.hpp"
 #include "Game/Map/Maze.hpp"
+#include "Engine/Math/AABB2.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 
 class MapDefinition;
 class Player;
 class Actor;
+class Timer;
 class Item;
 class Clock;
+class SpriteAnimDefinition;
+class SpriteSheet;
+class Texture;
 
 enum TileAttributeBitFlag: uint {
 	TILE_NON_ATTR_BIT		= 0,
@@ -130,6 +135,10 @@ public:
 	bool IsTileOfTypeInsideWithCoords( TileType type, IntVec2 tileCoords ) const;
 	bool IsTileCoordsInside( const IntVec2& tileCoords ) const;
 
+	// Fight
+	bool GetIsFighting() const;
+	const Actor* GetFightEnemy() const;
+
 private:
 	// Map Generation
 	void CreateMapFromDefinition();
@@ -163,6 +172,7 @@ private:
 	void CreateActors();
 	void CreatePlayer();
 	void CreateEnemies();
+	void DeleteEnemy( Actor* enemy );
 
 	// item
 	void CreateKey();
@@ -174,10 +184,15 @@ private:
 	void CheckPlayerTileCollision();
 	void CheckActorTileCollisionWithTileCoords( Actor* actor,  IntVec2 tileCoords );
 
+	void CheckPlayerOnLava();
+
 	// Fight
 	void CheckFight();
 	void StartFight( Actor* enemy );
-	void UpdateFight();
+	void UpdateFight( Actor* enemy, float deltaSeconds );
+	void EndFight();
+	void UpdateFightAnimation( float deltaSeconds );
+	void RenderFightAnimation();
 
 	// helper function
 	void DebugDrawTiles();
@@ -222,4 +237,11 @@ private:
 
 	Timer*							m_fightTimer = nullptr;
 	Actor*							m_fightEnemy = nullptr;
+
+	// fight
+	SpriteSheet*					m_fightSpriteSheet = nullptr;
+	SpriteAnimDefinition*			m_fightAnimDef = nullptr;
+	Texture*						m_fightTexture = nullptr;
+	std::vector<Vertex_PCU>			m_fightVerts;
+	AABB2							m_fightBox;
 };

@@ -14,6 +14,7 @@
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Physics/Physics2D.hpp"
+#include "Engine/Audio/AudioSystem.hpp"
 
 // Game
 App*			g_theApp			= nullptr;
@@ -28,6 +29,7 @@ Camera*			g_devCamera			= nullptr;
 DevConsole*		g_theConsole		= nullptr;
 EventSystem*	g_theEventSystem	= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
+AudioSystem*	g_theAudioSystem	= nullptr;
 Physics2D*		g_thePhysics		= nullptr;
 RenderContext*	g_theRenderer		= nullptr;
 
@@ -51,6 +53,7 @@ void App::StartupStage2()
 	// initialize system
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
+	g_theAudioSystem	= new AudioSystem();
 	g_thePhysics		= new Physics2D();
 	g_theEventSystem	= new EventSystem();
 
@@ -161,6 +164,7 @@ void App::BeginFrame()
 	g_theInputSystem->BeginFrame();
 	g_thePhysics->BeginFrame();
 	g_theRenderer->BeginFrame();
+	g_theAudioSystem->BeginFrame();
 }
 
 void App::Update( float deltaSeconds )
@@ -172,7 +176,7 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
-	g_gameCamera->m_clearColor = Rgba8::DARK_GRAY;
+	g_gameCamera->EnableClearColor( Rgba8::DARK_GRAY );
 	g_theRenderer->BeginCamera( g_gameCamera );
 	g_theGame->RenderGame();
 	g_theRenderer->EndCamera();
@@ -186,15 +190,16 @@ const void App::Render() const
 	DebugRenderScreenTo( g_gameCamera->GetColorTarget() );
 	DebugRenderWorldToCamera( g_gameCamera );
 
-	g_theRenderer->BeginCamera( g_devCamera );
-	g_theConsole->Render( *g_theRenderer );
-	g_theRenderer->EndCamera();
+// 	g_theRenderer->BeginCamera( g_devCamera );
+// 	g_theConsole->Render( *g_theRenderer );
+// 	g_theRenderer->EndCamera();
 }
 
 void App::EndFrame()
 {
 	g_theInputSystem->EndFrame();
 	g_theRenderer->EndFrame();
+	g_theAudioSystem->EndFrame();
 	DebugRenderEndFrame();
 }
 
