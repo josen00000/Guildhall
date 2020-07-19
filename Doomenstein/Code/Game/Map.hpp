@@ -5,7 +5,9 @@
 #include "Engine/Math/Vec2.hpp"
 #include "Engine/Math/Vec3.hpp"
 
+class World;
 class Entity;
+class Actor;
 class EntityDefinition;
 
 
@@ -36,15 +38,19 @@ public:
 
 	virtual void UpdateEntities( float deltaSeconds );
 
+	void TeleportToTargetMap( std::string targetMap, Vec2 target2DPos, Entity* actor );
+
 	// Entity
 	virtual Entity* SpawnNewEntityOfType( std::string const& entityDefName );
 	virtual Entity* SpawnNewEntityOfType( EntityDefinition const& entityDef );
 
 	void SetDebugMode( bool isDebug );
+
 public:
 	bool m_isDebug = false;
 	std::string m_name = "";
 	std::vector<Entity*> m_actors;
 	std::vector<Entity*> m_projectiles;
 	std::vector<Entity*> m_portals;
+	World* m_world = nullptr;
 };

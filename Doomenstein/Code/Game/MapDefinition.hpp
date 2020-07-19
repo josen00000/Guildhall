@@ -14,6 +14,13 @@ enum MapType {
 	NUM_MAP_TYPE
 };
 
+struct TeleportInfo {
+	float yaw;
+	Vec2 pos;
+	Vec2 targetPos;
+	std::string targetMapName;
+};
+
 class MapDefinition {
 public:
 	MapDefinition(){}
@@ -31,7 +38,7 @@ public:
 	IntVec2		m_dimensions = IntVec2::ZERO;
 	std::map<std::string, std::string> m_lengends;
 	std::vector<std::string> m_mapRows;
-	//std::
+	std::vector<TeleportInfo> m_teleInfos;
 	Vec2	m_playerStartPos = Vec2::ZERO; // temp without using entity
 	float	m_playerStartYaw = 0.f;		   // temp without using entity
 };

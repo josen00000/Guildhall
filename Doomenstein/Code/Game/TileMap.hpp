@@ -13,11 +13,17 @@ struct EntityInfo {
 	float yaw = 0.f;
 };
 
+struct PortalInfo {
+	EntityInfo entityInfo;
+	Vec2	targetPos;
+	std::string targetMap;
+};
+
 class TileMap : public Map {
 public:
 	TileMap(){}
 	~TileMap(){}
-	explicit TileMap( const XmlElement& mapElement, std::string name );
+	explicit TileMap( const XmlElement& mapElement, std::string name, World* world );
 	//static Map* CreateTileMap();
 
 public:
@@ -76,7 +82,7 @@ public:
 	std::vector<Vertex_PCU> m_meshes;
 	std::vector<Tile> m_tiles;
 	std::map<std::string, std::vector<EntityInfo>> m_actorList;
-	std::map<std::string, std::vector<EntityInfo>> m_portalList;
+	std::map<std::string, std::vector<PortalInfo>> m_portalList;
 	std::map<std::string, std::vector<EntityInfo>> m_projectileList;
 	// raycast debug
 	std::vector<Vertex_PCU> m_raycastDebugVerts;

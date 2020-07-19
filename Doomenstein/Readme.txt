@@ -1,4 +1,4 @@
-SD:ST Assignment 2 - Doomenstein
+SD:ST Assignment 4 - Doomenstein
 
 Controls:
 - P to play test sound
@@ -6,6 +6,7 @@ Controls:
 - Mouse y controls Pitch
 - ESDF fly around horizontally; RW fly up/down vertically
 - ESC quits
+- J to shut down job system
 
 DevConsole:
 command:

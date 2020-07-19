@@ -2,6 +2,8 @@
 #include <limits.h>
 #include "Game/Tile.hpp"
 #include "Game/Game.hpp"
+#include "Game/Portal.hpp"
+#include "Game/World.hpp"
 #include "Engine/Renderer/Sampler.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
@@ -22,12 +24,13 @@ static Rgba8 g_debugImpactColor = Rgba8( 0, 0, 0 );
 // static float g_debugHeight = 1.5f;
 // static float g_debugHeight = 1.5f;
 
-TileMap::TileMap( const XmlElement& mapElement, std::string name )
+TileMap::TileMap( const XmlElement& mapElement, std::string name, World* world )
 {
 	m_name = name;
 	LoadMapDefinitions( mapElement );
 	CreateAndPopulateTiles();
 	CreateEntities();
+	m_world = world;
 }
 
 void TileMap::RenderMap() const
@@ -326,10 +329,27 @@ void TileMap::LoadMapDefinitions( const XmlElement& mapElement )
 				entityInfos.push_back( entityInfo );
 				m_actorList[actorName] = entityInfos;
 			}
-
 		}
-		else if( entityType.compare( "Porter" ) == 0 ) {
+		else if( entityType.compare( "Portal" ) == 0 ) {
+			std::string portalType = ParseXmlAttribute( *entityElement, "type", "" );
+			auto iter = m_portalList.find( portalType );
+			Vec2 startPos	= ParseXmlAttribute( *entityElement, "pos", Vec2::ZERO );
+			float yaw		= ParseXmlAttribute( *entityElement, "yaw", 0.f );
+			EntityInfo entityInfo{ startPos, yaw };
 
+			Vec2 targetPos			= ParseXmlAttribute( *entityElement, "targetPos", Vec2::ZERO );
+			std::string targetMap	= ParseXmlAttribute( *entityElement, "targetMap", "" );
+			PortalInfo porterInfo{ entityInfo, targetPos, targetMap };
+
+
+			if( iter != m_portalList.end() ) {
+				m_portalList[portalType].push_back( porterInfo );
+			}
+			else {
+				std::vector<PortalInfo> porterInfos;
+				porterInfos.push_back( porterInfo );
+				m_portalList[portalType] = porterInfos;
+			}
 		}
 		else if( entityType.compare( "Projectile" ) == 0 ) {
 
@@ -799,6 +819,19 @@ void TileMap::CreateEntities()
 			Entity* tempActor = SpawnNewEntityOfType( actorType );
 			tempActor->Set2DPos( actorsInfo[i].pos );
 			m_actors.push_back( tempActor );
+		}
+	}
+
+	for( auto iter = m_portalList.begin(); iter != m_portalList.end(); ++iter ) {
+		std::string portalType = iter->first;
+		std::vector<PortalInfo>& portalInfos = iter->second;
+		for( int i = 0; i < portalInfos.size(); i++ ) {
+			Entity* tempPortal = SpawnNewEntityOfType( portalType );
+			Portal* portal	= dynamic_cast<Portal*>( tempPortal );
+			portal->Set2DPos( portalInfos[i].entityInfo.pos );
+			portal->SetTarget2DPosition( portalInfos[i].targetPos );
+			portal->SetTargetMapName( portalInfos[i].targetMap );
+			m_portals.push_back( portal );
 		}
 	}
 	// create player later.

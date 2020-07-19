@@ -11,6 +11,7 @@
 #include "Engine/Core/NamedProperties.hpp"
 #include "Engine/Core/Time/Clock.hpp"
 #include "Engine/Core/Time/Time.hpp"
+#include "Engine/Job/JobSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -28,6 +29,7 @@ RenderContext*	g_theRenderer		= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
 EventSystem*	g_theEventSystem	= nullptr;
 AudioSystem*	g_theAudioSystem	= nullptr;
+JobSystem*		g_theJobSystem		= nullptr;
 DevConsole*		g_theConsole		= nullptr;
 Convention		g_convention;
 
@@ -38,12 +40,12 @@ Convention		g_convention;
 
 void App::Startup()
 {
-	StringTesting();
+	//StringTesting();
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theEventSystem	= new EventSystem();
 	g_theAudioSystem	= new AudioSystem();
-	TemplateTesting();
+	//TemplateTesting();
 
 	Clock::SystemStartUp();
 	m_clock = new Clock();
@@ -71,6 +73,9 @@ void App::Startup()
 	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
 	g_theConsole->Startup();
+
+	g_theJobSystem = new JobSystem();
+	g_theJobSystem->CreateWorkerThread( 8 );
 
 	g_theGame			= new Game( g_camera, g_UICamera );
 	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP ); // basis currently not use
@@ -162,6 +167,7 @@ void App::Shutdown()
 	g_theGame->Shutdown();
 	g_theInputSystem->Shutdown();
 	g_theConsole->Shutdown();
+	g_theJobSystem->Shutdown();
 
 	Clock::SystemShutDown();
 	

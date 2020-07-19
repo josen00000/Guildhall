@@ -38,7 +38,7 @@
   </Projectile>
   ​
   <Portal name="Teleporter">
-    <Physics />
+    <Physics radius ="0.3" height ="0.8"/>
   </Portal>
 
 

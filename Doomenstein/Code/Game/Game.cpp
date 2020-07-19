@@ -8,6 +8,7 @@
 #include "Game/TileMap.hpp"
 #include "Game/MaterialDefinition.hpp"
 #include "Game/RegionDefinition.hpp"
+#include "Game/TestJob.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/Delegate.hpp"
 #include "Engine/Core/EngineCommon.hpp"
@@ -17,6 +18,7 @@
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/IntVec2.hpp"
+#include "Engine/Job/JobSystem.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/GPUMesh.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
@@ -33,8 +35,9 @@
 extern App*				g_theApp;
 extern BitmapFont*		g_squirrelFont;
 extern AudioSystem*		g_theAudioSystem; 
-extern RenderContext*	g_theRenderer;
 extern InputSystem*		g_theInputSystem;
+extern JobSystem*		g_theJobSystem;
+extern RenderContext*	g_theRenderer;
 extern DevConsole*		g_theConsole;
 extern Game*			g_theGame;
 
@@ -65,13 +68,14 @@ void Game::Startup()
 	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
 	LoadAssets();
 	CreateGameObjects();
+	JobTest();
 
 	// create world
 	m_player = new Entity( EntityDefinition::s_definitions["Player"]);
 	m_player->SetIsPlayer( true );
 	m_world = new World();
 	std::string startMapName = g_gameConfigBlackboard.GetValue( "StartMap", "" );
-	LoadMapsDefinitions( "Data/Maps" );
+	LoadMapsDefinitionsAndCreateMaps( "Data/Maps" );
 
 	m_world->LoadMap( startMapName );
 	Map* currentMap = m_world->GetCurrentMap();
@@ -111,7 +115,9 @@ void Game::Update( float deltaSeconds )
 	m_world->Update( deltaSeconds );
 
 	UpdatePlayer( deltaSeconds );
-	UpdateBillboardTest();
+	//UpdateBillboardTest();
+
+	g_theJobSystem->ClaimAndDeleteAllCompletedJobs();
 
 	//RaycastTest( Vec3::ZERO, Vec3::ZERO, 1.f );
 }
@@ -208,6 +214,13 @@ void Game::RenderDebugInfo() const
 		break;
 	}
 	DebugAddScreenLeftAlignText( 1.f, -index * 2, Vec2::ZERO, Rgba8::WHITE, 0.f, billBoardMsg );
+	index++;
+	DebugAddScreenLeftAlignTextf( 1.f, -index * 2 , Vec2::ZERO, Rgba8::WHITE, "waiting jobs: %i", g_theJobSystem->GetUndoJobsNum() );
+	index++;
+	DebugAddScreenLeftAlignTextf( 1.f, -index * 2 , Vec2::ZERO, Rgba8::WHITE, "runninging jobs: %i", g_theJobSystem->GetRunningJobsNum() );
+	index++;
+	DebugAddScreenLeftAlignTextf( 1.f, -index * 2 , Vec2::ZERO, Rgba8::WHITE, "completed jobs: %i", g_theJobSystem->GetCompletedJobsNum() );
+
 }
 
 void Game::RenderFPSInfo() const
@@ -239,6 +252,14 @@ void Game::RaycastTest( Vec3 startPos, Vec3 forwardNormal, float maxDist )
 	forwardNormal1.Normalize();
 	static float maxDist1 = maxDist;
 	currentMap->RayCast( startPos1, forwardNormal1, maxDist1 );
+}
+
+void Game::JobTest()
+{
+	for( int i = 0; i < 20; i++ ) {
+		TestJob* testJob = new TestJob();
+		g_theJobSystem->PostJob( testJob );
+	}
 }
 
 void Game::UpdatePlayer( float delteSeconds )
@@ -333,6 +354,9 @@ void Game::HandleKeyboardInput( float deltaSeconds )
 		if( m_billboardMode > 0  ) {
 			m_billboardMode = (BillboardMode)(m_billboardMode - 1);
 		}
+	}
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_J ) ) {
+		g_theJobSystem->Shutdown();
 	}
 
 }
@@ -474,7 +498,7 @@ void Game::RenderGame() const
 	//m_cubeObj2->Render();
 
 	m_world->Render();
-	RenderBillboardTest();
+	//RenderBillboardTest();
 
 	g_theRenderer->SetCullMode( RASTER_CULL_NONE );
 	g_theRenderer->DisableDepth();
@@ -599,7 +623,7 @@ void Game::LoadDefinitions()
 	LoadFileDefinition( EntityDefinition::LoadEntityDefinitions, "Data/Definitions/EntityTypes.xml" );
 }
 
-void Game::LoadMapsDefinitions( const char* mapFolderPath )
+void Game::LoadMapsDefinitionsAndCreateMaps( const char* mapFolderPath )
 {
 	g_theConsole->DebugLogf( "Loading 5 map files from \"%s\"",mapFolderPath );
 	Strings mapPaths = GetFileNamesInFolder( mapFolderPath, "*.xml" );
@@ -619,7 +643,7 @@ void Game::LoadMapsDefinitions( const char* mapFolderPath )
 
 		std::string mapType = ParseXmlAttribute( *mapElement, "type", "TileMap" );
 		Map* tempMap = nullptr;
-		if( mapType == "TileMap" )	{ tempMap = new TileMap( *mapElement, mapFilePath ); }
+		if( mapType == "TileMap" )	{ tempMap = new TileMap( *mapElement, mapFilePath, m_world ); }
 
 		tempMap->m_name = mapPaths[i];
 		if( tempMap ) {

@@ -77,6 +77,8 @@ public:
 	void SetCameraPos( Vec3 pos );
 	void SetCameraYaw( float yaw );
 	
+	Entity* GetPlayer() { return m_player; }
+
 private:
 	void Update( float deltaSeconds );
 	void UpdateUI( float deltaSeconds );
@@ -89,6 +91,10 @@ private:
 
 	// raycast test
 	void RaycastTest( Vec3 startPos, Vec3 forwardNormal, float maxDist );
+
+	// jobsystem test
+	void JobTest();
+
 
 	void UpdatePlayer( float delteSeconds );
 
@@ -113,7 +119,7 @@ private:
 	//Load
 	void LoadAssets();
 	void LoadDefinitions();
-	void LoadMapsDefinitions( const char* mapFolderPath );
+	void LoadMapsDefinitionsAndCreateMaps( const char* mapFolderPath );
 	template<typename T>
 	void LoadFileDefinition( T t, const char* path );
 

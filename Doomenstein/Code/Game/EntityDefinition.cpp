@@ -27,6 +27,7 @@ void EntityDefinition::LoadEntityDefinitions( const XmlElement& entityTypesEleme
 // 		if( !IsElementNameValidWithStrings( entityTypesElement, validNames ) ) {
 // 			g_theConsole->DebugErrorf( "Element name Error. %s is not correct.", entityTypeElement->Name() );
 // 		}
+// 		
 		EntityDefinition entityDef = EntityDefinition( *entityTypeElement );
 		s_definitions[entityDef.m_name] = entityDef;
 		entityTypeElement = entityTypeElement->NextSiblingElement();

@@ -7,8 +7,13 @@ public:
 	~JobSystemWorkerThread();
 
 public:
-	void WorkThreadMain();
+	void WorkThreadMain( int threadID );
+	void WaitUntilFinish();
+	void Quit();
+	void Destroy();
 
 private:
-	std::thread*	m_threadObject = nullptr;
+	std::thread*	m_threadObject	= nullptr;
+	int				m_threadID		= 0;
+	bool			m_isQuit		= false;
 };

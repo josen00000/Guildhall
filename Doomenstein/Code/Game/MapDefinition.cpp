@@ -34,9 +34,22 @@ MapDefinition::MapDefinition( const XmlElement& mapElement )
 	}
 
 	const XmlElement* entitiesElement = mapRowsElement->NextSiblingElement();
-	const XmlElement* playerStartElement = entitiesElement->FirstChildElement();
-	m_playerStartPos = ParseXmlAttribute( *playerStartElement, "pos", m_playerStartPos );
-	m_playerStartYaw = ParseXmlAttribute( *playerStartElement, "yaw", m_playerStartYaw );
+	const XmlElement* entityElement = entitiesElement->FirstChildElement();
+	while( entityElement ) {
+		if( std::strcmp( entityElement->Name(), "PlayerStart" ) == 0 ) {
+			m_playerStartPos = ParseXmlAttribute( *entityElement, "pos", m_playerStartPos );
+			m_playerStartYaw = ParseXmlAttribute( *entityElement, "yaw", m_playerStartYaw );
+		}
+		else if( std::strcmp( entityElement->Name(), "Teleporter" ) == 0 ){
+			Vec2 porterPos = ParseXmlAttribute( *entityElement, "pos", Vec2::ZERO );
+			float porterYaw = ParseXmlAttribute( *entityElement, "yaw", 0.f );
+			Vec2 targetPos = ParseXmlAttribute( *entityElement, "targetPos", Vec2::ZERO );
+			std::string targetMap = ParseXmlAttribute( *entityElement, "targetMap", "" );
+			TeleportInfo tempInfo = TeleportInfo{ porterYaw, porterPos, targetPos, targetMap };
+			m_teleInfos.push_back( tempInfo );
+
+		}
+	}
 }
 
 
