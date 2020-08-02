@@ -92,6 +92,7 @@ public:
 	bool IsTileVisited( int tileIndex ) const;
 	bool IsTileDoor( IntVec2 tileCoords ) const;
 	bool IsTileDoor( int tileIndex ) const;
+	bool IsTileReachable( int tileIndex ) const;
 
 	// Mutator
 	void SetName( std::string name );
@@ -148,6 +149,7 @@ private:
 	void RunMapGenSteps();
 	void PushTileVertices();
 	void RandomGenerateStartAndExitCoords();
+	void EliminateSingleLavaAndWater();
 	void CheckTilesReachability();
 
 	// Maze Generation
@@ -167,6 +169,8 @@ private:
 	bool isTileAttrs( IntVec2 tileCoords, TileAttribute attr ) const;
 	bool isTileAttrs( int tileIndex, TileAttribute attr ) const;
 	TileAttributeBitFlag GetTileAttrBitFlagWithAttr( TileAttribute attr ) const; 
+
+	int GetNumOfNeighborTilesInTypeWithIndex( TileType type, int tileIndex ) const;
 
 	// Actor
 	void CreateActors();
@@ -207,7 +211,7 @@ private:
 	int								m_height = 0;
 	int								m_roomNum = 0;
 
-	float							m_mazeEdgePercentage = 0.9f;
+	float							m_mazeEdgePercentage = 1.f;
 	float							m_fightDeltaSecondsEachTurn = 0.5f;
 
 	IntVec2							m_startCoords = IntVec2::ZERO;

@@ -24,6 +24,8 @@ public:
 	void HandleKeyPressed( unsigned char inValue );
 	void HandleKeyReleased( unsigned char inValue );
 	void ResetGame();
+	void PauseGame();
+	void UnPauseGame();
 
 private:
 	void Update( float deltaSeconds );
@@ -31,6 +33,7 @@ private:
 	
 private:
 	bool m_isQuitting		= false;
+	bool m_isPauseTime		= false;
 	float m_deltaTime		= 0;
 	float m_timeFraction	= 1.f;
 };

@@ -62,6 +62,7 @@ void App::StartupStage2()
 	g_theInputSystem->Startup();
 	g_thePhysics->StartUp();
 	EnableDebugRendering();
+	g_theInputSystem->HideSystemCursor();
 	g_convention = X_RIGHT_Y_UP_Z_BACKWARD;
 }
 
@@ -114,7 +115,6 @@ void App::RunFrame()
 	double timeThisFrameStarted = GetCurrentTimeSeconds();
 	double deltaSeconds = timeThisFrameStarted - timeLastFrameStarted;
 	m_deltaTime = (float)deltaSeconds * m_timeFraction;
-	//m_deltaTime=0.016;//testing
 	timeLastFrameStarted = timeThisFrameStarted;
 	if(g_theInputSystem->IsKeyDown(KEYBOARD_BUTTON_ID_T)){
 		m_deltaTime /= 10;
@@ -122,6 +122,9 @@ void App::RunFrame()
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_Y ) ) {
 		m_deltaTime *= 4;
 	}	
+	if( m_isPauseTime ) {
+		m_deltaTime = 0.f;
+	}
 	BeginFrame();
 	Update(m_deltaTime);
 	Render();
@@ -156,6 +159,16 @@ void App::ResetGame()
 	g_theGame->Shutdown();
 	delete g_theGame;
 	Startup();
+}
+
+void App::PauseGame()
+{
+	m_isPauseTime = true;
+}
+
+void App::UnPauseGame()
+{
+	m_isPauseTime = false;
 }
 
 void App::BeginFrame()

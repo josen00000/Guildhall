@@ -46,13 +46,15 @@ void Game::Startup()
 	m_isAppQuit		= false;
 	LoadAssets();
 	CreateAttractButtons();
-	m_world = World::CreateWorld( 1 );
+	//m_world = World::CreateWorld( 1 );
 	g_theEventSystem->SubscribeMethodToEvent( "DebugMessage", this, &Game::DebugGameInfo );
 }
 
-void Game::RestartGame()
+void Game::StartGame()
 {
-	delete m_world;
+	if( m_world == nullptr ) {
+		delete m_world;
+	}
 	m_world = World::CreateWorld( 1 );
 	//m_world->CreateMaps();
 }
@@ -81,10 +83,13 @@ void Game::UpdateGame( float deltaSeconds )
 	case IN_GAME:
 		CleanDestroyedObjects();
 		m_world->UpdateWorld( deltaSeconds );
+		if( m_showPauseMenu ) {
+			UpdatePauseButtons();
+		}
 		break;
 	case GAME_END:
 		if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ENTER ) ) {
-			RestartGame();
+			StartGame();
 			m_gameState = ATTRACT_SCREEN;
 		}
 		break;
@@ -124,6 +129,8 @@ void Game::RenderAttractScreen() const
 
 void Game::UpdateUI( float deltaSeconds )
 {
+	if( !m_world ){ return; }
+
 	Map* currentMap = m_world->GetCurrentMap();
 	Player* player = currentMap->GetPlayer();
 	m_playerHP = player->GetHealth();
@@ -159,7 +166,11 @@ void Game::RenderGameUI() const
 void Game::CheckIfExit()
 {
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) ){
-		g_theApp->HandleQuitRequested();
+		//g_theApp->HandleQuitRequested();
+		if( m_gameState == IN_GAME ) {
+			m_showPauseMenu = true;
+			g_theApp->PauseGame();
+		}
 	}
 }
 
@@ -167,7 +178,7 @@ void Game::CheckIfExit()
 void Game::HandleKeyboardInput()
 {
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F5 ) ) {
-		RestartGame();
+		StartGame();
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F1 ) ) {
 		m_isDebug = !m_isDebug;
@@ -202,6 +213,11 @@ void Game::RenderGame() const
 		break;
 	case IN_GAME:
 		m_world->RenderWorld();
+		if( m_showPauseMenu ) {
+			for( int i = 0; i < m_pauseButtons.size(); i++ ) {
+				m_pauseButtons[i]->RenderButton();
+			}
+		}
 		break;
 	case GAME_END:
 		break;
@@ -227,6 +243,9 @@ void Game::RenderUI() const
 		break;
 	case IN_GAME:
 		RenderGameUI();
+		if( m_showPauseMenu ) {
+			RenderPauseButtons();
+		}
 		break;
 	case GAME_END:
 		DebugAddScreenText( Vec4( 0.3f, 0.5f, 0.f, 0.f ), Vec2( 0.5f ), 10.f, Rgba8::RED, Rgba8::RED, 0.f, resultText );
@@ -275,7 +294,7 @@ void Game::LoadAssets()
 	g_theAudioSystem->CreateOrGetSound( "Data/Audio/SwordHit.mp3" );
 	g_theAudioSystem->CreateOrGetSound( "Data/Audio/WalkFoot.mp3" );
 	SoundID gameBGM = g_theAudioSystem->CreateOrGetSound( "Data/Audio/GameplayMusic.mp3" );
-	m_gameBGMID = g_theAudioSystem->PlaySound( gameBGM, true, m_volume );
+	m_gameBGMID = g_theAudioSystem->PlaySound( gameBGM, true, m_volume * m_backGroundVolumeScale );
 	LoadDefs();
 }
 
@@ -346,13 +365,21 @@ void Game::CreateAttractButtons()
 	UIButton* volumeMediumButton	= UIButton::CreateButtonWithPosSizeAndText( centerPos + Vec2( 0.f, -25.f ), Vec2( buttonWidth, buttonHeight ), "VOLUME MEDIUM" );
 	UIButton* volumeHighButton		= UIButton::CreateButtonWithPosSizeAndText( centerPos + Vec2( 0.f, -50.f ), Vec2( buttonWidth, buttonHeight ), "VOLUME HIGH" );
 
+	UIButton* resumeButton		= UIButton::CreateButtonWithPosSizeAndText( centerPos, Vec2( buttonWidth, buttonHeight ), "RESUME" );
+	UIButton* quitToMainButton	= UIButton::CreateButtonWithPosSizeAndText( centerPos + Vec2( 0.f, -35.f ), Vec2( buttonWidth, buttonHeight ), "QUIT" );
+
 
 	startButton->SetEventName( "StartGame" );
 	settingButton->SetEventName( "LoadSetting" );
 	quitButton->SetEventName( "QuitGame" );
+
 	volumeLowButton->SetEventName( "LowVolume" );
 	volumeHighButton->SetEventName( "HighVolume" );
 	volumeMediumButton->SetEventName( "MediumVolume" );
+
+	resumeButton->SetEventName( "Resume" );
+	quitToMainButton->SetEventName( "QuitToMain" );
+
 
 	g_theEventSystem->SubscribeMethodToEvent( "StartGame", this, &Game::StartGame );
 	g_theEventSystem->SubscribeMethodToEvent( "QuitGame", this, &Game::QuitGame );
@@ -361,6 +388,9 @@ void Game::CreateAttractButtons()
 	g_theEventSystem->SubscribeMethodToEvent( "LowVolume", this, &Game::SetVolumeLow );
 	g_theEventSystem->SubscribeMethodToEvent( "HighVolume", this, &Game::SetVolumeHigh );
 	g_theEventSystem->SubscribeMethodToEvent( "MediumVolume", this, &Game::SetVolumeMedium );
+
+	g_theEventSystem->SubscribeMethodToEvent( "Resume", this, &Game::Resume );
+	g_theEventSystem->SubscribeMethodToEvent( "QuitToMain", this, &Game::QuitToMain );
 
 	startButton->SetIsSelecting( true );
 	m_buttons.push_back( startButton );
@@ -371,11 +401,46 @@ void Game::CreateAttractButtons()
 	m_settingButtons.push_back( volumeLowButton );
 	m_settingButtons.push_back( volumeMediumButton );
 	m_settingButtons.push_back( volumeHighButton );
+
+	resumeButton->SetIsSelecting( true );
+	m_pauseButtons.push_back( resumeButton );
+	m_pauseButtons.push_back( quitToMainButton );
+}
+
+void Game::UpdatePauseButtons()
+{
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_UP_ARROW ) ) {
+		m_pauseButtons[0]->SetIsSelecting( true );
+		m_pauseButtons[1]->SetIsSelecting( false );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_DOWN_ARROW ) ) {
+		m_pauseButtons[0]->SetIsSelecting( false );
+		m_pauseButtons[1]->SetIsSelecting( true );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ENTER ) ) {
+		for( int i = 0; i < m_pauseButtons.size(); i++ ) {
+			if( m_pauseButtons[i]->GetIsSelecting() ) {
+				m_pauseButtons[i]->ExecuteTargetFunction();
+			}
+		}
+	}
+
+	for( int i = 0; i < m_pauseButtons.size(); i++ ) {
+		m_pauseButtons[i]->UpdateButton();
+	}
+}
+
+void Game::RenderPauseButtons() const
+{
+	for( int i = 0; i < m_pauseButtons.size(); i++ ) {
+		m_pauseButtons[i]->RenderButton();
+	}
 }
 
 bool Game::StartGame( EventArgs& args )
 {
 	m_gameState = IN_GAME;
+	StartGame();
 	return true;
 }
 
@@ -398,11 +463,26 @@ bool Game::DebugGameInfo( EventArgs& args )
 	return true;
 }
 
+bool Game::QuitToMain( EventArgs& args )
+{
+	m_gameState = ATTRACT_SCREEN;
+	m_showPauseMenu = false;
+	g_theApp->UnPauseGame();
+	return true;
+}
+
+bool Game::Resume( EventArgs& args )
+{
+	m_showPauseMenu = false;
+	g_theApp->UnPauseGame();
+	return true;
+}
+
 bool Game::SetVolumeHigh( EventArgs& args )
 {
 	m_volume = 0.7f;
 	m_isOnSettingPage = false;
-	g_theAudioSystem->SetSoundPlaybackVolume( m_gameBGMID, m_volume );
+	g_theAudioSystem->SetSoundPlaybackVolume( m_gameBGMID, m_volume * m_backGroundVolumeScale );
 	return true;
 }
 
@@ -410,7 +490,7 @@ bool Game::SetVolumeLow( EventArgs& args )
 {
 	m_volume = 0.3f;
 	m_isOnSettingPage = false;
-	g_theAudioSystem->SetSoundPlaybackVolume( m_gameBGMID, m_volume );
+	g_theAudioSystem->SetSoundPlaybackVolume( m_gameBGMID, m_volume * m_backGroundVolumeScale );
 	return true;
 }
 
@@ -418,7 +498,7 @@ bool Game::SetVolumeMedium( EventArgs& args )
 {
 	m_volume = 0.5f;
 	m_isOnSettingPage = false;
-	g_theAudioSystem->SetSoundPlaybackVolume( m_gameBGMID, m_volume );
+	g_theAudioSystem->SetSoundPlaybackVolume( m_gameBGMID, m_volume * m_backGroundVolumeScale );
 	return true;
 }
 

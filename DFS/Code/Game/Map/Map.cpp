@@ -50,11 +50,12 @@ void Map::UpdateMap( float deltaSeconds )
 		UpdateFight( m_fightEnemy, deltaSeconds );
 	}
 	m_player->UpdatePlayer( deltaSeconds );	
-	CheckIfCollectKey();
+	CheckIfCollectKey(); 
 	for( int i = 0; i < m_enemies.size(); i++ ) {
 		m_enemies[i]->UpdateActor( deltaSeconds );
 		m_enemies[i]->UpdateActorAnimation( deltaSeconds );
 	}
+	
 	if( m_enemies.size() == 0 ) {
 		g_theGame->SetGameEnd();
 	}
@@ -74,7 +75,6 @@ void Map::RenderMap()
 	for( int i = 0; i < m_enemies.size(); i++ ) {
 		m_enemies[i]->RenderActor();
 	}
-
 
 	if( !m_player->GetHasKey() ) {
 		Texture* playerTexture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/key.png" );
@@ -251,6 +251,26 @@ bool Map::IsTileDoor( IntVec2 tileCoords ) const
 bool Map::IsTileDoor( int tileIndex ) const
 {
 	return isTileAttrs( tileIndex, TILE_IS_DOOR );
+}
+
+bool Map::IsTileReachable( int tileIndex ) const
+{
+	IntVec2 tileCoords = GetTileCoordsWithTileIndex( tileIndex );
+	std::vector<IntVec2> neighborsTileCoords;
+	neighborsTileCoords.push_back( tileCoords + IntVec2( 0, 1 ) );
+	neighborsTileCoords.push_back( tileCoords + IntVec2( 0, -1 ) );
+	neighborsTileCoords.push_back( tileCoords + IntVec2( 1, 0 ) );
+	neighborsTileCoords.push_back( tileCoords + IntVec2( -1, 0 ) );
+
+	int NumOfsolidNeighbors = 0;
+	for( int i = 0; i < neighborsTileCoords.size(); i++ ) {
+		if( IsTileSolid( neighborsTileCoords[i] ) ) {
+			NumOfsolidNeighbors++;
+		}
+	}
+
+	if( NumOfsolidNeighbors == 4 ){ return false; }
+	return true;
 }
 
 void Map::SetName( std::string name ) 
@@ -511,14 +531,14 @@ void Map::PopulateTiles()
 {
 	InitializeTiles();
 	GenerateEdgeTiles( 1 );
-	RunMapGenSteps();
- 	RandomGenerateStartAndExitCoords();
- 	GenerateMazeTiles();
- 	GenerateDoorTiles();
- 	EliminateDeadEnds();
- 	CreateKey();
- 	CheckTilesReachability();
-	
+ 	RunMapGenSteps();
+  	RandomGenerateStartAndExitCoords();
+ 	EliminateSingleLavaAndWater();
+  	GenerateMazeTiles();
+   	GenerateDoorTiles();
+   	EliminateDeadEnds();
+	CheckTilesReachability();
+   	CreateKey();
 	PushTileVertices();
 }
 
@@ -683,6 +703,7 @@ void Map::GenerateDoorTiles()
 
 void Map::EliminateDeadEnds()
 {
+	int skipDeadEndChance = 0.3f;
 	for( int i = 0; i < m_mazes.size(); i++ ) {
 		Maze* tempMaze = m_mazes[i];
 		std::stack<IntVec2> deadEnds = tempMaze->m_deadEndtileCoords;
@@ -690,13 +711,16 @@ void Map::EliminateDeadEnds()
 			IntVec2 deadEndTileCoods = deadEnds.top();
 			deadEnds.pop();
 			if( !IsTileCoordsWalkableDeadEnd( deadEndTileCoods ) ){ continue; }
+			if( IsTileStart( deadEndTileCoods ) ){ continue; }
 			SetTileType( deadEndTileCoods, m_mazeWallType );
 			SetTileSolid( deadEndTileCoods, true );
 			IntVec2 neighborCoords[4];
 			GetNeighborsCoords( deadEndTileCoods, neighborCoords );
-			for( int j = 0; j < 4; j++ ) {
-				if( IsTileCoordsWalkableDeadEnd( neighborCoords[j] ) ) {
-					deadEnds.push( neighborCoords[j] );
+			if( m_rng->RollPercentChance( skipDeadEndChance ) ) {
+				for( int j = 0; j < 4; j++ ) {
+					if( IsTileCoordsWalkableDeadEnd( neighborCoords[j] ) ) {
+						deadEnds.push( neighborCoords[j] );
+					}
 				}
 			}
 		}
@@ -707,7 +731,7 @@ void Map::SetMazeNeighborEdge( IntVec2 tileCoords )
 {
 	if( !IsTileVisited( tileCoords ) && !IsTileExit( tileCoords ) && !IsTileStart( tileCoords ) && !IsTileSolid( tileCoords ) ) {
 		SetTileType( tileCoords, m_mazeWallType );
-		SetTileVisited( tileCoords, true );
+		//SetTileVisited( tileCoords, true );
 	}
 }
 
@@ -850,13 +874,36 @@ void Map::RandomGenerateStartAndExitCoords()
 	SetTileType( startCoords, startType );
 	m_startCoords = startCoords;
 
-	IntVec2 endCoords = GetRandomInsideWalkableTileCoords();
-	while( IsTileStart( endCoords ) ) {
-		endCoords = GetRandomInsideWalkableTileCoords();
+// 	IntVec2 endCoords = GetRandomInsideWalkableTileCoords();
+// 	while( IsTileStart( endCoords ) ) {
+// 		endCoords = GetRandomInsideWalkableTileCoords();
+// 	}
+// 	SetTileExit( endCoords, true );
+// 	SetTileType( endCoords, endType );
+// 	m_endCoords = endCoords;
+}
+
+void Map::EliminateSingleLavaAndWater()
+{
+	for( int i = 0; i < m_tiles.size(); i++ ) {
+		if( IsTileRoom( i ) ){ continue; }
+
+		if( IsTileOfTypeWithIndex( "Lava", i ) ) {
+			int numOfLavaNeighbors = GetNumOfNeighborTilesInTypeWithIndex( "Lava", i );
+			if( numOfLavaNeighbors < 3 ) {
+				SetTileType( i, m_mazeFloorType );
+			}
+
+
+		}
+		if( IsTileOfTypeWithIndex( "Water", i ) ) {
+			int numOfWaterNeighbors = GetNumOfNeighborTilesInTypeWithIndex( "Water", i );
+			if( numOfWaterNeighbors < 3 ) {
+				SetTileType( i, m_mazeFloorType );
+				SetTileSolid( i, false );
+			}
+		}
 	}
-	SetTileExit( endCoords, true );
-	SetTileType( endCoords, endType );
-	m_endCoords = endCoords;
 }
 
 void Map::CheckTilesReachability()
@@ -865,7 +912,11 @@ void Map::CheckTilesReachability()
 	while( !notExistUnreachableTile ) {
 		notExistUnreachableTile = true;
 		for( int i = 0; i < m_tiles.size(); i++ ) {
-			if( !IsTileSolid( i ) && !IsTileVisited( i ) && !IsTileRoom( i ) ) {
+			int tileindex = GetTileIndexWithTileCoords( IntVec2( 10, 5 ) );
+			if( i == tileindex ) {
+				int a = 0;
+			}
+			if( !IsTileSolid( i ) && !IsTileReachable( i ) && !IsTileRoom( i ) ) {
 				TileTypes solidNeighborTypes = GetSolidNeighborTypes( i );
 				int randomSelect = m_rng->RollRandomIntInRange( 1, (int)solidNeighborTypes.size()) - 1;
 				notExistUnreachableTile = false;
@@ -921,15 +972,43 @@ TileAttributeBitFlag Map::GetTileAttrBitFlagWithAttr( TileAttribute attr ) const
 	return TILE_NON_ATTR_BIT;
 }
 
+int Map::GetNumOfNeighborTilesInTypeWithIndex( TileType type, int tileIndex ) const
+{
+	IntVec2 tileCoords = GetTileCoordsWithTileIndex( tileIndex );
+	std::vector<IntVec2> neighborTileCoords;
+
+	neighborTileCoords.push_back( tileCoords + IntVec2( 0, 1 ) );
+	neighborTileCoords.push_back( tileCoords + IntVec2( 0, -1 ) );
+	neighborTileCoords.push_back( tileCoords + IntVec2( -1, 0 ) );
+	neighborTileCoords.push_back( tileCoords + IntVec2( 1, 0 ) );
+
+	neighborTileCoords.push_back( tileCoords + IntVec2( 1, 1 ) );
+	neighborTileCoords.push_back( tileCoords + IntVec2( -1, 1 ) );
+	neighborTileCoords.push_back( tileCoords + IntVec2( 1, -1 ) );
+	neighborTileCoords.push_back( tileCoords + IntVec2( -1, -1 ) );
+
+	int numOfNeighborTiles = 0;
+	for( int i = 0; i < neighborTileCoords.size(); i++ ) {
+		if( IsTileOfTypeWithCoords( type, neighborTileCoords[i] ) ) {
+			numOfNeighborTiles++;
+		}
+	}
+	return numOfNeighborTiles;
+}
+
 void Map::CreateActors()
 {
 	CreatePlayer();
 	CreateEnemies();
+	EventArgs args;
+	std::string resultString = "Kill all enemies to win!";
+	args.SetValue( "message", resultString );
+	g_theEventSystem->FireEvent( "DebugMessage", args );
 }
 
 void Map::CreatePlayer()
 {
-	m_player = Player::SpawnPlayerWithPos( ActorDefinition::s_definitions["Player"], Vec2( m_startCoords ) );
+	m_player = Player::SpawnPlayerWithPos( ActorDefinition::s_definitions["Player"], Vec2( m_startCoords ) + Vec2( 0.5f ) );
 }
 
 void Map::CreateEnemies()

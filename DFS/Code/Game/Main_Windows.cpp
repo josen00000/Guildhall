@@ -63,7 +63,7 @@ LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMess
 	{
 		unsigned char asKey = (unsigned char)wParam;
 		if( asKey==VK_ESCAPE ) {
-			g_theApp->HandleQuitRequested();
+			//g_theApp->HandleQuitRequested();
 		}
 		g_theInputSystem->UpdateKeyBoardButton( asKey, true );
 		break;

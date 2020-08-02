@@ -32,7 +32,7 @@ public:
 
 	//basic
 	void Startup();
-	void RestartGame();
+	void StartGame();
 	void Shutdown();
 	void RunFrame( float deltaSeclnds );
 	void RenderGame() const;
@@ -71,6 +71,11 @@ private:
 	void SelectNextButton();
 	void CreateAttractButtons();
 
+	// pause menu
+	void UpdatePauseButtons();
+	void RenderPauseButtons() const;
+
+
 	bool StartGame( EventArgs& args );
 	bool QuitGame( EventArgs& args );
 	bool LoadSettings( EventArgs& args );
@@ -79,16 +84,22 @@ private:
 	bool SetVolumeMedium( EventArgs& args );
 	bool BackToMain( EventArgs& args );
 	bool DebugGameInfo( EventArgs& args );
+	bool QuitToMain( EventArgs& args );
+	bool Resume( EventArgs& args );
+
 
 public:
 	bool m_isAppQuit		= false;
 	bool m_isDebug			= false;
 	bool m_isFighting		= false;
 	bool m_isOnSettingPage	= false;
+	bool m_showPauseMenu	= false;
 
 	GameState m_gameState	= ATTRACT_SCREEN;
 	std::vector<UIButton*> m_buttons;
 	std::vector<UIButton*> m_settingButtons;
+	std::vector<UIButton*> m_pauseButtons;
+
 	int m_currentButtonIndex = 0;
 	int m_currentSettingButtonIndex = 0;
 	
@@ -110,5 +121,6 @@ public:
 
 	// audio
 	float m_volume					= 0.5f;
+	float m_backGroundVolumeScale	= 0.3f;
 	SoundPlaybackID m_gameBGMID		= 0;
 };

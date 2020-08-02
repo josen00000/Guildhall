@@ -16,6 +16,8 @@ public:
 
 	static UIButton* CreateButtonWithPosSizeAndText( Vec2 pos, Vec2 size, std::string text );
 	Vec2 GetPosition() const { return m_pos; }
+	bool GetIsSelecting() const { return m_isSelecting; }
+
 
 	// mutator
 	void SetPosition( Vec2 pos );

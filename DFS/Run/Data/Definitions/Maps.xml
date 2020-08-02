@@ -2,8 +2,8 @@
 
   <MapDefinition name="level1" width="40" height="22" fillTile="Grass" edgeTile="Wall" startTile="Entry" endTile ="Exit">
     <MapGenerateSteps>
-      <Mutate chanceToRun="1" iterations="1" chancePerTile="0.05" ifType="Grass" setType="Water"/>
-      <Mutate chanceToRun="1" iterations="1" chancePerTile="0.05" ifType="Grass" setType="Lava"/>
+      <Mutate chanceToRun="1" iterations="1" chancePerTile="0.07" ifType="Grass" setType="Water"/>
+      <Mutate chanceToRun="1" iterations="1" chancePerTile="0.07" ifType="Grass" setType="Lava"/>
       <CellularAutomata chanceToRun="1" iterations="1" chancePerTile ="0.5" setType="Water"  ifNeighborType="Water" numNeighbors="2~5 "/>
       <CellularAutomata chanceToRun="1" iterations="1" chancePerTile ="0.5" setType="Lava"  ifNeighborType="Lava" numNeighbors="2~5 "/>
       
