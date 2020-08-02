@@ -24,6 +24,12 @@ void SpriteSheet::GetSpriteUVs( Vec2& out_uvAtMins, Vec2& out_uvAtMaxs, int spri
 }
 
 
+void SpriteSheet::GetSpriteUVs( Vec2& out_uvAtMins, Vec2& out_uvAtMaxs, IntVec2 spriteCoords ) const
+{
+	int spriteIndex = spriteCoords.x + ( spriteCoords.y * m_layout.x );
+	GetSpriteUVs( out_uvAtMins, out_uvAtMaxs, spriteIndex );
+}
+
 void SpriteSheet::GetSpriteUVsWithCoords( Vec2& out_uvAtMins, Vec2& out_uvAtMaxs, IntVec2 spriteCoords ) const
 {
 	int index = GetIndexWithCoords( spriteCoords );

@@ -75,9 +75,9 @@ void App::StartupStage3()
 
 	DebugRenderSystemStartup( g_theRenderer, g_gameCamera );
 	g_theGame			= new Game( g_gameCamera, g_UICamera );
-	g_theGame->Startup();
-
 	g_theConsole = DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
+
+	g_theGame->Startup();
 	g_theConsole->Startup();
 
 }

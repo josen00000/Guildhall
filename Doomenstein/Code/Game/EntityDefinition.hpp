@@ -37,7 +37,7 @@ public:
 public:
 	const AnimationsSpriteDefinitions GetAnimationSpriteDefinitions( AnimationType animationType ) const;
 	Vec2 GetMoveDirtNormal( MoveDirection moveDirt ) const;
-	Texture& GetSpriteTexture() const;
+	Texture* GetSpriteTexture() const;
 private:
 	std::string GetStringWithMoveDirection( MoveDirection moveDirt );
 public:

@@ -31,7 +31,7 @@ EventSystem*	g_theEventSystem	= nullptr;
 AudioSystem*	g_theAudioSystem	= nullptr;
 JobSystem*		g_theJobSystem		= nullptr;
 DevConsole*		g_theConsole		= nullptr;
-Convention		g_convention;
+//Convention		g_convention;
 
 #include <vector>
 #include <functional>

@@ -19,5 +19,5 @@ MaterialsSheet::MaterialsSheet( const XmlElement& materialSheetElement )
 
 	Texture* tempSheetTexture = g_theRenderer->CreateOrGetTextureFromFile( m_sheetTextures["Diffuse"].c_str() );
 	m_diffuseTexture = tempSheetTexture;
-	m_sheet = new SpriteSheet( *tempSheetTexture, m_layout );
+	m_sheet = new SpriteSheet( tempSheetTexture, m_layout );
 }

@@ -4,7 +4,8 @@
 #include "Game/EntityDefinition.hpp"
 #include "Engine/Math/Cylinder3.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
-#include "Engine/Core/Convention.hpp"
+#include "Engine/Core/EngineCommon.hpp"
+//#include "Engine/Core/Convention.hpp"
 
 class Camera;
 

@@ -60,7 +60,7 @@ EntityDefinition::EntityDefinition( const XmlElement& entityElement )
 
 		Texture* spriteTexture = g_theRenderer->CreateOrGetTextureFromFile( m_spriteSheetPath.c_str() );
 		m_spriteTexture = spriteTexture;
-		m_spriteSheet = new SpriteSheet( *spriteTexture, m_spriteSheetLayout );
+		m_spriteSheet = new SpriteSheet( spriteTexture, m_spriteSheetLayout );
 
 		const XmlElement* animationElement = apperanceElement->FirstChildElement();
 		while( animationElement ) {
@@ -128,7 +128,7 @@ Vec2 EntityDefinition::GetMoveDirtNormal( MoveDirection moveDirt ) const
 	return Vec2::ZERO;
 }
 
-Texture& EntityDefinition::GetSpriteTexture() const
+Texture* EntityDefinition::GetSpriteTexture() const
 {
 	return m_spriteSheet->GetTexture();
 }

@@ -7,6 +7,7 @@
 #include "Engine/Renderer/Sampler.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 

@@ -17,6 +17,7 @@ public:
 	int						GetNumSprites() const	{ return (int)m_spriteDefs.size(); }
 	const SpriteDefinition& GetSpriteDefinition( int spriteIndex ) const;
 	void					GetSpriteUVs( Vec2& out_uvAtMins, Vec2& out_uvAtMaxs, int spriteIndex ) const;
+	void					GetSpriteUVs( Vec2& out_uvAtMins, Vec2& out_uvAtMaxs, IntVec2 spriteCoords ) const;
 	void					GetSpriteUVsWithCoords( Vec2& out_uvAtMins, Vec2& out_uvAtMaxs, IntVec2 spriteCoords )const;
 
 private:

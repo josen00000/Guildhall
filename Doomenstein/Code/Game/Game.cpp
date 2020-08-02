@@ -607,7 +607,7 @@ void Game::LoadAssets()
 	g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Terrain_8x8.png");
 	g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Hud_Base.png" );
 	Texture* modelSpriteSheet = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/ViewModelsSpriteSheet_8x8.png" );
-	m_viewModelSpriteSheet = new SpriteSheet( *modelSpriteSheet, IntVec2( 8 ) );
+	m_viewModelSpriteSheet = new SpriteSheet( modelSpriteSheet, IntVec2( 8 ) );
 
 	LoadDefinitions();
 }
