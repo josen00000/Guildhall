@@ -215,7 +215,7 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	
-	void BeginCamera( Camera* camera, Convention convention );
+	void BeginCamera( Camera* camera, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
 	void EndCamera();
 
 	void ClearState();

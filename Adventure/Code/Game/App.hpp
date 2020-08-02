@@ -1,7 +1,8 @@
 #pragma once
-#include<Engine/Math/vec2.hpp>
-#include<Game/GameCommon.hpp>
-
+#include "Engine/Core/EventSystem.hpp"
+#include "Engine/Math/vec2.hpp"
+#include "Game/GameCommon.hpp"
+#include "Engine/Renderer/ObjectReader.hpp"
 
 class Game;
 
@@ -11,31 +12,33 @@ public:
 	App(){}
 	~App() {}
 	void Startup();
+
+	// test function
+	void TemplateTesting();
+	void StringTesting();
+	void NamedPropertyTesting();
+
 	void Shutdown();
+	void BeginFrame();
 	void RunFrame();
-	bool IsQuitting() const { return m_isQuitting; }
-	//bool HandleKeyPressed( unsigned char keyCode );
-	//bool HandleKeyReleased( unsigned char keyCode );
-	void HandleQuitRequested();
+	void EndFrame();
+	bool IsQuitting() const { return m_isQuitting;  }
 	void CheckGameQuit();
-	void HandleKeyPressed(unsigned char inValue);
-	void HandleKeyReleased(unsigned char inValue);
+	void HandleQuitRequested();
+	void HandleDevConsoleInput();
 	void ResetGame();
 
 private:
-	void BeginFrame();
 	void Update( float deltaSeconds );
+	void UpdateDevConsole( float deltaSeconds );
 	const void Render() const;
-	void EndFrame();
 	
 private:
-	float m_deltaTime=0;
-	bool m_isQuitting=false;
-	bool m_isPaused=false;
-	bool m_isSlowMo=false;
-	bool m_isDevelopMode=false;
-	Vec2 m_shipPos;
-	Game* m_theGame=nullptr;
-	float m_timeFraction=1.f;
-
+	bool m_isQuitting		= false;
+	float m_deltaTime		= 0;
+	float m_timeFraction	= 1.f;
 };
+
+bool HelpCommandEvent( EventArgs& args );
+bool QuitCommandEvent( EventArgs& args );
+bool eventTest( EventArgs& args );

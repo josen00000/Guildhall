@@ -17,19 +17,16 @@ public:
 
 	// accessor
 	ID3D11Texture2D* GetHandle() const { return m_handle; }
+	int		GetHeight() const { return m_texelSizeCoords.y; }
+	int		GetWidth() const { return m_texelSizeCoords.x; }
+	IntVec2	GetSize() const { return m_texelSizeCoords; }
 
-	void SetTextureID( const int textureID );
-	const int GetTextureID() const { return m_textureID; }
-	IntVec2 GetTexelSize() const { return m_texelSizeCoords; }
 	TextureView* GetOrCreateRenderTargetView();
 	TextureView* GetOrCreateShaderResourceView();
 	TextureView* GetDepthStencilView();
 	TextureView* GetOrCreateDepthStencilView();
 
 public:
-	float m_width				= 0;
-	float m_height				= 0;
-	unsigned int m_textureID	= 0;	
 	IntVec2 m_texelSizeCoords;
 	std::string m_imageFilePath;
 

@@ -24,9 +24,7 @@ public:
 	Vec3	RollRandomVec3InRange(const Vec3& minInclusive, const Vec3& maxInclusive );
 
 
-
+public:
 	int m_seed = 0;
 	int m_position = 0;
-
-
 };

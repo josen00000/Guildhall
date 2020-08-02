@@ -311,11 +311,11 @@ void Map::PushTileVertices()
 	}
 }
 
-void Map::RenderTiles() const
+void Map::RenderTiles() 
 {
 	Texture* tempTexture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Terrain_8x8.png" );
-	g_theRenderer->BindTexture( tempTexture );
-	g_theRenderer->DrawVertexVector(m_tilesVertices);
+	g_theRenderer->SetDiffuseTexture( tempTexture );
+	g_theRenderer->DrawVertexVector( m_tilesVertices );
 }
 
 void Map::AddVerticesForAABB2( std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2 minUV, const Vec2 maxUV )
@@ -339,6 +339,7 @@ void Map::AddVerticesForAABB2( std::vector<Vertex_PCU>& vertices, const AABB2& b
 
 void Map::UpdateMousePosInCamera( const Camera& camera )
 {
+	void* 
 	m_mousePos = g_theInputSystem->GetNormalizedMousePosInCamera( camera );
 
 }

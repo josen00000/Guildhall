@@ -16,17 +16,19 @@
 #include "Engine/Renderer/SpriteSheet.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
+#include "Engine/Platform/Window.hpp"
 
 
 extern App* g_theApp;
 extern InputSystem* g_theInputSystem;
-const XboxController* playerController = &(g_theInputSystem->GetXboxController(0));
+const XboxController* playerController = g_theInputSystem->GetXboxController(0);
 extern AudioSystem* g_theAudioSystem;
 extern RenderContext* g_theRenderer;
 extern BitmapFont* g_squirrelFont;
 extern Camera* g_camera;
 extern Camera* g_UICamera;
 extern Camera* g_consoleCamera;
+extern Window* g_theWindow;
 Texture* temTexture = nullptr;
 SpriteSheet* temSpriteSheet = nullptr;
 
@@ -36,7 +38,7 @@ Game::Game( bool isDevelop,Camera* inCamera)
 	,m_camera(inCamera)
 {
 	m_rng=RandomNumberGenerator();
-	playerController = &g_theInputSystem->GetXboxController(0);
+	playerController = g_theInputSystem->GetXboxController( 0 );
 	
 }
 
@@ -106,7 +108,7 @@ void Game::RunFrame(float deltaSeconds)
 void Game::CreatePauseScene()
 {
 	m_pauseColor = Rgba8(0,0,0,100);
-	m_pauseScene = g_camera->m_AABB2;
+	m_pauseScene = g_camera->GetCameraAsBox();
 	g_squirrelFont->AddVertsForText2D(m_pauseText,Vec2( 3, 5 ), 0.5, "press p to start");
 }
 
@@ -117,13 +119,13 @@ void Game::CheckGameStates()
 	CheckIfDeveloped();
 	CheckIfDebugNoClip();
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F4 ) ) {
-		m_debugCamera=!m_debugCamera;
-		if(m_debugCamera){
-			m_camera->SetOrthoView(Vec2(0,0),Vec2((float)(30*1.67),30.f));
-		}
-		else{
-			m_camera->SetOrthoView(Vec2( 0, 0 ), Vec2( 16, 9 ) );
-		}
+		m_debugCamera = !m_debugCamera;
+// 		if(m_debugCamera){
+// 			m_camera->SetOrthoView(Vec2(0,0),Vec2((float)(30*1.67),30.f));
+// 		}
+// 		else{
+// 			m_camera->SetOrthoView(Vec2( 0, 0 ), Vec2( 16, 9 ) );
+// 		}
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F8 ) ) {
 		g_theApp->ResetGame();
@@ -188,7 +190,7 @@ void Game::UpdateDisplayCursorInfo( Map* map )
 	}
 }
 
-void Game::Render() const
+void Game::Render() 
 {
 	switch( m_gameState )
 	{
@@ -217,43 +219,43 @@ void Game::Render() const
 
 
 
-void Game::RenderUI() const
+void Game::RenderUI() 
 {
 	//m_world->RenderUI();
 	RenderCursor();
 	RenderDisplay();
 }
 
-void Game::RenderCursor() const
+void Game::RenderCursor() 
 {
-	g_theRenderer->BindTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 	g_theRenderer->DrawCircle( m_mousePos, 3, 1, Rgba8::RED );
 }
 
-void Game::RenderDisplay() const
+void Game::RenderDisplay()
 {
-	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+	g_theRenderer->SetDiffuseTexture( g_squirrelFont->GetTexture() );
 	g_theRenderer->DrawVertexVector( m_displayVertices );
 	
 }
 
-void Game::RenderLoadingScene() const
+void Game::RenderLoadingScene() 
 {
-	g_theRenderer->BindTexture(g_squirrelFont->GetTexture());
+	g_theRenderer->SetDiffuseTexture(g_squirrelFont->GetTexture());
 	g_theRenderer->DrawVertexVector(m_LoadingTextVertices);
 }
 
-void Game::RenderAttractScene() const
+void Game::RenderAttractScene() 
 {
-	g_theRenderer->BindTexture( g_squirrelFont->GetTexture() );
+	g_theRenderer->SetDiffuseTexture( g_squirrelFont->GetTexture() );
 	g_theRenderer->DrawVertexVector( m_attractTextVertices );
 }
 
-void Game::RenderPauseScene() const
+void Game::RenderPauseScene() 
 {
-	g_theRenderer->BindTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 	g_theRenderer->DrawAABB2D( m_pauseScene,m_pauseColor );
-	g_theRenderer->BindTexture(g_squirrelFont->GetTexture());
+	g_theRenderer->SetDiffuseTexture(g_squirrelFont->GetTexture());
 	g_theRenderer->DrawVertexVector(m_pauseText);
 }
 
@@ -334,7 +336,8 @@ void Game::UpdateWorld( float deltaSeconds )
 void Game::UpdateCursor( float deltaSeconds )
 {
 	UNUSED( deltaSeconds );
-	m_mousePos = g_theInputSystem->GetNormalizedMousePosInCamera( *g_UICamera );
+	void* hwnd = g_theWindow->GetHandle();
+	m_mousePos = g_theInputSystem->GetNormalizedMousePosInCamera( hwnd, *g_UICamera );
 }
 
 void Game::LoadGameAsset()

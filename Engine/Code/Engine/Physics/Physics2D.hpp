@@ -10,7 +10,7 @@ class DiscCollider2D;
 class PolygonCollider2D;
 class Rigidbody2D;
 struct Polygon2;
-
+struct AABB2;
 
 enum CollisionState {
 	COLLISION_ENTER,
@@ -58,6 +58,8 @@ public:
 	// PolygonCollider2D
 	PolygonCollider2D* CreatePolyCollider( std::vector<Vec2> points, Rigidbody2D* rb = nullptr );
 	PolygonCollider2D* CreatePolyCollider( Polygon2 polygon, Rigidbody2D* rb = nullptr );
+	PolygonCollider2D* CreatePolyCollider( AABB2 box, Rigidbody2D* rb = nullptr );
+
 
 	// Collision
 	void DetectCollisions();	// A04

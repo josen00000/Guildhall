@@ -9,18 +9,16 @@ Vec2 BitmapFont::ALIGN_CENTERED = Vec2(0.5, 0.5);
 
 BitmapFont::BitmapFont( const char* fontName, Texture* fontTexture )
 	:m_fontName(fontName)
-	,m_glyphSpriteSheet (SpriteSheet(*fontTexture, IntVec2(16,16)))
+	,m_glyphSpriteSheet(SpriteSheet( fontTexture, IntVec2(16,16) ))
 {
 
 }
 
 Texture* BitmapFont::GetTexture() const
 {
-	Texture& tem = m_glyphSpriteSheet.GetTexture();
-	return &tem;
+	Texture* tem = m_glyphSpriteSheet.GetTexture();
+	return tem;
 }
-
-
 
 void BitmapFont::AddVertsForText2D( std::vector<Vertex_PCU>& vertexArray, const Vec2& textMins, float cellHeight, const std::string& text, const Rgba8& tint, float cellAspect )
 {	
@@ -28,7 +26,7 @@ void BitmapFont::AddVertsForText2D( std::vector<Vertex_PCU>& vertexArray, const 
 	float cellWidth = cellHeight * glyphAspect * cellAspect;
 	Vec2 minPos = textMins;
 	float cellRightPosX = cellWidth;
-	for(unsigned char c : text )
+	for( unsigned char c : text )
 	{
 		Vec2 minUV = Vec2(0,0);
 		Vec2 maxUV = Vec2(0,0);
@@ -83,7 +81,6 @@ void BitmapFont::AddVertsForTextInBox2D( std::vector<Vertex_PCU>& vertexArray, c
 		vertexArray.push_back( leftDown );
 		vertexArray.push_back( rightDown );
 		vertexArray.push_back( rightUp );
-
 	}
 }
 

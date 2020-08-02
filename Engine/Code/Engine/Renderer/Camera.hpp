@@ -1,8 +1,6 @@
 #pragma once
-#include "Engine/Core/Convention.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/Rgba8.hpp"
-#include "Engine/Core/Convention.hpp"
 #include "Engine/Core/Transform.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Vec2.hpp"

@@ -1,6 +1,7 @@
 #include "Physics2D.hpp"
 #include "Engine/Core/Time/Clock.hpp"
 #include "Engine/Core/Time/Timer.hpp"
+#include "Engine/Math/AABB2.hpp"
 #include "Engine/Physics/Collider2D.hpp"
 #include "Engine/Physics/DiscCollider2D.hpp"
 #include "Engine/Physics/PolygonCollider2D.hpp"
@@ -533,6 +534,15 @@ PolygonCollider2D* Physics2D::CreatePolyCollider( Polygon2 polygon, Rigidbody2D*
 	polyCol->m_worldPolygon = polygon;
 	polyCol->m_worldPos = polygon.m_center;
 	rb->SetSimulationMode( RIGIDBODY_STATIC );
+	return polyCol;
+}
+
+PolygonCollider2D* Physics2D::CreatePolyCollider( AABB2 box, Rigidbody2D* rb /*= nullptr */ )
+{
+	std::vector<Vec2> boxPoints;
+	boxPoints.resize( 4 );
+	box.GetCornerPositions( boxPoints.data() );
+	PolygonCollider2D* polyCol = CreatePolyCollider( boxPoints, rb );
 	return polyCol;
 }
 

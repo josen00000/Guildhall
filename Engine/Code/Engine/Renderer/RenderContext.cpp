@@ -132,7 +132,7 @@ void RenderContext::EndFrame()
 	Prensent();
 }
 
-void RenderContext::BeginCamera( Camera* camera, Convention convention )
+void RenderContext::BeginCamera( Camera* camera, Convention convention/*=X_RIGHT_Y_UP_Z_BACKWARD*/ )
 {
 #if defined(RENDER_DEBUG)
 	ClearState();
@@ -228,7 +228,7 @@ void RenderContext::BeginCameraRTVAndViewport( Camera* camera )
 	//TextureView* rtv = output->GetOrCreateRenderTargetView(); // texture view: handler of the data in texture
 	//ID3D11RenderTargetView* d3d_rtv = rtv->GetRTVHandle();
 
-	IntVec2 outputSize = output->GetTexelSize();
+	IntVec2 outputSize = output->GetSize();
 	BeginCameraViewport( outputSize );
 
 	// depth
@@ -343,11 +343,11 @@ void RenderContext::EndEffect()
 
 Texture* RenderContext::AcquireRenderTargetMatching( Texture* texture )
 {
-	IntVec2 size = texture->GetTexelSize();
+	IntVec2 size = texture->GetSize();
 
 	for( int i = 0; i < m_renderTargetPool.size(); i++ ) {
 		Texture* rt = m_renderTargetPool[i];
-		if( rt->GetTexelSize() == size ) {
+		if( rt->GetSize() == size ) {
 			m_renderTargetPool[i] = m_renderTargetPool.back();
 			m_renderTargetPool.pop_back();
 			return rt;
