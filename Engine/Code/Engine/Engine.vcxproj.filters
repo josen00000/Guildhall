@@ -52,6 +52,9 @@
     <Filter Include="Job">
       <UniqueIdentifier>{dd09c0ca-7073-4b08-92e8-ebd50d6d5670}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{c7e378c4-fc08-4b3d-b643-73d25b0e06e1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Camera.cpp">
@@ -294,9 +297,6 @@
     <ClCompile Include="Core\Delegate.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Convention.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="Job\Job.cpp">
       <Filter>Job</Filter>
     </ClCompile>
@@ -305,6 +305,15 @@
     </ClCompile>
     <ClCompile Include="Job\JobSystemWorkerThread.cpp">
       <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\NetworkSystem.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Client.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Server.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -581,9 +590,6 @@
     <ClInclude Include="Core\ConsumableDelegate.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Convention.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Job\Job.hpp">
       <Filter>Job</Filter>
     </ClInclude>
@@ -592,6 +598,15 @@
     </ClInclude>
     <ClInclude Include="Job\JobSystemWorkerThread.hpp">
       <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\NetworkSystem.hpp">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Client.hpp">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Server.hpp">
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
