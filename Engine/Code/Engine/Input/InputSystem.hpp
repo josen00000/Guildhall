@@ -32,7 +32,7 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	void Shutdown();
-	void Update();
+	void Update();	
 
 	// Mouse 
 	IntVec2 GetMouseRawDesktopPos() const; // interface to know

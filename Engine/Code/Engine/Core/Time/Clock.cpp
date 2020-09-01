@@ -118,3 +118,8 @@ Clock* Clock::GetMaster()
 {
 	return g_masterClock;
 }
+
+float Clock::GetMasterDeltaSeconds()
+{
+	return (float)g_masterClock->GetLastDeltaSeconds();
+}
