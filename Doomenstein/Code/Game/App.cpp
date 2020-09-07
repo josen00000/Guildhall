@@ -11,6 +11,7 @@
 #include "Engine/Core/NamedProperties.hpp"
 #include "Engine/Core/Time/Clock.hpp"
 #include "Engine/Core/Time/Time.hpp"
+#include "Engine/Network/NetworkSystem.hpp"
 #include "Engine/Job/JobSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
@@ -31,6 +32,7 @@ EventSystem*	g_theEventSystem	= nullptr;
 AudioSystem*	g_theAudioSystem	= nullptr;
 JobSystem*		g_theJobSystem		= nullptr;
 DevConsole*		g_theConsole		= nullptr;
+NetworkSystem*	g_theNetworkSystem	= nullptr;
 //Convention		g_convention;
 
 #include <vector>
@@ -45,6 +47,7 @@ void App::Startup()
 	g_theInputSystem	= new InputSystem();
 	g_theEventSystem	= new EventSystem();
 	g_theAudioSystem	= new AudioSystem();
+	g_theNetworkSystem	= new NetworkSystem();
 	//TemplateTesting();
 
 	Clock::SystemStartUp();
@@ -53,6 +56,7 @@ void App::Startup()
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );
 	g_theInputSystem->Startup();
+	g_theNetworkSystem->StartUp();
 
 	g_gameConfigBlackboard.PopulateFromXmlFile( "Data/GameConfig.xml" );
 	m_windowName = g_gameConfigBlackboard.GetValue( "WindowName", "default name " );
@@ -168,6 +172,7 @@ void App::Shutdown()
 	g_theInputSystem->Shutdown();
 	g_theConsole->Shutdown();
 	g_theJobSystem->Shutdown();
+	g_theNetworkSystem->ShutDown();
 
 	Clock::SystemShutDown();
 	
@@ -236,6 +241,7 @@ void App::BeginFrame()
 	g_theInputSystem->BeginFrame();
 	g_theRenderer->BeginFrame();
 	g_theAudioSystem->BeginFrame();
+	g_theNetworkSystem->BeginFrame();
 	//g_theGame->BeginFrame();
 }
 
@@ -273,6 +279,7 @@ void App::EndFrame()
 	g_theRenderer->EndFrame();
 	g_theInputSystem->EndFrame();
 	g_theConsole->EndFrame();
+	g_theNetworkSystem->EndFrame();
 	DebugRenderEndFrame();
 }
 

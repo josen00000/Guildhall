@@ -23,5 +23,10 @@ public:
 public:
 	std::vector<Client*> m_clients;
 	std::vector<Server*> m_servers;
+
+private:
+	int m_listenPort = -1;
+	bool m_isListening = true;
+	//SOCKET* m_listenSocket;
 };
 

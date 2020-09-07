@@ -18,6 +18,6 @@ public:
 
 public:
 	std::string m_targetIPAddress = "";
-	std::string 
+
 };
 
