@@ -39,6 +39,13 @@ enum TileAttribute {
 	NUM_TILE_ATTRS
 };
 
+enum tileDirection
+{
+	TILE_UP,
+	TILE_DOWN,
+	TILE_LEFT,
+	TILE_RIGHT
+};
 
 class Map {
 public:
@@ -51,19 +58,36 @@ public:
 	bool	IsTileOfTypeInsideWithCoords( TileType type, IntVec2 tileCoords ) const;
 	bool	IsTileOfTypeWithIndex( TileType type, int index ) const;
 	bool	IsTileCoordsInside( IntVec2 tileCoords ) const;
+	
+	bool	IsTileOfAttribute( IntVec2 tileCoords, TileAttribute attr ) const; 
+	bool	IsTileOfAttribute( int tileIndex, TileAttribute attr ) const;
+	bool	IsTileSolid( IntVec2 tileCoords ) const;
+	bool	IsTileRoom( IntVec2 tileCoords ) const;
+	bool	IsTileEdge( IntVec2 tileCoords ) const;
+	bool	IsTileVisited( IntVec2 tileCoords ) const;
+	bool	IsTilesSameRoom( IntVec2 tileCoords1, IntVec2 tileCoords2 );
+	bool	IsTilesSameRoomFloor( IntVec2 tileCoords1, IntVec2 tileCoords2 );
 
 	IntVec2 GetTileCoordsWithTileIndex( int index ) const;
+	IntVec2 GetRandomInsideTileCoords() const;
+	IntVec2 GetRandomInsideNotSolidTileCoords() const;
 	int		GetTileIndexWithTileCoords( IntVec2 tileCoords ) const;
 
 	RandomNumberGenerator* GetRNG(){ return m_rng; }
 
-	Tile&	GetTileWithTileCoords( IntVec2 coords );
+	const Tile&	GetTileWithTileCoords( IntVec2 coords );
 	std::vector<Tile>& GetTiles(){ return m_tiles; }
 
 
 	// Mutator
 	void SetTileTypeWithCoords( IntVec2 coords, TileType type );
 	void SetTileTypeWithIndex( int index, TileType type );
+
+	void SetTileOfAttribute( IntVec2 coords, TileAttribute attr, bool isTrue );
+	void SetTileSolid( IntVec2 coords, bool isSolid );
+	void SetTileRoom( IntVec2 coords, bool isRoom );
+
+	void AddRoom( Room* room );
 
 	// Basic
 	void UpdateMap( float deltaSeconds );
@@ -75,10 +99,20 @@ private:
 	void PopulateTiles();
 	void InitializeTiles();
 	void GenerateRooms();
-	void GenerateMazes();
+	void GeneratePaths();
+	void CreatePathBetweenCoords( IntVec2 coord1, IntVec2 coord2 );
+	
 
 	// private update
 	void UpdateDebugInfo();
+	void UpdateMouse();
+
+	// private Render
+	void RenderDebugInfo();
+	void RenderDebugTile( int tileIndex );
+
+	// private Accessor
+	TileAttributeBitFlag GetTileAttrBitFlagWithTileAttr( TileAttribute attr ) const;
 
 private:
 	int								m_width = 0;
@@ -89,6 +123,8 @@ private:
 
 	IntVec2							m_startCoords = IntVec2::ZERO;
 	IntVec2							m_endCoords = IntVec2::ZERO;
+
+	Vec2							m_mousePosInWorld = Vec2::ZERO;
 	
 	std::string						m_name;
 
@@ -101,6 +137,7 @@ private:
 
 	RandomNumberGenerator*			m_rng;
 
+	int								m_debugTileIndex = 0;
 
 	// Actor
 	Player*							m_player = nullptr;

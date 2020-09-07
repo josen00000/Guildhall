@@ -213,7 +213,6 @@
     <ClCompile Include="Map\Map.cpp" />
     <ClCompile Include="Map\MapDefinition.cpp" />
     <ClCompile Include="Map\MapGenStep.cpp" />
-    <ClCompile Include="Map\Maze.cpp" />
     <ClCompile Include="Map\Mutator.cpp" />
     <ClCompile Include="Map\GenRooms.cpp" />
     <ClCompile Include="Map\Room.cpp" />
@@ -236,7 +235,6 @@
     <ClInclude Include="Map\Map.hpp" />
     <ClInclude Include="Map\MapDefinition.hpp" />
     <ClInclude Include="Map\MapGenStep.hpp" />
-    <ClInclude Include="Map\Maze.hpp" />
     <ClInclude Include="Map\Mutator.hpp" />
     <ClInclude Include="Map\GenRooms.hpp" />
     <ClInclude Include="Map\Room.hpp" />

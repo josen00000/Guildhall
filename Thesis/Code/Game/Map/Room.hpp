@@ -14,14 +14,14 @@ public:
 	int GetLayer() const { return m_layer; }
 	bool IsTileOfRoomEdge( IntVec2 tileCoords ) const;
 	bool IsTileOfRoomFloor( IntVec2 tileCoords ) const;
+	bool IsTileOfRoom( IntVec2 tileCoords ) const;
 	
 	IntVec2 GetRandomEdgeTileCoord() const;
+	IntVec2 GetRandomNearestEdgeTileCoord( IntVec2 tileCoords ) const;
 	IntVec2 GetRandomFloorTileCoord() const;
 
 	std::vector<IntVec2> GetEdgeTileCoords() { return m_edgeTileCoords; }
 	std::vector<IntVec2> GetFloorTileCoords() { return m_floorTileCoords; }
-
-
 
 	void AddRoomEdgeTileCoords( IntVec2 tileCoords ); 
 	void AddRoomFloorTileCoords( IntVec2 tileCoords ); 

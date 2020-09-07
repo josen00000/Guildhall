@@ -44,7 +44,7 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 				case WA_ACTIVE: {
 					if( input != nullptr ){
 						input->ClipSystemCursor();
-						input->HideSystemCursor();
+						input->ShowSystemCursor();
 						input->SetCursorMode( CURSOR_RELATIVE );
 					}
 					break;

@@ -105,7 +105,7 @@ void DevConsole::EndDevConcole()
 	EndSelect();
 	ClearInput();
 	g_theInputSystem->ClearCharacters();
-	g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
+	//g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
 	g_theInputSystem->ClipSystemCursor();
 }
 
@@ -461,7 +461,6 @@ void DevConsole::DebugError( std::string errorMsg )
 {
 	PrintString( Rgba8::RED, errorMsg );
 	g_theConsole->StartDevConcole();
-	
 }
 
 

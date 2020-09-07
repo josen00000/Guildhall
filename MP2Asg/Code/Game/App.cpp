@@ -78,9 +78,9 @@ void App::StartupStage2()
 
 void App::StartupStage3()
 {
-	g_gameCamera		= new Camera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ), 0.9f );
-	g_UICamera			= new Camera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
-	g_devCamera			= new Camera( Vec2( 0, 0 ), Vec2( 30, 20 ) );
+	g_gameCamera		= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_UICamera			= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) );
+	g_devCamera			= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( 0, 0 ), Vec2( 30, 20 ) );
 
 	DebugRenderSystemStartup( g_theRenderer, g_gameCamera );
 	g_theGame			= new Game( g_gameCamera, g_UICamera );

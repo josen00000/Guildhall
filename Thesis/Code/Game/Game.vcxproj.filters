@@ -61,9 +61,6 @@
     <ClCompile Include="Map\Room.cpp">
       <Filter>Game\Map</Filter>
     </ClCompile>
-    <ClCompile Include="Map\Maze.cpp">
-      <Filter>Game\Map</Filter>
-    </ClCompile>
     <ClCompile Include="Actor.cpp">
       <Filter>Game</Filter>
     </ClCompile>
@@ -124,9 +121,6 @@
       <Filter>Game\Map</Filter>
     </ClInclude>
     <ClInclude Include="Map\Room.hpp">
-      <Filter>Game\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Map\Maze.hpp">
       <Filter>Game\Map</Filter>
     </ClInclude>
     <ClInclude Include="Actor.hpp">

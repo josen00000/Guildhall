@@ -74,6 +74,7 @@ void App::StartupStage3()
 
 	DebugRenderSystemStartup( g_theRenderer, g_gameCamera );
 	g_theGame			= new Game( g_gameCamera, g_UICamera );
+	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 	g_theConsole = DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
 
 	g_theGame->Startup();
@@ -119,7 +120,7 @@ void App::HandleQuitRequested()
 
 void App::CheckGameQuit()
 {
-	if(g_theGame->m_isAppQuit){
+	if( g_theGame->m_isAppQuit ){
 		m_isQuitting = true;
 	}
 }
@@ -153,6 +154,7 @@ void App::BeginFrame()
 void App::Update( float deltaSeconds )
 {
 	g_theGame->RunFrame( deltaSeconds );
+	g_theConsole->Update( deltaSeconds );
 	CheckGameQuit();
 }
 
@@ -167,6 +169,7 @@ const void App::Render() const
 	g_theGame->RenderUI();
 	g_theRenderer->EndCamera();
 
+	g_theConsole->Render( *g_theRenderer );
 	// debug render
 	DebugRenderScreenTo( g_gameCamera->GetColorTarget() );
 	DebugRenderWorldToCamera( g_gameCamera );
@@ -177,6 +180,7 @@ void App::EndFrame()
 	g_theInputSystem->EndFrame();
 	g_theRenderer->EndFrame();
 	g_theAudioSystem->EndFrame();
+	g_theConsole->EndFrame();
 	DebugRenderEndFrame();
 }
 
