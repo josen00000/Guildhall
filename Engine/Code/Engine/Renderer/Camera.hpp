@@ -86,6 +86,8 @@ public:
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio );
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float nearZ, float farZ, float aspectRatio );
 	void SetPosition( const Vec3& position );
+	void SetPosition2D( const Vec2& pos );
+	void SetCenterPosition2D( Vec2 pos );
 	
 	void SetRenderContext( RenderContext* ctx );
 

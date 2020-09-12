@@ -168,7 +168,9 @@ float AABB2::GetInnerRadius() const
 void AABB2::GetCornerPositions( Vec2* out_fourPoints ) const
 {
 	out_fourPoints[0] = mins;
-	out_fourPoints[1] = maxs;
+	out_fourPoints[1] = Vec2( mins.x, maxs.y );
+	out_fourPoints[2] = maxs;
+	out_fourPoints[3] = Vec2( maxs.x, mins.y );
 }
 
 void AABB2::Translate( const Vec2& translation )
@@ -208,6 +210,14 @@ void AABB2::StretchToIncludePoint( const Vec2& point )
 	if( nearestPoint.y==maxs.y ) {
 		maxs.y=point.y;
 	}
+}
+
+void AABB2::MoveToIncludePoint( const Vec2& point )
+{
+	Vec2 nearestPoint = GetNearestPoint( point );
+	Vec2 disp = nearestPoint - point;
+	Vec2 center = GetCenter();
+	SetCenter( center - disp );
 }
 
 void AABB2::filledWithinAABB2( const AABB2 filledAABB2 )

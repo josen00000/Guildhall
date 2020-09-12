@@ -820,6 +820,15 @@ void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, Rgba8 color, const char* format,
 	DebugAddScreenText( pos, pivot, g_defaultTextSize, color, color, 0.f, result );
 }
 
+void DebugAddScreenStrings( Vec4 pos, Vec2 pivot, float size, Rgba8 color, Strings strings )
+{
+	
+	for( int i = 0; i < strings.size(); i++ ) 
+	{
+		DebugAddScreenText( pos + Vec4( 0.f, 0.f, 0.f, -i * size ), pivot, size, color, color, 0.f, strings[i].c_str() );
+	}
+}
+
 void DebugAddScreenLeftAlignText( float relativeY, float absoluteY, Vec2 pivot, Rgba8 color, float duration, std::string text )
 {
 	DebugAddScreenText( Vec4( 0.f, relativeY, 0.f, absoluteY ), pivot, g_defaultTextSize, color, color, duration, text );
@@ -844,6 +853,11 @@ void DebugAddScreenLeftAlignTextf( float relativeY, float absoluteY, Vec2 pivot,
 	va_end( args );
 	//float textWidth = g_defaultDebugFont->GetWidthForText2D( g_defaultTextSize, result );
 	DebugAddScreenText( Vec4( 0.f, relativeY, 0.f, absoluteY ), pivot, g_defaultTextSize, color, color, 0.f, result );
+}
+
+void DebugAddScreenLeftAlignStrings( float relativeY, float absoluteY, Rgba8 color, Strings strings )
+{
+	DebugAddScreenStrings( Vec4( 0.f, relativeY, 0.f, absoluteY ), Vec2::ZERO, g_defaultTextSize, color, strings );
 }
 
 void DebugAddScreenBasis( Vec2 screenOriginLocation, Mat44 basisToRender, Rgba8 startTint, Rgba8 endTint, float duration )

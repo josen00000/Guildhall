@@ -23,6 +23,7 @@ public:
 	void SetW( float intensity ); // only use for intensity
 
 	const Vec4 operator-( const Vec4& vecToSubtract ) const;
+	const Vec4 operator+( const Vec4& vecToAdd ) const;
 	const Vec4 operator*=( float uniformScale ) const;
 
 	// static variable

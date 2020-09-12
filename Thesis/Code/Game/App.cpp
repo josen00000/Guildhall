@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
+#include "Game/Camera/CameraSystem.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/Time/Time.hpp"
 #include "Engine/Core/Time/Clock.hpp"
@@ -19,6 +20,7 @@
 // Game
 App*			g_theApp			= nullptr;
 Game*			g_theGame			= nullptr;
+CameraSystem*	g_theCameraSystem	= nullptr;
 
 // Engine
 BitmapFont*		g_squirrelFont		= nullptr;

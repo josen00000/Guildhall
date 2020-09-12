@@ -1,25 +1,29 @@
 #pragma once
 #include <vector>
-#include "Game/ActorDefinition.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB2.hpp"
 
 class Game;
 class Texture;
+class Map;
+
+enum ActorType {
+	ACTOR_NONE,
+	ACTOR_PLAYER,
+	ACTOR_ENEMY
+};
 
 class Actor {
 public:
 	Actor(){}
 	~Actor(){}
-	explicit Actor( ActorDefinition const& definition );
-	static Actor* SpawnActorWithPos( ActorDefinition const& definition, Vec2 pos );
+	explicit Actor( Vec2 pos );
+	static Actor* SpawnActorWithPos( Vec2 pos );
 
 public:
 	virtual void UpdateActor( float deltaSeconds );
-	virtual void UpdateActorVerts( Vec2 uvAtMin, Vec2 uvAtMax );
 	virtual void RenderActor();
-	void UpdateActorAnimation( float deltaSeconds );
-
+	virtual void Shoot();
 	void TakeDamage( float damage );
 
 public:
@@ -29,10 +33,8 @@ public:
 	float GetPhysicRadius() const { return m_physicsRadius; }
 	float GetHealth() const { return m_hp; }
 	float GetAttackStrength() const { return m_attackStrength; }
-	std::string GetType() const;
 
 	Vec2 GetPosition() const { return m_position; }
-	AABB2 GetShape() const { return m_shape; }
 
 	// Mutator
 	void SetOrientationDegrees( float orientationDegrees);
@@ -40,27 +42,27 @@ public:
 	void SetPhysicsRadius( float physicsRadius );
 	void SetHealth( float hp );
 	void SetAttackStrength( float attackStrength ) ;
-								;
+	void SetMoveDirt( Vec2 moveDirt );								;
 	void SetPosition( Vec2 pos );
-	void SetShape( AABB2 const& shape );
 
 
 protected:
-	bool m_isMoving = false;
-
 	float m_orientationDegrees	= 0.f;
-	float m_speed				= 0.f;
-	float m_physicsRadius		= 0.f;
-	float m_hp					= 0.f;
-	float m_attackStrength		= 0.f;
+	float m_speed				= 2.f;
+	float m_physicsRadius		= 1.f;
+	float m_hp					= 100.f;
+	float m_attackStrength		= 10.f;
 
 
+	Vec2 m_movingDirt	= Vec2::ZERO;
 	Vec2 m_position		= Vec2::ZERO;
-	AABB2 m_shape		= AABB2();
-	Texture* m_texture	= nullptr;
-	ActorDefinition	m_definition;
 
+	ActorType m_type	= ActorType::ACTOR_NONE;
 
-	std::vector<Vertex_PCU> m_verts;
+	Map* m_map = nullptr;
+public:
+
+	static Rgba8 s_enemyColor;
+	static Rgba8 s_playerColor;
 };
 

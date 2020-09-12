@@ -43,6 +43,7 @@ public:
 	void		SetCenter(const Vec2& newCenter);
 	void		SetDimensions(const Vec2& newDimensions);
 	void		StretchToIncludePoint(const Vec2& point);
+	void		MoveToIncludePoint( const Vec2& point );
 	void		filledWithinAABB2(const AABB2 filledAABB2);
 	AABB2		CarveBoxOffLeft( float fractionOfWidth, float additionalWidhth=0.f );
 	AABB2		CarveBoxOffRight( float fractionOfWidth, float additionalWidhth=0.f );

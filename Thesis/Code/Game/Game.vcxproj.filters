@@ -17,6 +17,15 @@
     <Filter Include="Game\Map\MapGenerator">
       <UniqueIdentifier>{1edc4308-9088-487b-a700-35454c1cc489}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game\Actor">
+      <UniqueIdentifier>{0f5ef36c-7b0d-4d55-b1ca-d7bd8eb4e756}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Items">
+      <UniqueIdentifier>{cbf7b5a6-6447-419a-9e52-58bb61e65be8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\CameraSystem">
+      <UniqueIdentifier>{426b7fd9-9d41-4421-a9d5-d8e785582b6e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -61,20 +70,26 @@
     <ClCompile Include="Map\Room.cpp">
       <Filter>Game\Map</Filter>
     </ClCompile>
-    <ClCompile Include="Actor.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="ActorDefinition.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Item.cpp">
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Coroutine.cpp">
       <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Game\Actor</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Game\Actor</Filter>
+    </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>Game\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\CameraSystem.cpp">
+      <Filter>Game\CameraSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\CameraController.cpp">
+      <Filter>Game\CameraSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -123,20 +138,26 @@
     <ClInclude Include="Map\Room.hpp">
       <Filter>Game\Map</Filter>
     </ClInclude>
-    <ClInclude Include="Actor.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Player.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="ActorDefinition.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="Item.hpp">
       <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="Coroutine.hpp">
       <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.hpp">
+      <Filter>Game\Actor</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.hpp">
+      <Filter>Game\Actor</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.hpp">
+      <Filter>Game\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera\CameraSystem.hpp">
+      <Filter>Game\CameraSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera\CameraController.hpp">
+      <Filter>Game\CameraSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

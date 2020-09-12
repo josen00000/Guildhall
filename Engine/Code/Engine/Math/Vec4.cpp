@@ -66,6 +66,11 @@ const Vec4 Vec4::operator-( const Vec4& vecToSubtract ) const
 	return Vec4( x - vecToSubtract.x, y - vecToSubtract.y, z - vecToSubtract.z, w - vecToSubtract.w );
 }
 
+const Vec4 Vec4::operator+( const Vec4& vecToAdd ) const
+{
+	return Vec4( x + vecToAdd.x, y + vecToAdd.y, z + vecToAdd.z, w + vecToAdd.w );
+}
+
 const Vec4 Vec4::operator*=( const float uniformScale ) const
 {
 	return Vec4( uniformScale*x, uniformScale*y, uniformScale*z, uniformScale*w );

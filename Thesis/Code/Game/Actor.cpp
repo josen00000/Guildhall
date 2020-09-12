@@ -1,5 +1,7 @@
 #include "Game/Actor.hpp"
 #include "Game/Game.hpp"
+#include "Game/Map/Map.hpp"
+#include "Game/Projectile.hpp"
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
 #include "Engine/Renderer/Texture.hpp"
@@ -8,69 +10,56 @@
 extern RenderContext* g_theRenderer;
 extern Game* g_theGame;
 
-Actor::Actor( ActorDefinition const& definition )
+Rgba8 Actor::s_enemyColor = Rgba8::BLUE;
+Rgba8 Actor::s_playerColor = Rgba8::RED;
+
+Actor::Actor( Vec2 pos )
 {
-	m_definition = definition;
-	m_hp = definition.m_health;
-	m_speed = definition.m_walkSpeed;
-	m_physicsRadius = definition.m_physicsRadius;
-	m_attackStrength = definition.m_attackStrength;
-	m_shape = AABB2( Vec2( 0.f, 0.2f ), Vec2( 0.5f, 1.f ) );
+	m_position = pos;
 }
 
-Actor* Actor::SpawnActorWithPos( ActorDefinition const& definition, Vec2 pos )
+Actor* Actor::SpawnActorWithPos( Vec2 pos )
 {
-	Actor* newActor = new Actor( definition );
-	newActor->SetPosition( pos );
+	Actor* newActor = new Actor( pos );
 	return newActor;
 }
 
 void Actor::UpdateActor( float deltaSeconds )
 {
-	m_verts.clear();
-	Vec2 forwardDirt = Vec2( 1.f, 0.f );
-	forwardDirt.SetAngleDegrees( m_orientationDegrees );
-	if( m_isMoving ) {
-		m_position = m_position + forwardDirt * m_speed * deltaSeconds; 
-		m_shape.SetCenter( m_position );
-	}
+	Vec2 velocity = m_movingDirt * m_speed;
+	m_position = m_position + velocity * deltaSeconds;
 }
 
-void Actor::UpdateActorVerts( Vec2 uvAtMin, Vec2 uvAtMax )
-{
-	AppendVertsForAABB2D( m_verts, m_shape, Rgba8::WHITE, uvAtMin, uvAtMax );
-}
 
 void Actor::RenderActor() 
 {
-	g_theRenderer->DrawVertexVector( m_verts );
-	if( g_theGame->GetIsDebug() ) {
-		g_theRenderer->SetDiffuseTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
+	switch( m_type )
+	{
+	case ACTOR_NONE:
+		break;
+	case ACTOR_PLAYER:
+		g_theRenderer->DrawCircle( Vec3( m_position, 0 ), m_physicsRadius, 0.05f, Rgba8::RED );
+		break;
+	case ACTOR_ENEMY:
 		g_theRenderer->DrawCircle( Vec3( m_position, 0 ), m_physicsRadius, 0.05f, Rgba8::BLUE );
+		break;
+	default:
+		break;
 	}
 }
 
-void Actor::UpdateActorAnimation( float deltaSeconds )
+void Actor::Shoot()
 {
-	static float totalSeconds = 0.f;
-	totalSeconds+= deltaSeconds;
-	SpriteAnimDefinition* currentAnimDef = m_definition.m_anims["Idle"];
-	const SpriteDefinition& currentSpriteDef = currentAnimDef->GetSpriteDefAtTime( totalSeconds );
-	Vec2 uvAtMin;
-	Vec2 uvAtMax;
-	m_texture = currentAnimDef->GetSpriteSheet().GetTexture();
-	currentSpriteDef.GetUVs( uvAtMin, uvAtMax );
-	UpdateActorVerts( uvAtMin, uvAtMax );
+	Vec2 projectileDirt = Vec2::ONE;
+	projectileDirt.SetAngleDegrees( m_orientationDegrees );
+	m_map->SpawnNewProjectile( m_type, m_position, projectileDirt );
+	
 }
 
 void Actor::TakeDamage( float damage )
 {
 	m_hp -= damage;
-}
-
-std::string Actor::GetType() const
-{
-	return m_definition.m_name;
 }
 
 void Actor::SetOrientationDegrees( float orientationDegrees )
@@ -98,13 +87,14 @@ void Actor::SetAttackStrength( float attackStrength )
 	m_attackStrength = attackStrength;
 }
 
+void Actor::SetMoveDirt( Vec2 moveDirt )
+{
+	m_movingDirt = moveDirt;
+}
+
 void Actor::SetPosition( Vec2 pos )
 {
 	m_position = pos;
-	m_shape.SetCenter( m_position );
 }
 
-void Actor::SetShape( AABB2 const& shape )
-{
-	m_shape = shape;
-}
+

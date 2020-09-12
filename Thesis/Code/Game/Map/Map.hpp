@@ -1,12 +1,12 @@
 #pragma once
 #include <string>
+#include "Game/Actor.hpp"
 #include "Game/Game.hpp"
 #include "Game/Map/Tile.hpp"
 #include "Game/Map/Room.hpp"
 #include "Game/Map/Maze.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
-
 
 class MapDefinition;
 class Player;
@@ -17,6 +17,7 @@ class Clock;
 class SpriteAnimDefinition;
 class SpriteSheet;
 class Texture;
+class Projectile;
 
 
 enum TileAttributeBitFlag: uint {
@@ -55,10 +56,10 @@ public:
 	static Map* CreateMap( std::string name, MapDefinition* definition );
 
 	// Accessor
+		// Tile
 	bool	IsTileOfTypeInsideWithCoords( TileType type, IntVec2 tileCoords ) const;
 	bool	IsTileOfTypeWithIndex( TileType type, int index ) const;
 	bool	IsTileCoordsInside( IntVec2 tileCoords ) const;
-	
 	bool	IsTileOfAttribute( IntVec2 tileCoords, TileAttribute attr ) const; 
 	bool	IsTileOfAttribute( int tileIndex, TileAttribute attr ) const;
 	bool	IsTileSolid( IntVec2 tileCoords ) const;
@@ -67,16 +68,18 @@ public:
 	bool	IsTileVisited( IntVec2 tileCoords ) const;
 	bool	IsTilesSameRoom( IntVec2 tileCoords1, IntVec2 tileCoords2 );
 	bool	IsTilesSameRoomFloor( IntVec2 tileCoords1, IntVec2 tileCoords2 );
+	bool	IsTileCoordsValid( IntVec2 tileCoords );
 
 	IntVec2 GetTileCoordsWithTileIndex( int index ) const;
 	IntVec2 GetRandomInsideTileCoords() const;
 	IntVec2 GetRandomInsideNotSolidTileCoords() const;
 	int		GetTileIndexWithTileCoords( IntVec2 tileCoords ) const;
 
-	RandomNumberGenerator* GetRNG(){ return m_rng; }
-
-	const Tile&	GetTileWithTileCoords( IntVec2 coords );
 	std::vector<Tile>& GetTiles(){ return m_tiles; }
+	const Tile&	GetTileWithTileCoords( IntVec2 coords );
+
+	RandomNumberGenerator* GetRNG(){ return m_rng; }
+		// Actor
 
 
 	// Mutator
@@ -91,7 +94,25 @@ public:
 
 	// Basic
 	void UpdateMap( float deltaSeconds );
+	void UpdateActors( float deltaSeconds );
+	void UpdateProjectiles( float deltaSeconds );
 	void RenderMap();
+	void RenderActors(); 
+	void RenderProjectiles();
+
+	// Actor
+	void CreatePlayer();
+
+	// Projectile
+	void SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt );
+
+	// Collision
+	void CheckCollision();
+	void CheckActorCollision();
+	void CheckTileCollision();
+	void CheckBulletCollision();
+	void CheckCollisionBetweenPlayerAndTiles( Player* player );
+	void CheckCollisionBetweenPlayerAndTile( Player* player, IntVec2 tileCoords );
 
 private:
 	// Generate Map
@@ -133,13 +154,12 @@ private:
 	std::vector<uint>				m_tileAttributes;
 	std::vector<Vertex_PCU>			m_tilesVertices;
 	std::vector<Room*>				m_rooms;
-	std::vector<Maze*>				m_mazes;
 
 	RandomNumberGenerator*			m_rng;
 
 	int								m_debugTileIndex = 0;
 
 	// Actor
-	Player*							m_player = nullptr;
-	std::vector<Actor*>				m_enemies;
+	std::vector<Player*>			m_players;
+	std::vector<Projectile*>		m_projectiles;
 };

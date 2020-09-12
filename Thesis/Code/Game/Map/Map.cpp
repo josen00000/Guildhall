@@ -7,6 +7,9 @@
 #include "Game/Map/MapDefinition.hpp"
 #include "Game/Map/MapGenStep.hpp"
 #include "Game/Map/TileDefinition.hpp"
+#include "Game/Camera/CameraSystem.hpp"
+#include "Game/Projectile.hpp"
+
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
@@ -31,6 +34,7 @@
 extern Game*			g_theGame;
 extern Camera*			g_debugCamera;
 extern Camera*			g_gameCamera;
+extern CameraSystem*	g_theCameraSystem;
 
 // Engine
 //////////////////////////////////////////////////////////////////////////
@@ -135,6 +139,11 @@ bool Map::IsTilesSameRoomFloor( IntVec2 tileCoords1, IntVec2 tileCoords2 )
 	}
 
 	return false;
+}
+
+bool Map::IsTileCoordsValid( IntVec2 tileCoords )
+{
+	return ( tileCoords.x >= 0 && tileCoords.x < m_width ) && ( tileCoords.y >= 0 && tileCoords.y < m_height );
 }
 
 IntVec2 Map::GetTileCoordsWithTileIndex( int index ) const
@@ -244,10 +253,8 @@ void Map::UpdateMap( float deltaSeconds )
 			stepIndex++;
 			break;	
 		case 2:
-			GeneratePaths();
+			m_startCoords = GetRandomInsideNotSolidTileCoords();
 			PopulateTiles();
-			stepIndex++;
-		case 3:
 			m_isGeneratingMap = false;
 		default:
 			break;
@@ -256,9 +263,31 @@ void Map::UpdateMap( float deltaSeconds )
 	}
 
 	UpdateMouse();
+	UpdateActors( deltaSeconds );
+	UpdateProjectiles( deltaSeconds );
+	CheckCollision();
 
 	if( g_theGame->GetIsDebug() ) {
 		UpdateDebugInfo();
+	}
+}
+
+void Map::UpdateActors( float deltaSeconds )
+{
+	if( m_players.size() == 1 ) {
+		Vec2 playerPos = m_players[0]->GetPosition();
+		Vec2 targetDirt = m_mousePosInWorld - playerPos;
+		m_players[0]->SetOrientationDegrees( targetDirt.GetAngleDegrees() );
+	}
+	for( int i = 0; i < m_players.size(); i++ ) {
+		m_players[i]->UpdatePlayer( deltaSeconds );
+	}
+}
+
+void Map::UpdateProjectiles( float deltaSeconds )
+{
+	for( int i = 0; i < m_projectiles.size(); i++ ) {
+		m_projectiles[i]->UpdateProjectile( deltaSeconds );
 	}
 }
 
@@ -267,10 +296,113 @@ void Map::RenderMap()
 	g_theRenderer->SetDiffuseTexture( TileDefinition::s_spriteTexture );
 	g_theRenderer->DrawVertexVector( m_tilesVertices );
 
+	RenderActors();
+	RenderProjectiles();
+
 	if( g_theGame->GetIsDebug() ) {
 		RenderDebugInfo();
 	}
 }
+
+void Map::RenderActors()
+{
+	g_theRenderer->SetDiffuseTexture( nullptr );
+	for( int i = 0; i < m_players.size(); i++ ) {
+		m_players[i]->RenderPlayer();
+	}
+}
+
+void Map::RenderProjectiles()
+{
+	g_theRenderer->SetDiffuseTexture( nullptr );
+	for( int i = 0; i < m_projectiles.size(); i++ ) {
+		m_projectiles[i]->RenderProjectile();
+	}
+}
+
+void Map::CreatePlayer( )
+{
+	Vec2 pos = (Vec2)m_startCoords;
+	Player* newPlayer = Player::SpawnPlayerWithPos( pos );
+	newPlayer->SetMap( this );
+	m_players.push_back( newPlayer );
+	g_theCameraSystem->CreateAndPushController( newPlayer, g_gameCamera );
+}
+
+void Map::SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt )
+{
+	Projectile* tempProjectile = Projectile::SpawnProjectileWithDirtAndType( movingDirt, startPos, type );
+	m_projectiles.push_back( tempProjectile );
+}
+
+void Map::CheckCollision()
+{
+	CheckActorCollision();
+	CheckTileCollision();
+	CheckBulletCollision();
+}
+
+void Map::CheckActorCollision()
+{
+
+}
+
+void Map::CheckTileCollision()
+{
+	for( int i = 0; i < m_players.size(); i++ ) {
+		Player* tempPlayer = m_players[i];
+		if( tempPlayer == nullptr ){ continue; }
+		CheckCollisionBetweenPlayerAndTiles( tempPlayer );
+	}
+}
+
+void Map::CheckBulletCollision()
+{
+	
+}
+
+void Map::CheckCollisionBetweenPlayerAndTiles( Player* player )
+{
+	IntVec2 playerTileCoords = (IntVec2)player->GetPosition(); 
+
+	IntVec2 downTileCoords	= playerTileCoords + IntVec2( 0, -1 );
+	IntVec2 upTileCoords	= playerTileCoords + IntVec2( 0, 1 );
+	IntVec2 rightTileCoords	= playerTileCoords + IntVec2( 1, 0 );
+	IntVec2 leftTileCoords	= playerTileCoords + IntVec2( -1, 0 );
+
+	IntVec2 downLeftTileCoords	= playerTileCoords + IntVec2( -1, -1 );
+	IntVec2 downRightTileCoords	= playerTileCoords + IntVec2( 1, -1 );
+	IntVec2 upLeftTileCoords	= playerTileCoords + IntVec2( -1, 1 );
+	IntVec2 upRightTileCoords	= playerTileCoords + IntVec2( 1, 1 );
+
+	CheckCollisionBetweenPlayerAndTile( player, downTileCoords );
+	CheckCollisionBetweenPlayerAndTile( player, upTileCoords );
+	CheckCollisionBetweenPlayerAndTile( player, rightTileCoords );
+	CheckCollisionBetweenPlayerAndTile( player, leftTileCoords );
+
+	CheckCollisionBetweenPlayerAndTile( player, downLeftTileCoords );
+	CheckCollisionBetweenPlayerAndTile( player, downRightTileCoords );
+	CheckCollisionBetweenPlayerAndTile( player, upLeftTileCoords );
+	CheckCollisionBetweenPlayerAndTile( player, upRightTileCoords );
+}
+
+void Map::CheckCollisionBetweenPlayerAndTile( Player* player, IntVec2 tileCoords )
+{
+	if( !IsTileCoordsValid( tileCoords ) ) { 
+		ERROR_RECOVERABLE( "tileCoords not valid !" );
+		return; 
+	}
+
+	if( !IsTileSolid( tileCoords ) ){ return; }
+
+	int tileIndex = GetTileIndexWithTileCoords( tileCoords );
+	Tile tempTile = m_tiles[tileIndex];
+	AABB2 tileBound = tempTile.GetTileBounds();
+	Vec2 playerPos = player->GetPosition();
+	PushDiscOutOfAABB2D( playerPos, player->GetPhysicRadius(), tileBound );
+	player->SetPosition( playerPos );
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -309,9 +441,8 @@ void Map::InitializeTiles()
 {
 	for( int i = 0; i < m_height * m_width; i++ ) {
 		IntVec2 tileCoords = GetTileCoordsWithTileIndex( i );
-		m_tiles.emplace_back( tileCoords, m_definition->GetEdgeType() );
+		m_tiles.emplace_back( tileCoords, m_definition->GetFillType() );
 		m_tileAttributes.push_back( (uint)0 );
-		SetTileSolid( tileCoords, true );
 	}
 }
 
@@ -407,22 +538,23 @@ void Map::RenderDebugInfo()
 
 void Map::RenderDebugTile( int tileIndex )
 {
+	if( tileIndex < 0 || tileIndex >= m_tiles.size() ){ return; }
 	int lineIndex = 0;
 	Tile debugTile = m_tiles[tileIndex];
 	TileType debugTiletype = debugTile.GetTileType();
 	Vec2 tileCoords = debugTile.GetWorldPos();
-	DebugAddScreenLeftAlignText( 0, 3 * lineIndex, Vec2::ZERO, Rgba8::WHITE, 0.f, debugTiletype );
+	DebugAddScreenLeftAlignText( 0, 3.f * lineIndex, Vec2::ZERO, Rgba8::WHITE, 0.f, debugTiletype );
 	lineIndex++;
-	DebugAddScreenLeftAlignText( 0, 3 * lineIndex, Vec2::ZERO, Rgba8::WHITE, 0.f, tileCoords.ToString() );
+	DebugAddScreenLeftAlignText( 0, 3.f * lineIndex, Vec2::ZERO, Rgba8::WHITE, 0.f, tileCoords.ToString() );
 	lineIndex++;
 	std::string isStartText = GetStringFromBool( IsTileOfAttribute( tileIndex, TILE_IS_START ) );
-	DebugAddScreenLeftAlignTextf( 0, 3 * lineIndex, Vec2::ZERO, Rgba8::WHITE, "isStart = %s", isStartText.c_str() );
+	DebugAddScreenLeftAlignTextf( 0, 3.f * lineIndex, Vec2::ZERO, Rgba8::WHITE, "isStart = %s", isStartText.c_str() );
 	lineIndex++;
 	std::string isRoomText = GetStringFromBool( IsTileOfAttribute( tileIndex, TILE_IS_ROOM ) );
-	DebugAddScreenLeftAlignTextf( 0, 3 * lineIndex, Vec2::ZERO, Rgba8::WHITE, "isRoom = %s", isRoomText.c_str() );
+	DebugAddScreenLeftAlignTextf( 0, 3.f * lineIndex, Vec2::ZERO, Rgba8::WHITE, "isRoom = %s", isRoomText.c_str() );
 	lineIndex++;
 	std::string isSolidText = GetStringFromBool( IsTileOfAttribute( tileIndex, TILE_IS_SOLID ) );
-	DebugAddScreenLeftAlignTextf( 0, 3 * lineIndex, Vec2::ZERO, Rgba8::WHITE, "isSolid = %s", isSolidText.c_str() );
+	DebugAddScreenLeftAlignTextf( 0, 3.f * lineIndex, Vec2::ZERO, Rgba8::WHITE, "isSolid = %s", isSolidText.c_str() );
 // 	lineIndex++;
 // 	std::string isStartText = GetStringFromBool( IsTileOfAttribute( tileIndex, TILE_IS_START ) );
 // 	DebugAddScreenLeftAlignTextf( 0, 3 * lineIndex, Vec2::ZERO, Rgba8::WHITE, "isStart = %s", isStartText.c_str() );

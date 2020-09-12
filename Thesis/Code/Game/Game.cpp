@@ -1,6 +1,6 @@
 #include "game.hpp"
 #include "Game/App.hpp"
-#include "Game/ActorDefinition.hpp"
+#include "Game/Camera/CameraSystem.hpp"
 #include "Game/Map/MapDefinition.hpp"
 #include "Game/Map/TileDefinition.hpp"
 #include "Game/World.hpp"
@@ -14,6 +14,7 @@
 // Game
 //////////////////////////////////////////////////////////////////////////
 extern App*				g_theApp;
+extern CameraSystem*	g_theCameraSystem;
 
 // Engine
 //////////////////////////////////////////////////////////////////////////
@@ -42,6 +43,8 @@ void Game::Startup()
 	LoadAssets();
 	LoadDefs();
 	m_world = World::CreateWorld( 1 );
+	g_theCameraSystem = new CameraSystem();
+	g_theCameraSystem->Startup();
 }
 
 void Game::Shutdown()
@@ -64,6 +67,7 @@ void Game::RunFrame( float deltaSeconds )
 void Game::RenderGame() const
 {
 	m_world->RenderWorld();
+	g_theCameraSystem->DebugRender();
 }
 
 void Game::RenderUI() const
@@ -78,6 +82,7 @@ void Game::RenderUI() const
 void Game::SetIsDebug( bool isDebug )
 {
 	m_isDebug = isDebug;
+	g_theCameraSystem->SetIsDebug( isDebug );
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +96,24 @@ void Game::SetIsDebug( bool isDebug )
 void Game::HandleInput()
 {
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F1 ) ) {
-		m_isDebug = !m_isDebug;
+		bool isdebug = GetIsDebug();
+		SetIsDebug( !isdebug );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F2 ) ) {
+		CameraWindowState currentState = g_theCameraSystem->GetCameraWindowState();
+		if( currentState < CameraWindowState::NUM_OF_CAMERA_WINDOW ) {
+			currentState = static_cast<CameraWindowState>( currentState + 1 );
+		}
+		if( currentState == CameraWindowState::NUM_OF_CAMERA_WINDOW ) {
+			currentState = static_cast<CameraWindowState>( (uint) 0 );
+		}
+		g_theCameraSystem->SetCameraWindowState( currentState );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P ) ) {
+		Map* currentMap = m_world->GetCurrentMap();
+		if( currentMap != nullptr ) {
+			currentMap->CreatePlayer();
+		 }
 	}
 }
 
@@ -101,6 +123,7 @@ void Game::UpdateGame( float deltaSeconds )
 	// update world
 	CheckIfExit();
 	m_world->UpdateWorld( deltaSeconds );
+	g_theCameraSystem->Update( deltaSeconds );
 }
 
 void Game::UpdateUI( float deltaSeconds )
@@ -120,12 +143,7 @@ void Game::CheckIfExit()
 	}
 }
 
-void Game::CheckIfDebug()
-{
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F1 ) ) {
-		m_isDebug = true;
-	}
-}
+
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -141,6 +159,6 @@ void Game::LoadDefs()
 {
 	MapDefinition::PopulateDefinitionsFromXmlFile( MAP_DEF_FILE_PATH );
 	TileDefinition::PopulateDefinitionFromXmlFile( TILE_DEF_FILE_PATH );
-	ActorDefinition::PopulateDefinitionFromXmlFile( ACTOR_DEF_FILE_PATH );
+	//ActorDefinition::PopulateDefinitionFromXmlFile( ACTOR_DEF_FILE_PATH );
 }
 //////////////////////////////////////////////////////////////////////////

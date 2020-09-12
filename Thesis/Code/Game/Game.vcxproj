@@ -202,8 +202,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
-    <ClCompile Include="ActorDefinition.cpp" />
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Camera\CameraController.cpp" />
+    <ClCompile Include="Camera\CameraSystem.cpp" />
     <ClCompile Include="Coroutine.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -219,12 +220,14 @@
     <ClCompile Include="Map\Tile.cpp" />
     <ClCompile Include="Map\TileDefinition.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.hpp" />
-    <ClInclude Include="ActorDefinition.hpp" />
     <ClInclude Include="App.hpp" />
+    <ClInclude Include="Camera\CameraController.hpp" />
+    <ClInclude Include="Camera\CameraSystem.hpp" />
     <ClInclude Include="Coroutine.hpp" />
     <ClInclude Include="EngineBuildPreferences.hpp" />
     <ClInclude Include="GameObject.hpp" />
@@ -241,6 +244,7 @@
     <ClInclude Include="Map\Tile.hpp" />
     <ClInclude Include="Map\TileDefinition.hpp" />
     <ClInclude Include="Player.hpp" />
+    <ClInclude Include="Projectile.hpp" />
     <ClInclude Include="World.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -2,6 +2,7 @@
 #include <vector>
 #include "Game/GameCommon.hpp"
 #include "Game/GameObject.hpp"
+
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Math/Polygon2.hpp"
@@ -11,6 +12,7 @@ class InputSystem;
 class RandomNumberGenerator;
 class Camera;
 class World;
+class CameraSystem;
 
 struct Vertex_PCU;
 
@@ -62,8 +64,9 @@ public:
 	World* m_world			= nullptr;
 
 
-	Camera* m_gameCamera	= nullptr;
-	Camera* m_UICamera		= nullptr;
+	CameraSystem* m_cameraSystem = nullptr;
+	Camera* m_gameCamera		= nullptr;
+	Camera* m_UICamera			= nullptr;
 
 	std::vector<Coroutine*> m_gameObjects;
 };

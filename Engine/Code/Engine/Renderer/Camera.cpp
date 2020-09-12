@@ -164,6 +164,17 @@ void Camera::SetPosition( const Vec3& position )
 	m_transform.SetPosition( position );
 }
 
+void Camera::SetPosition2D( const Vec2& pos )
+{
+	m_transform.SetPosition( Vec3( pos ) );
+}
+
+void Camera::SetCenterPosition2D( Vec2 pos )
+{
+	pos = pos - ( m_dimension / 2 ) ;
+	m_transform.SetPosition( Vec3( pos ) );
+}
+
 void Camera::SetRenderContext( RenderContext* ctx )
 {
 	m_rctx = ctx;
