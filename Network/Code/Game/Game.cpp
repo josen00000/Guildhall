@@ -16,6 +16,9 @@
 #include "Engine/Math/AABB3.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/Vec4.hpp"
+#include "Engine/Network/NetworkSystem.hpp"
+#include "Engine/Network/Client.hpp"
+#include "Engine/Network/Server.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Job/JobSystem.hpp"
@@ -36,6 +39,7 @@ extern App*				g_theApp;
 extern BitmapFont*		g_squirrelFont;
 extern AudioSystem*		g_theAudioSystem; 
 extern InputSystem*		g_theInputSystem;
+extern NetworkSystem*	g_theNetworkSystem;
 extern JobSystem*		g_theJobSystem;
 extern RenderContext*	g_theRenderer;
 extern DevConsole*		g_theConsole;
@@ -82,9 +86,17 @@ void Game::Startup()
 	currentMap->m_actors.push_back( m_player );
 	// command
 	g_theConsole->AddCommandToCommandList( std::string( "load_map" ), std::string( "Load one map with name." ), MapCommandLoadMap );
+	g_theConsole->AddCommandToCommandList( std::string( "client_connect" ), std::string( "Connect to target server" ), ConnectTo );
+	g_theConsole->AddCommandToCommandList( std::string( "send_message" ), std::string( "Connect to target server" ), SendMessageTest );
+	g_theConsole->AddCommandToCommandList( std::string( "start_server" ), std::string( "start server for listening" ), StartServer );
+	g_theConsole->AddCommandToCommandList( std::string( "send_data" ), std::string( "send Data to client" ), SendData );
 
 	m_billBoardEntity = new Entity();
  	m_billBoardEntity->m_cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.5f );
+
+	// network start up
+	m_testClient = g_theNetworkSystem->CreateClient();
+	m_testServer = g_theNetworkSystem->CreateServer();
 }
 
 void Game::Shutdown()
@@ -258,7 +270,7 @@ void Game::JobTest()
 {
 	for( int i = 0; i < 20; i++ ) {
 		TestJob* testJob = new TestJob();
-		g_theJobSystem->PostJob( testJob );
+		//g_theJobSystem->PostJob( testJob );
 	}
 }
 
@@ -423,7 +435,7 @@ void Game::HandleAudioKeyboardInput()
 void Game::PlayerTestSound()
 {
 	SoundID testSound = g_theAudioSystem->CreateOrGetSound( "Data/Audio/TestSound.mp3" );
-	g_theAudioSystem->PlaySound( testSound, false, m_rng->RollRandomFloatInRange( 0.5f, 1.f ), m_rng->RollRandomFloatInRange( -1.f, 1.f ), m_rng->RollRandomFloatInRange( 0.5f, 2.f ) );
+	//g_theAudioSystem->PlaySound( testSound, false, m_rng->RollRandomFloatInRange( 0.5f, 1.f ), m_rng->RollRandomFloatInRange( -1.f, 1.f ), m_rng->RollRandomFloatInRange( 0.5f, 2.f ) );
 }
 
 void Game::CheckIfExit()
@@ -756,5 +768,39 @@ bool MapCommandWarp( EventArgs& args )
 	//g_theGame->SetStartPos();
 	//g_theGame->SetStartYaw();
 	UNUSED(args);
+	return true;
+}
+
+bool ConnectTo( EventArgs& args )
+{
+	Client* tempClient = g_theGame->GetClient();
+	std::string targetIPAddr = args.GetValue( std::to_string( 0 ), "" );
+	std::string targetPort	= args.GetValue( std::to_string( 1 ), "" );
+	tempClient->CreateSocket( targetIPAddr.c_str(), targetPort.c_str() );
+	tempClient->Connect();
+	return true;
+}
+
+bool SendMessageTest( EventArgs& args )
+{
+	Client* tempClient = g_theGame->GetClient();
+	std::string message = args.GetValue( std::to_string( 0 ), "" );
+	tempClient->SendMessage( message );
+	return true;
+}
+
+bool StartServer( EventArgs& args )
+{
+	std::string port = args.GetValue( std::to_string( 0 ), "" );
+	g_theNetworkSystem->StartServerWithPort( port.c_str() );
+	return true;
+}
+
+bool SendData( EventArgs& args )
+{
+	std::string data = args.GetValue( std::to_string( 0 ), "" );
+	Server* test = g_theNetworkSystem->m_server;
+	test->SetSendData( data.c_str(), data.size()  );
+	
 	return true;
 }

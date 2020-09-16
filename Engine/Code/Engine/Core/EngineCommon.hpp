@@ -40,3 +40,7 @@ const Vec2 ALIGN_TOP_CENTER		= Vec2( 0.5f, 1.f );
 const Vec2 ALIGN_TOP_RIGHT		= Vec2( 1.f, 1.f);
 
 constexpr int MAX_LIGHTS_NUM = 8;
+
+// network
+constexpr int NET_BUFFER_SIZE		= 520;
+constexpr int NET_MESSAGE_SIZE		= 512;

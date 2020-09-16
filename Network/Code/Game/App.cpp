@@ -17,6 +17,7 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Network/NetworkSystem.hpp"
 
 
 App*			g_theApp			= nullptr;
@@ -29,6 +30,7 @@ RenderContext*	g_theRenderer		= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
 EventSystem*	g_theEventSystem	= nullptr;
 AudioSystem*	g_theAudioSystem	= nullptr;
+NetworkSystem*	g_theNetworkSystem	= nullptr;
 JobSystem*		g_theJobSystem		= nullptr;
 DevConsole*		g_theConsole		= nullptr;
 //Convention		g_convention;
@@ -73,6 +75,9 @@ void App::Startup()
 	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
 	g_theConsole->Startup();
+
+	g_theNetworkSystem = new NetworkSystem;
+	g_theNetworkSystem->StartUp();
 
 	g_theJobSystem = new JobSystem();
 	g_theJobSystem->CreateWorkerThread( 8 );
@@ -236,12 +241,14 @@ void App::BeginFrame()
 	g_theInputSystem->BeginFrame();
 	g_theRenderer->BeginFrame();
 	g_theAudioSystem->BeginFrame();
+	g_theNetworkSystem->BeginFrame();
 	//g_theGame->BeginFrame();
 }
 
 void App::Update( float deltaSeconds )
 {
 	//g_theRenderer->UpdateFrameTime( deltaSeconds );
+	g_theNetworkSystem->Update( deltaSeconds );
 	g_theGame->RunFrame( deltaSeconds );
 	CheckGameQuit();
 	g_theInputSystem->Update();

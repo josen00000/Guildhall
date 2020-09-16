@@ -83,6 +83,7 @@ public:
 	void DebugLog( Strings debugMsgs, Rgba8 color = Rgba8::WHITE );
 	void DebugLogf( const char* text, ... );
 	void DebugError( std::string errorMsg );
+	void DebugError( const char* errorMsg );
 	void DebugErrorf( const char* text, ... );
 
 private:
