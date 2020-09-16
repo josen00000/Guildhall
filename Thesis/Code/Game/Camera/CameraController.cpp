@@ -18,7 +18,9 @@ CameraController::CameraController( CameraSystem* owner, Player* player, Camera*
 
 void CameraController::Update( float deltaSeconds )
 {
+	m_currentCameraPos = m_camera->GetPosition();
 	UpdateCameraWindow( deltaSeconds );
+	UpdateCamera();
 	if( m_isDebug ) {
 		DebugCameraInfo();
 	}
@@ -61,16 +63,20 @@ void CameraController::SetIsDebug( bool isDebug )
 void CameraController::UpdateCameraWindow( float deltaSeconds )
 {
 	Vec2 playerPos = m_player->GetPosition();
-	Vec2 cameraPos;
 	switch( m_owner->GetCameraWindowState() )
 	{
 	case NO_CAMERA_WINDOW:
 		// Camera Pos Lock
-		cameraPos = playerPos;
-		m_camera->SetCenterPosition2D( cameraPos );
-		m_cameraWindow.SetCenter( cameraPos );
+		m_cameraWindowCenterPos = playerPos;
+		m_cameraWindow.SetCenter( m_cameraWindowCenterPos );
 		break;
 	case USE_CAMERA_WINDOW:
+		switch( m_owner->getcamera )
+		{
+		default:
+			break;
+		}
+
 		if( !IsPointInsideAABB2D( playerPos, m_cameraWindow ) ) {
 			m_cameraWindow.MoveToIncludePoint( playerPos );
 			cameraPos = m_cameraWindow.GetCenter();
@@ -86,6 +92,11 @@ void CameraController::UpdateCameraWindow( float deltaSeconds )
 void CameraController::SetCameraWindowSize( Vec2 size )
 {
 	m_cameraWindow.SetDimensions( size );
+}
+
+void CameraController::UpdateCamera()
+{
+	m_camera->SetCenterPosition2D( m_goalCameraPos );
 }
 
 // void CameraController::SetCameraWindowMode( CameraWindowState newState )

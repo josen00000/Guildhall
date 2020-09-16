@@ -26,6 +26,8 @@ public:
 	void UpdateCameraWindow( float deltaSeconds );
 	void SetCameraWindowSize( Vec2 size );
 	//void SetCameraWindowMode( CameraWindowState newState );
+private:
+	void UpdateCamera();
 
 private:
 	bool m_isDebug = false;
@@ -33,6 +35,11 @@ private:
 	Camera* m_camera = nullptr;
 	CameraSystem* m_owner = nullptr;
 
+
+	
+	Vec2 m_goalCameraPos = Vec2::ZERO;
+	Vec2 m_cameraWindowCenterPos = Vec2::ZERO;
+	Vec2 m_currentCameraPos = Vec2::ZERO;
 	// Camera Box
 	//CameraWindowState m_cameraWindowState = NO_CAMERA_WINDOW;
 	AABB2 m_cameraWindow;

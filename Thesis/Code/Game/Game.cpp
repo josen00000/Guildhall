@@ -101,10 +101,10 @@ void Game::HandleInput()
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F2 ) ) {
 		CameraWindowState currentState = g_theCameraSystem->GetCameraWindowState();
-		if( currentState < CameraWindowState::NUM_OF_CAMERA_WINDOW ) {
+		if( currentState < CameraWindowState::NUM_OF_CAMERA_WINDOW_STATE ) {
 			currentState = static_cast<CameraWindowState>( currentState + 1 );
 		}
-		if( currentState == CameraWindowState::NUM_OF_CAMERA_WINDOW ) {
+		if( currentState == CameraWindowState::NUM_OF_CAMERA_WINDOW_STATE ) {
 			currentState = static_cast<CameraWindowState>( (uint) 0 );
 		}
 		g_theCameraSystem->SetCameraWindowState( currentState );

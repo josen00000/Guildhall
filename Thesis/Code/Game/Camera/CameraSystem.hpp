@@ -8,7 +8,16 @@ class Camera;
 enum CameraWindowState: unsigned int {
 	NO_CAMERA_WINDOW = 0,
 	USE_CAMERA_WINDOW,
-	NUM_OF_CAMERA_WINDOW,
+	NUM_OF_CAMERA_WINDOW_STATE,
+};
+
+enum CameraSnappingState : unsigned int {
+	NO_CAMERA_SNAPPING = 0,
+	POSITION_SNAPPING,
+	POSITION_HORIZONTAL_LOCK,
+	POSITION_VERTICAL_LOCK,
+	POSITION_LOCK,
+	NUM_OF_CAMERA_SNAPPING_STATE
 };
 
 class CameraSystem {
@@ -39,9 +48,11 @@ public:
 	void CreateAndPushController( Player* player, Camera* camera );
 	void SetCameraWindowState( CameraWindowState newState );
 	CameraWindowState GetCameraWindowState() const { return m_cameraWindowState; }
+	CameraSnappingState GetCameraSnappingState() const { return m_cameraSnappingState; }
 
 private:
 	bool m_isdebug = false;
 	std::vector<CameraController*> m_controllers;
-	CameraWindowState m_cameraWindowState;
+	CameraWindowState m_cameraWindowState		= NO_CAMERA_WINDOW;
+	CameraSnappingState m_cameraSnappingState	= NO_CAMERA_SNAPPING;
 };
