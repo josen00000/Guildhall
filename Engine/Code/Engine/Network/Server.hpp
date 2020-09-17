@@ -9,7 +9,7 @@ class Server
 {
 public:
 	Server();
-	~Server();
+	~Server(){}
 
 public:
 	void StartUp();
@@ -25,16 +25,19 @@ public:
 	// Accessor
 	std::string GetClientIPAddr( SOCKET clientSocket ); // only able after accept
 	std::string GetStringFromData();
+
 private:
 	void ReceiveDataFromClient( SOCKET clientSocket );
 	void SendDataToClient( SOCKET clientSocket, MESSAGE_ID mid );
-	SOCKET CreateSocket( const char* portNum, addrinfo* socketAddr );
+	SOCKET CreateSocket( addrinfo* socketAddr );
 	void BindSocket( SOCKET socket, addrinfo* socketAddr );
 	void ListenOnSocket( SOCKET socket );
 	void AcceptConnectionFromClient( SOCKET listenSocket );
-	void Disconnect();
+	void DisconnectClientSocket( SOCKET clientSocket );
 	void CloseSocket( SOCKET socket );
 
+	// buffer
+	void WriteDataToRecvBuffer( DataPackage data );
 private:
 	addrinfo* m_resultAddr = nullptr;
 	FD_SET m_listenSet;
@@ -47,6 +50,6 @@ private:
 	bool	m_isSendBufDirty = false;
 	bool	m_isRecvBufDirty = false;
 	//std::vector<>
-	timeval m_timeval = timeval{ 01, 01 };
+	timeval m_timeval = timeval{ 00, 05 };
 };
 

@@ -1,6 +1,5 @@
 test1
 test2
-quit
 debug_render
 debug_add_screen_text
 debug_add_world_point
@@ -11,8 +10,10 @@ set_ambient_color
 set_light_color
 load_map
 raycast
-client_connect
-send_message
-start_server
-help
 send_data
+quit
+help
+client_connect
+disconnect
+start_server
+send_message

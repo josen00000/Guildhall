@@ -6,10 +6,12 @@ class Client;
 class Server;
 
 enum MESSAGE_ID: std::uint16_t {
-	SERVER_LISTENING	= 1,
+	NON_VALID_DATA		= 0,
+	SERVER_LISTENING,
 	TEXT_MESSAGE,
-	CLIENT_DISCONNECTING,
-	NUM_OF_MESSAGE_ID_PLUS_1
+	CLIENT_DISCONNECT,
+	SERVER_DISCONNECT,
+	NUM_OF_MESSAGE_ID
 };
 
 struct DataHeader {
@@ -49,7 +51,7 @@ public:
 	// temp use
 	Client* m_client;
 	Server* m_server;
-
+	bool m_isServer = false;
 private:
 	int m_listenPort = -1;
 	bool m_isListening = true;

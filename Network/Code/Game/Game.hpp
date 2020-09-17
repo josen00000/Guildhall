@@ -198,3 +198,5 @@ bool ConnectTo( EventArgs& args );
 bool SendMessageTest( EventArgs& args );
 bool StartServer( EventArgs& args );
 bool SendData( EventArgs& args );
+bool StopServer( EventArgs& args );
+bool Disconnect( EventArgs& args );

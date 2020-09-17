@@ -80,7 +80,7 @@ void App::Startup()
 	g_theNetworkSystem->StartUp();
 
 	g_theJobSystem = new JobSystem();
-	g_theJobSystem->CreateWorkerThread( 8 );
+	//g_theJobSystem->CreateWorkerThread( 8 );
 
 	g_theGame			= new Game( g_camera, g_UICamera );
 	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP ); // basis currently not use
@@ -173,6 +173,7 @@ void App::Shutdown()
 	g_theInputSystem->Shutdown();
 	g_theConsole->Shutdown();
 	g_theJobSystem->Shutdown();
+	g_theNetworkSystem->Shutdown();
 
 	Clock::SystemShutDown();
 	
@@ -185,6 +186,7 @@ void App::Shutdown()
 	delete g_theGame;
 	delete g_theEventSystem;
 	delete g_theRenderer;
+	delete g_theNetworkSystem;
 	
 
 	g_theGame			= nullptr;

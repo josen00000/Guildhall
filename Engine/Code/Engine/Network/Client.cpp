@@ -25,6 +25,11 @@ Client::Client()
 
 }
 
+Client::~Client()
+{
+
+}
+
 void Client::StartUp()
 {
 	m_isConnected = false;
@@ -33,6 +38,42 @@ void Client::StartUp()
 void Client::ShutDown()
 {
 	m_isConnected = false;
+}
+
+void Client::BeginFrame()
+{
+	if( m_isConnected ) {
+		FD_ZERO(&m_listenSet);
+		FD_SET( m_targetSocket, &m_listenSet );
+
+		int iResult = select( 0, &m_listenSet, NULL, NULL, &m_timeval );
+		if( iResult == SOCKET_ERROR ) {
+			g_theConsole->DebugErrorf( "Socket error in select: %d", WSAGetLastError() );
+			return;
+		}
+		else if( iResult == 0 ) {
+			//g_theConsole->DebugError( "Time limit expired in select" );
+			//return;
+		}
+
+		if( m_isSendBufDirty ) {
+			SendDataToServer( MESSAGE_ID::TEXT_MESSAGE );
+		}
+		ReceiveDataFromServer();
+	}
+}
+
+void Client::Update()
+{
+	if( m_isRecvBufDirty ) {
+		g_theConsole->DebugLogf( "Handle data: %s", GetStringFromData().c_str() );
+		m_isRecvBufDirty = false;
+	}
+}
+
+std::string Client::GetStringFromData()
+{
+	return std::string( m_recvBuf.data );
 }
 
 void Client::SetTargetIP( const std::string& targetIP )
@@ -55,10 +96,26 @@ void Client::SetSelfPort( const std::string& selfPort )
 	m_port = selfPort;
 }
 
-void Client::SendMessage( std::string message )
+void Client::ConnectToServerWithIPAndPort( const char* hostName, const char* portNum )
 {
-	m_message = message;
-	SendData();
+	CreateSocket( hostName, portNum );
+	Connect();
+}
+
+void Client::DisconnectServer()
+{
+	if( m_isConnected ) {
+		SendDisconnectMessageToServer();
+	}
+	DisconnectAndCloseSocket();
+}
+
+void Client::SetSendData( const char* data, int dataLen )
+{
+	memcpy( m_sendBuf.data, data, dataLen );
+	m_sendBuf.data[dataLen] = NULL;
+	m_sendBufLen = dataLen;
+	m_isSendBufDirty = true;
 }
 
 void Client::CreateSocket( const char* hostName, const char* portNum )
@@ -79,8 +136,9 @@ void Client::CreateSocket( const char* hostName, const char* portNum )
 		return;
 	}
 
-	m_socket = socket( m_resultAddr->ai_family, m_resultAddr->ai_socktype, m_resultAddr->ai_protocol );
-	if( m_socket == INVALID_SOCKET ) {
+	// ioControl
+	m_targetSocket = socket( m_resultAddr->ai_family, m_resultAddr->ai_socktype, m_resultAddr->ai_protocol );
+	if( m_targetSocket == INVALID_SOCKET ) {
 		g_theConsole->DebugErrorf( "Error at socket(): %ld\n ", WSAGetLastError() );
 		freeaddrinfo( m_resultAddr );
 		WSACleanup();
@@ -96,77 +154,148 @@ void Client::CreateSocket( )
 
 void Client::Connect()
 {
-	int iResult = connect( m_socket, m_resultAddr->ai_addr, (int)m_resultAddr->ai_addrlen );
+	int iResult = connect( m_targetSocket, m_resultAddr->ai_addr, (int)m_resultAddr->ai_addrlen );
 	if( iResult == SOCKET_ERROR ) {
-		closesocket( m_socket );
-		m_socket = INVALID_SOCKET;
+		g_theConsole->DebugErrorf( "connect error %d", WSAGetLastError() );
+		closesocket( m_targetSocket );
+		m_targetSocket = INVALID_SOCKET;
 	}
 
 	freeaddrinfo(m_resultAddr);
 
-	if( m_socket == INVALID_SOCKET ) {
+	if( m_targetSocket == INVALID_SOCKET ) {
 		g_theConsole->DebugErrorf( "Server connection failed." );
-		WSACleanup();
 		m_isConnected = false;
 		return;
 	}
 
 	// connect successful
 	m_isConnected = true;
-}
+	g_theConsole->DebugLog( "connect successful" );
 
-void Client::SendData()
-{
-	if( !m_isConnected ) {
-		g_theConsole->DebugError( "connection build failed. Can not send data. " );
-	}
-	const char* sendBuf = "testing!";
-
-
-	int iResult = send( m_socket, m_message.data(), (int)m_message.size(), 0 );
+	unsigned long blockingMode = 1;
+	iResult = ioctlsocket( m_targetSocket, FIONBIO, &blockingMode );
 	if( iResult == SOCKET_ERROR ) {
-		g_theConsole->DebugErrorf( "send failed %d\n", WSAGetLastError() );
-		closesocket( m_socket );
-		WSACleanup();
+		g_theConsole->DebugErrorf( "fail to IO Control socket: %d", WSAGetLastError() );
 		return;
 	}
-
-	g_theConsole->DebugLogf( "bytes sent : %d\n", iResult );
-
-	// shutdown?
-// 	int iResult = shutdown( m_socket, SD_SEND );
-// 	if( iResult == SOCKET_ERROR ) {
-// 		g_theConsole->DebugErrorf(" shut down fails %d ", WSAGetLastError() );
-// 		closesocket( m_socket );
-// 		WSACleanup();
-// 		return;
-// 	}
-
 }
+
+void Client::SendDataToServer( MESSAGE_ID mid )
+{
+	if( !m_isConnected ) { return; }
+
+	DataPackage tempData;
+	tempData.header.messageID = mid;
+
+	switch( mid )
+	{
+	case TEXT_MESSAGE:
+		tempData.header.messageLen = (std::uint16_t)(sizeof( tempData.header ) + m_sendBufLen );
+		memcpy( tempData.message, m_sendBuf.data, m_sendBufLen );
+		break;
+	case CLIENT_DISCONNECT:
+		tempData.header.messageLen = (std::uint16_t)(sizeof( tempData.header ) + 1);
+		tempData.message[0] = '0';
+		break;
+	default:
+		g_theConsole->DebugError( "Error in Message ID" );
+		break;
+	}
+
+	int iResult = send( m_targetSocket, (char*)&tempData, m_sendBufLen + sizeof( tempData.header ), 0 );
+	if( iResult == SOCKET_ERROR ) {
+		g_theConsole->DebugErrorf( "Send data Error: %d", WSAGetLastError() );
+		closesocket(m_targetSocket);
+		return;
+	}
+	else {
+		g_theConsole->DebugLogf( "Send data success with bytes: %d", iResult );
+		memset( m_sendBuf.data, '0', m_sendBufLen );
+		m_sendBufLen = 0;
+		m_isSendBufDirty = false;
+	}
+}
+
+void Client::SendDisconnectMessageToServer()
+{
+	if( m_isConnected ) {
+		SendDataToServer( MESSAGE_ID::CLIENT_DISCONNECT );
+	}
+}
+
+void Client::ReceiveDataFromServer()
+{
+	DataPackage tempData = DataPackage();
+	int iResult = recv( m_targetSocket, (char*)&tempData, NET_BUFFER_SIZE, 0 );
+	if( iResult == SOCKET_ERROR ) {
+		if( WSAGetLastError() != 10035 ) {
+			g_theConsole->DebugErrorf( " receive data error: %d", WSAGetLastError() );
+			DisconnectAndCloseSocket();
+		}
+		return;
+	}
+	else if( iResult == 0 ) {
+		g_theConsole->DebugError( "connection closed" );
+		DisconnectAndCloseSocket();
+		return;
+	}
+	else {
+		if( iResult < NET_BUFFER_SIZE ) {
+			g_theConsole->DebugLogf( "Receive data %d byte success.", iResult );
+			switch( tempData.header.messageID )
+			{
+			case SERVER_LISTENING:
+				g_theConsole->DebugLogf( "server is listening!" );
+			case TEXT_MESSAGE:
+				WriteDataToRecvBuffer( tempData );
+				break;
+			case SERVER_DISCONNECT:
+				DisconnectAndCloseSocket();
+				g_theConsole->DebugLog( "server shut down" );
+				break;
+			default:
+				g_theConsole->DebugError( "message ID error" );
+				break;
+			}
+		}
+	}
+}
+
 
 void Client::ReceiveData()
 {
 	char recvBuf[512];
-	int iResult = recv( m_socket, recvBuf, 512, 0 );// temp buffer and temp buffer length
+	int iResult = recv( m_targetSocket, recvBuf, 512, 0 );// temp buffer and temp buffer length
 	if( iResult > 0 ) {
 		g_theConsole->DebugLogf( "Byte received %d", iResult );
 	}
 	else if( iResult == 0 ) {
 		g_theConsole->DebugLogf( "Connection closed in receive Data." );
+		DisconnectAndCloseSocket();
 	}
 	else {
 		g_theConsole->DebugErrorf( "Recv failed: %d", WSAGetLastError() );
 	}
 }
 
-void Client::DisConnect()
+void Client::DisconnectAndCloseSocket()
 {
-	int iResult = shutdown( m_socket, SD_SEND );
+	int iResult = shutdown( m_targetSocket, SD_SEND );
 	if( iResult == SOCKET_ERROR ) {
 		g_theConsole->DebugErrorf( "shut down failed: %d", WSAGetLastError() );
 	}
 
-	closesocket( m_socket );
-	m_socket = INVALID_SOCKET;
-	WSACleanup();
+	closesocket( m_targetSocket );
+	m_targetSocket = INVALID_SOCKET;
+	m_isConnected = false;
+}
+
+void Client::WriteDataToRecvBuffer( DataPackage data )
+{
+	size_t bufferLen = data.header.messageLen - sizeof( data.header );
+	memcpy( m_recvBuf.data, data.message, bufferLen );
+	m_recvBuf.data[bufferLen] = NULL;
+	g_theConsole->DebugLogf( "Receive data success from client with byte: %d", (int)bufferLen );
+	m_isRecvBufDirty = true;
 }

@@ -90,6 +90,8 @@ void Game::Startup()
 	g_theConsole->AddCommandToCommandList( std::string( "send_message" ), std::string( "Connect to target server" ), SendMessageTest );
 	g_theConsole->AddCommandToCommandList( std::string( "start_server" ), std::string( "start server for listening" ), StartServer );
 	g_theConsole->AddCommandToCommandList( std::string( "send_data" ), std::string( "send Data to client" ), SendData );
+	g_theConsole->AddCommandToCommandList( std::string( "stop_server" ), std::string( "stop the server" ), StopServer );
+	g_theConsole->AddCommandToCommandList( std::string( "disconnect" ), std::string( "disconnect the server" ), Disconnect );
 
 	m_billBoardEntity = new Entity();
  	m_billBoardEntity->m_cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.5f );
@@ -773,19 +775,27 @@ bool MapCommandWarp( EventArgs& args )
 
 bool ConnectTo( EventArgs& args )
 {
-	Client* tempClient = g_theGame->GetClient();
+	Client* tempClient = g_theNetworkSystem->m_client;
 	std::string targetIPAddr = args.GetValue( std::to_string( 0 ), "" );
 	std::string targetPort	= args.GetValue( std::to_string( 1 ), "" );
-	tempClient->CreateSocket( targetIPAddr.c_str(), targetPort.c_str() );
-	tempClient->Connect();
+
+	tempClient->ConnectToServerWithIPAndPort( targetIPAddr.c_str(), targetPort.c_str() );
+	g_theNetworkSystem->m_isServer = false;
 	return true;
 }
 
 bool SendMessageTest( EventArgs& args )
 {
-	Client* tempClient = g_theGame->GetClient();
-	std::string message = args.GetValue( std::to_string( 0 ), "" );
-	tempClient->SendMessage( message );
+	Client* tempClient = g_theNetworkSystem->m_client;
+	Server* tempServer = g_theNetworkSystem->m_server;
+	if( !g_theNetworkSystem->m_isServer ) {
+		std::string message = args.GetValue( std::to_string( 0 ), "" );
+		tempClient->SetSendData( message.data(), (int)message.size() );
+	}
+	else {
+		std::string message = args.GetValue( std::to_string( 0 ), "" );
+		tempServer->SetSendData( message.data(), (int)message.size() );
+	}
 	return true;
 }
 
@@ -793,6 +803,9 @@ bool StartServer( EventArgs& args )
 {
 	std::string port = args.GetValue( std::to_string( 0 ), "" );
 	g_theNetworkSystem->StartServerWithPort( port.c_str() );
+	if( !g_theNetworkSystem->m_isServer ) {
+		g_theNetworkSystem->m_isServer = true;
+	}
 	return true;
 }
 
@@ -800,7 +813,19 @@ bool SendData( EventArgs& args )
 {
 	std::string data = args.GetValue( std::to_string( 0 ), "" );
 	Server* test = g_theNetworkSystem->m_server;
-	test->SetSendData( data.c_str(), data.size()  );
+	test->SetSendData( data.c_str(), (int)data.size()  );
 	
+	return true;
+}
+
+bool StopServer( EventArgs& args )
+{
+	g_theNetworkSystem->m_server->ShutDown();
+	return true;
+}
+
+bool Disconnect( EventArgs& args )
+{
+	g_theNetworkSystem->m_client->DisconnectServer();
 	return true;
 }

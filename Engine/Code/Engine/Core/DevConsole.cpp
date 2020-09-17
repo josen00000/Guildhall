@@ -460,14 +460,18 @@ void DevConsole::DebugLogf( const char* text, ... )
 void DevConsole::DebugError( std::string errorMsg )
 {
 	PrintString( Rgba8::RED, errorMsg );
-	g_theConsole->StartDevConcole();
+	if( !g_theConsole->IsOpen() ) {
+		g_theConsole->StartDevConcole();
+	}
 }
 
 
 void DevConsole::DebugError( const char* errorMsg )
 {
 	PrintString( Rgba8::RED, errorMsg );
-	g_theConsole->StartDevConcole();
+	if( !g_theConsole->IsOpen() ) {
+		g_theConsole->StartDevConcole();
+	}
 }
 
 void DevConsole::DebugErrorf( const char* text, ... )

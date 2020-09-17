@@ -28,6 +28,11 @@ NetworkSystem::NetworkSystem()
 	
 }
 
+NetworkSystem::~NetworkSystem()
+{
+
+}
+
 //COMMAND(startTCPServer, "Start TCP server listening" );
 
 void NetworkSystem::StartUp()
@@ -47,13 +52,23 @@ void NetworkSystem::StartUp()
 
 void NetworkSystem::BeginFrame()
 {
-	m_server->BeginFrame();
+	if( m_server != nullptr ) {
+		m_server->BeginFrame();
+	}
+	if( m_client != nullptr ) {
+		m_client->BeginFrame();
+	}
 }
 
 void NetworkSystem::Update( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
-	m_server->Update();
+	if( m_server != nullptr ) {
+		m_server->Update();
+	}
+	if( m_client != nullptr ) {
+		m_client->Update();
+	}
 }
 
 void NetworkSystem::EndFrame()
@@ -63,11 +78,21 @@ void NetworkSystem::EndFrame()
 
 void NetworkSystem::Shutdown()
 {
+	if( m_client != nullptr ) {
+		delete m_client;
+	}
+	if( m_server != nullptr ) {
+		delete m_server;
+	}
+	WSACleanup();
 
 }
 
 void NetworkSystem::StartServerWithPort( const char* port )
 {
+	if( m_server == nullptr ) {
+		m_server = new Server();
+	}
 	m_server->PrepareForClientConnectionWithPort( port );
 }
 
