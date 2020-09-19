@@ -279,7 +279,7 @@ void Server::AcceptConnectionFromClient( SOCKET listenSocket )
 		return;
 	}
 	g_theConsole->DebugLogf( "client IP: %s", GetClientIPAddr( clientSocket).c_str() );
-	const char* gameName = "game name is shit!";
+	const char* gameName = "game name is shut!";
 	SetSendData( gameName, 20 );
 	SendDataToClient( clientSocket, SERVER_LISTENING );
 	memset( m_sendBuf.data, '0', m_sendBufLen );

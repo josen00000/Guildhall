@@ -13,7 +13,7 @@ raycast
 send_data
 quit
 help
-client_connect
-disconnect
 start_server
+client_connect
 send_message
+disconnect
