@@ -85,7 +85,7 @@ void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float a
 {
 	m_dimension.x = topRight.x - bottomLeft.x;
 	m_dimension.y = topRight.y - bottomLeft.y;
-	m_projection = Mat44::CreateOrthographicProjectionMatrix( Vec3( bottomLeft, 0.f ), Vec3( topRight, -1.f ), aspectRatio );
+	m_projection = Mat44::CreateOrthographicProjectionMatrix( Vec3( bottomLeft, 10.f ), Vec3( topRight, -10.f ), aspectRatio );
 }
 
 void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float nearZ, float farZ, float aspectRatio )
@@ -98,6 +98,11 @@ void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float n
 Vec3 Camera::GetPosition() const
 {
 	return m_transform.GetPosition();
+}
+
+Vec2 Camera::GetPosition2D() const
+{
+	return (Vec2)GetPosition();
 }
 
 Vec3 Camera::GetForwardDirt( Convention convension ) const
@@ -174,6 +179,7 @@ void Camera::SetCenterPosition2D( Vec2 pos )
 	pos = pos - ( m_dimension / 2 ) ;
 	m_transform.SetPosition( Vec3( pos ) );
 }
+
 
 void Camera::SetRenderContext( RenderContext* ctx )
 {
@@ -376,9 +382,19 @@ void Camera::UpdateViewMatrix( Convention convention )
  	{
  	case X_RIGHT_Y_UP_Z_BACKWARD:
  		m_view = Mat44();
+		m_view.RotateZDegrees( -m_transform.GetRollDegrees() );
+		m_view.RotateXDegrees( -m_transform.GetPitchDegrees() );
+		m_view.RotateYDegrees( -m_transform.GetYawDegrees() );
+
+		m_view.Translate3D( -m_transform.GetPosition() );
  		break;
  	case X_FORWARD_Y_LEFT_Z_UP:
  		m_view =  Mat44( Vec3( 0.f, 0.f, -1.f ), Vec3( -1.f, 0.f, 0.f ), Vec3( 0.f, 1.f, 0.f ) );
+		m_view.RotateXDegrees( -m_transform.GetRollDegrees() );
+		m_view.RotateYDegrees( -m_transform.GetPitchDegrees() );
+		m_view.RotateZDegrees( -m_transform.GetYawDegrees() );
+
+		m_view.Translate3D( -m_transform.GetPosition() );
  		break;
  	}
 
@@ -401,17 +417,7 @@ void Camera::UpdateViewMatrix( Convention convention )
 	// squirrel way
 	//m_view = Mat44( Vec3( 0.f, 0.f, -1.f ), Vec3( -1.f, 0.f, 0.f ), Vec3( 0.f, 1.f, 0.f ) );
 	// Apply (anti-)transforms from camera, in reverse order (simulate camera by moving the world oppositely)
-	m_view.RotateXDegrees( -m_transform.GetRollDegrees() );
-	m_view.RotateYDegrees( -m_transform.GetPitchDegrees() );
-	m_view.RotateZDegrees( -m_transform.GetYawDegrees() );
 
-	m_view.Translate3D( -m_transform.GetPosition() );
-// 	if( IsMat44MostlyEqual( m_view, forsethTest ) ) {
-// 		int a = 0;
-// 	}
-// 	else {
-// 		int b = 0;
-// 	}
 }
 
 // Private
@@ -426,4 +432,10 @@ Vec2 Camera::GetOrthoMax() const
 	Vec3 worldPos = ClientToWorld( Vec2( 1.f, 1.f ), 0.f );
 	return Vec2( worldPos );
 
+}
+
+Vec2 Camera::GetCenterPosition2D() const
+{
+	Vec2 pos = GetPosition2D();
+	return pos + ( m_dimension / 2 );
 }

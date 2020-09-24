@@ -11,6 +11,7 @@
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Core/ErrorWarningAssert.hpp"
 
 
 #define _USE_MATH_DEFINES 
@@ -74,12 +75,15 @@ Vec2 GetNormalDirectionWithDegrees( const float degrees )
 
 float RangeMapFloat(const float inStart, const float inEnd, const float outStart, const  float outEnd, const float inValue )
 {
-	float inDisplacement=inValue-inStart;
-	float inRange=inEnd-inStart;
-	float outRange=outEnd-outStart;
-	float fraction=inDisplacement/inRange;
-	float outDisplacement=outRange*fraction;
-	float outValue=outStart+outDisplacement;
+	float inDisplacement = inValue-inStart;
+	float inRange = inEnd - inStart;
+	float outRange = outEnd - outStart;
+	if( inStart == inEnd ) {
+		ERROR_RECOVERABLE( " range map float not vaild! inRange == 0 ");
+	}
+	float fraction = inDisplacement / inRange;
+	float outDisplacement = outRange * fraction;
+	float outValue = outStart + outDisplacement;
 	return outValue;
 }
 

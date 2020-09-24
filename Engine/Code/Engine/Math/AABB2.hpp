@@ -26,9 +26,9 @@ public:
 	bool IsPointInside(const Vec2& point) const;
 	const Vec2	GetCenter() const;
 	const Vec2	GetDimensions() const;
-	const Vec2	GetNearestPoint(const Vec2& referencePosition) const;
-	const Vec2	GetPointAtUV(const Vec2& uvCoordsZeroToOne) const;
-	const Vec2	GetUVForPoint(const Vec2& point) const;
+	const Vec2	GetNearestPoint( const Vec2& referencePosition ) const;
+	const Vec2	GetPointAtUV( const Vec2& uvCoordsZeroToOne ) const;
+	const Vec2	GetUVForPoint( const Vec2& point ) const;
 	AABB2		GetBoxWithin( const Vec2& dimensions, const Vec2& alignment ) const;
 	AABB2		GetBoxAtLeft( float fractionOfWidth, float additionalWidth=0.f ) const;
 	AABB2		GetBoxAtRight( float fractionOfWidth, float additionalWidth=0.f ) const;
@@ -36,7 +36,11 @@ public:
 	AABB2		GetBoxAtTop( float fractionOfHeight, float additionalWidth=0.f ) const;
 	float		GetOuterRadius() const;
 	float		GetInnerRadius() const;
+	float		GetWidth();
+	float		GetHeight();
+	float		GetDiagonalLength();
 	void		GetCornerPositions( Vec2* out_fourPoints ) const;
+
 
 	// Mutators
 	void		Translate(const Vec2& translation);

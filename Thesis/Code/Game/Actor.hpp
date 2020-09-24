@@ -34,6 +34,8 @@ public:
 	float GetHealth() const { return m_hp; }
 	float GetAttackStrength() const { return m_attackStrength; }
 
+	Vec2 GetHeadDir() const; 
+	Vec2 GetVelocity() const { return ( m_movingDir * m_speed ); }
 	Vec2 GetPosition() const { return m_position; }
 
 	// Mutator
@@ -48,13 +50,13 @@ public:
 
 protected:
 	float m_orientationDegrees	= 0.f;
-	float m_speed				= 2.f;
+	float m_speed				= 3.f;
 	float m_physicsRadius		= 1.f;
 	float m_hp					= 100.f;
 	float m_attackStrength		= 10.f;
 
 
-	Vec2 m_movingDirt	= Vec2::ZERO;
+	Vec2 m_movingDir	= Vec2::ZERO;
 	Vec2 m_position		= Vec2::ZERO;
 
 	ActorType m_type	= ActorType::ACTOR_NONE;

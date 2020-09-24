@@ -50,9 +50,13 @@ public:
 	float	GetCameraHeight() const;
 	float	GetCameraWidth() const;
 	float	GetOutputAspectRatio();
+
 	Vec2	GetOrthoMin() const;
 	Vec2	GetOrthoMax() const;
+	Vec2	GetCenterPosition2D() const;
+
 	Vec3	GetPosition() const;
+	Vec2	GetPosition2D() const;
 	Vec3	GetForwardDirt( Convention convension ) const;
 	Vec3	GetLeftDirt( Convention convension ) const;
 	Vec3	GetUpDirt( Convention convension ) const;

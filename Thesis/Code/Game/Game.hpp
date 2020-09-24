@@ -13,6 +13,7 @@ class RandomNumberGenerator;
 class Camera;
 class World;
 class CameraSystem;
+class Map;
 
 struct Vertex_PCU;
 
@@ -31,6 +32,7 @@ public:
 
 	// Accessor
 	bool GetIsDebug() const { return m_isDebug; }
+	Map* GetCurrentMap();
 
 	// mutator
 	void SetIsDebug( bool isDebug );
@@ -70,3 +72,6 @@ public:
 
 	std::vector<Coroutine*> m_gameObjects;
 };
+
+bool SetCameraAsymptoticValue( EventArgs& args );
+bool SpawnItem( EventArgs& args );

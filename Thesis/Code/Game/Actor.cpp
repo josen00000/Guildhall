@@ -26,7 +26,7 @@ Actor* Actor::SpawnActorWithPos( Vec2 pos )
 
 void Actor::UpdateActor( float deltaSeconds )
 {
-	Vec2 velocity = m_movingDirt * m_speed;
+	Vec2 velocity = m_movingDir * m_speed;
 	m_position = m_position + velocity * deltaSeconds;
 }
 
@@ -62,6 +62,13 @@ void Actor::TakeDamage( float damage )
 	m_hp -= damage;
 }
 
+Vec2 Actor::GetHeadDir() const
+{
+	Vec2 headDir = Vec2::ONE;
+	headDir.SetAngleDegrees( m_orientationDegrees );
+	return headDir;
+}
+
 void Actor::SetOrientationDegrees( float orientationDegrees )
 {
 	m_orientationDegrees = orientationDegrees;
@@ -89,7 +96,7 @@ void Actor::SetAttackStrength( float attackStrength )
 
 void Actor::SetMoveDirt( Vec2 moveDirt )
 {
-	m_movingDirt = moveDirt;
+	m_movingDir = moveDirt;
 }
 
 void Actor::SetPosition( Vec2 pos )

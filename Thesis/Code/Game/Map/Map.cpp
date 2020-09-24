@@ -172,6 +172,14 @@ IntVec2 Map::GetRandomInsideNotSolidTileCoords() const
 	}
 }
 
+Vec2 Map::GetCuePos() const
+{
+	if( m_activeItem == nullptr ) {
+		return Vec2::ZERO;
+	}
+	return m_activeItem->GetPosition();
+}
+
 int Map::GetTileIndexWithTileCoords( IntVec2 tileCoords ) const
 {
 	return m_width * tileCoords.y + tileCoords.x;
@@ -291,6 +299,11 @@ void Map::UpdateProjectiles( float deltaSeconds )
 	}
 }
 
+void Map::UpdateItems( float deltaSeconds )
+{
+
+}
+
 void Map::RenderMap()
 {
 	g_theRenderer->SetDiffuseTexture( TileDefinition::s_spriteTexture );
@@ -298,9 +311,10 @@ void Map::RenderMap()
 
 	RenderActors();
 	RenderProjectiles();
+	RenderItems();
 
 	if( g_theGame->GetIsDebug() ) {
-		RenderDebugInfo();
+		//RenderDebugInfo();
 	}
 }
 
@@ -320,6 +334,13 @@ void Map::RenderProjectiles()
 	}
 }
 
+void Map::RenderItems()
+{
+	for( int i = 0; i < m_items.size(); i++ ) {
+		m_items[i]->RenderItem();
+	}
+}
+
 void Map::CreatePlayer( )
 {
 	Vec2 pos = (Vec2)m_startCoords;
@@ -327,12 +348,21 @@ void Map::CreatePlayer( )
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );
 	g_theCameraSystem->CreateAndPushController( newPlayer, g_gameCamera );
+	g_gameCamera->SetPosition( pos ); // temp code5
+
 }
 
 void Map::SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt )
 {
 	Projectile* tempProjectile = Projectile::SpawnProjectileWithDirtAndType( movingDirt, startPos, type );
 	m_projectiles.push_back( tempProjectile );
+}
+
+void Map::SpawnNewItem( Vec2 startPos )
+{
+	Item* tempItem = new Item( startPos );
+	m_activeItem = tempItem;
+	m_items.push_back( tempItem );
 }
 
 void Map::CheckCollision()

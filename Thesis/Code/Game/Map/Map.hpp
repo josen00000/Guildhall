@@ -73,6 +73,9 @@ public:
 	IntVec2 GetTileCoordsWithTileIndex( int index ) const;
 	IntVec2 GetRandomInsideTileCoords() const;
 	IntVec2 GetRandomInsideNotSolidTileCoords() const;
+
+	Vec2 GetCuePos() const;
+
 	int		GetTileIndexWithTileCoords( IntVec2 tileCoords ) const;
 
 	std::vector<Tile>& GetTiles(){ return m_tiles; }
@@ -96,15 +99,20 @@ public:
 	void UpdateMap( float deltaSeconds );
 	void UpdateActors( float deltaSeconds );
 	void UpdateProjectiles( float deltaSeconds );
+	void UpdateItems( float deltaSeconds );
 	void RenderMap();
 	void RenderActors(); 
 	void RenderProjectiles();
+	void RenderItems();
 
 	// Actor
 	void CreatePlayer();
 
 	// Projectile
 	void SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt );
+
+	// Item
+	void SpawnNewItem( Vec2 startPos );
 
 	// Collision
 	void CheckCollision();
@@ -162,4 +170,8 @@ private:
 	// Actor
 	std::vector<Player*>			m_players;
 	std::vector<Projectile*>		m_projectiles;
+
+	// Item
+	std::vector<Item*>				m_items;
+	Item*							m_activeItem = nullptr;
 };

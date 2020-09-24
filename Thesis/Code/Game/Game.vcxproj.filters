@@ -70,9 +70,6 @@
     <ClCompile Include="Map\Room.cpp">
       <Filter>Game\Map</Filter>
     </ClCompile>
-    <ClCompile Include="Item.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Coroutine.cpp">
       <Filter>Game</Filter>
     </ClCompile>
@@ -90,6 +87,12 @@
     </ClCompile>
     <ClCompile Include="Camera\CameraController.cpp">
       <Filter>Game\CameraSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>Game\Actor</Filter>
+    </ClCompile>
+    <ClCompile Include="Item.cpp">
+      <Filter>Game\Items</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -138,9 +141,6 @@
     <ClInclude Include="Map\Room.hpp">
       <Filter>Game\Map</Filter>
     </ClInclude>
-    <ClInclude Include="Item.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="Coroutine.hpp">
       <Filter>Game</Filter>
     </ClInclude>
@@ -158,6 +158,12 @@
     </ClInclude>
     <ClInclude Include="Camera\CameraController.hpp">
       <Filter>Game\CameraSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.hpp">
+      <Filter>Game\Actor</Filter>
+    </ClInclude>
+    <ClInclude Include="Item.hpp">
+      <Filter>Game\Items</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

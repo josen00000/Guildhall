@@ -15,12 +15,14 @@
 //////////////////////////////////////////////////////////////////////////
 extern App*				g_theApp;
 extern CameraSystem*	g_theCameraSystem;
+extern Game*			g_theGame;
 
 // Engine
 //////////////////////////////////////////////////////////////////////////
 extern InputSystem*		g_theInputSystem;
 extern BitmapFont*		g_squirrelFont;
 extern RenderContext*	g_theRenderer;
+extern DevConsole*		g_theConsole;	
 
 //////////////////////////////////////////////////////////////////////////
 // public
@@ -45,6 +47,9 @@ void Game::Startup()
 	m_world = World::CreateWorld( 1 );
 	g_theCameraSystem = new CameraSystem();
 	g_theCameraSystem->Startup();
+
+	g_theConsole->AddCommandToCommandList( std::string( "set_asymptotic"), std::string( "Asymptotic value for camera controller" ), SetCameraAsymptoticValue );
+	g_theConsole->AddCommandToCommandList( std::string( "spawn_item"), std::string( "spawn new item" ), SpawnItem );
 }
 
 void Game::Shutdown()
@@ -58,7 +63,9 @@ void Game::Shutdown()
 
 void Game::RunFrame( float deltaSeconds )
 {
-	HandleInput();
+	if( !g_theConsole->IsOpen() ) {
+		HandleInput();
+	}
 	UpdateGame( deltaSeconds );
 	UpdateUI( deltaSeconds );
 
@@ -76,6 +83,11 @@ void Game::RenderUI() const
 }
 //////////////////////////////////////////////////////////////////////////
 
+
+Map* Game::GetCurrentMap()
+{
+	return m_world->GetCurrentMap();
+}
 
 // Mutator
 //////////////////////////////////////////////////////////////////////////
@@ -109,11 +121,50 @@ void Game::HandleInput()
 		}
 		g_theCameraSystem->SetCameraWindowState( currentState );
 	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F3 ) ) {
+		CameraSnappingState currentState = g_theCameraSystem->GetCameraSnappingState();
+		if( currentState < CameraSnappingState::NUM_OF_CAMERA_SNAPPING_STATE ) {
+			currentState = static_cast<CameraSnappingState>( currentState + 1 );
+		}
+		if( currentState == CameraSnappingState::NUM_OF_CAMERA_SNAPPING_STATE ) {
+			currentState = static_cast<CameraSnappingState>((uint)0);
+		}
+		g_theCameraSystem->SetCameraSnappingState( currentState );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F4 ) ) {
+		CameraShakeState currentState = g_theCameraSystem->GetCameraShakeState();
+		if( currentState < CameraShakeState::NUM_OF_SHAKE_STATE - 1 ) {
+			currentState = static_cast<CameraShakeState>( currentState + 1 );
+		}
+		else {
+			currentState = static_cast<CameraShakeState>( (uint)0 );
+		}
+		g_theCameraSystem->SetCameraShakeState( currentState );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F5 ) ) {
+		CameraFrameState currentState = g_theCameraSystem->GetCameraFrameState();
+		if( currentState < CameraFrameState::NUM_OF_FRAME_STATE - 1 ) {
+			currentState = static_cast<CameraFrameState>(currentState + 1);
+		}
+		else {
+			currentState = static_cast<CameraFrameState>((uint)0);
+		}
+		g_theCameraSystem->SetCameraFrameState( currentState );
+	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P ) ) {
 		Map* currentMap = m_world->GetCurrentMap();
 		if( currentMap != nullptr ) {
 			currentMap->CreatePlayer();
 		 }
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_I ) ) {
+		Map* currentMap = m_world->GetCurrentMap();
+		if( currentMap != nullptr ) {
+			currentMap->SpawnNewItem( Vec2( 13, 10 ) );
+		}
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
+		g_theCameraSystem->AddCameraShake( 0, 0.5f );
 	}
 }
 
@@ -162,3 +213,21 @@ void Game::LoadDefs()
 	//ActorDefinition::PopulateDefinitionFromXmlFile( ACTOR_DEF_FILE_PATH );
 }
 //////////////////////////////////////////////////////////////////////////
+
+bool SetCameraAsymptoticValue( EventArgs& args )
+{
+	float asymptoticValue = args.GetValue( std::to_string( 0 ), 0.f );
+	std::vector<CameraController*> controllers = g_theCameraSystem->GetCameraControllers();
+	for( int i = 0; i < controllers.size(); i++ ) {
+		controllers[i]->SetAsymptoticValue( asymptoticValue );
+	}
+	return true;
+}
+
+bool SpawnItem( EventArgs& args )
+{
+	Vec2 pos = args.GetValue( std::to_string( 0 ), Vec2::ZERO );
+	Map* currentMap = g_theGame->m_world->GetCurrentMap();
+	currentMap->SpawnNewItem( pos );
+	return true;
+}

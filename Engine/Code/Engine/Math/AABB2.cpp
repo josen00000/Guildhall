@@ -165,6 +165,24 @@ float AABB2::GetInnerRadius() const
 	return result;
 }
 
+float AABB2::GetWidth()
+{
+	return ( maxs.x - mins.x );
+}
+
+float AABB2::GetHeight()
+{
+	return ( maxs.y - mins.y );
+}
+
+float AABB2::GetDiagonalLength()
+{
+	float width = GetWidth();
+	float height = GetHeight();
+	float diagonalLength = sqrtf( ( width * width ) + ( height * height ) );
+	return diagonalLength;
+}
+
 void AABB2::GetCornerPositions( Vec2* out_fourPoints ) const
 {
 	out_fourPoints[0] = mins;
