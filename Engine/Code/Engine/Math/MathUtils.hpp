@@ -32,6 +32,7 @@ float	GetDistanceXY3D(const Vec3& positionA, const Vec3& positionB);
 float	GetDistanceXYSquared3D(const Vec3& positionA, const Vec3& positionB);
 float	GetTurnedToward(float currentDegrees, float goalDegrees, float maxDeltaDegrees);//new for asg4. should handle multiple degees for same displacement.
 float	GetShortestAngularDisplacement(float inDegree,float targetDegree);
+float	GetQuadraticSum( float a, float b );
 int		GetTaxicabDistance2D(const IntVec2& a, const IntVec2& b);
 //Vec2	GetPerpendicularVec( const Vec2& vec );
 
@@ -63,8 +64,8 @@ bool DoOBBAndOBBOVerlap2D( const OBB2& boxA, const OBB2& boxB );
 bool IsPointInsideCapsule2D( const Vec2& point, const Vec2& capsuleMidStart, const Vec2& capsuleMidEnd, float capsuleRadius );
 bool IsPointInsideOBB2D( const Vec2& point, const OBB2& box );
 bool IsPointInsideAABB2D( const Vec2& point, const AABB2& box );
+bool IsPointInsideDisc(const Vec2& point, const Vec2& center, float radius);
 bool IsPointInSector(const Vec2& point, const Vec2& center, float radius, Vec2 fwdDir, float apertureDegrees );
-bool IsPointInDisc(const Vec2& point, const Vec2& center, float radius);
 
 void PushDiscOutOfDisc2D(Vec2& centerIn, float radiuIn, const Vec2&centerFix, float radiuFix);
 void PushDiscsOutOfEachOther2D(Vec2& center1, float radiu1, Vec2& center2, float radiu2);

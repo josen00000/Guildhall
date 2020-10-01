@@ -291,6 +291,11 @@ float GetShortestAngularDisplacement( float inDegree, float targetDegree )
 	return displacement;
 }
 
+float GetQuadraticSum( float a, float b )
+{
+	return (( a * a ) + ( b * b ));
+}
+
 int GetTaxicabDistance2D( const IntVec2& a, const IntVec2& b )
 {
 	return abs(b.x - a.x) + abs(b.y - a.y);
@@ -531,15 +536,15 @@ Vec2 GetNearestPointOnAABB2D( const Vec2& point, const AABB2& square )
 	return nearestPoint;
 }
 
-void PushDiscOutOfDisc2D( Vec2& centerIn, float radiuIn, const Vec2& centerFix, float radiuFix )
+void PushDiscOutOfDisc2D( Vec2& pushedCenter, float pushedradius, const Vec2& pushCenter, float pushRadius )
 {
-	Vec2 direction=centerIn-centerFix;
-	float dis=direction.NormalizeAndGetPreviousLength();
-	if( dis > (radiuIn + radiuFix) ) {
+	Vec2 direction = pushedCenter - pushCenter;
+	float dis = direction.NormalizeAndGetPreviousLength();
+	if( dis > ( pushedradius + pushRadius ) ) {
 		return;
 	}
-	float pushDis=radiuIn+radiuFix-dis;
-	centerIn+=direction*pushDis;
+	float pushDis = pushedradius + pushRadius - dis;
+	pushedCenter += direction * pushDis;
 }
 
 /*
@@ -605,7 +610,7 @@ bool IsPointInSector( const Vec2& point, const Vec2& center, float radius, Vec2 
 
 }
 
-bool IsPointInDisc( const Vec2& point, const Vec2& center, float radius )
+bool IsPointInsideDisc( const Vec2& point, const Vec2& center, float radius )
 {
 	float distance = GetDistance2D( point, center );
 	if( distance > radius ) { return false; }

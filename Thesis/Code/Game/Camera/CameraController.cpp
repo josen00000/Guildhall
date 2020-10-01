@@ -41,6 +41,7 @@ void CameraController::Update( float deltaSeconds )
 void CameraController::DebugRender()
 {
 	if( m_isDebug ) {
+		g_theRenderer->SetDiffuseTexture( nullptr );
 		Vec2 windowPoints[4];
 		m_cameraWindow.GetCornerPositions( windowPoints );
 		for( int i = 0; i < 3; i++ ) {
@@ -223,7 +224,7 @@ void CameraController::UpdateCameraFrame( float deltaSeconds )
 	case BLEND_FRAMING:
 		m_fwdFrameRatio = 0.3f;
 		m_projectFrameRatio = 0.3f;
-		m_cueFrameRatio = 0.3;
+		m_cueFrameRatio = 0.3f;
 		break;
 	}
 	m_goalCameraPos = ( m_fwdFrameRatio * fwdGoalPos ) + ( m_projectFrameRatio * projectGoalPos ) + ( m_cueFrameRatio * cueGoalPos );

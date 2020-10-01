@@ -15,6 +15,7 @@ public:
 	void CreateMaps();
 	void UpdateWorld( float deltaSeconds );
 	void RenderWorld() const;
+	void EndFrame();
 
 	// Accessor
 	int GetTotalMapIndex() const { return m_totalMapIndex; }

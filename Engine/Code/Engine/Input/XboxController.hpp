@@ -31,12 +31,12 @@ public:
 	explicit XboxController(int controllerID);
 	~XboxController();
 
-	bool					isConnected() const			{return m_isConnected;}
-	int						GetControllerID() const		{return m_controllerID;}
-	const AnalogJoystick&	GetLeftJoystick() const		{return m_leftJoystick;}
-	const AnalogJoystick&	GetRightJoystick() const	{return m_rightJoystick;}
-	float					GetLeftTrigger() const		{return m_leftTriggerValue;}
-	float					GetRightTrigger() const		{return m_rightTriggerValue;}
+	bool					isConnected() const			{ return m_isConnected; }
+	int						GetControllerID() const		{ return m_controllerID; }
+	const AnalogJoystick&	GetLeftJoystick() const		{ return m_leftJoystick; }
+	const AnalogJoystick&	GetRightJoystick() const	{ return m_rightJoystick; }
+	float					GetLeftTrigger() const		{ return m_leftTriggerValue; }
+	float					GetRightTrigger() const		{ return m_rightTriggerValue; }
 	const KeyButtonState&	GetButtonState(XboxButtonID buttonID) const;
 	void setVibration(float value) const;
 

@@ -35,6 +35,11 @@ void World::RenderWorld() const
 	m_maps[m_currentMapIndex]->RenderMap();
 }
 
+void World::EndFrame()
+{
+	m_maps[m_currentMapIndex]->EndFrame();
+}
+
 Map* World::GetCurrentMap()
 {
 	return m_maps[m_currentMapIndex];

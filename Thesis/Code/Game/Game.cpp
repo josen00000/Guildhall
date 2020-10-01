@@ -81,6 +81,12 @@ void Game::RenderUI() const
 {
 
 }
+
+void Game::EndFrame()
+{
+	m_world->EndFrame();
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -163,6 +169,13 @@ void Game::HandleInput()
 			currentMap->SpawnNewItem( Vec2( 13, 10 ) );
 		}
 	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_E ) ) {
+		Map* currentMap = m_world->GetCurrentMap();
+		if( currentMap != nullptr ) {
+			Vec2 spawnPos = (Vec2)currentMap->GetRandomInsideNotSolidTileCoords();
+			currentMap->SpawnNewEnemy( spawnPos );
+		}
+	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
 		g_theCameraSystem->AddCameraShake( 0, 0.5f );
 	}
@@ -204,6 +217,12 @@ void Game::CheckIfExit()
 void Game::LoadAssets()
 {
 	g_squirrelFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "squirrelFont", "Data/Fonts/SquirrelFixedFont" );	
+	m_playerTexture				= g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/PlayerTankBase.png" );
+	m_playerBarrelTexture		= g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/PlayerTankTop.png" );
+	m_enemyTexture				= g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/EnemyTank1.png" );
+	m_enemyBarrelTexture		= g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/EnemyCannon.png" );
+	m_playerProjectileTexture	= g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/FriendlyBullet.png" );
+	m_enemyProjectileTexture	= g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/EnemyBullet.png" );
 }
 
 void Game::LoadDefs()

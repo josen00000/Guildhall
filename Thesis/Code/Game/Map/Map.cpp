@@ -4,6 +4,7 @@
 #include "Game/Player.hpp"
 #include "Game/Item.hpp"
 #include "Game/Game.hpp"
+#include "Game/Enemy.hpp"
 #include "Game/Map/MapDefinition.hpp"
 #include "Game/Map/MapGenStep.hpp"
 #include "Game/Map/TileDefinition.hpp"
@@ -84,6 +85,7 @@ bool Map::IsTileCoordsInside( IntVec2 tileCoords ) const
 
 bool Map::IsTileOfAttribute( IntVec2 tileCoords, TileAttribute attr ) const
 {
+	if( !IsTileCoordsValid( tileCoords ) ){ return false; }
 	int tileIndex = GetTileIndexWithTileCoords( tileCoords );
 	uint tileAttributeFlags = m_tileAttributes[tileIndex];
 	TileAttributeBitFlag attrBitFlag = GetTileAttrBitFlagWithTileAttr( attr );
@@ -141,9 +143,23 @@ bool Map::IsTilesSameRoomFloor( IntVec2 tileCoords1, IntVec2 tileCoords2 )
 	return false;
 }
 
-bool Map::IsTileCoordsValid( IntVec2 tileCoords )
+bool Map::IsTileCoordsValid( IntVec2 tileCoords ) const
 {
 	return ( tileCoords.x >= 0 && tileCoords.x < m_width ) && ( tileCoords.y >= 0 && tileCoords.y < m_height );
+}
+
+bool Map::IsPosNotSolid( Vec2 pos )
+{
+	IntVec2 tileCoords = IntVec2( pos );
+	return !IsTileSolid( tileCoords );
+}
+
+Vec2 Map::GetPlayerPosWithIndex( int index )
+{
+	if( m_players.size() < index ) {
+		g_theConsole->DebugErrorf( "Index: %d does not exist in get player pos.", index );
+	}
+	return m_players[index]->GetPosition();
 }
 
 IntVec2 Map::GetTileCoordsWithTileIndex( int index ) const
@@ -178,6 +194,15 @@ Vec2 Map::GetCuePos() const
 		return Vec2::ZERO;
 	}
 	return m_activeItem->GetPosition();
+}
+
+Player* Map::GetPlayerWithIndex( int index )
+{
+	if( m_players.size() < index ) {
+		g_theConsole->DebugErrorf( "Index: %d does not exist in get player pos.", index );
+	}
+
+	return m_players[index];
 }
 
 int Map::GetTileIndexWithTileCoords( IntVec2 tileCoords ) const
@@ -256,7 +281,8 @@ void Map::UpdateMap( float deltaSeconds )
 			stepIndex++;
 			break;
 		case 1:
-			GenerateRooms();
+			/*GenerateRooms();*/
+			GenerateEdges();
 			PopulateTiles();
 			stepIndex++;
 			break;	
@@ -288,13 +314,20 @@ void Map::UpdateActors( float deltaSeconds )
 		m_players[0]->SetOrientationDegrees( targetDirt.GetAngleDegrees() );
 	}
 	for( int i = 0; i < m_players.size(); i++ ) {
+		if( m_players[i] == nullptr ){ continue;}
 		m_players[i]->UpdatePlayer( deltaSeconds );
+	}
+
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+		if( m_enemies[i] == nullptr ){ continue;}
+		m_enemies[i]->UpdateEnemy( deltaSeconds );
 	}
 }
 
 void Map::UpdateProjectiles( float deltaSeconds )
 {
 	for( int i = 0; i < m_projectiles.size(); i++ ) {
+		if( m_projectiles[i] == nullptr ){ continue;}
 		m_projectiles[i]->UpdateProjectile( deltaSeconds );
 	}
 }
@@ -324,12 +357,16 @@ void Map::RenderActors()
 	for( int i = 0; i < m_players.size(); i++ ) {
 		m_players[i]->RenderPlayer();
 	}
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+		m_enemies[i]->RenderEnemy();
+	}
 }
 
 void Map::RenderProjectiles()
 {
 	g_theRenderer->SetDiffuseTexture( nullptr );
 	for( int i = 0; i < m_projectiles.size(); i++ ) {
+		if( m_projectiles[i] == nullptr ){ continue; }
 		m_projectiles[i]->RenderProjectile();
 	}
 }
@@ -341,6 +378,11 @@ void Map::RenderItems()
 	}
 }
 
+void Map::EndFrame()
+{
+	ManageGarbage();	
+}
+
 void Map::CreatePlayer( )
 {
 	Vec2 pos = (Vec2)m_startCoords;
@@ -350,6 +392,12 @@ void Map::CreatePlayer( )
 	g_theCameraSystem->CreateAndPushController( newPlayer, g_gameCamera );
 	g_gameCamera->SetPosition( pos ); // temp code5
 
+}
+
+void Map::SpawnNewEnemy( Vec2 startPos )
+{
+	Enemy* tempEnemy = Enemy::SpawnPlayerWithPos( this, startPos );
+	m_enemies.push_back( tempEnemy );
 }
 
 void Map::SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt )
@@ -367,70 +415,191 @@ void Map::SpawnNewItem( Vec2 startPos )
 
 void Map::CheckCollision()
 {
-	CheckActorCollision();
-	CheckTileCollision();
-	CheckBulletCollision();
+	CheckActorsCollision();
+	CheckTilesCollision();
+	CheckBulletsCollision();
 }
 
-void Map::CheckActorCollision()
+void Map::CheckActorsCollision()
 {
+	// player and player
+	for( int i = 0; i < m_players.size(); i++ ) {
+		for( int j = i + 1; j < m_players.size(); j++ ) {
+			if( m_players[i] != nullptr && m_players[j] != nullptr )
+			CheckCollisionBetweenActors( m_players[i], m_players[j] );
+		}
+	}
 
+	// enemy and enemy
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+		for( int j = i + 1; j < m_enemies.size(); j++ ) {
+			if( m_enemies[i] != nullptr && m_enemies[j] != nullptr )
+				CheckCollisionBetweenActors( m_enemies[i], m_enemies[j] );
+		}
+	}
+
+	// player and enemy
+	for( int i = 0; i < m_players.size(); i++ ) {
+		for( int j = 0; j < m_enemies.size(); j++ ) {
+			if( m_players[i] != nullptr && m_enemies[j] != nullptr ) {
+				CheckCollisionBetweenActors( m_players[i], m_enemies[j] );
+			}
+		}
+	}
 }
 
-void Map::CheckTileCollision()
+void Map::CheckTilesCollision()
 {
 	for( int i = 0; i < m_players.size(); i++ ) {
 		Player* tempPlayer = m_players[i];
 		if( tempPlayer == nullptr ){ continue; }
-		CheckCollisionBetweenPlayerAndTiles( tempPlayer );
+		CheckCollisionBetweenActorAndTiles( tempPlayer );
+	}
+
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+		Enemy* tempEnemy = m_enemies[i];
+		if( tempEnemy == nullptr ){ continue; }
+		CheckCollisionBetweenActorAndTiles( tempEnemy );
 	}
 }
 
-void Map::CheckBulletCollision()
+void Map::CheckBulletsCollision()
 {
-	
+	for( int i = 0; i < m_projectiles.size(); i++ ) {
+		Projectile* tempProj = m_projectiles[i];
+		if( tempProj == nullptr ){ continue; }
+		CheckCollisionBetweenProjectileAndActors( tempProj );
+		CheckCollisionBetweenProjectileAndTiles( tempProj );
+	}
 }
 
-void Map::CheckCollisionBetweenPlayerAndTiles( Player* player )
+void Map::CheckCollisionBetweenProjectileAndActors( Projectile* projectile )
 {
-	IntVec2 playerTileCoords = (IntVec2)player->GetPosition(); 
-
-	IntVec2 downTileCoords	= playerTileCoords + IntVec2( 0, -1 );
-	IntVec2 upTileCoords	= playerTileCoords + IntVec2( 0, 1 );
-	IntVec2 rightTileCoords	= playerTileCoords + IntVec2( 1, 0 );
-	IntVec2 leftTileCoords	= playerTileCoords + IntVec2( -1, 0 );
-
-	IntVec2 downLeftTileCoords	= playerTileCoords + IntVec2( -1, -1 );
-	IntVec2 downRightTileCoords	= playerTileCoords + IntVec2( 1, -1 );
-	IntVec2 upLeftTileCoords	= playerTileCoords + IntVec2( -1, 1 );
-	IntVec2 upRightTileCoords	= playerTileCoords + IntVec2( 1, 1 );
-
-	CheckCollisionBetweenPlayerAndTile( player, downTileCoords );
-	CheckCollisionBetweenPlayerAndTile( player, upTileCoords );
-	CheckCollisionBetweenPlayerAndTile( player, rightTileCoords );
-	CheckCollisionBetweenPlayerAndTile( player, leftTileCoords );
-
-	CheckCollisionBetweenPlayerAndTile( player, downLeftTileCoords );
-	CheckCollisionBetweenPlayerAndTile( player, downRightTileCoords );
-	CheckCollisionBetweenPlayerAndTile( player, upLeftTileCoords );
-	CheckCollisionBetweenPlayerAndTile( player, upRightTileCoords );
+	switch( projectile->GetType() )
+	{
+	case ACTOR_ENEMY:
+		for( int i = 0; i < m_players.size(); i++ ) {
+			Player* tempPlayer = m_players[i];
+			if( IsPointInsideDisc( projectile->GetPosition(), tempPlayer->GetPosition(), tempPlayer->GetPhysicsRadius() ) ) {
+				//tempPlayer->TakeDamage();
+				projectile->Die();
+				break;
+			}
+		}
+		break;
+	case ACTOR_PLAYER:
+		for( int i = 0; i < m_enemies.size(); i++ ) {
+			Enemy* tempEnemy = m_enemies[i];
+			if( IsPointInsideDisc( projectile->GetPosition(), tempEnemy->GetPosition(), tempEnemy->GetPhysicsRadius() ) ) {
+				//tempEnemy->TakeDamage();
+				projectile->Die();
+				break;
+			}
+		}
+		break;
+	}
 }
 
-void Map::CheckCollisionBetweenPlayerAndTile( Player* player, IntVec2 tileCoords )
+void Map::CheckCollisionBetweenProjectileAndTiles( Projectile* projectile )
 {
-	if( !IsTileCoordsValid( tileCoords ) ) { 
+	Vec2 projectilePos = projectile->GetPosition();
+	if( IsTileSolid( (IntVec2)projectilePos ) ) {
+		projectile->Die();
+	}
+}
+
+void Map::ManageGarbage()
+{
+	// manage player
+	for( int i = 0; i < m_players.size(); i++ ) {
+		Player* tempPlayer = m_players[i];
+		if( tempPlayer != nullptr && tempPlayer->GetIsDead() ) {
+			delete tempPlayer;
+			m_players[i] = nullptr;
+		}
+	}
+
+	// manage enemy
+	for( int i = 0; i < m_enemies.size(); i++ ) {
+		Enemy* tempEnemy = m_enemies[i];
+		if( tempEnemy != nullptr && tempEnemy->GetIsDead() ) {
+			delete tempEnemy;
+			m_enemies[i] = nullptr;
+		}
+	}
+
+	// manage projectiles
+	for( int i = 0; i < m_projectiles.size(); i++ ) {
+		Projectile* tempProjectile = m_projectiles[i];
+		if( tempProjectile != nullptr && tempProjectile->GetIsDead() ) {
+			delete tempProjectile;
+			m_projectiles[i] = nullptr;
+		}
+	}
+}
+
+void Map::CheckCollisionBetweenActors( Actor* actorA, Actor* actorB )
+{
+	Vec2 posA = actorA->GetPosition();
+	Vec2 posB = actorB->GetPosition();
+	float radiusA = actorA->GetPhysicsRadius();
+	float radiusB = actorB->GetPhysicsRadius();
+	if( GetDistanceSquared2D( posA, posB ) < GetQuadraticSum( actorA->GetPhysicsRadius(), actorB->GetPhysicsRadius() ) ) {
+		if( actorA->GetDoesPushActor() && !actorA->GetIsPushedByActor() && actorB->GetIsPushedByActor() ) {
+			PushDiscOutOfDisc2D( posB, radiusB, posA, radiusA );
+		}
+		else if( actorB->GetDoesPushActor() && !actorB->GetIsPushedByActor() && actorA->GetIsPushedByActor() ) {
+			PushDiscOutOfDisc2D( posA, radiusA, posB, radiusA );
+		}
+		else if( actorA->GetDoesPushActor() && actorB->GetDoesPushActor() && actorA->GetIsPushedByActor() && actorB->GetIsPushedByActor() ) {
+			PushDiscsOutOfEachOther2D( posA, actorA->GetPhysicsRadius(), posB, actorB->GetPhysicsRadius() );
+		}
+		actorA->SetPosition( posA );
+		actorB->SetPosition( posB );
+	}
+}
+
+void Map::CheckCollisionBetweenActorAndTiles( Actor* actor )
+{
+	IntVec2 actorrTileCoords = (IntVec2)actor->GetPosition();
+
+	IntVec2 downTileCoords	= actorrTileCoords + IntVec2( 0, -1 );
+	IntVec2 upTileCoords	= actorrTileCoords + IntVec2( 0, 1 );
+	IntVec2 rightTileCoords	= actorrTileCoords + IntVec2( 1, 0 );
+	IntVec2 leftTileCoords	= actorrTileCoords + IntVec2( -1, 0 );
+
+	IntVec2 downLeftTileCoords	= actorrTileCoords + IntVec2( -1, -1 );
+	IntVec2 downRightTileCoords	= actorrTileCoords + IntVec2( 1, -1 );
+	IntVec2 upLeftTileCoords	= actorrTileCoords + IntVec2( -1, 1 );
+	IntVec2 upRightTileCoords	= actorrTileCoords + IntVec2( 1, 1 );
+
+	CheckCollisionBetweenActorAndTile( actor, downTileCoords );
+	CheckCollisionBetweenActorAndTile( actor, upTileCoords );
+	CheckCollisionBetweenActorAndTile( actor, rightTileCoords );
+	CheckCollisionBetweenActorAndTile( actor, leftTileCoords );
+
+	CheckCollisionBetweenActorAndTile( actor, downLeftTileCoords );
+	CheckCollisionBetweenActorAndTile( actor, downRightTileCoords );
+	CheckCollisionBetweenActorAndTile( actor, upLeftTileCoords );
+	CheckCollisionBetweenActorAndTile( actor, upRightTileCoords );
+}
+
+
+void Map::CheckCollisionBetweenActorAndTile( Actor* actor, IntVec2 tileCoords )
+{
+	if( !IsTileCoordsValid( tileCoords ) ) {
 		ERROR_RECOVERABLE( "tileCoords not valid !" );
-		return; 
+		return;
 	}
 
-	if( !IsTileSolid( tileCoords ) ){ return; }
+	if( !IsTileSolid( tileCoords ) ) { return; }
 
 	int tileIndex = GetTileIndexWithTileCoords( tileCoords );
 	Tile tempTile = m_tiles[tileIndex];
 	AABB2 tileBound = tempTile.GetTileBounds();
-	Vec2 playerPos = player->GetPosition();
-	PushDiscOutOfAABB2D( playerPos, player->GetPhysicRadius(), tileBound );
-	player->SetPosition( playerPos );
+	Vec2 playerPos = actor->GetPosition();
+	PushDiscOutOfAABB2D( playerPos, actor->GetPhysicsRadius(), tileBound );
+	actor->SetPosition( playerPos );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -473,6 +642,24 @@ void Map::InitializeTiles()
 		IntVec2 tileCoords = GetTileCoordsWithTileIndex( i );
 		m_tiles.emplace_back( tileCoords, m_definition->GetFillType() );
 		m_tileAttributes.push_back( (uint)0 );
+	}
+}
+
+void Map::GenerateEdges()
+{
+	TileType edgeType = m_definition->GetEdgeType();
+	for( int i = 0; i < m_width; i++ ) {
+		SetTileTypeWithCoords( IntVec2( i, 0 ), edgeType );
+		SetTileTypeWithCoords( IntVec2( i, ( m_height - 1 )), edgeType );
+		SetTileSolid( IntVec2( i, 0 ), true );
+		SetTileSolid( IntVec2( i, ( m_height - 1 )), true );
+	}
+
+	for( int i = 0; i < m_height; i++ ) {
+		SetTileTypeWithCoords( IntVec2( 0, i ), edgeType );
+		SetTileTypeWithCoords( IntVec2( ( m_width - 1 ), i ), edgeType );
+		SetTileSolid( IntVec2( 0, i ), true );
+		SetTileSolid( IntVec2( ( m_width - 1 ), i ), true );
 	}
 }
 

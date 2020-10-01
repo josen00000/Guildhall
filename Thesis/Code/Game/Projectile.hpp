@@ -13,18 +13,27 @@ public:
 public:
 	void UpdateProjectile( float deltaSeconds );
 	void RenderProjectile();
+	void Die();
 
 	// Accessor
+	bool GetIsDead() const { return m_isDead; }
+	ActorType GetType() const { return m_type; }
+	Vec2 GetPosition() const { return m_pos; }
 
 	// Mutator
 private:
+	bool m_isDead = false;
 
 public:
 	Rgba8 m_color;
-	Vec2 m_pos = Vec2::ZERO;
-	Vec2 m_movingDirection = Vec2::ZERO;
 	float m_physicsRadiu	= 0.3f;
 	float m_speed			= 5.f;
 	ActorType	m_type		= ACTOR_NONE;
+
+	Vec2 m_pos = Vec2::ZERO;
+	Vec2 m_movingDirection = Vec2::ZERO;
+
+	Texture* m_texture = nullptr;
+	std::vector<Vertex_PCU> m_vertices;
 };
 

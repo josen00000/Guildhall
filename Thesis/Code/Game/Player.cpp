@@ -11,6 +11,13 @@ Player::Player()
 {
 	m_type = ACTOR_PLAYER;
 	m_color = Rgba8::RED;
+	m_isPushedByActor = true;
+	m_doesPushActor = true;
+}
+
+Player::Player( int index )
+{
+	m_playerIndex = index;
 }
 
 Player* Player::SpawnPlayerWithPos( Vec2 pos )
@@ -55,24 +62,36 @@ void Player::UpdatePlayerSpeed( float deltaSeconds )
 void Player::HandleInput( float deltaSeconds )
 {
 	m_movingDir = Vec2::ZERO;
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_W ) ) {
-		m_movingDir.y = 1.f;
-	}
-	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
-		m_movingDir.y = -1.f;
-	}
-	
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
-		m_movingDir.x = 1.f;
-	}
-	else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_A ) ) {
-		m_movingDir.x = -1.f;
-	}
-	if( m_movingDir.GetLength() != 0 ) {
-		m_movingDir.Normalize();
-	}
-	if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_LEFT ) ) {
-		Shoot();
+	switch( m_inputState )
+	{
+	case KEYBOARD_INPUT:
+		if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_W ) ) {
+			m_movingDir.y = 1.f;
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
+			m_movingDir.y = -1.f;
+		}
+		
+		if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
+			m_movingDir.x = 1.f;
+		}
+		else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_A ) ) {
+			m_movingDir.x = -1.f;
+		}
+		if( m_movingDir.GetLength() != 0 ) {
+			m_movingDir.Normalize();
+		}
+		if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_LEFT ) ) {
+			Shoot();
+		}
+		break;
+	case CONTROLLER_INPUT:
+		const XboxController* xboxController = g_theInputSystem->GetXboxController( m_playerIndex );
+
+		if( xboxController->isConnected() ) {
+
+		}
+		break;
 	}
 }
 
@@ -87,5 +106,10 @@ void Player::RenderPlayer()
 void Player::SetMap( Map* map )
 {
 	m_map = map;
+}
+
+void Player::SetInputControlState( InputControlState state )
+{
+	m_inputState = state;
 }
 

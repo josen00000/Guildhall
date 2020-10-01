@@ -11,6 +11,7 @@
 class MapDefinition;
 class Player;
 class Actor;
+class Enemy;
 class Timer;
 class Item;
 class Clock;
@@ -68,15 +69,23 @@ public:
 	bool	IsTileVisited( IntVec2 tileCoords ) const;
 	bool	IsTilesSameRoom( IntVec2 tileCoords1, IntVec2 tileCoords2 );
 	bool	IsTilesSameRoomFloor( IntVec2 tileCoords1, IntVec2 tileCoords2 );
-	bool	IsTileCoordsValid( IntVec2 tileCoords );
+	bool	IsTileCoordsValid( IntVec2 tileCoords ) const;
+
+	bool	IsPosNotSolid( Vec2 pos );
+
+	int		GetTileIndexWithTileCoords( IntVec2 tileCoords ) const;
+	int		GetPlayerNum() const { return (int)m_players.size(); }
+	Vec2	GetPlayerPosWithIndex( int index ); 
+	Vec2	GetCuePos() const;
+
+	Player*	GetPlayerWithIndex( int index );
 
 	IntVec2 GetTileCoordsWithTileIndex( int index ) const;
 	IntVec2 GetRandomInsideTileCoords() const;
 	IntVec2 GetRandomInsideNotSolidTileCoords() const;
 
-	Vec2 GetCuePos() const;
+	
 
-	int		GetTileIndexWithTileCoords( IntVec2 tileCoords ) const;
 
 	std::vector<Tile>& GetTiles(){ return m_tiles; }
 	const Tile&	GetTileWithTileCoords( IntVec2 coords );
@@ -104,9 +113,11 @@ public:
 	void RenderActors(); 
 	void RenderProjectiles();
 	void RenderItems();
+	void EndFrame();
 
 	// Actor
 	void CreatePlayer();
+	void SpawnNewEnemy( Vec2 startPos );
 
 	// Projectile
 	void SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt );
@@ -116,17 +127,24 @@ public:
 
 	// Collision
 	void CheckCollision();
-	void CheckActorCollision();
-	void CheckTileCollision();
-	void CheckBulletCollision();
-	void CheckCollisionBetweenPlayerAndTiles( Player* player );
-	void CheckCollisionBetweenPlayerAndTile( Player* player, IntVec2 tileCoords );
+	void CheckActorsCollision();
+	void CheckCollisionBetweenActors( Actor* actorA, Actor* actorB );
+	void CheckCollisionBetweenActorAndTiles( Actor* actor );
+	void CheckCollisionBetweenActorAndTile( Actor* actor, IntVec2 tileCoords );
+	void CheckTilesCollision();
+	void CheckBulletsCollision();
+	void CheckCollisionBetweenProjectileAndActors( Projectile* projectile );
+	void CheckCollisionBetweenProjectileAndTiles( Projectile* projectile ); 
+
+	// Garbage management
+	void ManageGarbage();
 
 private:
 	// Generate Map
 	void LoadMapDefinitions();
 	void PopulateTiles();
 	void InitializeTiles();
+	void GenerateEdges();
 	void GenerateRooms();
 	void GeneratePaths();
 	void CreatePathBetweenCoords( IntVec2 coord1, IntVec2 coord2 );
@@ -169,6 +187,7 @@ private:
 
 	// Actor
 	std::vector<Player*>			m_players;
+	std::vector<Enemy*>				m_enemies;
 	std::vector<Projectile*>		m_projectiles;
 
 	// Item

@@ -179,6 +179,7 @@ const void App::Render() const
 
 void App::EndFrame()
 {
+	g_theGame->EndFrame();
 	g_theInputSystem->EndFrame();
 	g_theRenderer->EndFrame();
 	g_theAudioSystem->EndFrame();

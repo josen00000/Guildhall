@@ -14,6 +14,7 @@ class Camera;
 class World;
 class CameraSystem;
 class Map;
+class Texture;
 
 struct Vertex_PCU;
 
@@ -29,6 +30,7 @@ public:
 	void RunFrame( float deltaSeclnds );
 	void RenderGame() const;
 	void RenderUI() const;
+	void EndFrame();
 
 	// Accessor
 	bool GetIsDebug() const { return m_isDebug; }
@@ -58,12 +60,16 @@ public:
 	bool m_isOnSettingPage	= false;
 	bool m_showPauseMenu	= false;
 
-
 	int m_currentButtonIndex = 0;
 	int m_currentSettingButtonIndex = 0;
 	
-
 	World* m_world			= nullptr;
+	Texture* m_enemyTexture				= nullptr;
+	Texture* m_enemyBarrelTexture		= nullptr;
+	Texture* m_playerTexture			= nullptr;
+	Texture* m_playerBarrelTexture		= nullptr;
+	Texture* m_playerProjectileTexture	= nullptr;
+	Texture* m_enemyProjectileTexture	= nullptr;
 
 
 	CameraSystem* m_cameraSystem = nullptr;

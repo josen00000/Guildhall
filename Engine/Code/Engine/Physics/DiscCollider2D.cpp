@@ -47,7 +47,7 @@ Vec2 DiscCollider2D::GetClosestPoint( const Vec2& pos ) const
 
 bool DiscCollider2D::Contains( const Vec2& pos ) const
 {
-	if( IsPointInDisc( pos, m_worldPosition, m_radius ) ) {
+	if( IsPointInsideDisc( pos, m_worldPosition, m_radius ) ) {
 		return true;
 	}
 	else {

@@ -6,6 +6,7 @@
 
 class Game;
 class Map;
+class Player;
 
 enum EnemyAIState {
 	ENEMY_PATROL,
@@ -15,11 +16,11 @@ enum EnemyAIState {
 
 class Enemy : public Actor {
 public:
-	Enemy(){}
+	Enemy();
 	~Enemy(){}
 	
 public:
-	static Enemy* SpawnPlayerWithPos( Vec2 pos );
+	static Enemy* SpawnPlayerWithPos( Map* map,  Vec2 pos );
 
 public:
 	void UpdateEnemy( float deltaSeconds );
@@ -29,18 +30,22 @@ public:
 	// Mutator
 	void SetMap( Map* map );
 
-	void CheckIsActive();
+	void CheckState();
 	void CheckIfReachGoal();
 
 private:
-	Map*
-	bool m_isActive = false;
-	EnemyAIState m_state;
-	Vec2 m_goalPos = Vec2::ZERO;
-
+	void FindGoalPatrolPoint( float deltaSeconds );
+	void Shoot( float deltaSeconds );
 
 public:
-	float m_maxSpeed = 3.f;
-	Rgba8 m_color = Rgba8::BLUE;
+	float m_maxSpeed		= 3.f;
+	float m_shootCooldown	= 1.5f;
+	Rgba8 m_color			= Rgba8::BLUE;
+
+private:
+	float m_activeDistThreshold = 10.f;
+	EnemyAIState m_state	= ENEMY_PATROL;
+	Vec2 m_patrolGoalPos	= Vec2::ZERO;
+	Player*	m_target		= nullptr;
 };
 
