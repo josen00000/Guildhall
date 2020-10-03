@@ -31,14 +31,14 @@ Actor* Actor::SpawnActorWithPos( Vec2 pos )
 
 void Actor::UpdateActor( float deltaSeconds )
 {
-	static Vec2 lastNotZeroMovingDir = Vec2::ZERO;
 	Vec2 velocity = m_movingDir * m_speed;
 	m_position = m_position + velocity * deltaSeconds;
+	static float movingDegrees = 0.f;
 	if( m_movingDir != Vec2::ZERO ) {
-		lastNotZeroMovingDir = m_movingDir;
+		movingDegrees = m_movingDir.GetAngleDegrees();
 	}
 	
-	OBB2 baseOBB = OBB2( m_baseOBBSize, m_position, lastNotZeroMovingDir );
+	OBB2 baseOBB = OBB2( m_baseOBBSize, m_position, movingDegrees );
 	OBB2 barrelOBB = OBB2( m_barrelOBBSize, m_position, m_orientationDegrees );
 	m_baseVertices.clear();
 	m_barrelVertices.clear();
@@ -74,12 +74,16 @@ void Actor::RenderActor()
 	g_theRenderer->DrawVertexVector( m_barrelVertices );
 }
 
-void Actor::Shoot()
+void Actor::Shoot( float deltaSeconds )
 {
+	static float ShootTime = m_shootCoolDown;
+	ShootTime += deltaSeconds;
+	if( ShootTime < m_shootCoolDown ){ return; }
+
+	ShootTime = 0.f;
 	Vec2 projectileDirt = Vec2::ONE;
 	projectileDirt.SetAngleDegrees( m_orientationDegrees );
 	m_map->SpawnNewProjectile( m_type, m_position, projectileDirt );
-	
 }
 
 void Actor::TakeDamage( float damage )

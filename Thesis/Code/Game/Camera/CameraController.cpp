@@ -30,8 +30,6 @@ void CameraController::Update( float deltaSeconds )
 	UpdateCameraWindow( deltaSeconds );
 	UpdateCameraFrame( deltaSeconds );
 	UpdateCameraShake( deltaSeconds );
-	UpdateCamera();
-	
 	// Debug
 	if( m_isDebug ) {
 		DebugCameraInfo();

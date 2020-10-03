@@ -188,8 +188,8 @@ void Vec2::SetAngleRadians( float newAngleRadians ) {
 		
 }
 void Vec2::SetAngleDegrees(float newAngleDegess){
-	const float tem_Len=GetLength();
-	const float tem_Radians=ConvertDegreesToRadians(newAngleDegess);
+	const float tem_Len = GetLength();
+	const float tem_Radians = ConvertDegreesToRadians(newAngleDegess);
 	x=tem_Len*cos( tem_Radians );
 	y=tem_Len*sin( tem_Radians );
 }

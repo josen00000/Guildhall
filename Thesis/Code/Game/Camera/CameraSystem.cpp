@@ -26,7 +26,10 @@ void CameraSystem::EndFrame()
 
 void CameraSystem::Update( float deltaSeconds )
 {
+	
 	UpdateControllers( deltaSeconds );
+	UpdateSplitScreenEffects( deltaSeconds );
+	UpdateControllerCameras();
 	UpdateDebugInfo();
 
 }
@@ -35,6 +38,30 @@ void CameraSystem::UpdateControllers( float deltaSeconds )
 {
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 		m_controllers[i]->Update( deltaSeconds );
+	}
+}
+
+void CameraSystem::UpdateSplitScreenEffects( float deltaSeconds )
+{
+	switch( m_splitScreenState )
+	{
+	case NO_SPLIT_SCREEN:
+
+		break;
+	case NUM_OF_SPLIT_SCREEN:
+		break;
+	}
+}
+
+void CameraSystem::UpdateControllerCameras()
+{
+	if( m_splitScreenState == NO_SPLIT_SCREEN ) {
+
+	}
+	else {
+		for( int i = 0; i < m_controllers.size(); i++ ) {
+			m_controllers[i]->UpdateCamera();
+		}
 	}
 }
 
@@ -121,6 +148,19 @@ std::string CameraSystem::GetCameraFrameStateText() const
 		return result + std::string( "Blend frame." );
 	case NUM_OF_FRAME_STATE:
 		return result + std::string( "Num of camera frame." );
+	}
+	return result + "Error state.";
+}
+
+std::string CameraSystem::GetSplitScreenStateText() const
+{
+	std::string result = "split screen state : ";
+	switch( m_splitScreenState )
+	{
+	case NO_SPLIT_SCREEN:
+		return result + std::string( "No split screen" );
+	case NUM_OF_SPLIT_SCREEN:
+		return result + std::string( "Num of split screen" );
 	}
 	return result + "Error state.";
 }

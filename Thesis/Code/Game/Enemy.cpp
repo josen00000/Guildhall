@@ -110,7 +110,7 @@ void Enemy::Shoot( float deltaSeconds )
 	static float shootTotalTime = 0.f;
 	shootTotalTime += deltaSeconds;
 	if( shootTotalTime > m_shootCooldown ) {
-		__super::Shoot();
+		__super::Shoot( deltaSeconds );
 		shootTotalTime = 0.f;
 	}
 }

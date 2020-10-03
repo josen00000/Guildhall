@@ -25,7 +25,7 @@ public:
 public:
 	virtual void UpdateActor( float deltaSeconds );
 	virtual void RenderActor();
-	virtual void Shoot();
+	virtual void Shoot( float deltaSeconds );
 	void TakeDamage( float damage );
 	void Die();
 
@@ -68,6 +68,7 @@ protected:
 	float m_physicsRadius		= 1.f;
 	float m_hp					= 100.f;
 	float m_attackStrength		= 10.f;
+	float m_shootCoolDown		= 1.f;
 
 	Vec2 m_movingDir		= Vec2::ZERO;
 	Vec2 m_position			= Vec2::ZERO;

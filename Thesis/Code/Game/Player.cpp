@@ -82,14 +82,35 @@ void Player::HandleInput( float deltaSeconds )
 			m_movingDir.Normalize();
 		}
 		if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_LEFT ) ) {
-			Shoot();
+			Shoot( deltaSeconds );
 		}
 		break;
 	case CONTROLLER_INPUT:
 		const XboxController* xboxController = g_theInputSystem->GetXboxController( m_playerIndex );
+		if( !xboxController->isConnected() ) { return; }
 
-		if( xboxController->isConnected() ) {
 
+		AnalogJoystick leftJoyStick = xboxController->GetLeftJoystick();
+		{
+			float magnitude = leftJoyStick.GetMagnitude();
+			m_movingDir = Vec2::ZERO;
+			if( magnitude > 0 ) {
+				m_movingDir = Vec2( magnitude, 0.f );
+				m_movingDir.SetAngleDegrees( leftJoyStick.GetAngleDegrees() );
+			}
+		}
+		
+		AnalogJoystick rightJoyStick = xboxController->GetRightJoystick();
+		{
+			float magnitude = rightJoyStick.GetMagnitude();
+			if( magnitude > 0 ) {
+				m_orientationDegrees = rightJoyStick.GetAngleDegrees();
+				m_orientationDegrees = ClampDegressTo360( m_orientationDegrees );
+			}
+		}
+
+		if( xboxController->GetRightTrigger() > 0 ) {
+			Shoot( deltaSeconds );
 		}
 		break;
 	}

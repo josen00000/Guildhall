@@ -40,15 +40,16 @@ public:
 	void SmoothMotion();
 	float ComputeAsymptoticValueByDeltaDist( float deltaDist );
 
-private:
 	void UpdateCamera();
+private:
 
 	// camera snapping
 	float ComputeCameraSnapSpeed();
 	Vec2 ComputeCameraWindowSnappedPosition( float deltaSeconds );
 
 private:
-	bool m_isDebug = false;
+	bool m_isDebug				= false;
+	bool m_disableUpdateCamera	= false;
 	Player* m_player = nullptr;
 	Camera* m_camera = nullptr;
 	CameraSystem* m_owner = nullptr;
@@ -71,8 +72,8 @@ private:
 	// camera smooth
 	float m_asymptoticValue		= 0.9f;
 	float m_maxDeltaDist		= 5.f;
-	float m_minAsymptotic		= 0.89f;
-	float m_maxAsymptotic		= 0.97f;
+	float m_minAsymptotic		= 0.95f;
+	float m_maxAsymptotic		= 0.99f;
 	int m_smoothStep			= 0;
 
 

@@ -10,6 +10,7 @@ class Map;
 enum InputControlState {
 	KEYBOARD_INPUT = 0,
 	CONTROLLER_INPUT,
+	AI_INPUT,
 	NUM_OF_INPUT_STATE
 };
 
@@ -40,7 +41,7 @@ public:
 	bool m_isMoving			= false;
 	bool m_isContinousWalk	= false;
 
-	InputControlState m_inputState = KEYBOARD_INPUT;
+	InputControlState m_inputState = CONTROLLER_INPUT;
 	int m_playerIndex	= 0;
 
 	float m_maxSpeed = 3.f;

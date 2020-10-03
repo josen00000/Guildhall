@@ -37,6 +37,11 @@ enum CameraFrameState : unsigned int {
 	NUM_OF_FRAME_STATE
 };
 
+enum SplitScreenState {
+	NO_SPLIT_SCREEN = 0,
+	NUM_OF_SPLIT_SCREEN,
+};
+
 class CameraSystem {
 public:
 	CameraSystem(){}
@@ -49,6 +54,8 @@ public:
 	void EndFrame();
 	void Update( float deltaSeconds );
 	void UpdateControllers( float deltaSeconds );
+	void UpdateSplitScreenEffects( float deltaSeconds );
+	void UpdateControllerCameras();
 	void DebugRender();
 	void DebugRenderControllers();
 
@@ -58,6 +65,7 @@ public:
 	std::string GetCameraSnappingStateText() const;
 	std::string GetCameraShakeStateText() const;
 	std::string GetCameraFrameStateText() const;
+	std::string GetSplitScreenStateText() const;
 	CameraWindowState	GetCameraWindowState() const { return m_cameraWindowState; }
 	CameraSnappingState GetCameraSnappingState() const { return m_cameraSnappingState; }
 	CameraShakeState	GetCameraShakeState() const { return m_cameraShakeState; }
@@ -87,6 +95,7 @@ private:
 	CameraSnappingState m_cameraSnappingState	= NO_CAMERA_SNAPPING;
 	CameraShakeState	m_cameraShakeState		= POSITION_SHAKE;
 	CameraFrameState	m_cameraFrameState		= NO_FRAMEING;
+	SplitScreenState	m_splitScreenState		= NO_SPLIT_SCREEN;
 	RandomNumberGenerator* m_rng	= nullptr;
 	float m_shakeBlendAmount	= 0.f;
 };
