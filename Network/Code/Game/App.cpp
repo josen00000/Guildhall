@@ -18,6 +18,7 @@
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Network/NetworkSystem.hpp"
+#include "Engine/Network/BlockingQueue.hpp"
 
 
 App*			g_theApp			= nullptr;
@@ -42,12 +43,15 @@ DevConsole*		g_theConsole		= nullptr;
 
 void App::Startup()
 {
-	//StringTesting();
+	// test
+	//////////////////////////////////////////////////////////////////////////
+	BlockingQueueTesting();
+	//////////////////////////////////////////////////////////////////////////
+
 	g_theRenderer		= new RenderContext();
 	g_theInputSystem	= new InputSystem();
 	g_theEventSystem	= new EventSystem();
 	g_theAudioSystem	= new AudioSystem();
-	//TemplateTesting();
 
 	Clock::SystemStartUp();
 	m_clock = new Clock();
@@ -165,6 +169,17 @@ void App::NamedPropertyTesting()
 // 	float b = testProp->GetValue<float>( "floatA", 20.f );
 // 	Camera cameraC = testProp->GetValue<Camera>( "cameraA", *cameraB );
 	
+}
+
+void App::BlockingQueueTesting()
+{
+	BlockingQueue<int> testQueue{};
+	testQueue.Push( 0 );
+	testQueue.Push( 1 );
+
+	int a = testQueue.Pop();
+	int b = testQueue.Pop();
+	int c = testQueue.Pop();
 }
 
 void App::Shutdown()

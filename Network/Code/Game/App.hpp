@@ -17,6 +17,7 @@ public:
 	void TemplateTesting();
 	void StringTesting();
 	void NamedPropertyTesting();
+	void BlockingQueueTesting();
 
 	void Shutdown();
 	void BeginFrame();

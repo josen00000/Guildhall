@@ -315,6 +315,18 @@
     <ClCompile Include="Network\Server.cpp">
       <Filter>Network</Filter>
     </ClCompile>
+    <ClCompile Include="Network\BlockingQueue.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\NonBlockingQueue.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Socket.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\UDPSocket.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
@@ -606,6 +618,18 @@
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Network\Server.hpp">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\BlockingQueue.hpp">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\NonBlockingQueue.hpp">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Socket.hpp">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\UDPSocket.hpp">
       <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>

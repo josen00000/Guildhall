@@ -218,9 +218,13 @@
     <ClCompile Include="Math\Vec2.cpp" />
     <ClCompile Include="Math\Vec3.cpp" />
     <ClCompile Include="Math\Vec4.cpp" />
+    <ClCompile Include="Network\BlockingQueue.cpp" />
     <ClCompile Include="Network\Client.cpp" />
     <ClCompile Include="Network\NetworkSystem.cpp" />
+    <ClCompile Include="Network\NonBlockingQueue.cpp" />
     <ClCompile Include="Network\Server.cpp" />
+    <ClCompile Include="Network\Socket.cpp" />
+    <ClCompile Include="Network\UDPSocket.cpp" />
     <ClCompile Include="Physics\Collider2D.cpp" />
     <ClCompile Include="Physics\Collision2D.cpp" />
     <ClCompile Include="Physics\DiscCollider2D.cpp" />
@@ -315,9 +319,13 @@
     <ClInclude Include="Math\vec2.hpp" />
     <ClInclude Include="Math\Vec3.hpp" />
     <ClInclude Include="Math\Vec4.hpp" />
+    <ClInclude Include="Network\BlockingQueue.hpp" />
     <ClInclude Include="Network\Client.hpp" />
     <ClInclude Include="Network\NetworkSystem.hpp" />
+    <ClInclude Include="Network\NonBlockingQueue.hpp" />
     <ClInclude Include="Network\Server.hpp" />
+    <ClInclude Include="Network\Socket.hpp" />
+    <ClInclude Include="Network\UDPSocket.hpp" />
     <ClInclude Include="Physics\Collider2D.hpp" />
     <ClInclude Include="Physics\Collision2D.hpp" />
     <ClInclude Include="Physics\DiscCollider2D.hpp" />
