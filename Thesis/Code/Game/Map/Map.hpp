@@ -75,10 +75,14 @@ public:
 
 	int		GetTileIndexWithTileCoords( IntVec2 tileCoords ) const;
 	int		GetPlayerNum() const { return (int)m_players.size(); }
+	int		GetEnemyNum() const { return (int)m_enemies.size(); }
+
 	Vec2	GetPlayerPosWithIndex( int index ); 
 	Vec2	GetCuePos() const;
 
 	Player*	GetPlayerWithIndex( int index );
+	std::vector<Enemy*>& GetEnemies();
+	std::vector<Player*>& GetPlayers();
 
 	IntVec2 GetTileCoordsWithTileIndex( int index ) const;
 	IntVec2 GetRandomInsideTileCoords() const;
@@ -92,7 +96,7 @@ public:
 
 	RandomNumberGenerator* GetRNG(){ return m_rng; }
 		// Actor
-
+	int GetKeyboardPlayerIndex() const { return m_keyboardPlayerIndex; }
 
 	// Mutator
 	void SetTileTypeWithCoords( IntVec2 coords, TileType type );
@@ -117,6 +121,7 @@ public:
 
 	// Actor
 	void CreatePlayer();
+	void ShiftPlayer();
 	void SpawnNewEnemy( Vec2 startPos );
 
 	// Projectile
@@ -184,6 +189,7 @@ private:
 	RandomNumberGenerator*			m_rng;
 
 	int								m_debugTileIndex = 0;
+	int								m_keyboardPlayerIndex = 0;
 
 	// Actor
 	std::vector<Player*>			m_players;

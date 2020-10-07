@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "Game/GameCommon.hpp"
 #include "Game/Camera/CameraController.hpp"
 
 class Player;
@@ -37,9 +38,15 @@ enum CameraFrameState : unsigned int {
 	NUM_OF_FRAME_STATE
 };
 
-enum SplitScreenState {
+enum SplitScreenState : unsigned int {
 	NO_SPLIT_SCREEN = 0,
-	NUM_OF_SPLIT_SCREEN,
+	NUM_OF_SPLIT_SCREEN_STATE,
+};
+
+enum NoSplitScreenStrat : unsigned int {
+	NO_STRAT = 0,
+	ZOOM_TO_FIT,
+	NUM_OF_NO_SPLIT_SCREEN_STRAT
 };
 
 class CameraSystem {
@@ -66,10 +73,15 @@ public:
 	std::string GetCameraShakeStateText() const;
 	std::string GetCameraFrameStateText() const;
 	std::string GetSplitScreenStateText() const;
+	std::string GetNoSplitScreenStratText() const;
+
 	CameraWindowState	GetCameraWindowState() const { return m_cameraWindowState; }
 	CameraSnappingState GetCameraSnappingState() const { return m_cameraSnappingState; }
 	CameraShakeState	GetCameraShakeState() const { return m_cameraShakeState; }
 	CameraFrameState	GetCameraFrameState() const { return m_cameraFrameState; }
+	SplitScreenState	GetSplitScreenState() const { return m_splitScreenState; }
+	NoSplitScreenStrat	GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
+
 	std::vector<CameraController*>& GetCameraControllers();
 	RandomNumberGenerator* GetRNG(){ return m_rng; }
 
@@ -79,12 +91,22 @@ public:
 	void SetCameraSnappingState( CameraSnappingState newState );
 	void SetCameraShakeState( CameraShakeState newState );
 	void SetCameraFrameState( CameraFrameState newState );
+	void SetSplitScreenState( SplitScreenState newState );
+	void SetNoSplitScreenStrat( NoSplitScreenStrat newStrat ); 
+
 	void AddCameraShake( int index, float shakeTrauma );
 
 	void UpdateDebugInfo();
 
 	// Controller
 	void CreateAndPushController( Player* player, Camera* camera );
+
+	// split screen strat
+		// no split screen strat
+	void CheckIfZoom();
+	bool IsControllersInsideCamera();
+	void GetNotInsideControllers( std::vector<CameraController*>& vec );
+	float ComputeCameraHeight( std::vector<CameraController*> const& vec );
 
 private:
 	bool m_isdebug = false;
@@ -96,6 +118,13 @@ private:
 	CameraShakeState	m_cameraShakeState		= POSITION_SHAKE;
 	CameraFrameState	m_cameraFrameState		= NO_FRAMEING;
 	SplitScreenState	m_splitScreenState		= NO_SPLIT_SCREEN;
+	NoSplitScreenStrat	m_noSplitScreenStrat	= NO_STRAT;
 	RandomNumberGenerator* m_rng	= nullptr;
+
 	float m_shakeBlendAmount	= 0.f;
+	float m_idealCameraHeight	= GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y;
+	Vec2 m_noSplitCameraSize	= Vec2( ( GAME_CAMERA_MAX_X - GAME_CAMERA_MIN_X ), ( GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y) );
+	Vec2  m_goalCameraPos		= Vec2::ZERO;
+	AABB2 m_goalCameraWindow	= AABB2();
+	Camera* m_noSplitCamera	= nullptr;
 };

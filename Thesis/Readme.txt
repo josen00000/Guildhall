@@ -6,9 +6,14 @@ Open the .exe file under /Run/
 Operations:
 	press P to create player.
 	press I to create item.
+	press E to create enemy
     	W, A, S, D to move the player
 	press left mouse button to fire
 	press ESC to quit (not X)
+	Controller:
+		Right trigger: shoot
+		Left JoyStick: move
+		Right Joystick: aim
 	F1 to enter debug mode
 		blue box: camera window
 		red circle: camera position (smoothed)
@@ -32,4 +37,15 @@ Operations:
 		Forward frame: camera always shows where player moving to
 		Projectile frame: camera always shows where player facing to
 		Cue frame: Camera always shows where item are (if item exist)
-		    
+	F6 change camera split screen state:
+		N/A currently
+	F7 change no split-screen strat
+		No strat: no stratergy for no split-screen state, player can move out of the camera
+		Zoom to fit: When player try to move out of the camera, the camera zoom out to fit the player.
+			     Camera always trys to zoom in to original size.	 	    
+Settings:
+	The first player is always controlled by mouse and keyboard.
+	If the controller is connect, the other player is controlled by controller. Otherwise, they are controlled by AI.
+	Enemy and Player share same AI stratergy:
+		Patrol: No player/Enemy close enough, randomly find movable goal pos and move.
+		Shoot:	player/enemy is close enough, stable and shoot towards target with cooldown.

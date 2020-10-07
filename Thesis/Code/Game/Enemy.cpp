@@ -61,17 +61,20 @@ void Enemy::SetMap( Map* map )
 
 void Enemy::CheckState()
 {
-	int playerNum = m_map->GetPlayerNum();
-	for( int i = 0; i < playerNum; i++ ) {
-		Vec2 tempPlayerPos = m_map->GetPlayerPosWithIndex( i );
+	std::vector<Player*> players = m_map->GetPlayers();
+	for( int i = 0; i < players.size(); i++ ) {
+		Player* tempPlayer = players[i];
+		if( tempPlayer == nullptr ) { continue; }
+
+		Vec2 tempPlayerPos = tempPlayer->GetPosition();
 		float distSq = GetDistanceSquared2D( tempPlayerPos, m_position );
-		g_theConsole->DebugLogf( "dist sq is : %.2f", distSq );
-		if( distSq < ( m_activeDistThreshold * m_activeDistThreshold ) ) {
-			m_target = m_map->GetPlayerWithIndex( i );
+		if( distSq < (m_activeDistThreshold * m_activeDistThreshold) ) {
+			m_target = tempPlayer;
 			m_state = ENEMY_ATTACK;
 			return;
 		}
 	}
+	
 	m_target = nullptr;
 	m_state = ENEMY_PATROL;
 
@@ -107,11 +110,9 @@ void Enemy::Shoot( float deltaSeconds )
 	Vec2 fwdDir = m_target->GetPosition() - m_position;
 	fwdDir.Normalize();
 	m_orientationDegrees = fwdDir.GetAngleDegrees(); 
-	static float shootTotalTime = 0.f;
-	shootTotalTime += deltaSeconds;
-	if( shootTotalTime > m_shootCooldown ) {
-		__super::Shoot( deltaSeconds );
-		shootTotalTime = 0.f;
-	}
+	
+	__super::Shoot( deltaSeconds );
+		
+	
 }
 

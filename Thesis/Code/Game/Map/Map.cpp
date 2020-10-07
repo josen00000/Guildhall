@@ -205,6 +205,16 @@ Player* Map::GetPlayerWithIndex( int index )
 	return m_players[index];
 }
 
+std::vector<Enemy*>& Map::GetEnemies()
+{
+	return m_enemies;
+}
+
+std::vector<Player*>& Map::GetPlayers()
+{
+	return m_players;
+}
+
 int Map::GetTileIndexWithTileCoords( IntVec2 tileCoords ) const
 {
 	return m_width * tileCoords.y + tileCoords.x;
@@ -389,9 +399,31 @@ void Map::CreatePlayer( )
 	Player* newPlayer = Player::SpawnPlayerWithPos( pos );
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );
+	newPlayer->SetPlayerIndex( m_players.size() - 1 );
+	if( newPlayer->GetPlayerIndex() == m_keyboardPlayerIndex ) {
+		newPlayer->SetInputControlState( KEYBOARD_INPUT );
+	}
 	g_theCameraSystem->CreateAndPushController( newPlayer, g_gameCamera );
 	g_gameCamera->SetPosition( pos ); // temp code5
 
+}
+
+void Map::ShiftPlayer()
+{
+	Player* keyboardPlayer	= m_players[0];
+	for( int i = 0; i < m_players.size(); i++ ) {
+		Player* tempPlayer = m_players[i];
+		if( tempPlayer->IsControlledByUser() ) { continue; }
+		
+		m_players[0] = tempPlayer;
+		tempPlayer->SetPlayerIndex( 0 );
+		m_players[i] = nullptr;
+		m_players.erase( m_players.begin() + i );
+		break;
+	}
+	
+	m_players.push_back( keyboardPlayer );
+	keyboardPlayer->SetPlayerIndex( m_players.size() - 1 );
 }
 
 void Map::SpawnNewEnemy( Vec2 startPos )

@@ -57,6 +57,8 @@ public:
 
 	Vec3	GetPosition() const;
 	Vec2	GetPosition2D() const;
+	Vec2	GetBottomLeftWorldPos2D() const;
+	Vec2	GetTopRightWorldPos2D() const;
 	Vec3	GetForwardDirt( Convention convension ) const;
 	Vec3	GetLeftDirt( Convention convension ) const;
 	Vec3	GetUpDirt( Convention convension ) const;
@@ -95,7 +97,8 @@ public:
 	
 	void SetRenderContext( RenderContext* ctx );
 
-	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f );
+	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f, float aspectRatio = 1.f );
+	//void SetOrthographicSize( Vec2 size, float nearZ = -1.f, float farZ = 1.f );
 
 	void SetUseDepth( bool useDepth );
 

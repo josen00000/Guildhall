@@ -63,12 +63,14 @@ protected:
 
 	ActorType m_type	= ActorType::ACTOR_NONE;
 
-	float m_orientationDegrees	= 0.f;
-	float m_speed				= 3.f;
-	float m_physicsRadius		= 1.f;
-	float m_hp					= 100.f;
-	float m_attackStrength		= 10.f;
-	float m_shootCoolDown		= 1.f;
+	float m_orientationDegrees		= 0.f;
+	float m_speed					= 3.f;
+	float m_physicsRadius			= 1.f;
+	float m_hp						= 100.f;
+	float m_attackStrength			= 10.f;
+	float m_shootCoolDown			= 1.f;
+	float m_shootTimer				= m_shootCoolDown;
+	float m_lastFrameMovingDegrees	= 0.f;
 
 	Vec2 m_movingDir		= Vec2::ZERO;
 	Vec2 m_position			= Vec2::ZERO;

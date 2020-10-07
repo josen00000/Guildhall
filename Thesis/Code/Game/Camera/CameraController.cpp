@@ -30,6 +30,9 @@ void CameraController::Update( float deltaSeconds )
 	UpdateCameraWindow( deltaSeconds );
 	UpdateCameraFrame( deltaSeconds );
 	UpdateCameraShake( deltaSeconds );
+	SmoothMotion();
+	//BoundCameraPosInsideWindow();
+
 	// Debug
 	if( m_isDebug ) {
 		DebugCameraInfo();
@@ -137,6 +140,13 @@ void CameraController::SetCameraWindowSize( Vec2 size )
 	m_cameraWindow.SetDimensions( size );
 }
 
+void CameraController::BoundCameraPosInsideWindow()
+{
+	if( !m_cameraWindow.IsPointInside( m_smoothedGoalCameraPos ) ) {
+		m_smoothedGoalCameraPos = m_cameraWindow.GetNearestPoint( m_smoothedGoalCameraPos );
+	}
+}
+
 void CameraController::UpdateCameraShake( float deltaSeconds )
 {
 	if( m_trauma <= 0 ){ return; }
@@ -177,7 +187,7 @@ void CameraController::UpdateCameraFrame( float deltaSeconds )
 	Vec2 cueGoalPos = m_playerPos;
 
 	// Update fwd framing
-	if( m_player->GetIsContinousWalk() ) {
+	if( m_player->IsContinousWalk() ) {
 		Vec2 playerVelocity = m_player->GetVelocity();
 		fwdGoalPos = m_playerPos + playerVelocity * m_fwdFrameVelDist;
 	}
@@ -231,9 +241,7 @@ void CameraController::UpdateCameraFrame( float deltaSeconds )
 void CameraController::SmoothMotion()
 {
 	m_smoothedGoalCameraPos = m_goalCameraPos;
-	m_smoothStep = 0;
 
-	// solution 2 
 	m_asymptoticValue = ComputeAsymptoticValueByDeltaDist( GetDistance2D( m_smoothedGoalCameraPos, m_cameraPos ));
 	m_smoothedGoalCameraPos = ( m_cameraPos * m_asymptoticValue ) + ( m_smoothedGoalCameraPos * ( 1 - m_asymptoticValue ));
 
@@ -250,12 +258,8 @@ float CameraController::ComputeAsymptoticValueByDeltaDist( float deltaDist )
 	return result;
 }
 
-void CameraController::UpdateCamera()
+void CameraController::UpdateCameraPos()
 {
-	if( !m_cameraWindow.IsPointInside( m_goalCameraPos ) ) {
-		m_goalCameraPos = m_cameraWindow.GetNearestPoint( m_goalCameraPos );
-	}
-	SmoothMotion();
 	m_camera->SetPosition2D( m_smoothedGoalCameraPos );
 }
 

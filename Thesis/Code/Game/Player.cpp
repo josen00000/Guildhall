@@ -1,4 +1,5 @@
 #include "Player.hpp"
+#include "Game/Enemy.hpp"
 #include "Game/Map/Map.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
@@ -15,11 +16,6 @@ Player::Player()
 	m_doesPushActor = true;
 }
 
-Player::Player( int index )
-{
-	m_playerIndex = index;
-}
-
 Player* Player::SpawnPlayerWithPos( Vec2 pos )
 {
 	Player* tempPlayer = new Player();
@@ -30,6 +26,7 @@ Player* Player::SpawnPlayerWithPos( Vec2 pos )
 
 void Player::UpdatePlayer( float deltaSeconds )
 {
+	CheckInputMethod();
 	if( !g_theConsole->IsOpen() ) {
 		HandleInput( deltaSeconds );
 	}
@@ -82,11 +79,27 @@ void Player::HandleInput( float deltaSeconds )
 			m_movingDir.Normalize();
 		}
 		if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_LEFT ) ) {
-			Shoot( deltaSeconds );
+			__super::Shoot( deltaSeconds );
+		}
+		break;
+	case AI_INPUT:
+		CheckAIState();
+		switch( m_aiState )
+		{
+		case PLAYER_PATROL:
+			FindGoalPatrolPoint( deltaSeconds );
+			m_movingDir = m_patrolGoalPos - m_position;
+			m_movingDir.Normalize();
+			break;
+		case PLAYER_ATTACK:
+			AIShoot( deltaSeconds );
+			break;
+		default:
+			break;
 		}
 		break;
 	case CONTROLLER_INPUT:
-		const XboxController* xboxController = g_theInputSystem->GetXboxController( m_playerIndex );
+		const XboxController* xboxController = g_theInputSystem->GetXboxController( m_playerIndex - 1 );
 		if( !xboxController->isConnected() ) { return; }
 
 
@@ -110,7 +123,7 @@ void Player::HandleInput( float deltaSeconds )
 		}
 
 		if( xboxController->GetRightTrigger() > 0 ) {
-			Shoot( deltaSeconds );
+			__super::Shoot( deltaSeconds );
 		}
 		break;
 	}
@@ -124,13 +137,82 @@ void Player::RenderPlayer()
 	g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 1.f, 0.1f, m_color );
 }
 
+bool Player::IsControlledByUser() const
+{
+	return ( !( m_inputState == AI_INPUT ) );
+}
+
 void Player::SetMap( Map* map )
 {
 	m_map = map;
 }
 
+void Player::SetPlayerIndex( int index )
+{
+	m_playerIndex = index;
+}
+
 void Player::SetInputControlState( InputControlState state )
 {
 	m_inputState = state;
+}
+
+void Player::CheckInputMethod()
+{
+	if( m_playerIndex == 0 ) {
+		m_inputState = KEYBOARD_INPUT;
+	}
+	else {
+		XboxController const* controller = g_theInputSystem->GetXboxController( m_playerIndex - 1 );
+		if( !controller->isConnected() ) {
+			m_inputState = AI_INPUT;
+		}
+		else {
+			m_inputState = CONTROLLER_INPUT;
+		}
+	}
+}
+
+void Player::CheckAIState()
+{
+	std::vector<Enemy*> enemies = m_map->GetEnemies();
+	for( int i = 0; i < enemies.size(); i++ ) {
+		Enemy* tempEnemy = enemies[i];
+		if( tempEnemy == nullptr ){ continue; }
+
+		Vec2 tempEnemyPos = tempEnemy->GetPosition();
+		float distSq = GetDistanceSquared2D( tempEnemyPos, m_position );
+		if( distSq < (m_activeDistThreshold * m_activeDistThreshold) ) {
+			m_target = tempEnemy;
+			m_aiState = PLAYER_ATTACK;
+			return;
+		}
+	}
+	m_target = nullptr;
+	m_aiState = PLAYER_PATROL;
+}
+
+void Player::FindGoalPatrolPoint( float deltaSeconds )
+{
+	m_patrolTotalTime += deltaSeconds;
+	float distSq = GetDistanceSquared2D( m_position, m_patrolGoalPos );
+
+	if( distSq < 0.7f || m_patrolTotalTime > 5.f || !m_map->IsPosNotSolid( m_patrolGoalPos ) ) {
+		m_patrolTotalTime = 0.f;
+		m_patrolGoalPos = (Vec2)m_map->GetRandomInsideNotSolidTileCoords();
+	}
+}
+
+void Player::AIShoot( float deltaSeconds )
+{
+	if( m_target == nullptr ) {
+		ERROR_AND_DIE( "No enemy in player shoot!" );
+	}
+	m_movingDir = Vec2::ZERO;
+	Vec2 fwdDir = m_target->GetPosition() - m_position;
+	fwdDir.Normalize();
+	m_orientationDegrees = fwdDir.GetAngleDegrees();
+
+	__super::Shoot( deltaSeconds );
 }
 

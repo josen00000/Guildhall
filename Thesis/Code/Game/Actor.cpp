@@ -33,12 +33,11 @@ void Actor::UpdateActor( float deltaSeconds )
 {
 	Vec2 velocity = m_movingDir * m_speed;
 	m_position = m_position + velocity * deltaSeconds;
-	static float movingDegrees = 0.f;
 	if( m_movingDir != Vec2::ZERO ) {
-		movingDegrees = m_movingDir.GetAngleDegrees();
+		m_lastFrameMovingDegrees = m_movingDir.GetAngleDegrees();
 	}
 	
-	OBB2 baseOBB = OBB2( m_baseOBBSize, m_position, movingDegrees );
+	OBB2 baseOBB = OBB2( m_baseOBBSize, m_position, m_lastFrameMovingDegrees );
 	OBB2 barrelOBB = OBB2( m_barrelOBBSize, m_position, m_orientationDegrees );
 	m_baseVertices.clear();
 	m_barrelVertices.clear();
@@ -76,11 +75,10 @@ void Actor::RenderActor()
 
 void Actor::Shoot( float deltaSeconds )
 {
-	static float ShootTime = m_shootCoolDown;
-	ShootTime += deltaSeconds;
-	if( ShootTime < m_shootCoolDown ){ return; }
+	m_shootTimer += deltaSeconds;
+	if( m_shootTimer < m_shootCoolDown ){ return; }
 
-	ShootTime = 0.f;
+	m_shootTimer = 0.f;
 	Vec2 projectileDirt = Vec2::ONE;
 	projectileDirt.SetAngleDegrees( m_orientationDegrees );
 	m_map->SpawnNewProjectile( m_type, m_position, projectileDirt );

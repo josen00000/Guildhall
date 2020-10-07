@@ -105,6 +105,20 @@ Vec2 Camera::GetPosition2D() const
 	return (Vec2)GetPosition();
 }
 
+Vec2 Camera::GetBottomLeftWorldPos2D() const
+{
+	Vec2 pos = GetPosition2D();
+	pos -= ( m_dimension / 2 );
+	return pos;
+}
+
+Vec2 Camera::GetTopRightWorldPos2D() const
+{
+	Vec2 pos = GetPosition2D();
+	pos += ( m_dimension / 2 );
+	return pos;
+}
+
 Vec3 Camera::GetForwardDirt( Convention convension ) const
 {
 	return m_transform.GetForwardDirt( convension );
@@ -185,14 +199,22 @@ void Camera::SetRenderContext( RenderContext* ctx )
 {
 	m_rctx = ctx;
 }
+// 
+// void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f */ )
+// {
+// 	float aspectRatio = GetOutputAspectRatio();
+// 	Vec2 extents = Vec2( aspectRatio * height * 0.5f, height * 0.5f );
+// 	Vec3 min = Vec3( -extents, nearZ );
+// 	Vec3 max = Vec3( extents, farZ );
+// 	m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max, aspectRatio );
+// }
 
-void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f */ )
+void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f*/, float aspectRatio /*= 1.f */ )
 {
-	float aspectRatio = GetOutputAspectRatio();
 	Vec2 extents = Vec2( aspectRatio * height * 0.5f, height * 0.5f );
 	Vec3 min = Vec3( -extents, nearZ );
 	Vec3 max = Vec3( extents, farZ );
-	//m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max );
+	m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max, aspectRatio );
 }
 
 void Camera::SetUseDepth( bool useDepth )

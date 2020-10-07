@@ -35,11 +35,10 @@ public:
 
 private:
 	void FindGoalPatrolPoint( float deltaSeconds );
-	void Shoot( float deltaSeconds );
+	virtual void Shoot( float deltaSeconds ) override;
 
 public:
 	float m_maxSpeed		= 3.f;
-	float m_shootCooldown	= 1.5f;
 	Rgba8 m_color			= Rgba8::BLUE;
 
 private:

@@ -7,6 +7,7 @@ class CameraSystem;
 
 class CameraController {
 	friend class Player;
+	friend class CameraSystem;
 
 public:
 	CameraController(){}
@@ -19,6 +20,7 @@ public:
 	// Accessor
 	bool GetIsDebug() const { return m_isDebug; }
 	Vec2 GetCuePos() const ;
+	Vec2 GetSmoothedGoalPos() const { return m_smoothedGoalCameraPos; }
 
 	// Mutator
 	void SetIsDebug( bool isDebug );
@@ -30,6 +32,7 @@ public:
 	// Camera Window
 	void UpdateCameraWindow( float deltaSeconds );
 	void SetCameraWindowSize( Vec2 size );
+	void BoundCameraPosInsideWindow();
 	//void SetCameraWindowMode( CameraWindowState newState );
 
 	// Shake
@@ -40,7 +43,7 @@ public:
 	void SmoothMotion();
 	float ComputeAsymptoticValueByDeltaDist( float deltaDist );
 
-	void UpdateCamera();
+	void UpdateCameraPos();
 private:
 
 	// camera snapping

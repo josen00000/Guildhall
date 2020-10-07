@@ -157,6 +157,33 @@ void Game::HandleInput()
 		}
 		g_theCameraSystem->SetCameraFrameState( currentState );
 	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F6 ) ) {
+		SplitScreenState currentState = g_theCameraSystem->GetSplitScreenState();
+		if( currentState < SplitScreenState::NUM_OF_SPLIT_SCREEN_STATE - 1 ) {
+			currentState = static_cast<SplitScreenState>(currentState + 1);
+		}
+		else {
+			currentState = static_cast<SplitScreenState>((uint)0);
+		}
+		g_theCameraSystem->SetSplitScreenState( currentState );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F7 ) ) {
+		NoSplitScreenStrat currentStrat = g_theCameraSystem->GetNoSplitScreenStrat();
+		if( currentStrat < NoSplitScreenStrat::NUM_OF_NO_SPLIT_SCREEN_STRAT - 1 ) {
+			currentStrat = static_cast<NoSplitScreenStrat>(currentStrat + 1);
+		}
+		else {
+			currentStrat = static_cast<NoSplitScreenStrat>((uint)0);
+		}
+		g_theCameraSystem->SetNoSplitScreenStrat( currentStrat );
+	}
+
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_SHIFT ) ) {
+		Map* currentMap = m_world->GetCurrentMap();
+		if( currentMap != nullptr ) {
+			currentMap->ShiftPlayer();
+		}
+	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P ) ) {
 		Map* currentMap = m_world->GetCurrentMap();
 		if( currentMap != nullptr ) {
