@@ -24,7 +24,7 @@ public:
 	// declaration
 	void Push( const value_type& value );
 	value_type Pop();
-
+	void StopBlocking();
 
 
 	// definition
@@ -53,15 +53,24 @@ private:
 };
 
 template<typename T>
+void BlockingQueue<T>::StopBlocking()
+{
+	m_condition.notify_all();
+}
+
+template<typename T>
 T BlockingQueue<T>::Pop()
 {
 	std::unique_lock<std::mutex> uniqueLock( m_mutex );
 	if( base::empty() ) {
 		m_condition.wait( uniqueLock );
 	}
-
-	value_type value = base::front();
-	base::pop();
+	
+	value_type value = value_type();
+	if( !base::empty() ) {
+		value= base::front();
+		base::pop();
+	}
 	return value;
 }
 

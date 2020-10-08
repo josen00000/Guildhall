@@ -18,6 +18,7 @@ public:
 	void StringTesting();
 	void NamedPropertyTesting();
 	void BlockingQueueTesting();
+	void HandleNetworkMsg();
 
 	void Shutdown();
 	void BeginFrame();

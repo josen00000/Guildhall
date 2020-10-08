@@ -17,6 +17,7 @@
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Network/NetworkSystem.hpp"
+#include "Engine/Network/UDPSocket.hpp"
 #include "Engine/Network/Client.hpp"
 #include "Engine/Network/Server.hpp"
 #include "Engine/Input/InputSystem.hpp"
@@ -92,6 +93,9 @@ void Game::Startup()
 	g_theConsole->AddCommandToCommandList( std::string( "send_data" ), std::string( "send Data to client" ), SendData );
 	g_theConsole->AddCommandToCommandList( std::string( "stop_server" ), std::string( "stop the server" ), StopServer );
 	g_theConsole->AddCommandToCommandList( std::string( "disconnect" ), std::string( "disconnect the server" ), Disconnect );
+	g_theConsole->AddCommandToCommandList( std::string( "open_udp_port" ), std::string( "bind and open udp socket" ), OpenUDPPort );
+	g_theConsole->AddCommandToCommandList( std::string( "send_udp_msg" ), std::string( "send udp msg" ), SendUDPMessage );
+	g_theConsole->AddCommandToCommandList( std::string( "close_udp_port" ), std::string( "bind and open udp socket" ), CloseUDPPort );
 
 	m_billBoardEntity = new Entity();
  	m_billBoardEntity->m_cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.5f );
@@ -827,5 +831,30 @@ bool StopServer( EventArgs& args )
 bool Disconnect( EventArgs& args )
 {
 	g_theNetworkSystem->m_client->DisconnectServer();
+	return true;
+}
+
+bool OpenUDPPort( EventArgs& args )
+{
+	std::string bindportNum = args.GetValue( std::to_string( 0 ), "" );
+	std::string sendportNum = args.GetValue( std::to_string( 1 ), "" );
+	//g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "192.168.1.206" );
+	g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "10.8.155.124" );
+	g_theNetworkSystem->m_UDPSocket->BindSocket( atoi(bindportNum.c_str()) );
+	g_theConsole->DebugLogf( "open success" );
+	return true;
+}
+
+bool SendUDPMessage( EventArgs& args )
+{
+	std::string msg = args.GetValue( std::to_string( 0 ), "" );
+	g_theNetworkSystem->SetSendMsg( msg );
+	return true;
+}
+
+bool CloseUDPPort( EventArgs& args )
+{
+	UNUSED(args);
+	g_theNetworkSystem->CloseUDPSocket();
 	return true;
 }

@@ -1,9 +1,15 @@
 #pragma once
 #include <vector>
 #include "Engine/Core/EngineCommon.hpp"
+//#include "Engine/Network/UDPSocket.hpp"
+#include "Engine/Network/BlockingQueue.hpp"
+#include "Engine/Network/NonBlockingQueue.hpp"
+#include <thread>
+#include <mutex>
 
 class Client;
 class Server;
+class UDPSocket;
 
 enum MESSAGE_ID: std::uint16_t {
 	NON_VALID_DATA		= 0,
@@ -12,11 +18,6 @@ enum MESSAGE_ID: std::uint16_t {
 	CLIENT_DISCONNECT,
 	SERVER_DISCONNECT,
 	NUM_OF_MESSAGE_ID
-};
-
-struct DataHeader {
-	std::uint16_t messageID = 0;
-	std::uint16_t messageLen = 0;
 };
 
 struct DataPackage {
@@ -42,8 +43,19 @@ public:
 	void Shutdown();
 	void StartServerWithPort( const char* port );
 
+	void CloseUDPSocket();
+
+	// Accessor
+	std::string GetReceivedMsg();
+	// mutator
+	void SetSendMsg( std::string msg );
+
+
 	Client* CreateClient();
 	Server*	CreateServer();
+
+	static void ReadFromGameAndSendMessage();
+	static void ReceiveMessageAndWriteToGame();
 
 public:
 	std::vector<Client*> m_clients;
@@ -51,6 +63,13 @@ public:
 	// temp use
 	Client* m_client;
 	Server* m_server;
+	BlockingQueue <std::string> m_sendQueue{};
+	NonBlockingQueue <std::string> m_receiveQueue{};
+	UDPSocket* m_UDPSocket = nullptr;
+	std::thread m_readFromGameAndSendThread;
+	std::thread m_receiveAndSendToGameThread;
+
+	std::atomic<bool> m_isEnd = false;
 	bool m_isServer = false;
 private:
 	int m_listenPort = -1;

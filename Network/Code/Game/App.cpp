@@ -45,7 +45,7 @@ void App::Startup()
 {
 	// test
 	//////////////////////////////////////////////////////////////////////////
-	BlockingQueueTesting();
+	//BlockingQueueTesting();
 	//////////////////////////////////////////////////////////////////////////
 
 	g_theRenderer		= new RenderContext();
@@ -176,10 +176,18 @@ void App::BlockingQueueTesting()
 	BlockingQueue<int> testQueue{};
 	testQueue.Push( 0 );
 	testQueue.Push( 1 );
-
+	testQueue.Push( 2 );
 	int a = testQueue.Pop();
 	int b = testQueue.Pop();
 	int c = testQueue.Pop();
+}
+
+void App::HandleNetworkMsg()
+{
+	std::string msg = g_theNetworkSystem->GetReceivedMsg();
+	if( !msg.empty() ) {
+		g_theConsole->DebugLog( msg );
+	}
 }
 
 void App::Shutdown()
@@ -259,6 +267,8 @@ void App::BeginFrame()
 	g_theRenderer->BeginFrame();
 	g_theAudioSystem->BeginFrame();
 	g_theNetworkSystem->BeginFrame();
+	HandleNetworkMsg();
+
 	//g_theGame->BeginFrame();
 }
 

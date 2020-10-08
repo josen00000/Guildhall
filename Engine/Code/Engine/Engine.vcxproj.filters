@@ -321,9 +321,6 @@
     <ClCompile Include="Network\NonBlockingQueue.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="Network\Socket.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="Network\UDPSocket.cpp">
       <Filter>Network</Filter>
     </ClCompile>
@@ -624,9 +621,6 @@
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Network\NonBlockingQueue.hpp">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="Network\Socket.hpp">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Network\UDPSocket.hpp">

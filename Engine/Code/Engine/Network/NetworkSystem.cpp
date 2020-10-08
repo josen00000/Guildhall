@@ -2,6 +2,7 @@
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Network/Client.hpp"
 #include "Engine/Network/Server.hpp"
+#include "Engine/Network/UDPSocket.hpp"
 
 #include <iostream>
 #ifndef WIN32_LEAN_AND_MEAN
@@ -21,7 +22,7 @@
 
 
 extern DevConsole* g_theConsole;
-
+extern NetworkSystem* g_theNetworkSystem;
 
 NetworkSystem::NetworkSystem()
 {
@@ -48,6 +49,10 @@ void NetworkSystem::StartUp()
 
 	m_client = new Client();
 	m_server = new Server();
+	m_UDPSocket = new UDPSocket();
+	
+	m_readFromGameAndSendThread = std::thread( &NetworkSystem::ReadFromGameAndSendMessage );
+	m_receiveAndSendToGameThread = std::thread( &NetworkSystem::ReceiveMessageAndWriteToGame );
 }
 
 void NetworkSystem::BeginFrame()
@@ -85,7 +90,9 @@ void NetworkSystem::Shutdown()
 		delete m_server;
 	}
 	WSACleanup();
-
+	CloseUDPSocket();
+	m_readFromGameAndSendThread.join();
+	m_receiveAndSendToGameThread.join();
 }
 
 void NetworkSystem::StartServerWithPort( const char* port )
@@ -94,6 +101,23 @@ void NetworkSystem::StartServerWithPort( const char* port )
 		m_server = new Server();
 	}
 	m_server->PrepareForClientConnectionWithPort( port );
+}
+
+void NetworkSystem::CloseUDPSocket()
+{
+	m_UDPSocket->Close();
+	m_sendQueue.StopBlocking();
+	m_isEnd = true;
+}
+
+std::string NetworkSystem::GetReceivedMsg()
+{
+	return m_receiveQueue.Pop();
+}
+
+void NetworkSystem::SetSendMsg( std::string msg )
+{
+	m_sendQueue.Push( msg );
 }
 
 Client* NetworkSystem::CreateClient()
@@ -108,4 +132,37 @@ Server* NetworkSystem::CreateServer()
 	Server* tempServer = new Server();
 	m_servers.push_back( tempServer );
 	return tempServer;
+}
+
+void NetworkSystem::ReadFromGameAndSendMessage()
+{
+	static int index = 0;
+	while( !g_theNetworkSystem->m_isEnd )
+	{
+		g_theConsole->DebugLogf( "trying to send message with index : %d in thread: %d", index, std::this_thread::get_id() );
+		std::string sendMes = g_theNetworkSystem->m_sendQueue.Pop();
+		g_theNetworkSystem->m_UDPSocket->SetHeader( 0, sendMes.size(), index );
+		g_theNetworkSystem->m_UDPSocket->WriteData( sendMes.data(), sendMes.size() );
+		g_theNetworkSystem->m_UDPSocket->UDPSend( sizeof(g_theNetworkSystem->m_UDPSocket->m_sendBuffer.header) + sendMes.size() + 1 );
+		index++;	
+	}
+}
+
+void NetworkSystem::ReceiveMessageAndWriteToGame()
+{
+	DataHeader const* pMsg = nullptr;
+	UDPSocket* socket = g_theNetworkSystem->m_UDPSocket;
+	while( !g_theNetworkSystem->m_isEnd )
+	{
+		int size = g_theNetworkSystem->m_UDPSocket->UDPReceive();
+		if( size > 0 ) {
+			g_theConsole->DebugLogf( "receive message with in thread: %d", std::this_thread::get_id() );
+			std::string dataStr;
+			dataStr = std::string( "ip address is :") + socket->GetReceiveIPAddr();
+			dataStr += std::string( "received data is :") + socket->ReadDataAsString();
+			pMsg = socket->GetReceiveHeader();
+			g_theNetworkSystem->m_receiveQueue.Push( dataStr );
+		}
+	}
+
 }

@@ -49,7 +49,7 @@ void NonBlockingQueue<T>::Unlock()
 template<typename T>
 T NonBlockingQueue<T>::Pop()
 {
-	value_type value = value_type( 0 );
+	value_type value = value_type();
 	Lock();
 	if( !base::empty() ) {
 		value = base::front();

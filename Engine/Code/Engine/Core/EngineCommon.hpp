@@ -18,6 +18,13 @@ enum Convention
 	X_RIGHT_Y_UP_Z_BACKWARD
 };
 
+struct DataHeader {
+	std::uint16_t messageID = 0;
+	std::uint16_t messageLen = 0;
+	std::uint32_t messageSeq = 0;
+};
+
+
 typedef unsigned int uint;
 typedef unsigned char byte;
 
@@ -27,17 +34,17 @@ extern BitmapFont* g_defaultFont;
 extern NamedStrings g_gameConfigBlackboard;
 extern Convention g_convention;
 
-const Vec2 ALIGN_BOTTOM_LEFT	= Vec2( 0.f, 0.f);
-const Vec2 ALIGN_BOTTOM_CENTER	= Vec2( 0.5f, 0.f);
-const Vec2 ALIGN_BOTTOM_RIGHT	= Vec2( 1.f, 0.f);
-
-const Vec2 ALIGN_CENTERED_LEFT	= Vec2( 0.f, 0.5f);
-const Vec2 ALIGN_CENTERED		= Vec2( 0.5f, 0.5f);
-const Vec2 ALIGN_CENTER_RIGHT	= Vec2( 1.f, 0.5f);
-
-const Vec2 ALIGN_TOP_LEFT		= Vec2( 0.f, 1.f );
-const Vec2 ALIGN_TOP_CENTER		= Vec2( 0.5f, 1.f );
-const Vec2 ALIGN_TOP_RIGHT		= Vec2( 1.f, 1.f);
+// const Vec2 ALIGN_BOTTOM_LEFT	= Vec2( 0.f, 0.f);
+// const Vec2 ALIGN_BOTTOM_CENTER	= Vec2( 0.5f, 0.f);
+// const Vec2 ALIGN_BOTTOM_RIGHT	= Vec2( 1.f, 0.f);
+// 
+// const Vec2 ALIGN_CENTERED_LEFT	= Vec2( 0.f, 0.5f);
+// const Vec2 ALIGN_CENTERED		= Vec2( 0.5f, 0.5f);
+// const Vec2 ALIGN_CENTER_RIGHT	= Vec2( 1.f, 0.5f);
+// 
+// const Vec2 ALIGN_TOP_LEFT		= Vec2( 0.f, 1.f );
+// const Vec2 ALIGN_TOP_CENTER		= Vec2( 0.5f, 1.f );
+// const Vec2 ALIGN_TOP_RIGHT		= Vec2( 1.f, 1.f);
 
 constexpr int MAX_LIGHTS_NUM = 8;
 

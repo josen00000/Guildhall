@@ -200,3 +200,6 @@ bool StartServer( EventArgs& args );
 bool SendData( EventArgs& args );
 bool StopServer( EventArgs& args );
 bool Disconnect( EventArgs& args );
+bool OpenUDPPort( EventArgs& args );
+bool SendUDPMessage( EventArgs& args );
+bool CloseUDPPort( EventArgs& args );
