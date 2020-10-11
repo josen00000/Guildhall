@@ -838,8 +838,8 @@ bool OpenUDPPort( EventArgs& args )
 {
 	std::string bindportNum = args.GetValue( std::to_string( 0 ), "" );
 	std::string sendportNum = args.GetValue( std::to_string( 1 ), "" );
-	//g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "192.168.1.206" );
-	g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "10.8.155.124" );
+	g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "192.168.1.206" );
+	//g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "10.8.155.124" );
 	g_theNetworkSystem->m_UDPSocket->BindSocket( atoi(bindportNum.c_str()) );
 	g_theConsole->DebugLogf( "open success" );
 	return true;
