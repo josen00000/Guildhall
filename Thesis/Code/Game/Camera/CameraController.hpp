@@ -4,6 +4,7 @@
 class Camera;
 class Player;
 class CameraSystem;
+class Timer;
 
 class CameraController {
 	friend class Player;
@@ -28,6 +29,7 @@ public:
 	void SetTrauma( float trauma );
 	void AddTrauma( float addTrauma );
 	void SetFwdFrameDist( float dist );
+	void SetMultipleCameraFactorNotStableUntil( float totalSeconds );
 
 	// Camera Window
 	void UpdateCameraWindow( float deltaSeconds );
@@ -43,6 +45,10 @@ public:
 	void SmoothMotion();
 	float ComputeAsymptoticValueByDeltaDist( float deltaDist );
 
+	// Multiple camera
+	void UpdateMultipleCameraSettings( float deltaSeconds );
+	void UpdateMultipleCameraFactor( float deltaSeconds );
+
 	void UpdateCameraPos();
 private:
 
@@ -56,7 +62,7 @@ private:
 	Player* m_player = nullptr;
 	Camera* m_camera = nullptr;
 	CameraSystem* m_owner = nullptr;
-
+	Timer*	m_timer = nullptr;
 
 	Vec2 m_playerPos				= Vec2::ZERO;
 	Vec2 m_goalCameraPos			= Vec2::ZERO;
@@ -79,7 +85,6 @@ private:
 	float m_maxAsymptotic		= 0.99f;
 	int m_smoothStep			= 0;
 
-
 	// Camera Shake
 	float m_trauma				= 0.f;
 	float m_traumaDecaySpeed	= 1.f;
@@ -98,4 +103,9 @@ private:
 	float m_fwdFrameRatio		= 0.f;
 	float m_projectFrameRatio	= 0.f;
 	float m_cueFrameRatio		= 0.f;
+
+	// multiple camera
+	bool m_ismultipleFactorStable	= true;
+	float m_multipleFactor			= 0.01f;
+	float m_factorStableSeconds		= 0.f; 
 };

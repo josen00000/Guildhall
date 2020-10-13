@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
-#include "Game/GameCommon.hpp"
 #include "Game/Camera/CameraController.hpp"
+#include "Game/GameCommon.hpp"
+#include "Game/Map/Map.hpp"
 
 class Player;
 class Camera;
@@ -46,6 +47,7 @@ enum SplitScreenState : unsigned int {
 enum NoSplitScreenStrat : unsigned int {
 	NO_STRAT = 0,
 	ZOOM_TO_FIT,
+	KILL_AND_TELEPORT,
 	NUM_OF_NO_SPLIT_SCREEN_STRAT
 };
 
@@ -62,6 +64,7 @@ public:
 	void Update( float deltaSeconds );
 	void UpdateControllers( float deltaSeconds );
 	void UpdateSplitScreenEffects( float deltaSeconds );
+	void UpdateNoSplitScreenEffect( float deltaSeconds );
 	void UpdateControllerCameras();
 	void DebugRender();
 	void DebugRenderControllers();
@@ -93,6 +96,7 @@ public:
 	void SetCameraFrameState( CameraFrameState newState );
 	void SetSplitScreenState( SplitScreenState newState );
 	void SetNoSplitScreenStrat( NoSplitScreenStrat newStrat ); 
+	void SetMap( Map* map );
 
 	void AddCameraShake( int index, float shakeTrauma );
 
@@ -103,9 +107,11 @@ public:
 
 	// split screen strat
 		// no split screen strat
-	void CheckIfZoom();
 	bool IsControllersInsideCamera();
-	void GetNotInsideControllers( std::vector<CameraController*>& vec );
+	void GetNotInsideControllers( std::vector<CameraController*>& vec, float insidePaddingLength );
+	bool CheckIfZoomStable( float stablePaddingLength );
+	void KillAndTeleportPlayers( std::vector<CameraController*>& vec );
+	void ZoomCameraToFitPlayers();
 	float ComputeCameraHeight( std::vector<CameraController*> const& vec );
 
 private:
@@ -122,9 +128,21 @@ private:
 	RandomNumberGenerator* m_rng	= nullptr;
 
 	float m_shakeBlendAmount	= 0.f;
-	float m_idealCameraHeight	= GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y;
-	Vec2 m_noSplitCameraSize	= Vec2( ( GAME_CAMERA_MAX_X - GAME_CAMERA_MIN_X ), ( GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y) );
+
+	// no split settings
+	bool m_isCameraZoomStable				= false;
+	int m_recoverWaitFrame					= 10;
+	float m_notInsidePaddingLength			= 3.f;
+	float m_zoomStablePaddingLength			= 4.f;
+	float m_idealCameraHeight				= GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y;
+	float m_maxCameraDeltaHeightPerFrame	= 0.01f;
+	Vec2 m_noSplitCameraSize				= Vec2( ( GAME_CAMERA_MAX_X - GAME_CAMERA_MIN_X ), ( GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y) );
+
+
 	Vec2  m_goalCameraPos		= Vec2::ZERO;
 	AABB2 m_goalCameraWindow	= AABB2();
+
 	Camera* m_noSplitCamera	= nullptr;
+	Map*	m_map			= nullptr;
+	//Timer*
 };

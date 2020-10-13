@@ -3,6 +3,7 @@
 #include "Game/Game.hpp"
 #include "Game/Player.hpp"
 #include "Game/Camera/CameraSystem.hpp"
+#include "Engine/Core/Time/Timer.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -18,7 +19,7 @@ CameraController::CameraController( CameraSystem* owner, Player* player, Camera*
 	,m_player( player )
 	,m_camera( camera )
 {
-
+	m_timer = new Timer();
 }
 
 void CameraController::Update( float deltaSeconds )
@@ -30,7 +31,9 @@ void CameraController::Update( float deltaSeconds )
 	UpdateCameraWindow( deltaSeconds );
 	UpdateCameraFrame( deltaSeconds );
 	UpdateCameraShake( deltaSeconds );
+	UpdateMultipleCameraSettings( deltaSeconds );
 	SmoothMotion();
+	
 	//BoundCameraPosInsideWindow();
 
 	// Debug
@@ -106,6 +109,14 @@ void CameraController::AddTrauma( float addTrauma )
 void CameraController::SetFwdFrameDist( float dist )
 {
 	m_fwdFrameVelDist = dist;
+}
+
+void CameraController::SetMultipleCameraFactorNotStableUntil( float totalSeconds )
+{
+	m_ismultipleFactorStable = false;
+	m_timer->SetSeconds( (double)totalSeconds );
+	m_multipleFactor = 0.f;
+	m_factorStableSeconds = totalSeconds;
 }
 
 // Camera Window
@@ -256,6 +267,24 @@ float CameraController::ComputeAsymptoticValueByDeltaDist( float deltaDist )
 	float result =	RangeMapFloat( 0.f, m_maxDeltaDist, m_minAsymptotic, m_maxAsymptotic, deltaDist );
 	result = ClampFloat( m_minAsymptotic, m_maxAsymptotic, result );
 	return result;
+}
+
+void CameraController::UpdateMultipleCameraSettings( float deltaSeconds )
+{
+	if( !m_ismultipleFactorStable ) {
+		UpdateMultipleCameraFactor( deltaSeconds );
+	}
+}
+
+void CameraController::UpdateMultipleCameraFactor( float deltaSeconds )
+{
+	UNUSED(deltaSeconds);
+	float currentFactorSeconds = m_factorStableSeconds - m_timer->GetSecondsRemaining();
+	m_multipleFactor = RangeMapFloat( 0.f, m_factorStableSeconds, 0.01f, 1.f, currentFactorSeconds );
+	if( m_timer->HasElapsed() ) {
+		m_ismultipleFactorStable = true;
+		m_multipleFactor = 1.f;
+	}
 }
 
 void CameraController::UpdateCameraPos()

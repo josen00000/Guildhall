@@ -767,7 +767,7 @@ void DebugAddScreenText( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rgb
 	Vec2 textBoxMin = screenBox.GetPointAtUV( Vec2( pos.x, pos.y ) ) + Vec2( pos.z, pos.w ); 
 	AABB2 textBox = AABB2( textBoxMin, ( textBoxMin + textDimension ) );
 	Vec2 offset = textBox.GetPointAtUV( pivot );
-	g_defaultDebugFont->AddVertsForTextInBox2D( vertices, textBox, size, text, Rgba8::WHITE );
+	g_defaultDebugFont->AddVertsForTextInBox2D( vertices, textBox, size, text, startColor );
 
 
 	DebugRenderObject* textObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );

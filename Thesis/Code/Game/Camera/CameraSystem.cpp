@@ -1,8 +1,11 @@
 #include "CameraSystem.hpp"
 #include "Game/Player.hpp"
+#include "Game/Game.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+
+extern Game* g_theGame;
 
 void CameraSystem::Startup()
 {
@@ -45,40 +48,34 @@ void CameraSystem::UpdateControllers( float deltaSeconds )
 
 void CameraSystem::UpdateSplitScreenEffects( float deltaSeconds )
 {
-	std::vector<CameraController*> notInsideControllers;
 	switch( m_splitScreenState )
 	{
 		case NO_SPLIT_SCREEN: {
-			GetNotInsideControllers( notInsideControllers );
-			switch( m_noSplitScreenStrat )
-			{
-				case NO_STRAT:
-					break;
-				case ZOOM_TO_FIT: {
-					float zoomCameraHeight = 0.f;
-					if( notInsideControllers.size() > 0 ) {
-						zoomCameraHeight =	ComputeCameraHeight( notInsideControllers );
-						float currentCameraHeight = m_noSplitCamera->GetCameraHeight();
-						//zoomCameraHeight = RangeMapFloat( 0.f, 1.f, currentCameraHeight, zoomCameraHeight, 0.1f );
-					}
-					else if( m_noSplitCamera->GetCameraHeight() > m_idealCameraHeight ){
-						zoomCameraHeight = m_noSplitCamera->GetCameraHeight();
-						zoomCameraHeight = RangeMapFloat( 0.f, 1.f, zoomCameraHeight, m_idealCameraHeight, 0.1f );
-					}
-					else {
-						break;
-					}
-					Vec2 zoomCameraHalfDimension;
-					float width = zoomCameraHeight * m_noSplitCamera->GetOutputAspectRatio();
-					zoomCameraHalfDimension = Vec2( width / 2, zoomCameraHeight / 2 );
-					m_noSplitCamera->SetOrthoView( -zoomCameraHalfDimension, zoomCameraHalfDimension, 1 );
-					break;
-				}
-			}
+			UpdateNoSplitScreenEffect( deltaSeconds );
 			break;
 		}
 		case NUM_OF_SPLIT_SCREEN_STATE:
 			break;
+	}
+}
+
+void CameraSystem::UpdateNoSplitScreenEffect( float deltaSeconds )
+{
+	if( m_controllers.size() == 0 ){ return; }
+	std::vector<CameraController*> notInsideControllers;
+	static int zoomRecoverWaitFrames = 0;
+	switch( m_noSplitScreenStrat )
+	{
+		case NO_STRAT:
+			break;
+		case ZOOM_TO_FIT: {
+			ZoomCameraToFitPlayers();
+			break;
+		}
+		case KILL_AND_TELEPORT: {
+			GetNotInsideControllers( notInsideControllers, -2.f );
+			KillAndTeleportPlayers( notInsideControllers );
+		}
 	}
 }
 
@@ -91,8 +88,13 @@ void CameraSystem::UpdateControllerCameras()
 			m_noSplitCamera = m_controllers[0]->m_camera;
 		}
 		m_goalCameraPos = Vec2::ZERO;
-		for( int i = 0; i < m_controllers.size(); i++ ) {
-			m_goalCameraPos += ( m_controllers[i]->GetSmoothedGoalPos() / ( (int)m_controllers.size() ) );
+		if( m_controllers.size() == 1 ) {
+			m_goalCameraPos = m_controllers[0]->GetSmoothedGoalPos();
+		}
+		else {
+			for( int i = 0; i < m_controllers.size(); i++ ) {
+				m_goalCameraPos += ( (m_controllers[i]->GetSmoothedGoalPos()  * m_controllers[i]->m_multipleFactor) / ( (int)m_controllers.size() ) );
+			}
 		}
 		m_noSplitCamera->SetPosition2D( m_goalCameraPos );
 	}
@@ -212,6 +214,8 @@ std::string CameraSystem::GetNoSplitScreenStratText() const
 		return result + std::string( "No strat" );
 	case ZOOM_TO_FIT:
 		return result + std::string( "Zoom to fit" );
+	case KILL_AND_TELEPORT:
+		return result + std::string( "kill and teleport" );
 	case NUM_OF_NO_SPLIT_SCREEN_STRAT:
 		return result + std::string( "Number of no split screen strat" );
 	}
@@ -266,7 +270,7 @@ void CameraSystem::UpdateDebugInfo()
 		debugInfos.push_back( heightText );
 	}
 
-	DebugAddScreenLeftAlignStrings( 0.98f, 0.f, Rgba8::RED, debugInfos );
+	DebugAddScreenLeftAlignStrings( 0.98f, 0.f, Rgba8( 255, 255, 255, 125), debugInfos );
 }
 
 void CameraSystem::CreateAndPushController( Player* player, Camera* camera )
@@ -274,14 +278,8 @@ void CameraSystem::CreateAndPushController( Player* player, Camera* camera )
 	CameraController* tempCamController = new CameraController( this, player, camera );
 	tempCamController->SetCameraWindowSize( Vec2( 12, 8 ) );
 	camera->SetPosition( player->GetPosition() );
+	tempCamController->SetMultipleCameraFactorNotStableUntil( 2.f );
 	m_controllers.push_back( tempCamController );
-}
-
-void CameraSystem::CheckIfZoom()
-{
-	if( !IsControllersInsideCamera() ) {
-
-	}
 }
 
 bool CameraSystem::IsControllersInsideCamera()
@@ -291,18 +289,17 @@ bool CameraSystem::IsControllersInsideCamera()
 	Vec2 cameraTopRight		= m_noSplitCamera->GetTopRightWorldPos2D();	
 	AABB2 cameraBox{ cameraBottomLeft, cameraTopRight };
 	for( int i = 0; i < m_controllers.size(); i++ ) {
-		CameraController* tempController = m_controllers[i];
-		
+	
 	}
 }
 
-void CameraSystem::GetNotInsideControllers( std::vector<CameraController*>& vec )
+void CameraSystem::GetNotInsideControllers( std::vector<CameraController*>& vec, float insidePaddingLength )
 {
 	vec.clear();
 	if( m_noSplitCamera == nullptr ){ return; }
 	Vec2 cameraBottomLeft	= m_noSplitCamera->GetBottomLeftWorldPos2D();
 	Vec2 cameraTopRight		= m_noSplitCamera->GetTopRightWorldPos2D();
-	Vec2 padding			= Vec2( 1.f ); 
+	Vec2 padding			= Vec2( insidePaddingLength ); 
 	AABB2 currentCameraWindow = AABB2( cameraBottomLeft + padding, cameraTopRight - padding );
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 		CameraController* tempController = m_controllers[i];
@@ -313,6 +310,68 @@ void CameraSystem::GetNotInsideControllers( std::vector<CameraController*>& vec 
 	}
 }
 
+bool CameraSystem::CheckIfZoomStable( float stablePaddingLength )
+{
+	Vec2 stablePadding		= Vec2( stablePaddingLength );
+	Vec2 cameraBottomLeft	= m_noSplitCamera->GetBottomLeftWorldPos2D();
+	Vec2 cameraTopRight		= m_noSplitCamera->GetTopRightWorldPos2D();
+	AABB2 currentZoomStableWindow = AABB2( cameraBottomLeft + stablePadding, cameraTopRight - stablePadding );
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		CameraController* tempController = m_controllers[i];
+		Vec2 playerPos = tempController->m_playerPos;
+		if( !IsPointInsideAABB2D( playerPos, currentZoomStableWindow ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void CameraSystem::KillAndTeleportPlayers( std::vector<CameraController*>& vec )
+{
+	if( vec.size() == 0 ){ return; }
+	for( int i = 0; i < vec.size(); i++ ) {
+		CameraController* tempController = vec[i];
+		if( m_map == nullptr ) {
+			m_map = g_theGame->GetCurrentMap();
+		}
+		tempController->m_player->DisableInputForSeconds( 2 );
+		Vec2 teleportPos = (Vec2)m_map->GetRandomInsideNotSolidTileCoords();
+		tempController->m_player->SetPosition( teleportPos );
+	}
+}
+
+void CameraSystem::ZoomCameraToFitPlayers()
+{
+	static int zoomRecoverWaitFrames = 0;
+	std::vector<CameraController*> notInsideControllers;
+	GetNotInsideControllers( notInsideControllers, m_notInsidePaddingLength );
+	float goalZoomCameraHeight = 0.f;
+	if( notInsideControllers.size() > 0 ) {
+		goalZoomCameraHeight =	ComputeCameraHeight( notInsideControllers );
+		float currentCameraHeight = m_noSplitCamera->GetCameraHeight();
+		goalZoomCameraHeight = RangeMapFloat( 0.f, 1.f, currentCameraHeight, goalZoomCameraHeight, 0.1f );
+		zoomRecoverWaitFrames = 0;
+	}
+	else if( m_noSplitCamera->GetCameraHeight() > m_idealCameraHeight && !CheckIfZoomStable( m_zoomStablePaddingLength ) ) {
+		zoomRecoverWaitFrames++;
+		float currentCameraHeight = m_noSplitCamera->GetCameraHeight();
+		if( zoomRecoverWaitFrames > 10 ) {
+			goalZoomCameraHeight = RangeMapFloat( 0.f, 1.f, currentCameraHeight, m_idealCameraHeight, 0.1f );
+			goalZoomCameraHeight = ClampFloat( (currentCameraHeight - m_maxCameraDeltaHeightPerFrame), (currentCameraHeight + m_maxCameraDeltaHeightPerFrame), goalZoomCameraHeight );
+		}
+		else {
+			goalZoomCameraHeight = currentCameraHeight;
+		}
+	}
+	else {
+		return;
+	}
+	Vec2 zoomCameraHalfDimension;
+	float width = goalZoomCameraHeight * m_noSplitCamera->GetOutputAspectRatio();
+	zoomCameraHalfDimension = Vec2( width / 2, goalZoomCameraHeight / 2 );
+	m_noSplitCamera->SetOrthoView( -zoomCameraHalfDimension, zoomCameraHalfDimension, 1 );
+}
+
 float CameraSystem::ComputeCameraHeight( std::vector<CameraController*> const& vec )
 {
 	Vec2 cameraBottomLeft	= m_noSplitCamera->GetBottomLeftWorldPos2D();
@@ -321,11 +380,12 @@ float CameraSystem::ComputeCameraHeight( std::vector<CameraController*> const& v
 	float newHalfHeight = cameraHalfHeight;
 	
 	for( int i = 0; i < vec.size(); i++ ) {
-		CameraController* tempController = m_controllers[i];
+		CameraController* tempController = vec[i];
 		Vec2 playerPos = tempController->m_playerPos;
 		Vec2 disp = m_noSplitCamera->GetPosition2D() - playerPos;
 		float aspectRatio = m_noSplitCamera->GetOutputAspectRatio();
 		float tempNewHalfHeight = (abs(disp.y) > (abs(disp.x) / aspectRatio)) ? abs(disp.y) : (abs(disp.x) / aspectRatio);
+		tempNewHalfHeight += 2.f; // add for player texture
 		if( newHalfHeight < tempNewHalfHeight ) {
 			newHalfHeight = tempNewHalfHeight;
 		}
@@ -361,6 +421,11 @@ void CameraSystem::SetSplitScreenState( SplitScreenState newState )
 void CameraSystem::SetNoSplitScreenStrat( NoSplitScreenStrat newStrat )
 {
 	m_noSplitScreenStrat = newStrat;
+}
+
+void CameraSystem::SetMap( Map* map )
+{
+	m_map = map;
 }
 
 void CameraSystem::AddCameraShake( int index, float shakeTrauma )

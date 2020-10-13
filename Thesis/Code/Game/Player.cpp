@@ -27,7 +27,14 @@ Player* Player::SpawnPlayerWithPos( Vec2 pos )
 void Player::UpdatePlayer( float deltaSeconds )
 {
 	CheckInputMethod();
-	if( !g_theConsole->IsOpen() ) {
+	m_movingDir = Vec2::ZERO;
+	
+	m_disableInputSeconds -= deltaSeconds;
+	if( m_disableInputSeconds < 0.f ) {
+		m_isAbleInput = true;
+	}
+
+	if( !g_theConsole->IsOpen()) {
 		HandleInput( deltaSeconds );
 	}
 
@@ -58,7 +65,7 @@ void Player::UpdatePlayerSpeed( float deltaSeconds )
 
 void Player::HandleInput( float deltaSeconds )
 {
-	m_movingDir = Vec2::ZERO;
+	if( !m_isAbleInput ){ return; }
 	switch( m_inputState )
 	{
 	case KEYBOARD_INPUT:
@@ -155,6 +162,11 @@ void Player::SetPlayerIndex( int index )
 void Player::SetInputControlState( InputControlState state )
 {
 	m_inputState = state;
+}
+
+void Player::DisableInputForSeconds( int seconds )
+{
+	m_disableInputSeconds = seconds;
 }
 
 void Player::CheckInputMethod()

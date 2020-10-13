@@ -44,6 +44,8 @@ public:
 	void SetMap( Map* map );
 	void SetPlayerIndex( int index );
 	void SetInputControlState( InputControlState state );
+	void DisableInputForSeconds( int seconds );
+
 private:
 	void CheckInputMethod();
 
@@ -55,6 +57,7 @@ private:
 public:
 	bool m_isMoving			= false;
 	bool m_isContinousWalk	= false;
+	bool m_isAbleInput		= true;
 
 	InputControlState	m_inputState	= CONTROLLER_INPUT;
 	PlayerAIState		m_aiState		= PLAYER_PATROL;
@@ -65,6 +68,7 @@ public:
 	float m_accelerate			= 1.5f;
 	float m_patrolTotalTime		= 0.f;
 	float m_activeDistThreshold = 10.f;
+	float m_disableInputSeconds = 0.f;
 	Vec2 m_patrolGoalPos	= Vec2::ZERO;
 	Rgba8 m_color;
 
