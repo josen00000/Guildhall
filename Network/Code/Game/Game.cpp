@@ -18,8 +18,8 @@
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Network/NetworkSystem.hpp"
 #include "Engine/Network/UDPSocket.hpp"
-#include "Engine/Network/Client.hpp"
-#include "Engine/Network/Server.hpp"
+#include "Engine/Network/TCPClient.hpp"
+#include "Engine/Network/TCPServer.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Job/JobSystem.hpp"
@@ -779,7 +779,7 @@ bool MapCommandWarp( EventArgs& args )
 
 bool ConnectTo( EventArgs& args )
 {
-	Client* tempClient = g_theNetworkSystem->m_client;
+	TCPClient* tempClient = g_theNetworkSystem->m_client;
 	std::string targetIPAddr = args.GetValue( std::to_string( 0 ), "" );
 	std::string targetPort	= args.GetValue( std::to_string( 1 ), "" );
 
@@ -790,8 +790,8 @@ bool ConnectTo( EventArgs& args )
 
 bool SendMessageTest( EventArgs& args )
 {
-	Client* tempClient = g_theNetworkSystem->m_client;
-	Server* tempServer = g_theNetworkSystem->m_server;
+	TCPClient* tempClient = g_theNetworkSystem->m_client;
+	TCPServer* tempServer = g_theNetworkSystem->m_server;
 	if( !g_theNetworkSystem->m_isServer ) {
 		std::string message = args.GetValue( std::to_string( 0 ), "" );
 		tempClient->SetSendData( message.data(), (int)message.size() );
@@ -816,7 +816,7 @@ bool StartServer( EventArgs& args )
 bool SendData( EventArgs& args )
 {
 	std::string data = args.GetValue( std::to_string( 0 ), "" );
-	Server* test = g_theNetworkSystem->m_server;
+	TCPServer* test = g_theNetworkSystem->m_server;
 	test->SetSendData( data.c_str(), (int)data.size()  );
 	
 	return true;

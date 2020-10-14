@@ -7,8 +7,8 @@
 #include <thread>
 #include <mutex>
 
-class Client;
-class Server;
+class TCPClient;
+class TCPServer;
 class UDPSocket;
 
 enum MESSAGE_ID: std::uint16_t {
@@ -51,18 +51,18 @@ public:
 	void SetSendMsg( std::string msg );
 
 
-	Client* CreateClient();
-	Server*	CreateServer();
+	TCPClient* CreateClient();
+	TCPServer*	CreateServer();
 
 	static void ReadFromGameAndSendMessage();
 	static void ReceiveMessageAndWriteToGame();
 
 public:
-	std::vector<Client*> m_clients;
-	std::vector<Server*> m_servers;
+	std::vector<TCPClient*> m_clients;
+	std::vector<TCPServer*> m_servers;
 	// temp use
-	Client* m_client;
-	Server* m_server;
+	TCPClient* m_client;
+	TCPServer* m_server;
 	BlockingQueue <std::string> m_sendQueue{};
 	NonBlockingQueue <std::string> m_receiveQueue{};
 	UDPSocket* m_UDPSocket = nullptr;

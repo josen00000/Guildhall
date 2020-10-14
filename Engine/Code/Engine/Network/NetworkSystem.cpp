@@ -1,7 +1,7 @@
 #include "NetworkSystem.hpp"
 #include "Engine/Core/DevConsole.hpp"
-#include "Engine/Network/Client.hpp"
-#include "Engine/Network/Server.hpp"
+#include "Engine/Network/TCPClient.hpp"
+#include "Engine/Network/TCPServer.hpp"
 #include "Engine/Network/UDPSocket.hpp"
 
 #include <iostream>
@@ -47,8 +47,8 @@ void NetworkSystem::StartUp()
 		return;
 	}
 
-	m_client = new Client();
-	m_server = new Server();
+	m_client = new TCPClient();
+	m_server = new TCPServer();
 	m_UDPSocket = new UDPSocket();
 	
 	m_readFromGameAndSendThread = std::thread( &NetworkSystem::ReadFromGameAndSendMessage );
@@ -98,7 +98,7 @@ void NetworkSystem::Shutdown()
 void NetworkSystem::StartServerWithPort( const char* port )
 {
 	if( m_server == nullptr ) {
-		m_server = new Server();
+		m_server = new TCPServer();
 	}
 	m_server->PrepareForClientConnectionWithPort( port );
 }
@@ -120,16 +120,16 @@ void NetworkSystem::SetSendMsg( std::string msg )
 	m_sendQueue.Push( msg );
 }
 
-Client* NetworkSystem::CreateClient()
+TCPClient* NetworkSystem::CreateClient()
 {
-	Client* tempClient = new Client();
+	TCPClient* tempClient = new TCPClient();
 	m_clients.push_back( tempClient );
 	return tempClient;
 }
 
-Server* NetworkSystem::CreateServer()
+TCPServer* NetworkSystem::CreateServer()
 {
-	Server* tempServer = new Server();
+	TCPServer* tempServer = new TCPServer();
 	m_servers.push_back( tempServer );
 	return tempServer;
 }
@@ -141,9 +141,9 @@ void NetworkSystem::ReadFromGameAndSendMessage()
 	{
 		g_theConsole->DebugLogf( "trying to send message with index : %d in thread: %d", index, std::this_thread::get_id() );
 		std::string sendMes = g_theNetworkSystem->m_sendQueue.Pop();
-		g_theNetworkSystem->m_UDPSocket->SetHeader( 0, sendMes.size(), index );
-		g_theNetworkSystem->m_UDPSocket->WriteData( sendMes.data(), sendMes.size() );
-		g_theNetworkSystem->m_UDPSocket->UDPSend( sizeof(g_theNetworkSystem->m_UDPSocket->m_sendBuffer.header) + sendMes.size() + 1 );
+		g_theNetworkSystem->m_UDPSocket->SetHeader( 0, (uint16_t)sendMes.size(), index );
+		g_theNetworkSystem->m_UDPSocket->WriteData( sendMes.data(), (int)sendMes.size() );
+		g_theNetworkSystem->m_UDPSocket->UDPSend( (int)(sizeof(g_theNetworkSystem->m_UDPSocket->m_sendBuffer.header) + sendMes.size() + 1) );
 		index++;	
 	}
 }

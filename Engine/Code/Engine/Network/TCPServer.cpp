@@ -1,5 +1,5 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
-#include "Server.hpp"
+#include "TCPServer.hpp"
 #include "Engine/Network/NetworkSystem.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Core/EngineCommon.hpp"
@@ -22,17 +22,17 @@
 
 extern DevConsole* g_theConsole;
 
-Server::Server()
+TCPServer::TCPServer()
 {
 
 }
 
-void Server::StartUp()
+void TCPServer::StartUp()
 {
 
 }
 
-void Server::ShutDown()
+void TCPServer::ShutDown()
 {
 	if( m_clientSockets.size() > 0 ) {
 		for( int i = 0; i < m_clientSockets.size(); i++ ) {
@@ -47,7 +47,7 @@ void Server::ShutDown()
 	}
 }
 
-void Server::Update()
+void TCPServer::Update()
 {
 	if( m_isRecvBufDirty ) {
 		g_theConsole->DebugLogf( "Handle data: %s", GetStringFromData().c_str() );
@@ -57,7 +57,7 @@ void Server::Update()
 
 
 
-void Server::BeginFrame()
+void TCPServer::BeginFrame()
 {
 	//memset( &m_sendBuf.data[0], '0', 520 );
 	memset( &m_recvBuf.data[0], '0', NET_BUFFER_SIZE );
@@ -101,7 +101,7 @@ void Server::BeginFrame()
 	}
 }
 
-void Server::PrepareForClientConnectionWithPort( const char* portNum )
+void TCPServer::PrepareForClientConnectionWithPort( const char* portNum )
 {
 	addrinfo* socketAddr = NULL;
 	addrinfo hints;
@@ -122,7 +122,7 @@ void Server::PrepareForClientConnectionWithPort( const char* portNum )
 	g_theConsole->DebugLogf( "Ready for client connection in port: %s", portNum );
 }
 
-void Server::ReceiveDataFromClient( SOCKET clientSocket )
+void TCPServer::ReceiveDataFromClient( SOCKET clientSocket )
 {
 	DataPackage tempData;
 	int iResult = recv( clientSocket, (char*)&tempData, NET_BUFFER_SIZE, 0 );
@@ -158,7 +158,7 @@ void Server::ReceiveDataFromClient( SOCKET clientSocket )
 	}
 }
 
-void Server::SendDataToClient( SOCKET clientSocket, MESSAGE_ID mid )
+void TCPServer::SendDataToClient( SOCKET clientSocket, MESSAGE_ID mid )
 {
 	DataPackage tempData;
 	tempData.header.messageID = mid;
@@ -193,7 +193,7 @@ void Server::SendDataToClient( SOCKET clientSocket, MESSAGE_ID mid )
 	}
 }
 
-void Server::SetSendData( const char* data, int dataLen )
+void TCPServer::SetSendData( const char* data, int dataLen )
 {
 	memcpy( m_sendBuf.data, data, dataLen );
 	m_sendBuf.data[dataLen] = NULL;
@@ -201,7 +201,7 @@ void Server::SetSendData( const char* data, int dataLen )
 	m_isSendBufDirty = true;
 }
 
-std::string Server::GetClientIPAddr( SOCKET clientSocket )
+std::string TCPServer::GetClientIPAddr( SOCKET clientSocket )
 {
 	sockaddr clientAddr;
 	int addrSize = sizeof(clientAddr);
@@ -220,12 +220,12 @@ std::string Server::GetClientIPAddr( SOCKET clientSocket )
 	return std::string( addrStr );
 }
 
-std::string Server::GetStringFromData()
+std::string TCPServer::GetStringFromData()
 {
 	return std::string( m_recvBuf.data );
 }
 
-SOCKET Server::CreateSocket( addrinfo* socketAddr )
+SOCKET TCPServer::CreateSocket( addrinfo* socketAddr )
 {
 
 	SOCKET tempSocket = socket( socketAddr->ai_family, socketAddr->ai_socktype, socketAddr->ai_protocol );
@@ -247,7 +247,7 @@ SOCKET Server::CreateSocket( addrinfo* socketAddr )
 	return tempSocket;
 }
 
-void Server::BindSocket( SOCKET socket, addrinfo* socketAddr )
+void TCPServer::BindSocket( SOCKET socket, addrinfo* socketAddr )
 {
 	int iResult = bind( socket, socketAddr->ai_addr, (int)socketAddr->ai_addrlen );
 	if( iResult == SOCKET_ERROR ) {
@@ -260,7 +260,7 @@ void Server::BindSocket( SOCKET socket, addrinfo* socketAddr )
 	freeaddrinfo( socketAddr );
 }
 
-void Server::ListenOnSocket( SOCKET socket )
+void TCPServer::ListenOnSocket( SOCKET socket )
 {
 	int iResult = listen( socket, SOMAXCONN );
 	if( iResult == SOCKET_ERROR ) {
@@ -270,7 +270,7 @@ void Server::ListenOnSocket( SOCKET socket )
 	}
 }
 
-void Server::AcceptConnectionFromClient( SOCKET listenSocket )
+void TCPServer::AcceptConnectionFromClient( SOCKET listenSocket )
 {
 	SOCKET clientSocket = accept( listenSocket, NULL, NULL );
 	if( clientSocket == INVALID_SOCKET ) {
@@ -289,7 +289,7 @@ void Server::AcceptConnectionFromClient( SOCKET listenSocket )
 	g_theConsole->DebugLog( "Accept success." );
 }
 
-void Server::DisconnectClientSocket( SOCKET clientSocket )
+void TCPServer::DisconnectClientSocket( SOCKET clientSocket )
 {
 	int iResult = shutdown( clientSocket, SD_SEND ); 
 	if( iResult == SOCKET_ERROR ) {
@@ -299,7 +299,7 @@ void Server::DisconnectClientSocket( SOCKET clientSocket )
 	CloseSocket( clientSocket );
 }
 
-void Server::CloseSocket( SOCKET socket )
+void TCPServer::CloseSocket( SOCKET socket )
 {
 	for( int i = 0; i < m_clientSockets.size(); i++ ) {
 		if( socket == m_clientSockets[i] ) {
@@ -318,7 +318,7 @@ void Server::CloseSocket( SOCKET socket )
 	}
 }
 
-void Server::WriteDataToRecvBuffer( DataPackage data )
+void TCPServer::WriteDataToRecvBuffer( DataPackage data )
 {
 	size_t bufferLen = data.header.messageLen - sizeof(data.header);
 	memcpy( m_recvBuf.data, data.message, bufferLen );

@@ -23,6 +23,12 @@
     <Filter Include="Game\Entity">
       <UniqueIdentifier>{c2214c6c-a870-437c-8c57-fe0c79408e3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="NetworkArchitecture">
+      <UniqueIdentifier>{9126ac69-92fc-4df0-9c5f-594c53e4852f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Map">
+      <UniqueIdentifier>{bda58148-ce79-45c3-967c-8190be420b0b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -38,27 +44,6 @@
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="World.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Map.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="TileMap.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="MaterialDefinition.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="MaterialsSheet.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="RegionDefinition.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="MapDefinition.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
-    <ClCompile Include="Tile.cpp">
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Entity.cpp">
@@ -78,6 +63,54 @@
     </ClCompile>
     <ClCompile Include="TestJob.cpp">
       <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Server.cpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\AuthoritativeServer.cpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\RemoteServer.cpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Client.cpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\PlayerClient.cpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\RemoteClient.cpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityFactory.cpp">
+      <Filter>Game\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="SinglePlayerGame.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiPlayerGame.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Tile.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="TileMap.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="MapDefinition.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialDefinition.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="MaterialsSheet.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="RegionDefinition.cpp">
+      <Filter>Game\Map</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -99,27 +132,6 @@
     <ClInclude Include="World.hpp">
       <Filter>Game</Filter>
     </ClInclude>
-    <ClInclude Include="Map.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="TileMap.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="MaterialDefinition.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="MaterialsSheet.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="RegionDefinition.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="MapDefinition.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
-    <ClInclude Include="Tile.hpp">
-      <Filter>Game</Filter>
-    </ClInclude>
     <ClInclude Include="Entity.hpp">
       <Filter>Game\Entity</Filter>
     </ClInclude>
@@ -137,6 +149,54 @@
     </ClInclude>
     <ClInclude Include="TestJob.hpp">
       <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Server.hpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\AuthoritativeServer.hpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\RemoteServer.hpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Client.hpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\PlayerClient.hpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\RemoteClient.hpp">
+      <Filter>NetworkArchitecture</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityFactory.hpp">
+      <Filter>Game\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="SinglePlayerGame.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiPlayerGame.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Tile.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="TileMap.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="MapDefinition.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialDefinition.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="MaterialsSheet.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="RegionDefinition.hpp">
+      <Filter>Game\Map</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

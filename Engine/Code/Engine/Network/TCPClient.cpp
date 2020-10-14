@@ -1,4 +1,4 @@
-#include "Client.hpp"
+#include "TCPClient.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Engine/Network/NetworkSystem.hpp"
 
@@ -20,27 +20,27 @@ extern DevConsole*	g_theConsole;
 
 
 
-Client::Client()
+TCPClient::TCPClient()
 {
 
 }
 
-Client::~Client()
+TCPClient::~TCPClient()
 {
 
 }
 
-void Client::StartUp()
-{
-	m_isConnected = false;
-}
-
-void Client::ShutDown()
+void TCPClient::StartUp()
 {
 	m_isConnected = false;
 }
 
-void Client::BeginFrame()
+void TCPClient::ShutDown()
+{
+	m_isConnected = false;
+}
+
+void TCPClient::BeginFrame()
 {
 	if( m_isConnected ) {
 		FD_ZERO(&m_listenSet);
@@ -63,7 +63,7 @@ void Client::BeginFrame()
 	}
 }
 
-void Client::Update()
+void TCPClient::Update()
 {
 	if( m_isRecvBufDirty ) {
 		g_theConsole->DebugLogf( "Handle data: %s", GetStringFromData().c_str() );
@@ -71,38 +71,38 @@ void Client::Update()
 	}
 }
 
-std::string Client::GetStringFromData()
+std::string TCPClient::GetStringFromData()
 {
 	return std::string( m_recvBuf.data );
 }
 
-void Client::SetTargetIP( const std::string& targetIP )
+void TCPClient::SetTargetIP( const std::string& targetIP )
 {
 	m_targetIPAddress = targetIP;
 }
 
-void Client::SetTargetPort( const std::string& targetPort )
+void TCPClient::SetTargetPort( const std::string& targetPort )
 {
 	m_targetport = targetPort;
 }
 
-void Client::SetSelfIP( const std::string& selfIP )
+void TCPClient::SetSelfIP( const std::string& selfIP )
 {
 	m_IPAddress = selfIP;
 }
 
-void Client::SetSelfPort( const std::string& selfPort )
+void TCPClient::SetSelfPort( const std::string& selfPort )
 {
 	m_port = selfPort;
 }
 
-void Client::ConnectToServerWithIPAndPort( const char* hostName, const char* portNum )
+void TCPClient::ConnectToServerWithIPAndPort( const char* hostName, const char* portNum )
 {
 	CreateSocket( hostName, portNum );
 	Connect();
 }
 
-void Client::DisconnectServer()
+void TCPClient::DisconnectServer()
 {
 	if( m_isConnected ) {
 		SendDisconnectMessageToServer();
@@ -110,7 +110,7 @@ void Client::DisconnectServer()
 	DisconnectAndCloseSocket();
 }
 
-void Client::SetSendData( const char* data, int dataLen )
+void TCPClient::SetSendData( const char* data, int dataLen )
 {
 	memcpy( m_sendBuf.data, data, dataLen );
 	m_sendBuf.data[dataLen] = NULL;
@@ -118,7 +118,7 @@ void Client::SetSendData( const char* data, int dataLen )
 	m_isSendBufDirty = true;
 }
 
-void Client::CreateSocket( const char* hostName, const char* portNum )
+void TCPClient::CreateSocket( const char* hostName, const char* portNum )
 {
 	addrinfo  addrHints;
 	m_resultAddr = NULL;
@@ -147,12 +147,12 @@ void Client::CreateSocket( const char* hostName, const char* portNum )
 	}
 }
 
-void Client::CreateSocket( )
+void TCPClient::CreateSocket( )
 {
 	CreateSocket( m_targetIPAddress.c_str(), m_targetport.c_str() );
 }
 
-void Client::Connect()
+void TCPClient::Connect()
 {
 	int iResult = connect( m_targetSocket, m_resultAddr->ai_addr, (int)m_resultAddr->ai_addrlen );
 	if( iResult == SOCKET_ERROR ) {
@@ -181,7 +181,7 @@ void Client::Connect()
 	}
 }
 
-void Client::SendDataToServer( MESSAGE_ID mid )
+void TCPClient::SendDataToServer( MESSAGE_ID mid )
 {
 	if( !m_isConnected ) { return; }
 
@@ -217,14 +217,14 @@ void Client::SendDataToServer( MESSAGE_ID mid )
 	}
 }
 
-void Client::SendDisconnectMessageToServer()
+void TCPClient::SendDisconnectMessageToServer()
 {
 	if( m_isConnected ) {
 		SendDataToServer( MESSAGE_ID::CLIENT_DISCONNECT );
 	}
 }
 
-void Client::ReceiveDataFromServer()
+void TCPClient::ReceiveDataFromServer()
 {
 	DataPackage tempData = DataPackage();
 	int iResult = recv( m_targetSocket, (char*)&tempData, NET_BUFFER_SIZE, 0 );
@@ -263,7 +263,7 @@ void Client::ReceiveDataFromServer()
 }
 
 
-void Client::ReceiveData()
+void TCPClient::ReceiveData()
 {
 	char recvBuf[512];
 	int iResult = recv( m_targetSocket, recvBuf, 512, 0 );// temp buffer and temp buffer length
@@ -279,7 +279,7 @@ void Client::ReceiveData()
 	}
 }
 
-void Client::DisconnectAndCloseSocket()
+void TCPClient::DisconnectAndCloseSocket()
 {
 	int iResult = shutdown( m_targetSocket, SD_SEND );
 	if( iResult == SOCKET_ERROR ) {
@@ -291,7 +291,7 @@ void Client::DisconnectAndCloseSocket()
 	m_isConnected = false;
 }
 
-void Client::WriteDataToRecvBuffer( DataPackage data )
+void TCPClient::WriteDataToRecvBuffer( DataPackage data )
 {
 	size_t bufferLen = data.header.messageLen - sizeof( data.header );
 	memcpy( m_recvBuf.data, data.message, bufferLen );

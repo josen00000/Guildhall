@@ -25,8 +25,8 @@ class ShaderState;
 class Material;
 class Shader;
 class RenderBuffer;
-class Client;
-class Server;
+class TCPClient;
+class TCPServer;
 
 struct Vertex_PCU;
 struct Mat44;
@@ -79,8 +79,8 @@ public:
 	void SetCameraPos( Vec3 pos );
 	void SetCameraYaw( float yaw );
 	
-	Client* GetClient() const { return m_testClient; }
-	Server* GetServer() const { return m_testServer; }
+	TCPClient* GetClient() const { return m_testClient; }
+	TCPServer* GetServer() const { return m_testServer; }
 
 	Entity* GetPlayer() { return m_player; }
 
@@ -170,8 +170,8 @@ public:
 	SpriteSheet* m_viewModelSpriteSheet;
 
 	// Network Test
-	Client* m_testClient = nullptr;
-	Server* m_testServer = nullptr;
+	TCPClient* m_testClient = nullptr;
+	TCPServer* m_testServer = nullptr;
 
 private:
 	float m_DebugDeltaSeconds = 0.f;

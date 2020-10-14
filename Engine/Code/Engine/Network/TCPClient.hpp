@@ -3,11 +3,11 @@
 #include <string>
 #include <winsock2.h>
 
-class Client
+class TCPClient
 {
 public:
-	Client();
-	~Client();
+	TCPClient();
+	~TCPClient();
 
 public:
 	void StartUp();

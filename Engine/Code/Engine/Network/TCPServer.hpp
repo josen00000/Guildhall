@@ -5,11 +5,11 @@
 #include <string>
 
 
-class Server
+class TCPServer
 {
 public:
-	Server();
-	~Server(){}
+	TCPServer();
+	~TCPServer(){}
 
 public:
 	void StartUp();
