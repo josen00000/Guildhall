@@ -1,6 +1,7 @@
 #include "CameraSystem.hpp"
 #include "Game/Player.hpp"
 #include "Game/Game.hpp"
+#include "Engine/Math/Vec4.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
@@ -88,12 +89,17 @@ void CameraSystem::UpdateControllerCameras()
 			m_noSplitCamera = m_controllers[0]->m_camera;
 		}
 		m_goalCameraPos = Vec2::ZERO;
+
 		if( m_controllers.size() == 1 ) {
 			m_goalCameraPos = m_controllers[0]->GetSmoothedGoalPos();
 		}
 		else {
 			for( int i = 0; i < m_controllers.size(); i++ ) {
-				m_goalCameraPos += ( (m_controllers[i]->GetSmoothedGoalPos()  * m_controllers[i]->m_multipleFactor) / ( (int)m_controllers.size() ) );
+				m_goalCameraPos += ( m_controllers[i]->GetSmoothedGoalPos() * m_controllers[i]->GetCurrentMultipleFactor() );
+				g_theConsole->DebugLogf( "goalcamera pos is :%.2f, %.2f", m_goalCameraPos.x, m_goalCameraPos.y );
+				if( m_goalCameraPos.x > 1000 ) {
+					int a = 0;
+				}
 			}
 		}
 		m_noSplitCamera->SetPosition2D( m_goalCameraPos );
@@ -271,6 +277,17 @@ void CameraSystem::UpdateDebugInfo()
 	}
 
 	DebugAddScreenLeftAlignStrings( 0.98f, 0.f, Rgba8( 255, 255, 255, 125), debugInfos );
+
+	float posHeight = 0.4f;
+	float posWidth = 0.5f;
+	Vec4 pos[4] = { Vec4( 0.f, posHeight, 0.f, 0.f ),
+					Vec4( posWidth, posHeight, 0.f, 0.f ),
+					Vec4( 0.f, posHeight * 0.5f, 0.f, 0.f ),
+					Vec4( posWidth, posHeight * 0.5f, 0.f, 0.f )
+	} ;
+ 	for( int i = 0; i < m_controllers.size(); i++ ) {
+ 		m_controllers[i]->DebugCameraInfoAt( pos[i] );
+ 	}
 }
 
 void CameraSystem::CreateAndPushController( Player* player, Camera* camera )
@@ -278,8 +295,14 @@ void CameraSystem::CreateAndPushController( Player* player, Camera* camera )
 	CameraController* tempCamController = new CameraController( this, player, camera );
 	tempCamController->SetCameraWindowSize( Vec2( 12, 8 ) );
 	camera->SetPosition( player->GetPosition() );
-	tempCamController->SetMultipleCameraFactorNotStableUntil( 2.f );
 	m_controllers.push_back( tempCamController );
+	float smoothTime = 10.f;
+	if( m_controllers.size() == 1 ){
+		smoothTime = 0.1f;
+	}
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		m_controllers[i]->SetMultipleCameraStableFactorNotStableUntil( smoothTime, ( 1.f / (float)m_controllers.size()));
+	}
 }
 
 bool CameraSystem::IsControllersInsideCamera()

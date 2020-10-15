@@ -5,6 +5,7 @@ class Camera;
 class Player;
 class CameraSystem;
 class Timer;
+struct Vec4;
 
 class CameraController {
 	friend class Player;
@@ -16,10 +17,11 @@ public:
 	explicit CameraController( CameraSystem* owner, Player* player, Camera* camera );
 	void Update( float deltaSeconds );
 	void DebugRender();
-	void DebugCameraInfo();
+	void DebugCameraInfoAt( Vec4 pos );
 
 	// Accessor
 	bool GetIsDebug() const { return m_isDebug; }
+	float GetCurrentMultipleFactor() const { return m_currentMultipleFactor; }
 	Vec2 GetCuePos() const ;
 	Vec2 GetSmoothedGoalPos() const { return m_smoothedGoalCameraPos; }
 
@@ -29,7 +31,7 @@ public:
 	void SetTrauma( float trauma );
 	void AddTrauma( float addTrauma );
 	void SetFwdFrameDist( float dist );
-	void SetMultipleCameraFactorNotStableUntil( float totalSeconds );
+	void SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor );
 
 	// Camera Window
 	void UpdateCameraWindow( float deltaSeconds );
@@ -83,7 +85,6 @@ private:
 	float m_maxDeltaDist		= 5.f;
 	float m_minAsymptotic		= 0.95f;
 	float m_maxAsymptotic		= 0.99f;
-	int m_smoothStep			= 0;
 
 	// Camera Shake
 	float m_trauma				= 0.f;
@@ -106,6 +107,8 @@ private:
 
 	// multiple camera
 	bool m_ismultipleFactorStable	= true;
-	float m_multipleFactor			= 0.01f;
+	float m_stableMultipleFactor	= 1.f;
+	float m_currentMultipleFactor	= 0.f;
+
 	float m_factorStableSeconds		= 0.f; 
 };

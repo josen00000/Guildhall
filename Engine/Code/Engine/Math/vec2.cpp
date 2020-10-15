@@ -155,7 +155,8 @@ const Vec2 Vec2::GetReflected( const Vec2& normal ) const
 
 std::string Vec2::ToString()
 {	
-	return std::string( "Vec2 x: " + std::to_string( x ) + ".  y: " + std::to_string( y ) );
+	return Stringf( "Vec2 X:%.2f, Y:%.2f", x, y );
+	//return std::string( "Vec2 x: " + std::to_string( x ) + ".  y: " + std::to_string( y ) );
 }
 
 float Vec2::NormalizeAndGetPreviousLength()

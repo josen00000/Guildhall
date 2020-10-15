@@ -6,6 +6,7 @@
 #include "Engine/Core/Time/Timer.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Math/Vec4.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
@@ -37,9 +38,9 @@ void CameraController::Update( float deltaSeconds )
 	//BoundCameraPosInsideWindow();
 
 	// Debug
-	if( m_isDebug ) {
-		DebugCameraInfo();
-	}
+// 	if( m_isDebug ) {
+// 		DebugCameraInfo();
+// 	}
 }
 
 void CameraController::DebugRender()
@@ -57,27 +58,36 @@ void CameraController::DebugRender()
 	}
 }
 
-void CameraController::DebugCameraInfo()
+void CameraController::DebugCameraInfoAt( Vec4 pos )
 {
 	Vec2 playerPos		= m_player->GetPosition();
 	Vec2 cameraPos		= m_camera->GetPosition();
 	Vec2 cameraGoalPos	= m_goalCameraPos;
 	Strings debugStrings;
+	float currentFactorSeconds = m_factorStableSeconds - m_timer->GetSecondsRemaining();
 
-	std::string playerPosText		= std::string( "Player pos =  " + playerPos.ToString() );
-	std::string cameraPosText		= std::string( "Camera pos = " + cameraPos.ToString() );
-	std::string cameraGoalPosText	= std::string( "Goal Camera pos = " + cameraGoalPos.ToString() );
-	std::string asymptoticValueText = std::string( "Asymptotic Value = " + std::to_string( m_asymptoticValue ) );
-	std::string traumaText			= std::string( "Trauma = " + std::to_string( m_trauma ) );
-	std::string smoothStepText		= std::string( "Smooth step = " + std::to_string( m_smoothStep ));
+	std::string playerPosText					= std::string( "Player pos =  " + playerPos.ToString() );
+	std::string cameraPosText					= std::string( "Camera pos = " + cameraPos.ToString() );
+	std::string cameraGoalPosText				= std::string( "Goal Camera pos = " + cameraGoalPos.ToString() );
+	std::string asymptoticValueText				= std::string( "Asymptotic Value = " + std::to_string( m_asymptoticValue ) );
+	std::string traumaText						= std::string( "Trauma = " + std::to_string( m_trauma ) );
+	std::string currentMultipleStableFactorText	= std::string( "multiple factor = " + std::to_string( m_currentMultipleFactor ));
+	std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_stableMultipleFactor ));
+	std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
+	std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
+	
 
 	debugStrings.push_back( playerPosText );
 	debugStrings.push_back( cameraPosText );
 	debugStrings.push_back( cameraGoalPosText );
 	debugStrings.push_back( asymptoticValueText );
 	debugStrings.push_back( traumaText );
-	debugStrings.push_back( smoothStepText );
-	DebugAddScreenLeftAlignStrings( 0.15f, 0, Rgba8::WHITE, debugStrings );
+	debugStrings.push_back( currentMultipleStableFactorText );
+	debugStrings.push_back( goalMultipleStableFactorText );
+	debugStrings.push_back( currentFactorSecondsText );
+	debugStrings.push_back( totalFactorSecondsText );
+	//DebugAddScreenLeftAlignStrings( 0.15f, 0, Rgba8::WHITE, debugStrings );
+	DebugAddScreenStrings( pos, Vec2::ZERO, 1.5f, Rgba8( 255, 255, 255, 125), debugStrings );
 }
 
 Vec2 CameraController::GetCuePos() const
@@ -111,11 +121,11 @@ void CameraController::SetFwdFrameDist( float dist )
 	m_fwdFrameVelDist = dist;
 }
 
-void CameraController::SetMultipleCameraFactorNotStableUntil( float totalSeconds )
+void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor )
 {
 	m_ismultipleFactorStable = false;
 	m_timer->SetSeconds( (double)totalSeconds );
-	m_multipleFactor = 0.f;
+	m_stableMultipleFactor = goalFactor;
 	m_factorStableSeconds = totalSeconds;
 }
 
@@ -280,10 +290,9 @@ void CameraController::UpdateMultipleCameraFactor( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
 	float currentFactorSeconds = m_factorStableSeconds - m_timer->GetSecondsRemaining();
-	m_multipleFactor = RangeMapFloat( 0.f, m_factorStableSeconds, 0.01f, 1.f, currentFactorSeconds );
+	m_currentMultipleFactor = RangeMapFloat( 0.f, m_factorStableSeconds, m_currentMultipleFactor, m_stableMultipleFactor, currentFactorSeconds );
 	if( m_timer->HasElapsed() ) {
 		m_ismultipleFactorStable = true;
-		m_multipleFactor = 1.f;
 	}
 }
 
