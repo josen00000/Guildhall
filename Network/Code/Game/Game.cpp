@@ -128,7 +128,7 @@ void Game::Reset()
 
 void Game::Update( float deltaSeconds )
 {
-	UpdateLighting( deltaSeconds );
+	//UpdateLighting( deltaSeconds );
 	UpdateUI( deltaSeconds );
 	m_world->Update( deltaSeconds );
 

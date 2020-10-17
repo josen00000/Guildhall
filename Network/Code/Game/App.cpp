@@ -229,7 +229,6 @@ void App::RunFrame()
 	Update( (float)m_clock->GetLastDeltaSeconds() );
 	Render();
 	EndFrame();
-
 }
 
 void App::HandleQuitRequested()
