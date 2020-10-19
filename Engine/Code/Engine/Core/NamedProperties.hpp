@@ -29,8 +29,8 @@ public:
 	bool PopulateFromXMLAttributes( const XmlElement& element );
 	bool PopulateFromKeyValuePairs( std::string const& str );
 
-	void SetValue( std::string const& keyName, std::string const& value );
-	std::string GetValue( std::string const& keyName, std::string const& defValue );
+	//void SetValue( std::string const& keyName, std::string const& value );
+	//std::string GetValue( std::string const& keyName, std::string const& defValue );
 
 	template <typename T>
 	void SetValue( const std::string& keyName, const T& value );

@@ -121,6 +121,7 @@ public:
 
 	// Actor
 	void CreatePlayer();
+	void DestroyPlayerWithIndex( int index );
 	void ShiftPlayer();
 	void SpawnNewEnemy( Vec2 startPos );
 

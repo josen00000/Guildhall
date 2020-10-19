@@ -956,7 +956,7 @@ bool DebugRenderCommandAddScreenTextEvent( EventArgs& args )
 {
 	Vec2 position		= args.GetValue( std::to_string( 0 ), Vec2::ZERO );
 	Vec2 pivot			= args.GetValue( std::to_string( 1 ), Vec2::ZERO );
-	std::string text	= args.GetValue( std::to_string( 2 ), "" );
+	std::string text	= args.GetValue( std::to_string( 2 ), std::string() );
 
 	Vec4 pos = Vec4( position.x, position.y, 0.f, 0.f );
 	DebugAddScreenText( pos, pivot, 5.f, g_defaultColor, g_defaultColor, 5.f, text );

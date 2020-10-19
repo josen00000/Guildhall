@@ -15,6 +15,13 @@ enum ActorType {
 	ACTOR_ENEMY
 };
 
+enum AliveState :uint {
+	ALIVE,
+	WAIT_FOR_DELETE,
+	READY_TO_DELETE,
+	NUM_OF_ALIVE_STATE
+};
+
 class Actor {
 public:
 	Actor();
@@ -33,7 +40,8 @@ public:
 	// Accessor
 	bool GetIsPushedByActor() const { return m_isPushedByActor; }
 	bool GetDoesPushActor() const { return m_doesPushActor; }
-	bool GetIsDead() const { return m_isDead; }
+
+	AliveState GetAliveState() const { return m_aliveState; }
 
 	float GetOrientationDegrees() const { return m_orientationDegrees; } 
 	float GetSpeed() const { return m_speed; }
@@ -55,13 +63,14 @@ public:
 	void SetPosition( Vec2 pos );
 	void SetBaseOBBSize( Vec2 size );
 	void SetBarrelOBBSize( Vec2 size );
+	void SetAliveState( AliveState state );
 
 protected:
 	bool m_isPushedByActor		= false;
 	bool m_doesPushActor		= false;
-	bool m_isDead				= false;
 
-	ActorType m_type	= ActorType::ACTOR_NONE;
+	ActorType m_type		= ActorType::ACTOR_NONE;
+	AliveState m_aliveState = AliveState::ALIVE;
 
 	float m_orientationDegrees		= 0.f;
 	float m_speed					= 3.f;

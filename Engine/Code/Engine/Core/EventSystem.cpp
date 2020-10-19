@@ -1,6 +1,19 @@
 #include "EventSystem.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
 
+void EventSystem::Update()
+{
+	for( int i = 0; i < m_timerRegisteredEvents.size(); i++ ) {
+		TimeDelegate tempTimeDele = m_timerRegisteredEvents[i];
+		if( !tempTimeDele.timer->HasElapsed() ){ continue; }
+
+		EventArgs tempEventArg = EventArgs();
+		tempTimeDele.delegate->invoke( tempEventArg );
+		m_timerRegisteredEvents.erase( m_timerRegisteredEvents.begin() + i );
+		i--;
+	}
+}
+
 void EventSystem::SubscribeEvent( const std::string& event, const EventCallbackFunctionPtr callbackFunction )
 {
 	if( m_registeredEvents.count( event ) == 0 ) {

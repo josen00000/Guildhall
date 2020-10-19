@@ -104,6 +104,7 @@ public:
 
 	// Controller
 	void CreateAndPushController( Player* player, Camera* camera );
+	void PrepareRemoveAndDestroyController( Player const* player );
 
 	// split screen strat
 		// no split screen strat

@@ -24,9 +24,14 @@ Player* Player::SpawnPlayerWithPos( Vec2 pos )
 	return tempPlayer;
 }
 
-void Player::UpdatePlayer( float deltaSeconds )
+void Player::UpdatePlayer( float deltaSeconds, int playerIndex )
 {
-	CheckInputMethod();
+	// test check
+	if( m_aliveState != WAIT_FOR_DELETE && m_aliveState != ALIVE && m_aliveState != READY_TO_DELETE ) {
+		int a = 0;
+	}
+	if( m_aliveState != AliveState::ALIVE ){ return; }
+	CheckInputMethod( playerIndex );
 	m_movingDir = Vec2::ZERO;
 	
 	m_disableInputSeconds -= deltaSeconds;
@@ -35,7 +40,7 @@ void Player::UpdatePlayer( float deltaSeconds )
 	}
 
 	if( !g_theConsole->IsOpen()) {
-		HandleInput( deltaSeconds );
+		HandleInput( deltaSeconds, playerIndex );
 	}
 
 	UpdatePlayerSpeed( deltaSeconds );
@@ -63,7 +68,7 @@ void Player::UpdatePlayerSpeed( float deltaSeconds )
 	}
 }
 
-void Player::HandleInput( float deltaSeconds )
+void Player::HandleInput( float deltaSeconds, int playerIndex )
 {
 	if( !m_isAbleInput ){ return; }
 	switch( m_inputState )
@@ -106,7 +111,7 @@ void Player::HandleInput( float deltaSeconds )
 		}
 		break;
 	case CONTROLLER_INPUT:
-		const XboxController* xboxController = g_theInputSystem->GetXboxController( m_playerIndex - 1 );
+		const XboxController* xboxController = g_theInputSystem->GetXboxController( playerIndex - 1 );
 		if( !xboxController->isConnected() ) { return; }
 
 
@@ -138,6 +143,7 @@ void Player::HandleInput( float deltaSeconds )
 
 void Player::RenderPlayer()
 {
+	if( m_aliveState != ALIVE ){ return; }
 	__super::RenderActor();
 	Vec2 forwardDirt = Vec2::ONE;
 	forwardDirt.SetAngleDegrees( m_orientationDegrees );
@@ -154,28 +160,23 @@ void Player::SetMap( Map* map )
 	m_map = map;
 }
 
-void Player::SetPlayerIndex( int index )
-{
-	m_playerIndex = index;
-}
-
 void Player::SetInputControlState( InputControlState state )
 {
 	m_inputState = state;
 }
 
-void Player::DisableInputForSeconds( int seconds )
+void Player::DisableInputForSeconds( float seconds )
 {
 	m_disableInputSeconds = seconds;
 }
 
-void Player::CheckInputMethod()
+void Player::CheckInputMethod( int playerIndex )
 {
-	if( m_playerIndex == 0 ) {
+	if( playerIndex == 0 ) {
 		m_inputState = KEYBOARD_INPUT;
 	}
 	else {
-		XboxController const* controller = g_theInputSystem->GetXboxController( m_playerIndex - 1 );
+		XboxController const* controller = g_theInputSystem->GetXboxController( playerIndex - 1 );
 		if( !controller->isConnected() ) {
 			m_inputState = AI_INPUT;
 		}

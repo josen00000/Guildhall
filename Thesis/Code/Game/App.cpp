@@ -110,7 +110,7 @@ void App::Shutdown()
 void App::RunFrame()
 {
 	BeginFrame();
-	Update( Clock::GetMasterDeltaSeconds() );
+	Update( /*Clock::GetMasterDeltaSeconds()*/ 0.016f );
 	Render();
 	EndFrame();
 }
@@ -155,6 +155,7 @@ void App::BeginFrame()
 
 void App::Update( float deltaSeconds )
 {
+	g_theEventSystem->Update();
 	g_theGame->RunFrame( deltaSeconds );
 	g_theConsole->Update( deltaSeconds );
 	CheckGameQuit();
@@ -180,6 +181,7 @@ const void App::Render() const
 void App::EndFrame()
 {
 	g_theGame->EndFrame();
+	g_theCameraSystem->EndFrame();
 	g_theInputSystem->EndFrame();
 	g_theRenderer->EndFrame();
 	g_theAudioSystem->EndFrame();

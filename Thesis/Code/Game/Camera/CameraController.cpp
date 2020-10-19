@@ -23,6 +23,13 @@ CameraController::CameraController( CameraSystem* owner, Player* player, Camera*
 	m_timer = new Timer();
 }
 
+CameraController::~CameraController()
+{
+	// leave map delete player
+	// leave camera to future
+	delete m_timer;
+}
+
 void CameraController::Update( float deltaSeconds )
 {
 	m_playerPos				= m_player->GetPosition();
@@ -75,7 +82,7 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_stableMultipleFactor ));
 	std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
 	std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
-	
+	std::string testing							= std::to_string( (uint)m_player->GetAliveState() );
 
 	debugStrings.push_back( playerPosText );
 	debugStrings.push_back( cameraPosText );
@@ -86,6 +93,7 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	debugStrings.push_back( goalMultipleStableFactorText );
 	debugStrings.push_back( currentFactorSecondsText );
 	debugStrings.push_back( totalFactorSecondsText );
+	debugStrings.push_back( testing );
 	//DebugAddScreenLeftAlignStrings( 0.15f, 0, Rgba8::WHITE, debugStrings );
 	DebugAddScreenStrings( pos, Vec2::ZERO, 1.5f, Rgba8( 255, 255, 255, 125), debugStrings );
 }
@@ -293,6 +301,9 @@ void CameraController::UpdateMultipleCameraFactor( float deltaSeconds )
 	m_currentMultipleFactor = RangeMapFloat( 0.f, m_factorStableSeconds, m_currentMultipleFactor, m_stableMultipleFactor, currentFactorSeconds );
 	if( m_timer->HasElapsed() ) {
 		m_ismultipleFactorStable = true;
+		if( m_player->GetAliveState() == WAIT_FOR_DELETE ) {
+			m_player->SetAliveState( AliveState::READY_TO_DELETE );
+		}
 	}
 }
 

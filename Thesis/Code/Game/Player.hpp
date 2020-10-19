@@ -21,6 +21,7 @@ enum PlayerAIState {
 	NUM_OF_PLAYER_STATE
 };
 
+
 class Player : public Actor {
 public:
 	Player();
@@ -30,24 +31,22 @@ public:
 	static Player* SpawnPlayerWithPos( Vec2 pos );
 
 public:
-	void UpdatePlayer( float deltaSeconds );
+	void UpdatePlayer( float deltaSeconds, int playerIndex );
 	void UpdatePlayerSpeed( float deltaSeconds );
-	void HandleInput( float deltaSeconds );
+	void HandleInput( float deltaSeconds, int playerIndex );
 	void RenderPlayer();
 
 	// Accessor
 	bool IsContinousWalk() const { return m_isContinousWalk; }
 	bool IsControlledByUser() const;
-	int	GetPlayerIndex() const { return m_playerIndex; }
 
 	// Mutator
 	void SetMap( Map* map );
-	void SetPlayerIndex( int index );
 	void SetInputControlState( InputControlState state );
-	void DisableInputForSeconds( int seconds );
+	void DisableInputForSeconds( float seconds );
 
 private:
-	void CheckInputMethod();
+	void CheckInputMethod( int playerIndex );
 
 	// AI function
 	void CheckAIState();
@@ -62,7 +61,6 @@ public:
 	InputControlState	m_inputState	= CONTROLLER_INPUT;
 	PlayerAIState		m_aiState		= PLAYER_PATROL;
 
-	int m_playerIndex	= 0;
 
 	float m_maxSpeed			= 3.f;
 	float m_accelerate			= 1.5f;

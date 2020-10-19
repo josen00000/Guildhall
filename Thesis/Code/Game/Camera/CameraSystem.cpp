@@ -27,7 +27,12 @@ void CameraSystem::BeginFrame()
 
 void CameraSystem::EndFrame()
 {
-
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		if( m_controllers[i]->m_player->GetAliveState() == READY_TO_DELETE ) {
+			delete m_controllers[i];
+			m_controllers.erase( m_controllers.begin() + i );
+		}
+	}
 }
 
 void CameraSystem::Update( float deltaSeconds )
@@ -86,7 +91,7 @@ void CameraSystem::UpdateControllerCameras()
 
 	if( m_splitScreenState == NO_SPLIT_SCREEN ) {
 		if( !m_noSplitCamera ) {
-			m_noSplitCamera = m_controllers[0]->m_camera;
+			m_noSplitCamera = g_theGame->m_gameCamera;
 		}
 		m_goalCameraPos = Vec2::ZERO;
 
@@ -96,10 +101,10 @@ void CameraSystem::UpdateControllerCameras()
 		else {
 			for( int i = 0; i < m_controllers.size(); i++ ) {
 				m_goalCameraPos += ( m_controllers[i]->GetSmoothedGoalPos() * m_controllers[i]->GetCurrentMultipleFactor() );
-				g_theConsole->DebugLogf( "goalcamera pos is :%.2f, %.2f", m_goalCameraPos.x, m_goalCameraPos.y );
-				if( m_goalCameraPos.x > 1000 ) {
-					int a = 0;
-				}
+				//g_theConsole->DebugLogf( "goalcamera pos is :%.2f, %.2f", m_goalCameraPos.x, m_goalCameraPos.y );
+// 				if( m_goalCameraPos.x > 1000 ) {
+// 					int a = 0;
+// 				}
 			}
 		}
 		m_noSplitCamera->SetPosition2D( m_goalCameraPos );
@@ -305,6 +310,19 @@ void CameraSystem::CreateAndPushController( Player* player, Camera* camera )
 	}
 }
 
+void CameraSystem::PrepareRemoveAndDestroyController( Player const* player )
+{
+	float smoothTime = 10.f;
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		if( m_controllers[i]->m_player == player ) {
+			m_controllers[i]->SetMultipleCameraStableFactorNotStableUntil( smoothTime, 0.f );
+		}
+		else {
+			m_controllers[i]->SetMultipleCameraStableFactorNotStableUntil( smoothTime, ( 1.f / (float)m_controllers.size()) );
+		}	
+	}
+}
+
 bool CameraSystem::IsControllersInsideCamera()
 {
 	if( m_controllers.size() == 0 ){ return true; }
@@ -314,6 +332,7 @@ bool CameraSystem::IsControllersInsideCamera()
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 	
 	}
+	return true;
 }
 
 void CameraSystem::GetNotInsideControllers( std::vector<CameraController*>& vec, float insidePaddingLength )

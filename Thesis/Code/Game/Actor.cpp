@@ -91,7 +91,7 @@ void Actor::TakeDamage( float damage )
 
 void Actor::Die()
 {
-	m_isDead = true;
+	m_aliveState = WAIT_FOR_DELETE;
 }
 
 Vec2 Actor::GetHeadDir() const
@@ -144,5 +144,10 @@ void Actor::SetBaseOBBSize( Vec2 size )
 void Actor::SetBarrelOBBSize( Vec2 size )
 {
 	m_barrelOBBSize = size;
+}
+
+void Actor::SetAliveState( AliveState state )
+{
+	m_aliveState = state;
 }
 

@@ -50,6 +50,7 @@ void Game::Startup()
 
 	g_theConsole->AddCommandToCommandList( std::string( "set_asymptotic"), std::string( "Asymptotic value for camera controller" ), SetCameraAsymptoticValue );
 	g_theConsole->AddCommandToCommandList( std::string( "spawn_item"), std::string( "spawn new item" ), SpawnItem );
+	g_theConsole->AddCommandToCommandList( std::string( "delete_player"), std::string( "delete player with index" ), DeletePlayer );
 }
 
 void Game::Shutdown()
@@ -275,5 +276,13 @@ bool SpawnItem( EventArgs& args )
 	Vec2 pos = args.GetValue( std::to_string( 0 ), Vec2::ZERO );
 	Map* currentMap = g_theGame->m_world->GetCurrentMap();
 	currentMap->SpawnNewItem( pos );
+	return true;
+}
+
+bool DeletePlayer( EventArgs& args )
+{
+	int playerIndex = args.GetValue( std::to_string( 0 ), 0 );
+	Map* currentMap = g_theGame->GetCurrentMap();
+	currentMap->DestroyPlayerWithIndex( playerIndex );
 	return true;
 }

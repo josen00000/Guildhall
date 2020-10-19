@@ -13,7 +13,7 @@ class CameraController {
 
 public:
 	CameraController(){}
-	~CameraController(){}
+	~CameraController();
 	explicit CameraController( CameraSystem* owner, Player* player, Camera* camera );
 	void Update( float deltaSeconds );
 	void DebugRender();
@@ -61,7 +61,7 @@ private:
 private:
 	bool m_isDebug				= false;
 	bool m_disableUpdateCamera	= false;
-	Player* m_player = nullptr;
+	Player* m_player = nullptr; // const
 	Camera* m_camera = nullptr;
 	CameraSystem* m_owner = nullptr;
 	Timer*	m_timer = nullptr;

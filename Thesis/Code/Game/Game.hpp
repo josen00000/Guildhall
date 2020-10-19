@@ -81,3 +81,4 @@ public:
 
 bool SetCameraAsymptoticValue( EventArgs& args );
 bool SpawnItem( EventArgs& args );
+bool DeletePlayer( EventArgs& args );

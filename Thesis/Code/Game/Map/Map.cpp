@@ -325,7 +325,7 @@ void Map::UpdateActors( float deltaSeconds )
 	}
 	for( int i = 0; i < m_players.size(); i++ ) {
 		if( m_players[i] == nullptr ){ continue;}
-		m_players[i]->UpdatePlayer( deltaSeconds );
+		m_players[i]->UpdatePlayer( deltaSeconds, i );
 	}
 
 	for( int i = 0; i < m_enemies.size(); i++ ) {
@@ -395,17 +395,27 @@ void Map::EndFrame()
 
 void Map::CreatePlayer( )
 {
+	if( m_players.size() >= 4 ){ return; }
 	Vec2 pos = (Vec2)m_startCoords;
 	Player* newPlayer = Player::SpawnPlayerWithPos( pos );
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );
-	newPlayer->SetPlayerIndex( m_players.size() - 1 );
-	if( newPlayer->GetPlayerIndex() == m_keyboardPlayerIndex ) {
-		newPlayer->SetInputControlState( KEYBOARD_INPUT );
-	}
+	//newPlayer->SetPlayerIndex( m_players.size() - 1 );
+ 	if( m_players.size() == m_keyboardPlayerIndex ) {
+ 		newPlayer->SetInputControlState( KEYBOARD_INPUT );
+ 	}
 	g_theCameraSystem->CreateAndPushController( newPlayer, g_gameCamera );
-	g_gameCamera->SetPosition( pos ); // temp code5
+}
 
+void Map::DestroyPlayerWithIndex( int index )
+{
+	if( index >= m_players.size() ){ 
+		g_theConsole->DebugErrorf( "destroy player out of range: %d", index );
+		return; 
+	}
+	m_players[index]->SetAliveState( WAIT_FOR_DELETE );
+	g_theCameraSystem->PrepareRemoveAndDestroyController( m_players[index] );
+	
 }
 
 void Map::ShiftPlayer()
@@ -416,14 +426,12 @@ void Map::ShiftPlayer()
 		if( tempPlayer->IsControlledByUser() ) { continue; }
 		
 		m_players[0] = tempPlayer;
-		tempPlayer->SetPlayerIndex( 0 );
 		m_players[i] = nullptr;
 		m_players.erase( m_players.begin() + i );
 		break;
 	}
 	
 	m_players.push_back( keyboardPlayer );
-	keyboardPlayer->SetPlayerIndex( m_players.size() - 1 );
 }
 
 void Map::SpawnNewEnemy( Vec2 startPos )
@@ -545,16 +553,16 @@ void Map::ManageGarbage()
 	// manage player
 	for( int i = 0; i < m_players.size(); i++ ) {
 		Player* tempPlayer = m_players[i];
-		if( tempPlayer != nullptr && tempPlayer->GetIsDead() ) {
+		if( tempPlayer != nullptr && tempPlayer->GetAliveState() == AliveState::READY_TO_DELETE ) {
 			delete tempPlayer;
-			m_players[i] = nullptr;
+			m_players.erase( m_players.begin() + i );
 		}
 	}
 
 	// manage enemy
 	for( int i = 0; i < m_enemies.size(); i++ ) {
 		Enemy* tempEnemy = m_enemies[i];
-		if( tempEnemy != nullptr && tempEnemy->GetIsDead() ) {
+		if( tempEnemy != nullptr && tempEnemy->GetAliveState() == AliveState::WAIT_FOR_DELETE ) {
 			delete tempEnemy;
 			m_enemies[i] = nullptr;
 		}
