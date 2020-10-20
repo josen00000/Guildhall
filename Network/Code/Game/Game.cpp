@@ -73,18 +73,18 @@ void Game::Startup()
 	DebugRenderSystemStartup( g_theRenderer, m_gameCamera );
 	LoadAssets();
 	CreateGameObjects();
-	JobTest();
+	//JobTest();
 
 	// create world
-	m_player = new Entity( EntityDefinition::s_definitions["Player"]);
-	m_player->SetIsPlayer( true );
+// 	m_player = new Entity( EntityDefinition::s_definitions["Player"] );
+// 	m_player->SetIsPlayer( true );
 	m_world = new World();
 	std::string startMapName = g_gameConfigBlackboard.GetValue( "StartMap", "" );
 	LoadMapsDefinitionsAndCreateMaps( "Data/Maps" );
 
 	m_world->LoadMap( startMapName );
 	Map* currentMap = m_world->GetCurrentMap();
-	currentMap->m_actors.push_back( m_player );
+	//currentMap->m_actors.push_back( m_player );
 	// command
 	g_theConsole->AddCommandToCommandList( std::string( "load_map" ), std::string( "Load one map with name." ), MapCommandLoadMap );
 	g_theConsole->AddCommandToCommandList( std::string( "client_connect" ), std::string( "Connect to target server" ), ConnectTo );
@@ -114,13 +114,6 @@ void Game::Shutdown()
 	DebugRenderSystemShutdown();
 }
 
-void Game::RunFrame( float deltaSeconds )
-{
-	m_DebugDeltaSeconds = deltaSeconds;
-	Update( deltaSeconds );
-	HandleInput( deltaSeconds );
-}
-
 void Game::Reset()
 {
 	Startup();
@@ -128,11 +121,13 @@ void Game::Reset()
 
 void Game::Update( float deltaSeconds )
 {
+	m_DebugDeltaSeconds = deltaSeconds;
+	HandleInput( deltaSeconds );
 	//UpdateLighting( deltaSeconds );
 	UpdateUI( deltaSeconds );
 	m_world->Update( deltaSeconds );
 
-	UpdatePlayer( deltaSeconds );
+	//UpdatePlayer( deltaSeconds );
 	//UpdateBillboardTest();
 
 	g_theJobSystem->ClaimAndDeleteAllCompletedJobs();
@@ -282,51 +277,51 @@ void Game::JobTest()
 
 void Game::UpdatePlayer( float delteSeconds )
 {
-	static Vec3 testPos = Vec3::ZERO;
-	static Vec3 forward = Vec3::ZERO;
-	static float maxDist = 0.f;
-	if( m_player ) {
-		testPos = m_player->GetPosition();
-		forward =m_gameCamera->GetForwardDirt( m_convension );
-		maxDist = 1.f;
-	}
-	//RaycastTest( testPos, forward, maxDist );
-	if( !m_player ){ return; }
-
-	float baseRotSpeed = 30.f;
-	float playerOrientation = m_player->m_orientation;
-
-	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
-	float deltaPlayerOrientation = -mouseMove.x * baseRotSpeed;
-
-	playerOrientation += deltaPlayerOrientation;
-	m_gameCamera->m_transform.SetYawDegrees( playerOrientation );
-
-	bool isMoving = false;
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_E ) ) {
-		isMoving = true;
-		m_player->SetMoveDirt( Vec2( 1.f, 0.f ) );
-	}
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
-		isMoving = true;
-		m_player->SetMoveDirt( Vec2( -1.f, 0.f ) );
-	}
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_F ) ) {
-		isMoving = true;
-		m_player->SetMoveDirt( Vec2( 0.f, -1.f ) );
-	}
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
-		isMoving = true;
-		m_player->SetMoveDirt( Vec2( 0.f, 1.f ) );
-	}
-	m_player->SetIsMoving( isMoving );
-	m_player->SetOrientation( playerOrientation );
-	m_player->Update( delteSeconds );
-
-	m_gameCamera->SetPosition( m_player->GetPosition() );
-
-	Map* currentMap = m_world->GetCurrentMap();
-	currentMap->RayCast( m_player->GetPosition() + m_gameCamera->GetForwardDirt( m_convension ) * m_player->GetRadius() * 1.5f, m_gameCamera->GetForwardDirt( m_convension ), 1.f );
+// 	static Vec3 testPos = Vec3::ZERO;
+// 	static Vec3 forward = Vec3::ZERO;
+// 	static float maxDist = 0.f;
+// 	if( m_player ) {
+// 		testPos = m_player->GetPosition();
+// 		forward =m_gameCamera->GetForwardDirt( m_convension );
+// 		maxDist = 1.f;
+// 	}
+// 	//RaycastTest( testPos, forward, maxDist );
+// 	if( !m_player ){ return; }
+// 
+// 	float baseRotSpeed = 30.f;
+// 	float playerOrientation = m_player->m_orientation;
+// 
+// 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
+// 	float deltaPlayerOrientation = -mouseMove.x * baseRotSpeed;
+// 
+// 	playerOrientation += deltaPlayerOrientation;
+// 	m_gameCamera->m_transform.SetYawDegrees( playerOrientation );
+// 
+// 	bool isMoving = false;
+// 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_E ) ) {
+// 		isMoving = true;
+// 		m_player->SetMoveDirt( Vec2( 1.f, 0.f ) );
+// 	}
+// 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
+// 		isMoving = true;
+// 		m_player->SetMoveDirt( Vec2( -1.f, 0.f ) );
+// 	}
+// 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_F ) ) {
+// 		isMoving = true;
+// 		m_player->SetMoveDirt( Vec2( 0.f, -1.f ) );
+// 	}
+// 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
+// 		isMoving = true;
+// 		m_player->SetMoveDirt( Vec2( 0.f, 1.f ) );
+// 	}
+// 	m_player->SetIsMoving( isMoving );
+// 	m_player->SetOrientation( playerOrientation );
+// 	m_player->Update( delteSeconds );
+// 
+// 	m_gameCamera->SetPosition( m_player->GetPosition() );
+// 
+// 	Map* currentMap = m_world->GetCurrentMap();
+// 	currentMap->RayCast( m_player->GetPosition() + m_gameCamera->GetForwardDirt( m_convension ) * m_player->GetRadius() * 1.5f, m_gameCamera->GetForwardDirt( m_convension ), 1.f );
 }
 
 void Game::HandleInput( float deltaSeconds )
@@ -458,7 +453,7 @@ void Game::CheckGameStates()
 {
 	CheckIfPause();
 	CheckIfDeveloped();
-	CheckIfGhost();
+	//CheckIfGhost();
 }
 
 void Game::CheckIfPause()

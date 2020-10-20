@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
+#include "Game/Network/Server.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
@@ -34,6 +35,7 @@ AudioSystem*	g_theAudioSystem	= nullptr;
 NetworkSystem*	g_theNetworkSystem	= nullptr;
 JobSystem*		g_theJobSystem		= nullptr;
 DevConsole*		g_theConsole		= nullptr;
+Server*			g_theServer			= nullptr;
 //Convention		g_convention;
 
 #include <vector>
@@ -113,6 +115,10 @@ void App::Startup()
 	g_theConsole->AddCommandToCommandList( testComd, testComdDesc, nullptr );
 	g_theConsole->AddCommandToCommandList( testComd1, testComd1Desc, nullptr );
 	g_theConsole->AddCommandToCommandList( testComd2, testComd2Desc, nullptr );
+
+	// network architecture
+	g_theServer = new Server( g_theGame );
+	g_theServer->Startup();
 }
 
 void App::TemplateTesting()
@@ -192,7 +198,8 @@ void App::HandleNetworkMsg()
 
 void App::Shutdown()
 {
-	g_theGame->Shutdown();
+	g_theServer->Shutdown();
+	//g_theGame->Shutdown();
 	g_theInputSystem->Shutdown();
 	g_theConsole->Shutdown();
 	g_theJobSystem->Shutdown();
@@ -262,12 +269,12 @@ void App::ResetGame()
 void App::BeginFrame()
 {
 	Clock::BeginFrame();
-	g_theInputSystem->BeginFrame();
+	//g_theInputSystem->BeginFrame();
 	g_theRenderer->BeginFrame();
 	g_theAudioSystem->BeginFrame();
 	g_theNetworkSystem->BeginFrame();
 	HandleNetworkMsg();
-
+	g_theServer->BeginFrame();
 	//g_theGame->BeginFrame();
 }
 
@@ -275,7 +282,7 @@ void App::Update( float deltaSeconds )
 {
 	//g_theRenderer->UpdateFrameTime( deltaSeconds );
 	g_theNetworkSystem->Update( deltaSeconds );
-	g_theGame->RunFrame( deltaSeconds );
+	g_theServer->Update( deltaSeconds );
 	CheckGameQuit();
 	g_theInputSystem->Update();
 

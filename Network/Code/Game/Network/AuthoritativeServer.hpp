@@ -7,4 +7,5 @@ class AuthoritativeServer : public Server {
 	AuthoritativeServer( AuthoritativeServer const& copyFrom ) = delete;
 	AuthoritativeServer( AuthoritativeServer const&& moveFrom ) = delete;
 
+	void CreateAndPushPlayer();
 };

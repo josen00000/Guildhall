@@ -4,6 +4,7 @@
 #include "Game/Game.hpp"
 #include "Game/Portal.hpp"
 #include "Game/World.hpp"
+#include "Game/Network/Server.hpp"
 #include "Engine/Renderer/Sampler.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
@@ -11,9 +12,9 @@
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 
-
-extern RenderContext* g_theRenderer;
-extern Game* g_theGame;
+extern RenderContext*	g_theRenderer;
+extern Game*			g_theGame;
+extern Server*			g_theServer;
 
 static float g_debugHeight		= 0.f;
 static float g_debugSideLength	= 0.05f;
@@ -817,6 +818,7 @@ void TileMap::CreateEntities()
 		std::string actorType = iter->first;
 		std::vector<EntityInfo> actorsInfo = iter->second;
 		for( int i = 0; i < actorsInfo.size(); i++ ) {
+			g_theServer->CreateAndPushEntity()
 			Entity* tempActor = SpawnNewEntityOfType( actorType );
 			tempActor->Set2DPos( actorsInfo[i].pos );
 			m_actors.push_back( tempActor );

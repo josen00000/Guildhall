@@ -57,7 +57,7 @@ public:
 	//basic
 	void Startup();
 	void Shutdown();
-	void RunFrame( float deltaSeclnds );
+	void Update( float deltaSeconds );
 	void Reset();
 	void RenderGame() const;
 	void RenderUI() const;
@@ -85,7 +85,6 @@ public:
 	Entity* GetPlayer() { return m_player; }
 
 private:
-	void Update( float deltaSeconds );
 	void UpdateUI( float deltaSeconds );
 	void UpdateCamera(float deltaSeconds );
 	void UpdateLighting( float deltaSeconds );
