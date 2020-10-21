@@ -17,8 +17,10 @@ public:
 
 	// Accessor
 	bool GetIsDead() const { return m_isDead; }
+	float GetDamage() const { return m_damage; }
 	ActorType GetType() const { return m_type; }
 	Vec2 GetPosition() const { return m_pos; }
+
 
 	// Mutator
 private:
@@ -28,6 +30,7 @@ public:
 	Rgba8 m_color;
 	float m_physicsRadiu	= 0.3f;
 	float m_speed			= 5.f;
+	float m_damage			= 10.f;
 	ActorType	m_type		= ACTOR_NONE;
 
 	Vec2 m_pos = Vec2::ZERO;

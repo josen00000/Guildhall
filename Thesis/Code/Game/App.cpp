@@ -8,6 +8,7 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/Time/Time.hpp"
 #include "Engine/Core/Time/Clock.hpp"
+#include "Engine/Core/EventSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -110,7 +111,7 @@ void App::Shutdown()
 void App::RunFrame()
 {
 	BeginFrame();
-	Update( /*Clock::GetMasterDeltaSeconds()*/ 0.016f );
+	Update( Clock::GetMasterDeltaSeconds() );
 	Render();
 	EndFrame();
 }

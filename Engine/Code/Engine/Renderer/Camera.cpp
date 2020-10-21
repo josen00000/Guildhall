@@ -5,6 +5,7 @@
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/Vec4.hpp"
+#include "Engine/Math/AABB2.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
@@ -137,6 +138,13 @@ Vec3 Camera::GetUpDirt( Convention convension ) const
 RenderContext* Camera::GetRenderContext() const
 {
 	return m_rctx;
+}
+
+AABB2 Camera::GetWorldBox() const
+{
+	Vec2 min = GetBottomLeftWorldPos2D();
+	Vec2 max = GetTopRightWorldPos2D();
+	return AABB2( min, max );
 }
 
 float Camera::GetOutputAspectRatio()

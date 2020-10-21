@@ -64,7 +64,7 @@ void Enemy::CheckState()
 	std::vector<Player*> players = m_map->GetPlayers();
 	for( int i = 0; i < players.size(); i++ ) {
 		Player* tempPlayer = players[i];
-		if( tempPlayer == nullptr ) { continue; }
+		if( tempPlayer == nullptr || tempPlayer->GetAliveState() != ALIVE ) { continue; }
 
 		Vec2 tempPlayerPos = tempPlayer->GetPosition();
 		float distSq = GetDistanceSquared2D( tempPlayerPos, m_position );

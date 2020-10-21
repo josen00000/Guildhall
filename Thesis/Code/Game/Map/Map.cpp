@@ -188,6 +188,16 @@ IntVec2 Map::GetRandomInsideNotSolidTileCoords() const
 	}
 }
 
+IntVec2 Map::GetRandomInsideCameraNotSolidTileCoords( Camera* camera ) const
+{
+	while ( true )
+	{
+		IntVec2 result = GetRandomInsideNotSolidTileCoords();
+		AABB2 cameraBox = camera->GetWorldBox();
+		if( cameraBox.IsPointInside( (Vec2)result )){ return result; }
+	}
+}
+
 Vec2 Map::GetCuePos() const
 {
 	if( m_activeItem == nullptr ) {
@@ -400,6 +410,7 @@ void Map::CreatePlayer( )
 	Player* newPlayer = Player::SpawnPlayerWithPos( pos );
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );
+
 	//newPlayer->SetPlayerIndex( m_players.size() - 1 );
  	if( m_players.size() == m_keyboardPlayerIndex ) {
  		newPlayer->SetInputControlState( KEYBOARD_INPUT );
@@ -465,8 +476,9 @@ void Map::CheckActorsCollision()
 	// player and player
 	for( int i = 0; i < m_players.size(); i++ ) {
 		for( int j = i + 1; j < m_players.size(); j++ ) {
-			if( m_players[i] != nullptr && m_players[j] != nullptr )
-			CheckCollisionBetweenActors( m_players[i], m_players[j] );
+			if( m_players[i]->GetAliveState() == ALIVE && m_players[j]->GetAliveState() == ALIVE ) {
+				CheckCollisionBetweenActors( m_players[i], m_players[j] );
+			}
 		}
 	}
 
@@ -481,7 +493,7 @@ void Map::CheckActorsCollision()
 	// player and enemy
 	for( int i = 0; i < m_players.size(); i++ ) {
 		for( int j = 0; j < m_enemies.size(); j++ ) {
-			if( m_players[i] != nullptr && m_enemies[j] != nullptr ) {
+			if( m_players[i] != nullptr && m_enemies[j] != nullptr && m_players[i]->GetAliveState() == ALIVE ) {
 				CheckCollisionBetweenActors( m_players[i], m_enemies[j] );
 			}
 		}
@@ -520,8 +532,9 @@ void Map::CheckCollisionBetweenProjectileAndActors( Projectile* projectile )
 	case ACTOR_ENEMY:
 		for( int i = 0; i < m_players.size(); i++ ) {
 			Player* tempPlayer = m_players[i];
+			if( tempPlayer->GetAliveState() != ALIVE ){ continue; }
 			if( IsPointInsideDisc( projectile->GetPosition(), tempPlayer->GetPosition(), tempPlayer->GetPhysicsRadius() ) ) {
-				//tempPlayer->TakeDamage();
+				tempPlayer->TakeDamage( projectile->GetDamage() );
 				projectile->Die();
 				break;
 			}
@@ -530,8 +543,9 @@ void Map::CheckCollisionBetweenProjectileAndActors( Projectile* projectile )
 	case ACTOR_PLAYER:
 		for( int i = 0; i < m_enemies.size(); i++ ) {
 			Enemy* tempEnemy = m_enemies[i];
+			if( tempEnemy == nullptr ){ continue; }
 			if( IsPointInsideDisc( projectile->GetPosition(), tempEnemy->GetPosition(), tempEnemy->GetPhysicsRadius() ) ) {
-				//tempEnemy->TakeDamage();
+				tempEnemy->TakeDamage( projectile->GetDamage() );
 				projectile->Die();
 				break;
 			}
@@ -553,7 +567,7 @@ void Map::ManageGarbage()
 	// manage player
 	for( int i = 0; i < m_players.size(); i++ ) {
 		Player* tempPlayer = m_players[i];
-		if( tempPlayer != nullptr && tempPlayer->GetAliveState() == AliveState::READY_TO_DELETE ) {
+		if( tempPlayer != nullptr && tempPlayer->GetAliveState() == AliveState::READY_TO_DELETE_PLAYER ) {
 			delete tempPlayer;
 			m_players.erase( m_players.begin() + i );
 		}

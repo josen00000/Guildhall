@@ -81,13 +81,14 @@ public:
 	Vec2	GetCuePos() const;
 
 	Player*	GetPlayerWithIndex( int index );
+	
 	std::vector<Enemy*>& GetEnemies();
 	std::vector<Player*>& GetPlayers();
 
 	IntVec2 GetTileCoordsWithTileIndex( int index ) const;
 	IntVec2 GetRandomInsideTileCoords() const;
 	IntVec2 GetRandomInsideNotSolidTileCoords() const;
-
+	IntVec2 GetRandomInsideCameraNotSolidTileCoords( Camera* camera ) const;
 	
 
 

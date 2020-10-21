@@ -65,6 +65,7 @@ public:
 
 	RenderContext* GetRenderContext() const;
 
+	AABB2	GetWorldBox() const; // temp for thesis usage
 	AABB2	GetCameraAsBox() const;
 	ProjectionType GetCameraProjectionType() const{ return m_projectionType; }
 

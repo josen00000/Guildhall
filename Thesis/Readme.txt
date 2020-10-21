@@ -42,7 +42,11 @@ Operations:
 	F7 change no split-screen strat
 		No strat: no stratergy for no split-screen state, player can move out of the camera
 		Zoom to fit: When player try to move out of the camera, the camera zoom out to fit the player.
-			     Camera always trys to zoom in to original size.	 	    
+			     Camera always trys to zoom in to original size.
+		kill and teleport: camera does't zoom. When player out of camera, it will be teleported back 
+				   back inside the camera range.	 	    
+Console command:
+	delete_player:<index> delete player with index
 Settings:
 	The first player is always controlled by mouse and keyboard.
 	If the controller is connect, the other player is controlled by controller. Otherwise, they are controlled by AI.

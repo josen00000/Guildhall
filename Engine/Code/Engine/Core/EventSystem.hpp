@@ -52,7 +52,7 @@ void EventSystem::SetTimerByFunction( float duration, OBJ_TYPE* obj, bool(OBJ_TY
 	tempTimeDelegate.timer = new Timer();
 	tempTimeDelegate.delegate = new ConsumableDelegate<EventArgs&>();
 	tempTimeDelegate.delegate->subscribe_method( obj, mcb );
-	tempTimeDelegate.timer.SetSeconds( duration );
+	tempTimeDelegate.timer->SetSeconds( duration );
 	m_timerRegisteredEvents.push_back( tempTimeDelegate );
 }
 

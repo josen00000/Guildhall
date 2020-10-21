@@ -28,7 +28,8 @@ void CameraSystem::BeginFrame()
 void CameraSystem::EndFrame()
 {
 	for( int i = 0; i < m_controllers.size(); i++ ) {
-		if( m_controllers[i]->m_player->GetAliveState() == READY_TO_DELETE ) {
+		if( m_controllers[i]->m_player->GetAliveState() == READY_TO_DELETE_CONTROLLER ) {
+			m_controllers[i]->m_player->SetAliveState( AliveState::READY_TO_DELETE_PLAYER );
 			delete m_controllers[i];
 			m_controllers.erase( m_controllers.begin() + i );
 		}
@@ -89,7 +90,7 @@ void CameraSystem::UpdateControllerCameras()
 {
 	if( m_controllers.size() == 0 ){ return; }
 
-	if( m_splitScreenState == NO_SPLIT_SCREEN ) {
+	if( m_splitScreenState == NO_SPLIT_SCREEN && m_controllers.size() > 1 ) {
 		if( !m_noSplitCamera ) {
 			m_noSplitCamera = g_theGame->m_gameCamera;
 		}
@@ -99,13 +100,16 @@ void CameraSystem::UpdateControllerCameras()
 			m_goalCameraPos = m_controllers[0]->GetSmoothedGoalPos();
 		}
 		else {
+			float totalFactor = 0.f;
 			for( int i = 0; i < m_controllers.size(); i++ ) {
-				m_goalCameraPos += ( m_controllers[i]->GetSmoothedGoalPos() * m_controllers[i]->GetCurrentMultipleFactor() );
-				//g_theConsole->DebugLogf( "goalcamera pos is :%.2f, %.2f", m_goalCameraPos.x, m_goalCameraPos.y );
-// 				if( m_goalCameraPos.x > 1000 ) {
-// 					int a = 0;
-// 				}
+				totalFactor += m_controllers[i]->GetCurrentMultipleFactor();
 			}
+			for( int i = 0; i < m_controllers.size(); i++ ) {
+				Vec2 smoothedPos = m_controllers[i]->GetSmoothedGoalPos();
+				float multipleFactor = m_controllers[i]->GetCurrentMultipleFactor();
+				m_goalCameraPos += ( m_controllers[i]->GetSmoothedGoalPos() * m_controllers[i]->GetCurrentMultipleFactor() );
+			}
+			m_goalCameraPos = m_goalCameraPos / totalFactor; 
 		}
 		m_noSplitCamera->SetPosition2D( m_goalCameraPos );
 	}
@@ -233,6 +237,14 @@ std::string CameraSystem::GetNoSplitScreenStratText() const
 	return result + "Error state.";
 }
 
+CameraController* CameraSystem::GetCameraControllerWithPlayer( Player* player )
+{
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		if( m_controllers[i]->m_player == player ){ return m_controllers[i]; }
+	}
+	return nullptr;
+}
+
 std::vector<CameraController*>& CameraSystem::GetCameraControllers()
 {
 	return m_controllers;
@@ -243,6 +255,13 @@ void CameraSystem::SetIsDebug( bool isDebug )
 	m_isdebug = isDebug;
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 		m_controllers[i]->SetIsDebug( isDebug );
+	}
+}
+
+void CameraSystem::SetControllerSmooth( bool isSmooth )
+{
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		m_controllers[i]->SetIsSmooth( isSmooth );
 	}
 }
 
@@ -299,28 +318,50 @@ void CameraSystem::CreateAndPushController( Player* player, Camera* camera )
 {
 	CameraController* tempCamController = new CameraController( this, player, camera );
 	tempCamController->SetCameraWindowSize( Vec2( 12, 8 ) );
-	camera->SetPosition( player->GetPosition() );
+	if( m_controllers.size() == 0 ){
+		camera->SetPosition( player->GetPosition() );
+	}
 	m_controllers.push_back( tempCamController );
-	float smoothTime = 10.f;
+	float smoothTime = 2.f;
 	if( m_controllers.size() == 1 ){
 		smoothTime = 0.1f;
 	}
-	for( int i = 0; i < m_controllers.size(); i++ ) {
-		m_controllers[i]->SetMultipleCameraStableFactorNotStableUntil( smoothTime, ( 1.f / (float)m_controllers.size()));
-	}
+	UpdateControllerMultipleFactor( smoothTime );
 }
 
 void CameraSystem::PrepareRemoveAndDestroyController( Player const* player )
 {
-	float smoothTime = 10.f;
+	float smoothTime = 2.f;
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 		if( m_controllers[i]->m_player == player ) {
 			m_controllers[i]->SetMultipleCameraStableFactorNotStableUntil( smoothTime, 0.f );
-		}
-		else {
-			m_controllers[i]->SetMultipleCameraStableFactorNotStableUntil( smoothTime, ( 1.f / (float)m_controllers.size()) );
 		}	
 	}
+	UpdateControllerMultipleFactor( smoothTime );
+}
+
+void CameraSystem::UpdateControllerMultipleFactor( float smoothTime )
+{
+	
+	int num = GetValidPlayerNum();
+	if( num == 0 ){ return; }
+	float goalFactor = 1.f / (float)num ;
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		if( m_controllers[i]->m_player->GetAliveState() == ALIVE ) {
+			m_controllers[i]->SetMultipleCameraStableFactorNotStableUntil( smoothTime, goalFactor );
+		}
+	}
+}
+
+int CameraSystem::GetValidPlayerNum()
+{
+	int result = 0;
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		if( m_controllers[i]->m_player->GetAliveState() == ALIVE ) {
+			result++;
+		}
+	}
+	return result;
 }
 
 bool CameraSystem::IsControllersInsideCamera()
@@ -376,9 +417,9 @@ void CameraSystem::KillAndTeleportPlayers( std::vector<CameraController*>& vec )
 		if( m_map == nullptr ) {
 			m_map = g_theGame->GetCurrentMap();
 		}
-		tempController->m_player->DisableInputForSeconds( 2 );
-		Vec2 teleportPos = (Vec2)m_map->GetRandomInsideNotSolidTileCoords();
-		tempController->m_player->SetPosition( teleportPos );
+		if( tempController->m_player->GetAliveState() == ALIVE ) {
+			tempController->m_player->FakeDeadForSeconds( 2.f );
+		}
 	}
 }
 

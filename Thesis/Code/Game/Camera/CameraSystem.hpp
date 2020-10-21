@@ -85,11 +85,15 @@ public:
 	SplitScreenState	GetSplitScreenState() const { return m_splitScreenState; }
 	NoSplitScreenStrat	GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
 
+	Camera*				GetNoSplitCamera() { return m_noSplitCamera; }
+	CameraController*	GetCameraControllerWithPlayer( Player* player );
+
 	std::vector<CameraController*>& GetCameraControllers();
 	RandomNumberGenerator* GetRNG(){ return m_rng; }
 
 	// Mutator
 	void SetIsDebug( bool isDebug );
+	void SetControllerSmooth( bool isSmooth );
 	void SetCameraWindowState( CameraWindowState newState );
 	void SetCameraSnappingState( CameraSnappingState newState );
 	void SetCameraShakeState( CameraShakeState newState );
@@ -105,6 +109,8 @@ public:
 	// Controller
 	void CreateAndPushController( Player* player, Camera* camera );
 	void PrepareRemoveAndDestroyController( Player const* player );
+	void UpdateControllerMultipleFactor( float smoothTime );
+	int GetValidPlayerNum();
 
 	// split screen strat
 		// no split screen strat

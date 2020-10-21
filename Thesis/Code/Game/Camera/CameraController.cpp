@@ -41,8 +41,8 @@ void CameraController::Update( float deltaSeconds )
 	UpdateCameraShake( deltaSeconds );
 	UpdateMultipleCameraSettings( deltaSeconds );
 	SmoothMotion();
+	BoundCameraPosInsideWindow();
 	
-	//BoundCameraPosInsideWindow();
 
 	// Debug
 // 	if( m_isDebug ) {
@@ -79,7 +79,7 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	std::string asymptoticValueText				= std::string( "Asymptotic Value = " + std::to_string( m_asymptoticValue ) );
 	std::string traumaText						= std::string( "Trauma = " + std::to_string( m_trauma ) );
 	std::string currentMultipleStableFactorText	= std::string( "multiple factor = " + std::to_string( m_currentMultipleFactor ));
-	std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_stableMultipleFactor ));
+	std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_goalMultipleFactor ));
 	std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
 	std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
 	std::string testing							= std::to_string( (uint)m_player->GetAliveState() );
@@ -109,6 +109,11 @@ void CameraController::SetIsDebug( bool isDebug )
 	m_isDebug = isDebug;
 }
 
+void CameraController::SetIsSmooth( bool isSmooth )
+{
+	m_isSmooth = isSmooth;
+}
+
 void CameraController::SetAsymptoticValue( float value )
 {
 	m_asymptoticValue = value;
@@ -133,7 +138,9 @@ void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalS
 {
 	m_ismultipleFactorStable = false;
 	m_timer->SetSeconds( (double)totalSeconds );
-	m_stableMultipleFactor = goalFactor;
+	g_theConsole->DebugLogf( "set, player: %d, start: %.2f, duration: %.2f", m_player->GetPlayerIndex(), m_timer->m_startSeconds, m_timer->m_durationSeconds );
+	m_startMultipleFactor = m_currentMultipleFactor;
+	m_goalMultipleFactor = goalFactor;
 	m_factorStableSeconds = totalSeconds;
 }
 
@@ -153,7 +160,6 @@ void CameraController::UpdateCameraWindow( float deltaSeconds )
 			Vec2 windowSnappedGoalPos = ComputeCameraWindowSnappedPosition( deltaSeconds );
  			m_cameraWindow.SetCenter( windowSnappedGoalPos );
 		}
-
 		if( !IsPointInsideAABB2D( m_playerPos, m_cameraWindow ) ) {
 			m_cameraWindow.MoveToIncludePoint( m_playerPos );
 		}
@@ -171,6 +177,7 @@ void CameraController::SetCameraWindowSize( Vec2 size )
 
 void CameraController::BoundCameraPosInsideWindow()
 {
+	if( m_owner->GetCameraWindowState() == NO_CAMERA_WINDOW ){ return; }
 	if( !m_cameraWindow.IsPointInside( m_smoothedGoalCameraPos ) ) {
 		m_smoothedGoalCameraPos = m_cameraWindow.GetNearestPoint( m_smoothedGoalCameraPos );
 	}
@@ -270,6 +277,7 @@ void CameraController::UpdateCameraFrame( float deltaSeconds )
 void CameraController::SmoothMotion()
 {
 	m_smoothedGoalCameraPos = m_goalCameraPos;
+	if( !m_isSmooth ){ 	return; }
 
 	m_asymptoticValue = ComputeAsymptoticValueByDeltaDist( GetDistance2D( m_smoothedGoalCameraPos, m_cameraPos ));
 	m_smoothedGoalCameraPos = ( m_cameraPos * m_asymptoticValue ) + ( m_smoothedGoalCameraPos * ( 1 - m_asymptoticValue ));
@@ -298,11 +306,23 @@ void CameraController::UpdateMultipleCameraFactor( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
 	float currentFactorSeconds = m_factorStableSeconds - m_timer->GetSecondsRemaining();
-	m_currentMultipleFactor = RangeMapFloat( 0.f, m_factorStableSeconds, m_currentMultipleFactor, m_stableMultipleFactor, currentFactorSeconds );
+	float smoothValue = 0.f;
+	smoothValue = currentFactorSeconds / m_factorStableSeconds;
+	smoothValue = ClampFloat( 0.f, 1.f, smoothValue );
+	smoothValue = SmoothStep3( smoothValue );
+	smoothValue = ClampFloat( 0.f, 1.f, smoothValue );
+
+	m_currentMultipleFactor = RangeMapFloat( 0.f, 1.f, m_startMultipleFactor, m_goalMultipleFactor, smoothValue ); // TODO testing
+	m_currentMultipleFactor = ClampFloat( 0.f, 1.f, m_currentMultipleFactor );
+
 	if( m_timer->HasElapsed() ) {
 		m_ismultipleFactorStable = true;
+		float time = m_timer->m_clock->GetTotalSeconds();
+		g_theConsole->DebugLogf( "elapsed, player: %d, elapsed: %.2f, start: %.2f, duration: %.2f", m_player->GetPlayerIndex(), time, m_timer->m_startSeconds, m_timer->m_durationSeconds );
+// 		g_theConsole->DebugLogf( "start: %.2f", m_timer->m_startSeconds );
+// 		g_theConsole->DebugLogf( "duration: %.2f", m_timer->m_durationSeconds );
 		if( m_player->GetAliveState() == WAIT_FOR_DELETE ) {
-			m_player->SetAliveState( AliveState::READY_TO_DELETE );
+			m_player->SetAliveState( AliveState::READY_TO_DELETE_CONTROLLER );
 		}
 	}
 }
@@ -323,9 +343,14 @@ Vec2 CameraController::ComputeCameraWindowSnappedPosition( float deltaSeconds )
 {
 	m_snappingSpeed = ComputeCameraSnapSpeed();
 	Vec2 snapDirt = m_playerPos - m_cameraWindowCenterPos;
-	snapDirt.Normalize();
 	Vec2 snappedPos =Vec2::ZERO;
-	snappedPos = m_cameraWindowCenterPos + ( deltaSeconds * m_snappingSpeed * snapDirt );
+	if( snapDirt.GetLength() < 0.1f ) {
+		snappedPos = m_cameraWindowCenterPos;
+	}
+	else {
+		snapDirt.Normalize();
+		snappedPos = m_cameraWindowCenterPos + ( deltaSeconds * m_snappingSpeed * snapDirt );
+	}
 
 	switch( m_owner->GetCameraSnappingState() )
 	{

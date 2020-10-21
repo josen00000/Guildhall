@@ -31,6 +31,8 @@ Actor* Actor::SpawnActorWithPos( Vec2 pos )
 
 void Actor::UpdateActor( float deltaSeconds )
 {
+	m_shootTimer += deltaSeconds;
+
 	Vec2 velocity = m_movingDir * m_speed;
 	m_position = m_position + velocity * deltaSeconds;
 	if( m_movingDir != Vec2::ZERO ) {
@@ -75,7 +77,6 @@ void Actor::RenderActor()
 
 void Actor::Shoot( float deltaSeconds )
 {
-	m_shootTimer += deltaSeconds;
 	if( m_shootTimer < m_shootCoolDown ){ return; }
 
 	m_shootTimer = 0.f;
@@ -87,6 +88,9 @@ void Actor::Shoot( float deltaSeconds )
 void Actor::TakeDamage( float damage )
 {
 	m_hp -= damage;
+	if( m_hp <= 0 ) {
+		Die();
+	}
 }
 
 void Actor::Die()

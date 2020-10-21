@@ -27,6 +27,7 @@ public:
 
 	// Mutator
 	void SetIsDebug( bool isDebug );
+	void SetIsSmooth( bool isSmooth );
 	void SetAsymptoticValue( float value );
 	void SetTrauma( float trauma );
 	void AddTrauma( float addTrauma );
@@ -81,6 +82,7 @@ private:
 	float m_snappingSpeed		= 0.f;
 
 	// camera smooth
+	bool m_isSmooth				= true;
 	float m_asymptoticValue		= 0.9f;
 	float m_maxDeltaDist		= 5.f;
 	float m_minAsymptotic		= 0.95f;
@@ -107,7 +109,8 @@ private:
 
 	// multiple camera
 	bool m_ismultipleFactorStable	= true;
-	float m_stableMultipleFactor	= 1.f;
+	float m_goalMultipleFactor		= 1.f;
+	float m_startMultipleFactor		= 0.f;
 	float m_currentMultipleFactor	= 0.f;
 
 	float m_factorStableSeconds		= 0.f; 

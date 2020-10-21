@@ -35,15 +35,20 @@ public:
 	void UpdatePlayerSpeed( float deltaSeconds );
 	void HandleInput( float deltaSeconds, int playerIndex );
 	void RenderPlayer();
+	virtual void Die() override;
 
 	// Accessor
 	bool IsContinousWalk() const { return m_isContinousWalk; }
 	bool IsControlledByUser() const;
+	int GetPlayerIndex();
 
 	// Mutator
 	void SetMap( Map* map );
 	void SetInputControlState( InputControlState state );
 	void DisableInputForSeconds( float seconds );
+	void FakeDeadForSeconds( float seconds );
+	bool Reborn( EventArgs& args );
+	bool EnableInput( EventArgs& args );
 
 private:
 	void CheckInputMethod( int playerIndex );

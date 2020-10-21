@@ -51,6 +51,7 @@ void Game::Startup()
 	g_theConsole->AddCommandToCommandList( std::string( "set_asymptotic"), std::string( "Asymptotic value for camera controller" ), SetCameraAsymptoticValue );
 	g_theConsole->AddCommandToCommandList( std::string( "spawn_item"), std::string( "spawn new item" ), SpawnItem );
 	g_theConsole->AddCommandToCommandList( std::string( "delete_player"), std::string( "delete player with index" ), DeletePlayer );
+	g_theConsole->AddCommandToCommandList( std::string( "set_camera_smooth" ), std::string( "set is controller smooth motion" ), SetIsSmooth );
 }
 
 void Game::Shutdown()
@@ -281,8 +282,17 @@ bool SpawnItem( EventArgs& args )
 
 bool DeletePlayer( EventArgs& args )
 {
-	int playerIndex = args.GetValue( std::to_string( 0 ), 0 );
+	std::string playerIndex = args.GetValue( std::to_string( 0 ), "0" );
+	
 	Map* currentMap = g_theGame->GetCurrentMap();
-	currentMap->DestroyPlayerWithIndex( playerIndex );
+	currentMap->DestroyPlayerWithIndex( atoi(playerIndex.c_str()) );
+	return true;
+}
+
+bool SetIsSmooth( EventArgs& args )
+{
+	std::string isSmoothText = args.GetValue( std::to_string( 0 ), std::string() );
+	bool isSmooth = GetBoolFromText( isSmoothText.c_str() );
+	g_theCameraSystem->SetControllerSmooth( isSmooth );
 	return true;
 }

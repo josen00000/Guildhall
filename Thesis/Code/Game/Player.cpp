@@ -1,12 +1,16 @@
 #include "Player.hpp"
 #include "Game/Enemy.hpp"
 #include "Game/Map/Map.hpp"
+#include "Game/Camera/CameraSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Core/EventSystem.hpp"
 
 extern InputSystem*		g_theInputSystem;
 extern RenderContext*	g_theRenderer;
 extern DevConsole*		g_theConsole;
+extern CameraSystem*	g_theCameraSystem;
+extern EventSystem*		g_theEventSystem;
 
 Player::Player()
 {
@@ -26,10 +30,6 @@ Player* Player::SpawnPlayerWithPos( Vec2 pos )
 
 void Player::UpdatePlayer( float deltaSeconds, int playerIndex )
 {
-	// test check
-	if( m_aliveState != WAIT_FOR_DELETE && m_aliveState != ALIVE && m_aliveState != READY_TO_DELETE ) {
-		int a = 0;
-	}
 	if( m_aliveState != AliveState::ALIVE ){ return; }
 	CheckInputMethod( playerIndex );
 	m_movingDir = Vec2::ZERO;
@@ -150,9 +150,27 @@ void Player::RenderPlayer()
 	g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 1.f, 0.1f, m_color );
 }
 
+void Player::Die()
+{
+	SetAliveState( WAIT_FOR_DELETE );
+	g_theCameraSystem->PrepareRemoveAndDestroyController( this );
+}
+
 bool Player::IsControlledByUser() const
 {
 	return ( !( m_inputState == AI_INPUT ) );
+}
+
+int Player::GetPlayerIndex()
+{
+	const std::vector<Player*> players = m_map->GetPlayers();
+	for( int i = 0; i < players.size(); i++ ) {
+		if( players[i] == this ) {
+			return i ;
+		}
+	}
+	g_theConsole->DebugErrorf( "player not exist in get player index " );
+	return -1;
 }
 
 void Player::SetMap( Map* map )
@@ -167,8 +185,39 @@ void Player::SetInputControlState( InputControlState state )
 
 void Player::DisableInputForSeconds( float seconds )
 {
+	m_isAbleInput = false;
+	g_theEventSystem->SetTimerByFunction( seconds, this, &Player::EnableInput );
 	m_disableInputSeconds = seconds;
 }
+
+void Player::FakeDeadForSeconds( float seconds )
+{
+	m_aliveState = WAIT_FOR_REBORN;
+	CameraController* controller = g_theCameraSystem->GetCameraControllerWithPlayer( this );
+	controller->SetMultipleCameraStableFactorNotStableUntil( 2.f, 0.f );
+	g_theCameraSystem->UpdateControllerMultipleFactor( 2.f );
+
+	g_theEventSystem->SetTimerByFunction( seconds, this, &Player::Reborn );
+	DisableInputForSeconds( 4.f );
+}
+
+bool Player::Reborn( EventArgs& args )
+{
+	Vec2 teleportPos = (Vec2)m_map->GetRandomInsideCameraNotSolidTileCoords( g_theCameraSystem->GetNoSplitCamera() );
+	SetPosition( teleportPos );
+	m_aliveState = ALIVE;
+	g_theCameraSystem->UpdateControllerMultipleFactor( 2.f );
+	return true;
+}
+
+bool Player::EnableInput( EventArgs& args )
+{
+	UNUSED(args);
+	m_isAbleInput = true;
+	return true;
+}
+
+
 
 void Player::CheckInputMethod( int playerIndex )
 {

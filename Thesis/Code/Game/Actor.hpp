@@ -17,8 +17,10 @@ enum ActorType {
 
 enum AliveState :uint {
 	ALIVE,
+	WAIT_FOR_REBORN,
 	WAIT_FOR_DELETE,
-	READY_TO_DELETE,
+	READY_TO_DELETE_CONTROLLER,
+	READY_TO_DELETE_PLAYER,
 	NUM_OF_ALIVE_STATE
 };
 
@@ -34,7 +36,7 @@ public:
 	virtual void RenderActor();
 	virtual void Shoot( float deltaSeconds );
 	void TakeDamage( float damage );
-	void Die();
+	virtual void Die();
 
 public:
 	// Accessor
@@ -75,7 +77,7 @@ protected:
 	float m_orientationDegrees		= 0.f;
 	float m_speed					= 3.f;
 	float m_physicsRadius			= 1.f;
-	float m_hp						= 100.f;
+	float m_hp						= 50.f;
 	float m_attackStrength			= 10.f;
 	float m_shootCoolDown			= 1.f;
 	float m_shootTimer				= m_shootCoolDown;
