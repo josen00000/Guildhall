@@ -16,6 +16,6 @@ start_server
 client_connect
 send_message
 disconnect
-help
 open_udp_port
+help
 send_udp_msg
