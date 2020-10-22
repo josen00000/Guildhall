@@ -308,10 +308,12 @@ void CameraSystem::UpdateDebugInfo()
 					Vec4( posWidth, posHeight, 0.f, 0.f ),
 					Vec4( 0.f, posHeight * 0.5f, 0.f, 0.f ),
 					Vec4( posWidth, posHeight * 0.5f, 0.f, 0.f )
-	} ;
- 	for( int i = 0; i < m_controllers.size(); i++ ) {
- 		m_controllers[i]->DebugCameraInfoAt( pos[i] );
- 	}
+	};
+	if( m_isdebug ) {
+ 		for( int i = 0; i < m_controllers.size(); i++ ) {
+ 			m_controllers[i]->DebugCameraInfoAt( pos[i] );
+ 		}
+	}
 }
 
 void CameraSystem::CreateAndPushController( Player* player, Camera* camera )
