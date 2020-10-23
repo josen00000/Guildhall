@@ -1,12 +1,17 @@
 #include "Server.hpp"
 #include "Game/Game.hpp"
 #include "Game/Actor.hpp"
+#include "Game/World.hpp"
+#include "Game/Map.hpp"
 #include "Game/Network/Client.hpp"
 #include "Game/Network/PlayerClient.hpp"
 #include "Game/EntityFactory.hpp"
 #include "Engine/Renderer/Camera.hpp"
 
-extern Camera* g_camera;
+extern Camera*	g_camera;
+extern Camera*	g_UICamera;
+extern Game*	g_theGame;
+
 
 Server::Server( Game* game )
 {
@@ -15,14 +20,24 @@ Server::Server( Game* game )
 
 Server::~Server()
 {
+	for( int i = 0; i < m_entities.size(); i++ ) {
+		delete m_entities[i];
+	}
+	delete m_entityFactory;
+	delete m_world;
+	delete m_game;
+	delete m_playerClient;
 }
 
 void Server::Startup()
 {
 	m_entityFactory = new EntityFactory();
-	Client* tempClient = new PlayerClient( this, g_camera );
-	m_clients.push_back( tempClient );
-	//m_game = g_theGame;
+	m_playerClient = new PlayerClient( this, g_camera ); 
+	m_playerClient->SetUICamera( g_UICamera );
+	m_playerClient->Startup();
+	m_game = g_theGame;
+
+
 }
 
 void Server::Shutdown()
@@ -32,6 +47,7 @@ void Server::Shutdown()
 
 void Server::Update( float deltaSeconds )
 {
+	m_playerClient->Update( deltaSeconds );
 	for( int i = 0; i < m_clients.size(); i++ ) {
 		m_clients[i]->Update( deltaSeconds );
 	}
@@ -39,6 +55,8 @@ void Server::Update( float deltaSeconds )
 	for( int i = 0; i < m_entities.size(); i++ ) {
 		m_entities[i]->Update( deltaSeconds );
 	}
+	Map* currentMap = m_game->m_world->GetCurrentMap();
+	currentMap->CheckCollision();
 }
 
 void Server::BeginFrame()
@@ -46,47 +64,42 @@ void Server::BeginFrame()
 	for( int i = 0; i < m_clients.size(); i++ ) {
 		m_clients[i]->BeginFrame();
 	}
+	m_playerClient->BeginFrame();
 }
 
 void Server::EndFrame()
 {
-
+	
+	for( int i = 0; i < m_clients.size(); i++ ) {
+		m_clients[i]->EndFrame();
+	}
+	m_playerClient->EndFrame();
 }
 
 Entity* Server::CreateAndPushPlayer()
 {
 	Entity* player = m_entityFactory->CreateEntityWithDefinition( std::string( "player" ) );
 	player->SetIsPlayer( true );
+	player->Set2DPos( Vec2( 1.5f, 1.5f ) );
 	m_entities.push_back( player );
 	return player;
 }
 
-Entity* Server::CreateAndPushEntity( std::string entityType )
+Entity* Server::CreateAndPushEntityWithPos( EntityType entityType, Vec2 pos )
 {
-	Entity* entity = m_entityFactory->CreateEntityWithDefinition( entityType );
-	m_entities.push_back( entity );
-}
-
-Entity* Server::SpawnNewEntityOfType( EntityDefinition const& entityDef )
-{
-	Entity* result = nullptr;
-	if( entityDef.m_type.compare( "Actor" ) == 0 ) {
-		result = new Actor( entityDef );
-	}
-// 	else if( entityDef.m_type.compare( "Projectile" ) == 0 ) {
-// 		result = new Projectile();
-// 	}
-// 	else if( entityDef.m_type.compare( "Portal" ) == 0 ) {
-// 		result = new Portal( entityDef );
-// 	}
-	else if( entityDef.m_type.compare( "Entity" ) == 0 ) {
-		result = new Entity( entityDef );
-	}
-	return result;
+	Entity* tempEntity = m_entityFactory->SpawnNewEntityOfType( entityType );
+	tempEntity->Set2DPos( pos );
+	m_entities.push_back( tempEntity );
+	return tempEntity;
 }
 
 Convention Server::GetGameConvention() const
 {
 	return m_game->m_convension;
+}
+
+std::vector<Entity*> Server::GetEntities()
+{
+	return m_entities;
 }
 

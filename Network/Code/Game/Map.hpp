@@ -25,7 +25,7 @@ struct MapRaycastResult {
 class Map {
 public:
 	Map(){}
-	~Map(){}
+	virtual	~Map();
 
 	virtual void RenderMap() const = 0;
 	virtual void RenderEntities() const;
@@ -49,8 +49,8 @@ public:
 public:
 	bool m_isDebug = false;
 	std::string m_name = "";
-	std::vector<Entity*> m_actors;
-	std::vector<Entity*> m_projectiles;
-	std::vector<Entity*> m_portals;
+// 	std::vector<Entity*> m_actors;
+// 	std::vector<Entity*> m_projectiles;
+// 	std::vector<Entity*> m_portals;
 	World* m_world = nullptr;
 };

@@ -3,7 +3,7 @@
 
 class MultiPlayerGame : protected Game {
 	MultiPlayerGame() = default;
-	~MultiPlayerGame();
+	~MultiPlayerGame() = default;
 	MultiPlayerGame( MultiPlayerGame const& ) = default;
 	MultiPlayerGame( MultiPlayerGame &&  ) = default;
 

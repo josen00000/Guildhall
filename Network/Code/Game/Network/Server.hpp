@@ -1,8 +1,10 @@
 #pragma once
 #include <vector>
 #include "Engine/Core/EngineCommon.hpp"
+#include "Game/EntityDefinition.hpp"
 
 class Client;
+class PlayerClient;
 class Game;
 class World;
 class EntityFactory;
@@ -23,16 +25,17 @@ public:
 	virtual void BeginFrame();
 	virtual void EndFrame();
 	Entity* CreateAndPushPlayer();
-	Entity* CreateAndPushEntity( std::string entityType );
-	Entity* SpawnNewEntityOfType( EntityDefinition const& entityDef );
+	Entity* CreateAndPushEntityWithPos( EntityType entityType, Vec2 pos );
 
 	// Accessor
 	Convention GetGameConvention() const;
+	std::vector<Entity*> GetEntities();
 
-protected:
+public:
 	Game*	m_game					= nullptr;
 	World*	m_world					= nullptr;
 	EntityFactory* m_entityFactory	= nullptr;
 	std::vector<Entity*> m_entities;
 	std::vector<Client*> m_clients;
+	PlayerClient* m_playerClient	= nullptr;
 };

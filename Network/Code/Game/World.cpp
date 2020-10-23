@@ -17,6 +17,13 @@ World::World()
 	g_theConsole->AddCommandToCommandList( std::string( "raycast" ), std::string( "add raycast with start pos and end pos" ), MapCommandRaycast );
 }
 
+World::~World()
+{
+	for( int i = 0; i < m_maps.size(); i++ ) {
+		delete m_maps[i];
+	}
+}
+
 void World::Update( float deltaSeconds )
 {
 	m_maps[m_currentMapIndex]->Update( deltaSeconds );
@@ -41,6 +48,10 @@ bool World::LoadMap( std::string mapName )
 			m_currentMapIndex = i;
 			isValidMap = true;
 			m_maps[i]->PreparePlayer();
+			TileMap* tileMap = dynamic_cast<TileMap*>(m_maps[i]);
+			if( tileMap ) {
+				tileMap->CreateEntities();
+			}
 		}
 	}
 	return isValidMap;

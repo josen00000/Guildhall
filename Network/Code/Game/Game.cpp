@@ -76,8 +76,8 @@ void Game::Startup()
 	//JobTest();
 
 	// create world
-// 	m_player = new Entity( EntityDefinition::s_definitions["Player"] );
-// 	m_player->SetIsPlayer( true );
+	m_player = new Entity( EntityDefinition::s_definitions["Player"] );
+	m_player->SetIsPlayer( true );
 	m_world = new World();
 	std::string startMapName = g_gameConfigBlackboard.GetValue( "StartMap", "" );
 	LoadMapsDefinitionsAndCreateMaps( "Data/Maps" );
@@ -127,7 +127,7 @@ void Game::Update( float deltaSeconds )
 	UpdateUI( deltaSeconds );
 	m_world->Update( deltaSeconds );
 
-	//UpdatePlayer( deltaSeconds );
+	UpdatePlayer( deltaSeconds );
 	//UpdateBillboardTest();
 
 	g_theJobSystem->ClaimAndDeleteAllCompletedJobs();
@@ -489,6 +489,7 @@ void Game::CheckIfGhost()
 
 void Game::RenderGame() const
 {
+	return;
  	Rgba8 tempColor = Rgba8::DARK_GRAY;
  	m_gameCamera->m_clearColor = tempColor;
 	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
@@ -506,12 +507,7 @@ void Game::RenderGame() const
 
  	g_theRenderer->SetDiffuseTexture( temp );
 
-	//m_cubeObj->Render();
-	//m_cubeObj1->Render();
-	//m_cubeObj2->Render();
-
 	m_world->Render();
-	//RenderBillboardTest();
 
 	g_theRenderer->SetCullMode( RASTER_CULL_NONE );
 	g_theRenderer->DisableDepth();
@@ -610,6 +606,22 @@ void Game::SetCameraPos( Vec3 pos )
 void Game::SetCameraYaw( float yaw )
 {
 	m_gameCamera->SetYawRotation( yaw );
+}
+
+Texture* Game::GetMapTexture()
+{
+	return MaterialDefinition::s_sheet.m_diffuseTexture;
+}
+
+std::vector<Vertex_PCU>& Game::GetMapRenderData()
+{
+	TileMap* currentMap = dynamic_cast<TileMap*>( m_world->GetCurrentMap() );
+	return currentMap->m_meshes;
+}
+
+SpriteSheet* Game::GetViewModelSpriteSheet()
+{
+	return m_viewModelSpriteSheet;
 }
 
 void Game::LoadAssets()
@@ -714,36 +726,36 @@ void Game::CreateGameObjects()
 
 void Game::PossessEntityAsPlayer()
 {
-	Map* currentMap = m_world->GetCurrentMap();
-	Vec3 cameraPos = m_gameCamera->GetPosition();
-	Vec3 cameraForward = m_gameCamera->GetForwardDirt( m_convension );
-	Vec2 cameraPosXY = cameraPos.GetXYVector();
-	Vec2 cameraForwardXY = cameraForward.GetXYVector();
-	float dist = 2.f;
-	Entity* tempPlayer = nullptr;
-
-	std::vector<Entity*> mapEntities = currentMap->m_actors;
-	for( int i = 0; i < mapEntities.size(); i++ ) {
-		Entity* tempEntity = mapEntities[i];
-		Vec2 entityPosXY = tempEntity->Get2DPosition();
-		Vec2 cameraToEntityXY = entityPosXY - cameraPosXY;
-		Vec3 cameraToEntity = tempEntity->GetPosition() - cameraPos;
-		float angleDegrees = GetAngleDegreesBetweenVectors2D( cameraToEntityXY, cameraForwardXY );
-		if( angleDegrees < 45 ) {
-			float cameraToEntityDist = cameraToEntity.GetLength();
-			if( cameraToEntityDist < dist ) {
-				dist = cameraToEntityDist;
-				tempPlayer = tempEntity;
-			}
-		}
-	}
-	if( tempPlayer ) {
-		m_player = tempPlayer;
-		m_player->SetIsPlayer( true );
-	}
-	else {
-		m_ghostMode = true;
-	}
+// 	Map* currentMap = m_world->GetCurrentMap();
+// 	Vec3 cameraPos = m_gameCamera->GetPosition();
+// 	Vec3 cameraForward = m_gameCamera->GetForwardDirt( m_convension );
+// 	Vec2 cameraPosXY = cameraPos.GetXYVector();
+// 	Vec2 cameraForwardXY = cameraForward.GetXYVector();
+// 	float dist = 2.f;
+// 	Entity* tempPlayer = nullptr;
+// 
+// 	std::vector<Entity*> mapEntities = currentMap->m_actors;
+// 	for( int i = 0; i < mapEntities.size(); i++ ) {
+// 		Entity* tempEntity = mapEntities[i];
+// 		Vec2 entityPosXY = tempEntity->Get2DPosition();
+// 		Vec2 cameraToEntityXY = entityPosXY - cameraPosXY;
+// 		Vec3 cameraToEntity = tempEntity->GetPosition() - cameraPos;
+// 		float angleDegrees = GetAngleDegreesBetweenVectors2D( cameraToEntityXY, cameraForwardXY );
+// 		if( angleDegrees < 45 ) {
+// 			float cameraToEntityDist = cameraToEntity.GetLength();
+// 			if( cameraToEntityDist < dist ) {
+// 				dist = cameraToEntityDist;
+// 				tempPlayer = tempEntity;
+// 			}
+// 		}
+// 	}
+// 	if( tempPlayer ) {
+// 		m_player = tempPlayer;
+// 		m_player->SetIsPlayer( true );
+// 	}
+// 	else {
+// 		m_ghostMode = true;
+// 	}
 }
 
 // command

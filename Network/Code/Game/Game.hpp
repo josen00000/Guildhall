@@ -84,6 +84,10 @@ public:
 
 	Entity* GetPlayer() { return m_player; }
 
+	Texture* GetMapTexture();
+	std::vector<Vertex_PCU>& GetMapRenderData();
+	SpriteSheet* GetViewModelSpriteSheet();
+
 private:
 	void UpdateUI( float deltaSeconds );
 	void UpdateCamera(float deltaSeconds );

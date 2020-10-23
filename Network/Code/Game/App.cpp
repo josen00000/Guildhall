@@ -4,7 +4,10 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
+#include "Game/Network/PlayerClient.hpp"
+#include "Game/Network/RemoteServer.hpp"
 #include "Game/Network/Server.hpp"
+#include "Game/Network/AuthoritativeServer.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
@@ -36,6 +39,7 @@ NetworkSystem*	g_theNetworkSystem	= nullptr;
 JobSystem*		g_theJobSystem		= nullptr;
 DevConsole*		g_theConsole		= nullptr;
 Server*			g_theServer			= nullptr;
+PlayerClient*	g_theClient			= nullptr;
 //Convention		g_convention;
 
 #include <vector>
@@ -88,37 +92,33 @@ void App::Startup()
 	g_theJobSystem = new JobSystem();
 	//g_theJobSystem->CreateWorkerThread( 8 );
 
-	g_theGame			= new Game( g_camera, g_UICamera );
+	// network architecture
+
+	g_theServer = new AuthoritativeServer();
+	g_theGame	= new Game( g_camera, g_UICamera );
 	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP ); // basis currently not use
 	g_convention = X_RIGHT_Y_UP_Z_BACKWARD;
 
+	g_theServer->Startup();
 	g_theGame->Startup();
 	EnableDebugRendering();
 	g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
 
 	std::string helpComd = std::string( "help" ); 
 	std::string quitComd = std::string( "quit" );
-	std::string testComd = std::string( "test" );
-	std::string testComd1 = std::string( "test1" );
-	std::string testComd2 = std::string( "test2" );
 	
 	std::string helpComdDesc = std::string( "List all commands in devConsole." );
 	std::string quitComdDesc = std::string( "Quit the app." );
-	std::string testComdDesc = std::string( "test for command history1." );
-	std::string testComd1Desc = std::string( "test for command history1." );
-	std::string testComd2Desc = std::string( "test for command history1." );
+
 
 	EventCallbackFunctionPtr helpFuncPtr = HelpCommandEvent;
 	EventCallbackFunctionPtr quitFuncPtr = QuitCommandEvent;
 	g_theConsole->AddCommandToCommandList( helpComd, helpComdDesc, helpFuncPtr );
 	g_theConsole->AddCommandToCommandList( quitComd, quitComdDesc, quitFuncPtr );
-	g_theConsole->AddCommandToCommandList( testComd, testComdDesc, nullptr );
-	g_theConsole->AddCommandToCommandList( testComd1, testComd1Desc, nullptr );
-	g_theConsole->AddCommandToCommandList( testComd2, testComd2Desc, nullptr );
 
-	// network architecture
-	g_theServer = new Server( g_theGame );
-	g_theServer->Startup();
+	g_theConsole->AddCommandToCommandList( std::string( "start_mul_server" ), std::string( "start multiplayer server"), StartMultiplayerServer );
+	g_theConsole->AddCommandToCommandList( std::string( "connect_to_mul_server" ), std::string( "connect to multiplayer server"), ConnectToMultiplayerServer );
+
 }
 
 void App::TemplateTesting()
@@ -266,6 +266,7 @@ void App::ResetGame()
 	Startup();
 }
 
+
 void App::BeginFrame()
 {
 	Clock::BeginFrame();
@@ -299,17 +300,15 @@ void App::UpdateDevConsole( float deltaSeconds )
 
 const void App::Render() const
 {
-	g_theGame->RenderGame();
+	//g_theGame->RenderGame();
 	
 	//g_theRenderer->BeginCamera(*g_UICamera);
 	//g_theGame->RenderUI();
-	
-	g_theConsole->Render( *g_theRenderer );
-
 }
 
 void App::EndFrame()
 {
+	g_theServer->EndFrame();
 	g_theRenderer->EndFrame();
 	g_theInputSystem->EndFrame();
 	g_theConsole->EndFrame();
@@ -324,6 +323,35 @@ bool QuitCommandEvent( EventArgs& args )
 	return true;
 }
 
+
+bool ConnectToMultiplayerServer( EventArgs& args )
+{
+	delete g_theServer;
+	g_theServer = nullptr;
+	g_theGame = nullptr;
+	
+	g_theGame	= new Game( g_camera, g_UICamera );
+	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP );
+	g_theServer = new RemoteServer();
+	g_theGame->Startup();
+	g_theServer->Startup();
+	return true;
+}
+
+bool StartMultiplayerServer( EventArgs& args )
+{
+	delete g_theServer;
+	g_theServer = nullptr;
+	g_theClient = nullptr;
+	g_theGame	= nullptr;
+
+	g_theGame	= new Game( g_camera, g_UICamera );
+	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP );
+	g_theServer = new AuthoritativeServer();
+	g_theGame->Startup();
+	g_theServer->Startup();
+	return true;
+}
 
 bool HelpCommandEvent( EventArgs& args )
 {

@@ -22,7 +22,7 @@ struct PortalInfo {
 class TileMap : public Map {
 public:
 	TileMap(){}
-	~TileMap(){}
+	~TileMap();
 	explicit TileMap( const XmlElement& mapElement, std::string name, World* world );
 	//static Map* CreateTileMap();
 
@@ -47,6 +47,8 @@ public:
 	bool IsTileCoordsValid( IntVec2 tileCoords );
 	bool IsTileCoordsSolid( IntVec2 tileCoords );
 
+	// entity
+	void CreateEntities();
 private:
 	void LoadMapDefinitions( const XmlElement& mapElement );
 	void EntityRaycast( MapRaycastResult& result );
@@ -67,8 +69,6 @@ private:
 	void AddVertsForSolidTile( std::vector<Vertex_PCU>& meshes, const Tile& tile );
 	void AddVertsForNonSolidTile( std::vector<Vertex_PCU>& meshes, const Tile& tile );
 	
-	// entity
-	void CreateEntities();
 
 public:
 	int			m_version = 1;

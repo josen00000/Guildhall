@@ -15,7 +15,7 @@ public:
 	virtual void BeginFrame();
 	virtual void Update( float deltaSeconds );
 	virtual void EndFrame();
-	void Render();
+	virtual void Render();
 
 	Server* m_owner = nullptr;
 };

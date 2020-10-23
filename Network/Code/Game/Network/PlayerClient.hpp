@@ -21,9 +21,18 @@ public:
 	virtual void EndFrame() override;
 	void HandleUserInput();
 	void PreUpdatePlayer();
-	void Render();
+	virtual void Render() override;
 
+	void RenderUI();
+	void RenderBaseHud();
+	void RenderGun();
 
+	// audio
+	void PlayAudioWithSoundID( size_t id );
+
+	void SetUICamera( Camera* camera );
+	
 	Entity* m_player = nullptr;
-	Camera* m_gameCamera = nullptr;
+	Camera* m_gameCamera	= nullptr;
+	Camera* m_UICamera		= nullptr;
 };

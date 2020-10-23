@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "Game/EntityDefinition.hpp"
 
 class Entity;
 
@@ -12,5 +13,6 @@ public:
 
 	void LoadEntityDefinitions(); // TODO: Move from game to here
 	Entity* CreateEntityWithDefinition( std::string defName );
-
+	Entity* SpawnNewEntityOfType( EntityType type );
+	Entity* SpawnNewEntityOfType( EntityDefinition const& entityDef );
 };

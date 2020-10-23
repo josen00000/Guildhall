@@ -11,6 +11,7 @@ class EntityDefinition;
 typedef std::map<std::string, EntityDefinition> EntityTypeMap;
 typedef	std::vector<SpriteAnimDefinition*> AnimationsSpriteDefinitions;
 typedef std::string AnimationType;
+using EntityType = std::string;
 
 enum MoveDirection: int {
 	MOVE_FRONT = 0,

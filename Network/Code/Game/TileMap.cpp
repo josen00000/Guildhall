@@ -35,6 +35,10 @@ TileMap::TileMap( const XmlElement& mapElement, std::string name, World* world )
 	m_world = world;
 }
 
+TileMap::~TileMap()
+{
+}
+
 void TileMap::RenderMap() const
 {
 	Texture* mapTexture = MaterialDefinition::s_sheet.m_diffuseTexture;
@@ -79,7 +83,7 @@ void TileMap::Update( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
 	UpdateMeshes();
-	UpdateEntities( deltaSeconds );
+	//UpdateEntities( deltaSeconds );
 	CheckCollision();
 }
 
@@ -153,11 +157,12 @@ void TileMap::CheckCollision()
 
 void TileMap::CheckEntitiesCollision()
 {
-	for( int i = 0; i < m_actors.size(); i++ ) {
-		Entity* tempEntityA = m_actors[i];
-		for( int j = i; j < m_actors.size(); j++ ) {
+	std::vector<Entity*> entity = g_theServer->GetEntities();
+	for( int i = 0; i < entity.size(); i++ ) {
+		Entity* tempEntityA = entity[i];
+		for( int j = i; j < entity.size(); j++ ) {
 			if( i == j ){ continue; }
-			Entity* tempEntityB = m_actors[j];
+			Entity* tempEntityB = entity[j];
 			CheckCollisionBetweenTwoEntities( tempEntityA, tempEntityB );
 
 		}
@@ -166,8 +171,9 @@ void TileMap::CheckEntitiesCollision()
 
 void TileMap::CheckTileCollision()
 {
-	for( int i = 0; i < m_actors.size(); i++ ) {
-		Entity* tempEntity = m_actors[i];
+	std::vector<Entity*> entity = g_theServer->GetEntities();
+	for( int i = 0; i < entity.size(); i++ ) {
+		Entity* tempEntity = entity[i];
 		CheckCollisionBetweenEntityAndTiles( tempEntity );
 	}
 }
@@ -375,9 +381,9 @@ void TileMap::EntityRaycast( MapRaycastResult& result )
 	float forwardNormalZLength = abs( result.forwardNormal.z );
 	float maxDistanceZ = result.maxDistance * result.forwardNormal.z;
 
-
-	for( int i = 0; i < m_actors.size(); i++ ) {
-		Entity* tempEntity = m_actors[i];
+	std::vector<Entity*> mapEntities = g_theServer->GetEntities();
+	for( int i = 0; i < mapEntities.size(); i++ ) {
+		Entity* tempEntity = mapEntities[i];
 		FloatRange rangeXY = GetEntityXYRaycastDistRange( tempEntity, startPosXY, forwardNormalXY, maxDistanceXY );
 		FloatRange rangeZ = GetEntityZRaycastDistRange( tempEntity, startPosZ, maxDistanceZ );
 
@@ -818,25 +824,27 @@ void TileMap::CreateEntities()
 		std::string actorType = iter->first;
 		std::vector<EntityInfo> actorsInfo = iter->second;
 		for( int i = 0; i < actorsInfo.size(); i++ ) {
-			g_theServer->CreateAndPushEntity()
-			Entity* tempActor = SpawnNewEntityOfType( actorType );
-			tempActor->Set2DPos( actorsInfo[i].pos );
-			m_actors.push_back( tempActor );
+			//g_theServer->CreateAndPushEntityWithPos()
+			g_theServer->CreateAndPushEntityWithPos( actorType, actorsInfo[i].pos );
+// 			Entity* tempActor = SpawnNewEntityOfType( actorType );// TODO Delete
+// 			tempActor->Set2DPos( actorsInfo[i].pos );			  // TODO Delete
+// 			m_actors.push_back( tempActor );					  // TODO Delete
 		}
 	}
-
-	for( auto iter = m_portalList.begin(); iter != m_portalList.end(); ++iter ) {
-		std::string portalType = iter->first;
-		std::vector<PortalInfo>& portalInfos = iter->second;
-		for( int i = 0; i < portalInfos.size(); i++ ) {
-			Entity* tempPortal = SpawnNewEntityOfType( portalType );
-			Portal* portal	= dynamic_cast<Portal*>( tempPortal );
-			portal->Set2DPos( portalInfos[i].entityInfo.pos );
-			portal->SetTarget2DPosition( portalInfos[i].targetPos );
-			portal->SetTargetMapName( portalInfos[i].targetMap );
-			m_portals.push_back( portal );
-		}
-	}
+	//g_theServer->CreateAndPushPlayer();
+// 
+// 	for( auto iter = m_portalList.begin(); iter != m_portalList.end(); ++iter ) {
+// 		std::string portalType = iter->first;
+// 		std::vector<PortalInfo>& portalInfos = iter->second;
+// 		for( int i = 0; i < portalInfos.size(); i++ ) {
+// 			Entity* tempPortal = SpawnNewEntityOfType( portalType );
+// 			Portal* portal	= dynamic_cast<Portal*>( tempPortal );
+// 			portal->Set2DPos( portalInfos[i].entityInfo.pos );
+// 			portal->SetTarget2DPosition( portalInfos[i].targetPos );
+// 			portal->SetTargetMapName( portalInfos[i].targetMap );
+// 			m_portals.push_back( portal );
+// 		}
+// 	}
 	// create player later.
 }
 

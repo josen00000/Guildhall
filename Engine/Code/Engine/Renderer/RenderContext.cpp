@@ -891,8 +891,8 @@ void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
 		// triangle2
 		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
-		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( 0, 1 ) ),
 		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
+		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( 0, 1 ) ),
 	};
 	DrawVertexArray( 6, temAABB2 );
 }

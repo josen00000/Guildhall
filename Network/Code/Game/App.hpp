@@ -31,6 +31,7 @@ public:
 	void ResetGame();
 	std::string GetWindowsName() const { return m_windowName; }
 
+
 private:
 	void Update( float deltaSeconds );
 	void UpdateDevConsole( float deltaSeconds );
@@ -46,4 +47,5 @@ private:
 
 bool HelpCommandEvent( EventArgs& args );
 bool QuitCommandEvent( EventArgs& args );
-bool eventTest( EventArgs& args );
+bool ConnectToMultiplayerServer( EventArgs& args );
+bool StartMultiplayerServer( EventArgs& args );

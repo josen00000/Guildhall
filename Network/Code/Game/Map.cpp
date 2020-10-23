@@ -7,15 +7,20 @@
 
 extern Game* g_theGame;
 
+Map::~Map()
+{
+
+}
+
 void Map::RenderEntities() const
 {
-	for( int i = 0; i < m_actors.size(); i++ ) {
-		m_actors[i]->Render();
-	}
-	
-	for( int i = 0; i < m_portals.size(); i++ ) {
-		m_portals[i]->Render();
-	}
+// 	for( int i = 0; i < m_actors.size(); i++ ) {
+// 		m_actors[i]->Render();
+// 	}
+// 	
+// 	for( int i = 0; i < m_portals.size(); i++ ) {
+// 		m_portals[i]->Render();
+// 	}
 }
 
 void Map::CheckCollision()
@@ -39,26 +44,26 @@ MapRaycastResult Map::RayCast( Vec3 startPos, Vec3 endPos )
 
 void Map::UpdateEntities( float deltaSeconds )
 {
-	for( int i = 0; i < m_actors.size(); i++ ) {
-		m_actors[i]->Update( deltaSeconds );
-	}
-	
-	Entity* player = g_theGame->GetPlayer();
-
-	for( int i = 0; i < m_portals.size(); i++ ) {
-		Vec2 portalPos = m_portals[i]->Get2DPosition();
-		
-		for( int j = 0; j < m_actors.size(); j++ ) {
-			Vec2 actorPos = m_actors[j]->Get2DPosition();
-
-			float distance = GetDistance2D( actorPos, portalPos );	 
-
-			if( distance < m_actors[j]->GetRadius() + m_portals[i]->GetRadius() ) {
-				Portal* tempPortal = dynamic_cast<Portal*>(m_portals[i]);
-				TeleportToTargetMap( tempPortal->GetTargetMapName(), tempPortal->GetTarget2DPosition(), m_actors[j] );
-			}
-
-		}
+// 	for( int i = 0; i < m_actors.size(); i++ ) {
+// 		m_actors[i]->Update( deltaSeconds );
+// 	}
+// 	
+// 	Entity* player = g_theGame->GetPlayer();
+// 
+// 	for( int i = 0; i < m_portals.size(); i++ ) {
+// 		Vec2 portalPos = m_portals[i]->Get2DPosition();
+// 		
+// 		for( int j = 0; j < m_actors.size(); j++ ) {
+// 			Vec2 actorPos = m_actors[j]->Get2DPosition();
+// 
+// 			float distance = GetDistance2D( actorPos, portalPos );	 
+// 
+// 			if( distance < m_actors[j]->GetRadius() + m_portals[i]->GetRadius() ) {
+// 				Portal* tempPortal = dynamic_cast<Portal*>(m_portals[i]);
+// 				TeleportToTargetMap( tempPortal->GetTargetMapName(), tempPortal->GetTarget2DPosition(), m_actors[j] );
+// 			}
+// 
+// 		}
 // 		Vec2 playerPos = player->Get2DPosition();
 // 		Vec2 portalPos = m_portals[i]->Get2DPosition();
 // 		
@@ -67,10 +72,10 @@ void Map::UpdateEntities( float deltaSeconds )
 // 			Portal* tempPortal = dynamic_cast<Portal*>( m_portals[i] );
 // 			TeleportToTargetMap( tempPortal->GetTargetMapName(), tempPortal->GetTarget2DPosition() );
 // 		}
-	}
-	if( player ) {
-
-	}
+// 	}
+// 	if( player ) {
+// 
+// 	}
 }
 
 void Map::TeleportToTargetMap( std::string targetMap, Vec2 target2DPos, Entity* actor )

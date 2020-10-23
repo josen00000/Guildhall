@@ -10,7 +10,7 @@ class World
 {
 public:
 	World();
-	~World(){}
+	~World();
 	void Update(float deltaSeconds);	
 	void Render()const ;
 	void AddMap( Map* map );
