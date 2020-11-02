@@ -375,9 +375,11 @@ void Map::RenderActors()
 {
 	g_theRenderer->SetDiffuseTexture( nullptr );
 	for( int i = 0; i < m_players.size(); i++ ) {
+		if( m_players[i]->GetAliveState() != ALIVE ){ continue; }
 		m_players[i]->RenderPlayer();
 	}
 	for( int i = 0; i < m_enemies.size(); i++ ) {
+		if( m_enemies[i]->GetAliveState()  != ALIVE ){ continue; }
 		m_enemies[i]->RenderEnemy();
 	}
 }
@@ -415,7 +417,7 @@ void Map::CreatePlayer( )
  	if( m_players.size() == m_keyboardPlayerIndex ) {
  		newPlayer->SetInputControlState( KEYBOARD_INPUT );
  	}
-	g_theCameraSystem->CreateAndPushController( newPlayer, g_gameCamera );
+	g_theCameraSystem->CreateAndPushController( newPlayer );
 }
 
 void Map::DestroyPlayerWithIndex( int index )

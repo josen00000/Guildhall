@@ -2,24 +2,26 @@
 #include <vector>
 #include "Engine/Math/Vec2.hpp" 
 #include "Engine/Math/LineSegment2.hpp"
+#include "Engine/Math/AABB2.hpp"
 
 
 struct Polygon2
 {
 public:
-	std::vector<LineSegment2> m_edges;
+	std::vector<LineSegment2> m_edges; // counter-clockwise
 	Vec2 m_center;
 public:
 	Polygon2() = default;
 	~Polygon2() = default;	
 	Polygon2( std::vector<Vec2> points );
 	static Polygon2 MakeConvexFromPointCloud( std::vector<Vec2> points );
+	static Polygon2 MakeConvexFromAABB2( AABB2 box );
 public:
 	// bool
 	bool IsValid() const;
 	bool IsConvex() const;
 
-	bool Contains( Vec2 point ) const;
+	bool IsPointInside( Vec2 point ) const;
 
 	// Accessor
 	float	GetDistanceToCenter( Vec2 point ) const;
@@ -36,11 +38,15 @@ public:
 	Vec2	GetEdgeNormal( int edgeIndex ) const;
 
 	bool GetEdgeInWorldWithPoint( Vec2 point,  LineSegment2& seg ) const;
+
 	LineSegment2 GetEdge( int index ) const;
 	LineSegment2 GetEdgeInWorld( int index ) const;
 	LineSegment2 GetEdgeInWorldWithPoint( Vec2 point ) const;
+
+	AABB2 GetQuickOutBox();
+
 	int		GetEdgeIndexWithPoint( Vec2 point ) const;
-	void	GetAllVertices( std::vector<Vec2>& vertices ) const;
+	void	GetAllVerticesInWorld( std::vector<Vec2>& vertices ) const;
 
 	// Mutator
 	void	SetEdgesFromPoints( std::vector<Vec2> points );

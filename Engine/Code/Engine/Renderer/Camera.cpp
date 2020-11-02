@@ -404,6 +404,11 @@ Vec3 Camera::WorldToClient( Vec3 worldPos )
 	return Vec3::ZERO;
 }
 
+Vec2 Camera::WorldToScreen2D( Vec2 worldPos )
+{
+	return Vec2::ZERO;
+}
+
 void Camera::UpdateViewMatrix( Convention convention )
 {
 	// forseth way

@@ -1,11 +1,16 @@
 #pragma once
 #include "Engine/Math/AABB2.hpp"
+#include "Engine/Math/Polygon2.hpp"
+#include <chrono>
 
 class Camera;
 class Player;
 class CameraSystem;
 class Timer;
+class Texture;
 struct Vec4;
+class RenderBuffer;
+class Shader;
 
 class CameraController {
 	friend class Player;
@@ -16,14 +21,19 @@ public:
 	~CameraController();
 	explicit CameraController( CameraSystem* owner, Player* player, Camera* camera );
 	void Update( float deltaSeconds );
+	void Render();
+	void EndFrame();
 	void DebugRender();
 	void DebugCameraInfoAt( Vec4 pos );
+
 
 	// Accessor
 	bool GetIsDebug() const { return m_isDebug; }
 	float GetCurrentMultipleFactor() const { return m_currentMultipleFactor; }
 	Vec2 GetCuePos() const ;
 	Vec2 GetSmoothedGoalPos() const { return m_smoothedGoalCameraPos; }
+
+	Camera* GetCamera(){ return m_camera; }
 
 	// Mutator
 	void SetIsDebug( bool isDebug );
@@ -52,6 +62,16 @@ public:
 	void UpdateMultipleCameraSettings( float deltaSeconds );
 	void UpdateMultipleCameraFactor( float deltaSeconds );
 
+	// split screen
+	int GetTextureIndexWithScreenCoords( int x, int y, IntVec2 textureSize );	   // with world space coords
+	IntVec2 GetTextureCoordsWithScreenCoords( int x, int y, IntVec2 textureSize ); // with world space coords
+
+	void UpdateStencilTexture( Texture* src );
+	bool IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, Polygon2 renderArea, AABB2 quickOutBox );
+	AABB2 GetScreenRenderBox( IntVec2 size );
+	AABB2 GetWorldSpaceRenderBox();
+	Vec2 GetSPlitScreenBoxDimension();
+
 	void UpdateCameraPos();
 private:
 
@@ -62,10 +82,15 @@ private:
 private:
 	bool m_isDebug				= false;
 	bool m_disableUpdateCamera	= false;
-	Player* m_player = nullptr; // const
-	Camera* m_camera = nullptr;
-	CameraSystem* m_owner = nullptr;
-	Timer*	m_timer = nullptr;
+	Player* m_player			= nullptr; // const
+	Camera* m_camera			= nullptr;
+	Camera* m_splitCamera		= nullptr;
+	Texture* m_stencilTexture	= nullptr;
+	Shader* m_boxShader			= nullptr;
+	Shader* m_voronoiShader		= nullptr;
+
+	CameraSystem* m_owner		= nullptr;
+	Timer*	m_timer				= nullptr;
 
 	Vec2 m_playerPos				= Vec2::ZERO;
 	Vec2 m_goalCameraPos			= Vec2::ZERO;
@@ -112,6 +137,9 @@ private:
 	float m_goalMultipleFactor		= 1.f;
 	float m_startMultipleFactor		= 0.f;
 	float m_currentMultipleFactor	= 0.f;
-
 	float m_factorStableSeconds		= 0.f; 
+
+	RenderBuffer* m_splitBuffer		= nullptr;
+
+	std::chrono::microseconds m_testDuration;
 };

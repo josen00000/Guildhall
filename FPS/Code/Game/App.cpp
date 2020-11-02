@@ -27,7 +27,7 @@ RenderContext*	g_theRenderer		= nullptr;
 InputSystem*	g_theInputSystem	= nullptr;
 EventSystem*	g_theEventSystem	= nullptr;
 DevConsole*		g_theConsole		= nullptr;
-
+Convention		g_convention;
 
 #include <vector>
 #include <functional>
@@ -87,6 +87,7 @@ void App::Startup()
 	g_devCamera			= new Camera( g_theRenderer, Vec2( -32, -18 ), Vec2( 32, 18 ) );
 	g_theGame			= new Game( g_camera, g_UICamera );
 
+	//g_convention		= X_RIGHT_Y_UP_Z_BACKWARD
 	g_theGame->Startup();
 	EnableDebugRendering();
 	g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );

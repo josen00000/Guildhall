@@ -1,6 +1,7 @@
 #include "Polygon2.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Math/AABB2.hpp"
 
 Polygon2::Polygon2( std::vector<Vec2> points )
 {
@@ -71,6 +72,16 @@ Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 	return tempPoly;
 }
 
+Polygon2 Polygon2::MakeConvexFromAABB2( AABB2 box )
+{
+	std::vector<Vec2> points;
+	points.push_back( box.mins );
+	points.push_back( Vec2( box.maxs.x, box.mins.y ) );
+	points.push_back( box.maxs );
+	points.push_back( Vec2( box.mins.x, box.maxs.y ) );
+	return Polygon2( points );
+}
+
 bool Polygon2::IsValid() const
 {
 	if( m_edges.size() >= 3 ) {
@@ -101,7 +112,7 @@ bool Polygon2::IsConvex() const
 	return true;
 }
 
-bool Polygon2::Contains( Vec2 point ) const
+bool Polygon2::IsPointInside( Vec2 point ) const
 {
 	point = point - m_center;
 	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
@@ -165,7 +176,7 @@ int Polygon2::GetEdgeCount() const
 
 Vec2 Polygon2::GetClosestPoint( Vec2 point ) const
 {
-	if( Contains( point ) ){ return point; }
+	if( IsPointInside( point ) ){ return point; }
 
 	point = point - m_center;
 
@@ -265,6 +276,31 @@ LineSegment2 Polygon2::GetEdgeInWorldWithPoint( Vec2 point ) const
 	return LineSegment2();
 }
 
+AABB2 Polygon2::GetQuickOutBox()
+{
+	std::vector<Vec2> vertices;
+	GetAllVerticesInWorld( vertices );
+	Vec2 min = vertices[0];
+	Vec2 max = vertices[0];
+	for( int i = 1; i < vertices.size(); i++ ) {
+		Vec2 tempPoint = vertices[i];
+		if( tempPoint.x < min.x ) {
+			min.x = tempPoint.x;
+		}
+		if( tempPoint.y < min.y ) {
+			min.y = tempPoint.y;
+		}
+
+		if( tempPoint.x > max.x ) {
+			max.x = tempPoint.x;
+		}
+		if( tempPoint.y > max.y ) {
+			max.y = tempPoint.y;
+		}
+	}
+	return AABB2( min, max );
+}
+
 int Polygon2::GetEdgeIndexWithPoint( Vec2 point ) const
 {
 	for( int i = 0; i < m_edges.size(); i++ ) {
@@ -276,7 +312,7 @@ int Polygon2::GetEdgeIndexWithPoint( Vec2 point ) const
 	return -1;
 }
 
-void Polygon2::GetAllVertices( std::vector<Vec2>& vertices ) const
+void Polygon2::GetAllVerticesInWorld( std::vector<Vec2>& vertices ) const
 {
 	for( int i = 0; i < m_edges.size(); i++ ){
 		Vec2 point = m_edges[i].GetStartPos() + m_center;

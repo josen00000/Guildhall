@@ -27,9 +27,12 @@ Texture::Texture( const char* filePath, RenderContext* ctx, ID3D11Texture2D* han
 
 Texture::~Texture()
 {
-	delete m_renderTargetView;
-	delete m_shaderResourcwView;
-	delete m_depthStencilView;
+	SELF_SAFE_RELEASE(m_renderTargetView);
+	SELF_SAFE_RELEASE(m_shaderResourcwView);
+	SELF_SAFE_RELEASE(m_depthStencilView);
+// 	delete m_renderTargetView;
+// 	delete m_shaderResourcwView;
+// 	delete m_depthStencilView;
 
 	m_renderTargetView		= nullptr;
 	m_shaderResourcwView	= nullptr;

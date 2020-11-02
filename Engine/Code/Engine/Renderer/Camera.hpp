@@ -70,7 +70,7 @@ public:
 	ProjectionType GetCameraProjectionType() const{ return m_projectionType; }
 
 	Mat44	GetViewMatrix() const { return m_view; }
-	Mat44	GetUpdatedViewMatrix( Convention convention );
+	Mat44	GetUpdatedViewMatrix( Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
 	Mat44	GetProjectionMatrix() const { return m_projection; }
 	Mat44	GetModelMatrix( Convention convention ) const;
 
@@ -119,7 +119,6 @@ public:
 	void SetProjectionPerspective( float fov=60, float nearZ=-0.1, float farZ=-100 );
 
 	void UpdateCameraUBO( Convention convention );
-	void UpdateCameraRotation( Vec3 deltaRot );
 	void UpdateCameraPitch( float deltaPitch );
 	void UpdateCameraRoll( float deltaRoll );
 	void UpdateCameraYaw( float deltaYaw );
@@ -127,6 +126,7 @@ public:
 	// Helper
 	Vec3 ClientToWorld( Vec2 client, float ndcZ ) const;
 	Vec3 WorldToClient( Vec3 worldPos );
+	Vec2 WorldToScreen2D( Vec2 worldPos );
 
 	void UpdateViewMatrix( Convention convention );
 

@@ -21,6 +21,7 @@ public:
 	explicit AABB2(const Vec2& mins, const Vec2& maxs);
 	explicit AABB2(const IntVec2& intMins, const IntVec2& intMaxs);
 	explicit AABB2(float minX,float minY, float maxX,float maxY);
+	explicit AABB2( Vec2 const& center, float width, float height );
 
 	//Accessors(const methods)
 	bool IsPointInside(const Vec2& point) const;

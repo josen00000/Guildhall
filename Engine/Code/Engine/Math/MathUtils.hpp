@@ -8,6 +8,7 @@ struct AABB2;
 struct OBB2;
 struct IntVec2;
 struct FloatRange;
+struct Polygon2;
 struct Mat44;
 
 //
@@ -81,19 +82,22 @@ float GetAngleDegreesBetweenVectors2D( const Vec2& vectorA, const Vec2& vectorB 
 //
 // Lerp and Clamp
 // 
-float Interpolate(float a,float b,float fractionOfB);
-float RangeMapFloat(const float inStart,const float inEnd,const float outStart,const float outEnd, const float inValue);
-Vec3 RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 inValue );
-Vec2 RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue );
-float ClampFloat(float inMin,float inMax,float inValue);
-float temClampFloat(float inValue, float inMin, float inMax);
-float ClampZeroToOne(float value);
-float Round(float value);
-int ClampInt( int inMin, int inMax, int inValue );
-int RoundDownToInt(float value);
-int RountToNearestInt(float value); 
-int GetIntFromText(const char* text);
-float GetFloatFromText(const char* text);
+float		Interpolate(float a,float b,float fractionOfB);
+float		RangeMapFloat(const float inStart,const float inEnd,const float outStart,const float outEnd, const float inValue);
+Vec3		RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 inValue );
+Vec2		RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue );
+Vec2		RangeMapPointFromBoxToBox( AABB2 inBox, AABB2 outBox, Vec2 inPoint );
+Polygon2	RangeMapPolygonFromBoxToBox( AABB2 inBox, AABB2 outBox, Polygon2 inPolygon );
+
+int			ClampInt( int inMin, int inMax, int inValue );
+int			RoundDownToInt(float value);
+int			RountToNearestInt(float value); 
+int			GetIntFromText(const char* text);
+float		ClampFloat(float inMin,float inMax,float inValue);
+float		temClampFloat(float inValue, float inMin, float inMax);
+float		ClampZeroToOne(float value);
+float		Round(float value);
+float		GetFloatFromText(const char* text);
 
 //
 // product

@@ -2,11 +2,12 @@
 #include <math.h>
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/Mat44.hpp"
+#include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/Vec2.hpp"
 #include "Engine/Math/Vec3.hpp"
-#include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/OBB2.hpp"
 #include "Engine/Math/AABB2.hpp"
+#include "Engine/Math/Polygon2.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/StringUtils.hpp"
@@ -102,6 +103,26 @@ Vec2 RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 ou
 	result.x = RangeMapFloat( inStart, inEnd, outStart.x, outEnd.x, inValue );
 	result.y = RangeMapFloat( inStart, inEnd, outStart.y, outEnd.y, inValue );
 	return result;
+}
+
+Vec2 RangeMapPointFromBoxToBox( AABB2 inBox, AABB2 outBox, Vec2 inPoint )
+{
+	Vec2 uvPoint = inBox.GetUVForPoint( inPoint );
+	return outBox.GetPointAtUV( uvPoint );
+}
+
+Polygon2 RangeMapPolygonFromBoxToBox( AABB2 inBox, AABB2 outBox, Polygon2 inPolygon )
+{
+	std::vector<Vec2> inPolyPoints;
+	std::vector<Vec2> outPolyPoints;
+	
+	inPolygon.GetAllVerticesInWorld( inPolyPoints );
+	for( int i = 0; i < inPolyPoints.size(); i++ ) {
+		Vec2 outPoint = RangeMapPointFromBoxToBox( inBox, outBox, inPolyPoints[i] );
+		outPolyPoints.push_back( outPoint );
+	}
+
+	return Polygon2( outPolyPoints );
 }
 
 float ClampFloat( float inMin, float inMax, float inValue )

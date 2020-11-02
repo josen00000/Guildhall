@@ -41,6 +41,8 @@ enum CameraFrameState : unsigned int {
 
 enum SplitScreenState : unsigned int {
 	NO_SPLIT_SCREEN = 0,
+	AXIS_ALIGNED_SPLIT,
+	VORONOI_SPLIT,
 	NUM_OF_SPLIT_SCREEN_STATE,
 };
 
@@ -62,6 +64,7 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	void Update( float deltaSeconds );
+	void RenderGame();
 	void UpdateControllers( float deltaSeconds );
 	void UpdateSplitScreenEffects( float deltaSeconds );
 	void UpdateNoSplitScreenEffect( float deltaSeconds );
@@ -71,6 +74,9 @@ public:
 
 	// Accessor
 	bool GetIsDebug() const { return m_isdebug; }
+	int GetControllersNum() const { return (int)m_controllers.size(); }
+	float GetTotalFactor() const ; 
+
 	std::string GetCameraWindowStateText() const;
 	std::string GetCameraSnappingStateText() const;
 	std::string GetCameraShakeStateText() const;
@@ -107,7 +113,7 @@ public:
 	void UpdateDebugInfo();
 
 	// Controller
-	void CreateAndPushController( Player* player, Camera* camera );
+	void CreateAndPushController( Player* player );
 	void PrepareRemoveAndDestroyController( Player const* player );
 	void UpdateControllerMultipleFactor( float smoothTime );
 	int GetValidPlayerNum();

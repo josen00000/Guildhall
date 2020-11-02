@@ -4,14 +4,18 @@
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 
-extern Game* g_theGame;
+extern Game*			g_theGame;
+extern Camera*			g_gameCamera;
+extern RenderContext*	g_theRenderer;
 
 void CameraSystem::Startup()
 {
 	m_controllers.reserve( 4 );
 	m_rng = new RandomNumberGenerator( 1 );
+	m_noSplitCamera = g_gameCamera;
 }
 
 void CameraSystem::Shutdown()
@@ -28,6 +32,7 @@ void CameraSystem::BeginFrame()
 void CameraSystem::EndFrame()
 {
 	for( int i = 0; i < m_controllers.size(); i++ ) {
+		m_controllers[i]->EndFrame();
 		if( m_controllers[i]->m_player->GetAliveState() == READY_TO_DELETE_CONTROLLER ) {
 			m_controllers[i]->m_player->SetAliveState( AliveState::READY_TO_DELETE_PLAYER );
 			delete m_controllers[i];
@@ -44,6 +49,31 @@ void CameraSystem::Update( float deltaSeconds )
 	UpdateControllerCameras();
 	UpdateDebugInfo();
 
+}
+
+void CameraSystem::RenderGame()
+{
+	switch( m_splitScreenState )
+	{
+	case NO_SPLIT_SCREEN:
+		if( m_noSplitCamera == nullptr ) {
+			m_noSplitCamera = g_theGame->m_gameCamera;
+		}
+		m_noSplitCamera->EnableClearColor( Rgba8::DARK_GRAY );
+		g_theRenderer->BeginCamera( m_noSplitCamera );
+		g_theGame->RenderGame();
+		g_theRenderer->EndCamera();
+		break;
+	case AXIS_ALIGNED_SPLIT:
+		for( int i = 0; i < m_controllers.size(); i++ ) {
+			m_controllers[i]->Render();
+		}
+		break;
+	default:
+		break;
+	}
+
+	//g_gameCamera->EnableClearColor( Rgba8::DARK_GRAY );
 }
 
 void CameraSystem::UpdateControllers( float deltaSeconds )
@@ -68,6 +98,7 @@ void CameraSystem::UpdateSplitScreenEffects( float deltaSeconds )
 
 void CameraSystem::UpdateNoSplitScreenEffect( float deltaSeconds )
 {
+	UNUSED (deltaSeconds);
 	if( m_controllers.size() == 0 ){ return; }
 	std::vector<CameraController*> notInsideControllers;
 	static int zoomRecoverWaitFrames = 0;
@@ -90,34 +121,27 @@ void CameraSystem::UpdateControllerCameras()
 {
 	if( m_controllers.size() == 0 ){ return; }
 
-	if( m_splitScreenState == NO_SPLIT_SCREEN && m_controllers.size() > 1 ) {
+	if( m_splitScreenState == NO_SPLIT_SCREEN ) {
 		if( !m_noSplitCamera ) {
 			m_noSplitCamera = g_theGame->m_gameCamera;
 		}
-		m_goalCameraPos = Vec2::ZERO;
 
-		if( m_controllers.size() == 1 ) {
-			m_goalCameraPos = m_controllers[0]->GetSmoothedGoalPos();
+		m_goalCameraPos = Vec2::ZERO;
+		float totalFactor = GetTotalFactor();
+
+		for( int i = 0; i < m_controllers.size(); i++ ) {
+			Vec2 smoothedPos = m_controllers[i]->GetSmoothedGoalPos();
+			m_goalCameraPos += ( m_controllers[i]->GetSmoothedGoalPos() * m_controllers[i]->GetCurrentMultipleFactor() );
 		}
-		else {
-			float totalFactor = 0.f;
-			for( int i = 0; i < m_controllers.size(); i++ ) {
-				totalFactor += m_controllers[i]->GetCurrentMultipleFactor();
-			}
-			for( int i = 0; i < m_controllers.size(); i++ ) {
-				Vec2 smoothedPos = m_controllers[i]->GetSmoothedGoalPos();
-				float multipleFactor = m_controllers[i]->GetCurrentMultipleFactor();
-				m_goalCameraPos += ( m_controllers[i]->GetSmoothedGoalPos() * m_controllers[i]->GetCurrentMultipleFactor() );
-			}
-			m_goalCameraPos = m_goalCameraPos / totalFactor; 
-		}
+		
+		m_goalCameraPos = m_goalCameraPos / totalFactor; 
 		m_noSplitCamera->SetPosition2D( m_goalCameraPos );
 	}
-	else {
-		for( int i = 0; i < m_controllers.size(); i++ ) {
-			m_controllers[i]->UpdateCameraPos();
-		}
+	
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		m_controllers[i]->UpdateCameraPos();
 	}
+	
 }
 
 void CameraSystem::DebugRender()
@@ -130,6 +154,15 @@ void CameraSystem::DebugRenderControllers()
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 		m_controllers[i]->DebugRender();
 	}
+}
+
+float CameraSystem::GetTotalFactor() const
+{
+	float totalFactor = 0.f;
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		totalFactor += m_controllers[i]->GetCurrentMultipleFactor();
+	}
+	return totalFactor;
 }
 
 std::string CameraSystem::GetCameraWindowStateText() const
@@ -214,6 +247,8 @@ std::string CameraSystem::GetSplitScreenStateText() const
 	{
 	case NO_SPLIT_SCREEN:
 		return result + std::string( "No split screen" );
+	case AXIS_ALIGNED_SPLIT:
+		return result + std::string( "axis aligned split screen" );
 	case NUM_OF_SPLIT_SCREEN_STATE:
 		return result + std::string( "Num of split screen" );
 	}
@@ -316,13 +351,12 @@ void CameraSystem::UpdateDebugInfo()
 	}
 }
 
-void CameraSystem::CreateAndPushController( Player* player, Camera* camera )
+void CameraSystem::CreateAndPushController( Player* player )
 {
-	CameraController* tempCamController = new CameraController( this, player, camera );
+	Camera* tempCamera = Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	CameraController* tempCamController = new CameraController( this, player, tempCamera );
 	tempCamController->SetCameraWindowSize( Vec2( 12, 8 ) );
-	if( m_controllers.size() == 0 ){
-		camera->SetPosition( player->GetPosition() );
-	}
+	tempCamera->SetPosition( player->GetPosition() );
 	m_controllers.push_back( tempCamController );
 	float smoothTime = 2.f;
 	if( m_controllers.size() == 1 ){

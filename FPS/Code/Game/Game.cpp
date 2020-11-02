@@ -22,6 +22,7 @@
 #include "Engine/Renderer/Material.hpp"
 #include "Engine/Renderer/Sampler.hpp"
 #include "Engine/Core/Delegate.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 
 extern App*				g_theApp;
@@ -112,8 +113,8 @@ void Game::Shutdown()
 }
 
 void Game::RunFrame( float deltaSeconds )
-{
-	Update( deltaSeconds );
+{Update
+	( deltaSeconds );
 }
 
 void Game::Reset()
@@ -238,7 +239,7 @@ void Game::CreateDebugScreen()
 {
 	float deltaHeight = 3.f;
 	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f ), Vec2::ZERO, 3.f, Rgba8::WHITE, "Ambient light intensity: %.2f. [9,0]", m_ambientLightIntensity );
-	std::string attenuationText = "Attenuation: " + m_diffuseAttenuation.GetText();
+	std::string attenuationText = "Attenuation: " + m_diffuseAttenuation.ToString();
 	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Diffuse Attenuation: %.2f, %.2f, %.2f ", m_diffuseAttenuation.x, m_diffuseAttenuation.y, m_diffuseAttenuation.z );
 	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 2 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Specular Attenuation: %.2f, %.2f, %.2f ", m_specularAttenuation.x, m_specularAttenuation.y, m_specularAttenuation.z );
 	DebugAddScreenTextf( Vec4( 0.f, 1.f, 5.f, -5.f - deltaHeight * 3 ), Vec2::ZERO, 3.f, Rgba8::WHITE ,"Light intensity: %.2f. [-,+] ", m_lightIntensity );
@@ -332,7 +333,7 @@ void Game::HandleDebugKeyboardInput( float deltaSeconds )
 	}
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_8 ) ) {
 		Vec3 cameraPos = m_gameCamera->GetPosition();
-		std::string lightStr = "light pos is " + cameraPos.GetText();
+		std::string lightStr = "light pos is " + cameraPos.ToString();
 		DebugAddWorldText( trans, Vec2( 0.5f, 0.5f ), Rgba8::RED, Rgba8::BLACK, debugTime * 2, DEBUG_RENDER_XRAY, lightStr );
 	}
 	
@@ -507,9 +508,12 @@ void Game::HandleCameraMovement( float deltaSeconds )
 
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
 	Vec3 rotation = Vec3( -mouseMove.y, 0.f, -mouseMove.x ) * coe * 15;
-	m_gameCamera->UpdateCameraRotation( rotation );
+	//m_gameCamera->UpdateCameraRotation( rotation );
+	m_gameCamera->UpdateCameraPitch( rotation.x );
+	m_gameCamera->UpdateCameraRoll( rotation.y );
+	m_gameCamera->UpdateCameraYaw( rotation.z );
 	
-	Mat44 rotationMatrix = m_gameCamera->m_transform.GetRotationMatrix( PITCH_ROLL_YAW_ORDER );
+	Mat44 rotationMatrix = m_gameCamera->m_transform.GetRotationMatrix();
 	float temY = movement.y;
 	movement.y = 0.0f;
 	Vec3 cameraPos = m_gameCamera->GetPosition();
@@ -613,43 +617,45 @@ void Game::Render() const
 
 	DebugRenderWorldToCamera( m_gameCamera );
 	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
+	
 	// image effect
+	
 	// sd a09
-// 	if( m_isUsingGrayEffect ) {
-// 		g_grayBuffer->Update( &m_colorData, sizeof(Mat44), sizeof(Mat44) );
-// 		//g_theRenderer->BindUniformBuffer( 6, g_grayBuffer);
-// 		//g_theRenderer->SetMaterialBuffer( g_grayBuffer );
-// 		TestImageEffect( grayScaleTex, colorTarget, m_grayShader, g_grayBuffer );
-// 	}
-// 	if( m_isUsingBloomEffect ) {
-// 		
-// 		float data[4];
-// 		data[0] = (float)bloomTarget->GetTexelSize().x;
-// 		data[1] = (float)bloomTarget->GetTexelSize().y;
-// 		data[2] = 0.f;
-// 		data[3] = 0.f;
-// 
-// 		g_bloomBuffer->Update( &data, sizeof(ColorData), sizeof(ColorData) );
-// 		g_theRenderer->SetMaterialBuffer( g_bloomBuffer );
-// 		TestBloomImageEffect( bloomTex, colorTarget, bloomTarget, m_bloomShader, g_bloomBuffer );
-// 	}
-// 	//TestImageEffect( tempRT );
-// 
-// 	//GUARANTEE_OR_DIE( g_theRenderer->m_totalRenderTargetMade < 10, "leaking " );
-// 	
-// 	// setup camera 
-// 	// bind shader for effect
-// 	// render full screen image
-// 	
-// 	if( m_isUsingBloomEffect ) {
-// 		g_theRenderer->CopyTexture( backBuffer, bloomTex );
-// 	}
-// 	else if( m_isUsingGrayEffect ) {
-// 		g_theRenderer->CopyTexture( backBuffer, grayScaleTex );
-// 	}
-// 	else {
-// 		g_theRenderer->CopyTexture( backBuffer, colorTarget );
-// 	}
+	if( m_isUsingGrayEffect ) {
+		g_grayBuffer->Update( &m_colorData, sizeof(Mat44), sizeof(Mat44) );
+		//g_theRenderer->BindUniformBuffer( 6, g_grayBuffer);
+		//g_theRenderer->SetMaterialBuffer( g_grayBuffer );
+		TestImageEffect( grayScaleTex, colorTarget, m_grayShader, g_grayBuffer );
+	}
+	if( m_isUsingBloomEffect ) {
+		
+		float data[4];
+		data[0] = (float)bloomTarget->GetWidth();
+		data[1] = (float)bloomTarget->GetHeight();
+		data[2] = 0.f;
+		data[3] = 0.f;
+
+		g_bloomBuffer->Update( &data, sizeof(ColorData), sizeof(ColorData) );
+		g_theRenderer->SetMaterialBuffer( g_bloomBuffer );
+		TestBloomImageEffect( bloomTex, colorTarget, bloomTarget, m_bloomShader, g_bloomBuffer );
+	}
+	//TestImageEffect( tempRT );
+
+	//GUARANTEE_OR_DIE( g_theRenderer->m_totalRenderTargetMade < 10, "leaking " );
+	
+	// setup camera 
+	// bind shader for effect
+	// render full screen image
+	
+	if( m_isUsingBloomEffect ) {
+		g_theRenderer->CopyTexture( backBuffer, bloomTex );
+	}
+	else if( m_isUsingGrayEffect ) {
+		g_theRenderer->CopyTexture( backBuffer, grayScaleTex );
+	}
+	else {
+		g_theRenderer->CopyTexture( backBuffer, colorTarget );
+	}
 
 	g_theRenderer->ReleaseRenderTarget( colorTarget );
 	g_theRenderer->ReleaseRenderTarget( normalTarget );
@@ -1103,4 +1109,5 @@ bool LightCommandSetLightColor( EventArgs& args )
 bool MapCommandLoadMap( EventArgs& args )
 {
 	std::string mapName = args.GetValue( std::to_string( 0 ), "" );
+	return true;
 }

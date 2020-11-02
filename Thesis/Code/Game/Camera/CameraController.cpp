@@ -3,15 +3,20 @@
 #include "Game/Game.hpp"
 #include "Game/Player.hpp"
 #include "Game/Camera/CameraSystem.hpp"
+
 #include "Engine/Core/Time/Timer.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
+#include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 
+#include <chrono>
+
 extern RenderContext*	g_theRenderer;
+extern Camera*			g_gameCamera;
 extern Game*			g_theGame;
 
 
@@ -21,6 +26,11 @@ CameraController::CameraController( CameraSystem* owner, Player* player, Camera*
 	,m_camera( camera )
 {
 	m_timer = new Timer();
+	m_splitCamera = new Camera();
+	m_splitCamera->EnableClearColor( Rgba8::BLACK );
+	m_splitBuffer = new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_boxShader		= g_theRenderer->GetOrCreateShader( "data/Shader/boxSplit.hlsl" );
+	m_voronoiShader = g_theRenderer->GetOrCreateShader( "data/Shader/voronoiSplit.hlsl" );
 }
 
 CameraController::~CameraController()
@@ -28,6 +38,8 @@ CameraController::~CameraController()
 	// leave map delete player
 	// leave camera to future
 	delete m_timer;
+	delete m_boxShader;
+	delete m_voronoiShader;
 }
 
 void CameraController::Update( float deltaSeconds )
@@ -48,6 +60,29 @@ void CameraController::Update( float deltaSeconds )
 // 	if( m_isDebug ) {
 // 		DebugCameraInfo();
 // 	}
+}
+
+void CameraController::Render()
+{
+	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
+	Texture* colorTarget = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	g_theRenderer->BeginCamera( m_camera );
+	m_camera->SetColorTarget( colorTarget );
+	//g_theRenderer->SetDiffuseTexture( m_stencilTexture );
+	g_theGame->RenderGame();
+	g_theRenderer->EndCamera();
+
+	if( m_owner->GetSplitScreenState() != NO_SPLIT_SCREEN ) {
+		UpdateStencilTexture( colorTarget );
+		g_theRenderer->CopyTexture( backBuffer, m_stencilTexture );
+	}
+
+	g_theRenderer->ReleaseRenderTarget( colorTarget );
+	g_theRenderer->ReleaseRenderTarget( m_stencilTexture );
+}
+
+void CameraController::EndFrame()
+{	
 }
 
 void CameraController::DebugRender()
@@ -71,7 +106,8 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	Vec2 cameraPos		= m_camera->GetPosition();
 	Vec2 cameraGoalPos	= m_goalCameraPos;
 	Strings debugStrings;
-	float currentFactorSeconds = m_factorStableSeconds - m_timer->GetSecondsRemaining();
+	float currentFactorSeconds = m_factorStableSeconds - (float)m_timer->GetSecondsRemaining();
+
 
 	std::string playerPosText					= std::string( "Player pos =  " + playerPos.ToString() );
 	std::string cameraPosText					= std::string( "Camera pos = " + cameraPos.ToString() );
@@ -82,7 +118,8 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_goalMultipleFactor ));
 	std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
 	std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
-	std::string testing							= std::to_string( (uint)m_player->GetAliveState() );
+	std::string testing							= std::to_string( m_testDuration.count() );
+
 
 	debugStrings.push_back( playerPosText );
 	debugStrings.push_back( cameraPosText );
@@ -218,6 +255,8 @@ void CameraController::UpdateCameraShake( float deltaSeconds )
 
 void CameraController::UpdateCameraFrame( float deltaSeconds )
 {
+	UNUSED(deltaSeconds);
+
 	Vec2 fwdGoalPos = m_playerPos;
 	Vec2 projectGoalPos = m_playerPos;
 	Vec2 cueGoalPos = m_playerPos;
@@ -305,7 +344,7 @@ void CameraController::UpdateMultipleCameraSettings( float deltaSeconds )
 void CameraController::UpdateMultipleCameraFactor( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
-	float currentFactorSeconds = m_factorStableSeconds - m_timer->GetSecondsRemaining();
+	float currentFactorSeconds = m_factorStableSeconds - (float)m_timer->GetSecondsRemaining();
 	float smoothValue = 0.f;
 	smoothValue = currentFactorSeconds / m_factorStableSeconds;
 	smoothValue = ClampFloat( 0.f, 1.f, smoothValue );
@@ -317,13 +356,128 @@ void CameraController::UpdateMultipleCameraFactor( float deltaSeconds )
 
 	if( m_timer->HasElapsed() ) {
 		m_ismultipleFactorStable = true;
-		float time = m_timer->m_clock->GetTotalSeconds();
+		float time = (float)m_timer->m_clock->GetTotalSeconds();
 		g_theConsole->DebugLogf( "elapsed, player: %d, elapsed: %.2f, start: %.2f, duration: %.2f", m_player->GetPlayerIndex(), time, m_timer->m_startSeconds, m_timer->m_durationSeconds );
 // 		g_theConsole->DebugLogf( "start: %.2f", m_timer->m_startSeconds );
 // 		g_theConsole->DebugLogf( "duration: %.2f", m_timer->m_durationSeconds );
 		if( m_player->GetAliveState() == WAIT_FOR_DELETE ) {
 			m_player->SetAliveState( AliveState::READY_TO_DELETE_CONTROLLER );
 		}
+	}
+}
+
+int CameraController::GetTextureIndexWithScreenCoords( int x, int y, IntVec2 textureSize )
+{
+	y = textureSize.y - 1 - y;
+	return x + ( textureSize.x * y );
+}
+
+IntVec2 CameraController::GetTextureCoordsWithScreenCoords( int x, int y, IntVec2 textureSize )
+{
+	y = textureSize.y - 1 - y;
+	return IntVec2( x, y );
+}
+
+void CameraController::UpdateStencilTexture( Texture* src )
+{
+	//TODO: optmize the time
+	// 1 calculate render area
+	// Create and update stencil texture
+// 	auto start = std::chrono::high_resolution_clock::now();
+// 
+// 	AABB2 quickOutBox = m_screenRenderArea.GetQuickOutBox();
+// 	for( int i = (int)quickOutBox.mins.x - 1; i < (int)quickOutBox.maxs.x + 1; i++ ) {
+// 		for( int j = (int)quickOutBox.mins.y - 1; j < (int)quickOutBox.maxs.y + 1; j++ ) {
+// 			if( m_screenRenderArea.IsPointInside( Vec2( (float)i , (float)j ) ) ) {
+// 				int TextureIndex = GetTextureIndexWithScreenCoords( i, j, bufferSize );
+// 				if( TextureIndex >= m_textureData.size() ){ continue; }
+// 				m_textureData[TextureIndex] = Rgba8::WHITE;
+// 			}
+// 		}
+// 	}
+// 
+// 	m_stencilTexture = g_theRenderer->CreateRenderTargetWithSizeAndData( bufferSize, m_textureData.data() );
+// 	auto stop = std::chrono::high_resolution_clock::now(); 
+// 	m_testDuration = std::chrono::duration_cast<std::chrono::microseconds>( stop - start );
+
+	
+	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
+ 	IntVec2 bufferSize = backBuffer->GetSize();
+	m_stencilTexture = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+
+	switch( m_owner->GetSplitScreenState() )
+	{
+		case AXIS_ALIGNED_SPLIT: {
+ 			AABB2 screenRenderBox  = GetScreenRenderBox( bufferSize ); // render area in client space but not revert y
+			IntVec2 data[4];
+			data[0] = (IntVec2)screenRenderBox.mins;									// left-bottom
+			data[1] = (IntVec2)screenRenderBox.maxs;									// right-top
+		
+
+			data[0] = GetTextureCoordsWithScreenCoords( data[0].x, data[0].y, bufferSize );
+			data[1] = GetTextureCoordsWithScreenCoords( data[1].x, data[1].y, bufferSize );
+
+			m_splitCamera->SetColorTarget( m_stencilTexture );
+			m_splitBuffer->Update( &data, ( sizeof(IntVec2) * 2 ), ( sizeof(IntVec2) * 2 ) );
+			g_theRenderer->BeginCamera( m_splitCamera );
+			g_theRenderer->BindShader( m_boxShader );
+			g_theRenderer->SetMaterialBuffer( m_splitBuffer );
+			g_theRenderer->SetDiffuseTexture( src );
+			g_theRenderer->m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+			g_theRenderer->m_context->Draw( 3, 0 );
+			g_theRenderer->EndCamera();
+		}
+		break;
+	}
+
+
+}
+
+bool CameraController::IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, Polygon2 renderArea, AABB2 quickOutBox )
+{
+ 	Vec2 coords_Vec2 = (Vec2)coords;
+// 	if( !quickOutBox.IsPointInside( coords_Vec2 ) ){ return false; }
+
+	return renderArea.IsPointInside( coords_Vec2 );
+}
+
+AABB2 CameraController::GetScreenRenderBox( IntVec2 size )
+{
+	AABB2 worldRenderBox = GetWorldSpaceRenderBox();
+	AABB2 cameraWorldBox = g_gameCamera->GetWorldBox();
+	AABB2 screenBox = AABB2( Vec2::ZERO, (Vec2)size );
+	Vec2 screenRenderBoxMinUV = cameraWorldBox.GetUVForPoint( worldRenderBox.mins );
+	Vec2 screenRenderBoxMaxUV = cameraWorldBox.GetUVForPoint( worldRenderBox.maxs );
+	Vec2 screenRenderBoxMin	= screenBox.GetPointAtUV( screenRenderBoxMinUV );
+	Vec2 screenRenderBoxMax	= screenBox.GetPointAtUV( screenRenderBoxMaxUV );
+		
+	return  AABB2( screenRenderBoxMin, screenRenderBoxMax );
+}
+
+AABB2 CameraController::GetWorldSpaceRenderBox()
+{
+	Vec2 boxDimension = GetSPlitScreenBoxDimension();
+	return AABB2( m_cameraPos, boxDimension.x, boxDimension.y );
+}
+
+Vec2 CameraController::GetSPlitScreenBoxDimension()
+{
+	int ControllerNum = m_owner->GetControllersNum();
+	float totalFactor = m_owner->GetTotalFactor();
+	float totalWidth = GAME_CAMERA_MAX_X - GAME_CAMERA_MIN_X;
+	float totalHeight = GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y;
+	if( ControllerNum == 1 ) {
+		return Vec2( totalWidth, GAME_CAMERA_MAX_Y - totalHeight );
+	}
+	else if( ControllerNum == 2 ) {
+		float width = totalWidth * ( m_currentMultipleFactor / totalFactor );
+		float height = totalHeight / 2 ;
+		return Vec2( width, height );
+	}
+	else {
+		float width = totalWidth / 2;
+		float height = totalHeight / 2;
+		return Vec2( width, height );
 	}
 }
 

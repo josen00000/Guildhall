@@ -57,7 +57,7 @@ Vec2 PolygonCollider2D::GetClosestPoint( const Vec2& pos ) const
 
 bool PolygonCollider2D::Contains( const Vec2& pos ) const
 {
-	if( m_worldPolygon.Contains( pos ) ) {
+	if( m_worldPolygon.IsPointInside( pos ) ) {
 		return true;
 	}
 	else {

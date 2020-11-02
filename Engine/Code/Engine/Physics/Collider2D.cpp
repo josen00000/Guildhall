@@ -226,8 +226,8 @@ bool PolygonVSPolygonCollisionCheck( const Collider2D* colA, const Collider2D* c
 	
 	std::vector<Vec2> shapeA;
 	std::vector<Vec2> shapeB;
-	polyColA->m_worldPolygon.GetAllVertices( shapeA );
-	polyColB->m_worldPolygon.GetAllVertices( shapeB );
+	polyColA->m_worldPolygon.GetAllVerticesInWorld( shapeA );
+	polyColB->m_worldPolygon.GetAllVerticesInWorld( shapeB );
 
 	if( GJKIntersectCheck2D( Vec2( 1, 0 ), shapeA, shapeB ) ) {
 		return true;
@@ -281,8 +281,8 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 	std::vector<Vec2> shapeB;
 	std::vector<Vec2> simplex;
 	Manifold2D result;
-	polyColA->m_worldPolygon.GetAllVertices( shapeA );
-	polyColB->m_worldPolygon.GetAllVertices( shapeB );
+	polyColA->m_worldPolygon.GetAllVerticesInWorld( shapeA );
+	polyColB->m_worldPolygon.GetAllVerticesInWorld( shapeB );
 
 	GJKIntersectCheck2DAndGetSimplex( Vec2( 1.f, 0.f ), shapeA, shapeB, simplex );
 

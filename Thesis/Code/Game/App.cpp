@@ -111,7 +111,7 @@ void App::Shutdown()
 void App::RunFrame()
 {
 	BeginFrame();
-	Update( Clock::GetMasterDeltaSeconds() );
+	Update( /*Clock::GetMasterDeltaSeconds()*/ 0.016f );
 	Render();
 	EndFrame();
 }
@@ -164,10 +164,7 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
-	g_gameCamera->EnableClearColor( Rgba8::DARK_GRAY );
-	g_theRenderer->BeginCamera( g_gameCamera );
-	g_theGame->RenderGame();
-	g_theRenderer->EndCamera();
+	g_theCameraSystem->RenderGame();
 
 	g_theRenderer->BeginCamera( g_UICamera );
 	g_theGame->RenderUI();

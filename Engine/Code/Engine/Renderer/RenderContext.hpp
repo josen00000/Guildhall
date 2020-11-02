@@ -223,6 +223,7 @@ public:
 	
 	// new for render target
 	Texture* CreateRenderTarget( IntVec2 texSize );
+	Texture* CreateRenderTargetWithSizeAndData( IntVec2 texSize, void* data );
 	void CopyTexture( Texture* dst, Texture* src );
 	void ApplyEffect( Texture* dst, Texture* src, Material* mat );
 	void StartEffect( Texture* dst, Texture* src, Shader* shader, RenderBuffer* ubo );

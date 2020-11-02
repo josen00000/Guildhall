@@ -177,4 +177,15 @@
       <Filter>Data</Filter>
     </Xml>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\..\Run\Data\Shader\MultipleCamera.hlsl">
+      <Filter>Data</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\boxSplit.hlsl">
+      <Filter>Data</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\voronoiSplit.hlsl">
+      <Filter>Data</Filter>
+    </FxCompile>
+  </ItemGroup>
 </Project>

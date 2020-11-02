@@ -37,6 +37,13 @@ AABB2::AABB2( const IntVec2& intMins, const IntVec2& intMaxs )
 	maxs.y = (float)intMaxs.y;
 }
 
+AABB2::AABB2( Vec2 const& center, float width, float height )
+{
+	Vec2 halfDimension = Vec2( ( width / 2 ), ( height / 2 ) );
+	mins = center - halfDimension;
+	maxs = center + halfDimension;
+}
+
 bool AABB2::IsPointInside( const Vec2& point ) const
 {
 	if(( point.x > mins.x && point.x < maxs.x ) && (point.y > mins.y && point.y < maxs.y )){

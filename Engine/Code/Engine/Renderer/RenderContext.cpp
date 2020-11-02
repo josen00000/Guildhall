@@ -171,7 +171,6 @@ void RenderContext::BeginCamera( Camera* camera, Convention convention/*=X_RIGHT
 	SetDiffuseTexture( nullptr ); //default white texture;
 	SetNormalTexture( nullptr ); //default white texture;
 	BindSampler( nullptr );
-
 }
 
 void RenderContext::BeginCameraViewport( IntVec2 viewPortSize )
@@ -305,7 +304,33 @@ Texture* RenderContext::CreateRenderTarget( IntVec2 texSize )
 
 	Texture* newTexture = new Texture( this, texHandle );
 	return newTexture;
+}
 
+Texture* RenderContext::CreateRenderTargetWithSizeAndData( IntVec2 texSize, void* data )
+{
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width				= texSize.x;
+	desc.Height				= texSize.y;
+	desc.MipLevels			= 1;
+	desc.ArraySize			= 1;
+	desc.Format				= DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count	= 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage				= D3D11_USAGE_DEFAULT; // mip-chains, GPU/DEFAUTE
+	desc.BindFlags			= D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	desc.CPUAccessFlags		= 0;
+	desc.MiscFlags			= 0;
+
+	D3D11_SUBRESOURCE_DATA initialData;
+	initialData.pSysMem = data;
+	initialData.SysMemPitch = texSize.x * 4;
+	initialData.SysMemSlicePitch = 0; // for 3d texture
+
+	ID3D11Texture2D* texHandle = nullptr;
+	m_device->CreateTexture2D( &desc, &initialData, &texHandle );
+
+	Texture* newTexture = new Texture( this, texHandle );
+	return newTexture;
 }
 
 void RenderContext::CopyTexture( Texture* dst, Texture* src )
