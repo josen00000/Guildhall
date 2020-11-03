@@ -93,9 +93,9 @@ namespace UnitTest
 			Logger::WriteMessage( "Starting UDP test" );
 			UDPSocket socket1 = UDPSocket();
 			UDPSocket socket2 = UDPSocket();
-			socket1.CreateUDPSocket( "48000", "192.168.1.206" );
+			socket1.CreateUDPSocket( "48000", "127.0.0.1" );
 			socket1.BindSocket( 48001 );
-			socket2.CreateUDPSocket( "48001", "192.168.1.206" );
+			socket2.CreateUDPSocket( "48001", "127.0.0.1" );
 			socket2.BindSocket( 48000);
 
 			TextArray readmessages1;
