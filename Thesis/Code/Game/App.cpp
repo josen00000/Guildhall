@@ -111,7 +111,8 @@ void App::Shutdown()
 void App::RunFrame()
 {
 	BeginFrame();
-	Update( /*Clock::GetMasterDeltaSeconds()*/ 0.016f );
+	/*Update( / *Clock::GetMasterDeltaSeconds()* / / *0.016f* / );*/
+	Update( Clock::GetMasterDeltaSeconds() );
 	Render();
 	EndFrame();
 }
@@ -164,7 +165,7 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
-	g_theCameraSystem->RenderGame();
+	g_theCameraSystem->Render();
 
 	g_theRenderer->BeginCamera( g_UICamera );
 	g_theGame->RenderUI();

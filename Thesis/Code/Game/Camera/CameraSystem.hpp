@@ -64,7 +64,7 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	void Update( float deltaSeconds );
-	void RenderGame();
+	void Render();
 	void UpdateControllers( float deltaSeconds );
 	void UpdateSplitScreenEffects( float deltaSeconds );
 	void UpdateNoSplitScreenEffect( float deltaSeconds );
@@ -155,7 +155,8 @@ private:
 	Vec2  m_goalCameraPos		= Vec2::ZERO;
 	AABB2 m_goalCameraWindow	= AABB2();
 
-	Camera* m_noSplitCamera	= nullptr;
-	Map*	m_map			= nullptr;
+	Camera* m_noSplitCamera			= nullptr;
+	Shader* m_multipleCameraShader	= nullptr;
+	Map*	m_map					= nullptr;
 	//Timer*
 };

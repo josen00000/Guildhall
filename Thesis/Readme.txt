@@ -38,7 +38,8 @@ Operations:
 		Projectile frame: camera always shows where player facing to
 		Cue frame: Camera always shows where item are (if item exist)
 	F6 change camera split screen state:
-		N/A currently
+		No split screen: use one camera with no split-screen strategy
+		Axis aligned split screen: use multiple cameras and each camera takes a box render area in screen
 	F7 change no split-screen strat
 		No strat: no stratergy for no split-screen state, player can move out of the camera
 		Zoom to fit: When player try to move out of the camera, the camera zoom out to fit the player.
@@ -53,3 +54,6 @@ Settings:
 	Enemy and Player share same AI stratergy:
 		Patrol: No player/Enemy close enough, randomly find movable goal pos and move.
 		Shoot:	player/enemy is close enough, stable and shoot towards target with cooldown.
+What's new this milestone:
+	Have split screen and multiple camera rendering!
+	In game, press F6 to change to axis aligned split screen mode and press p to create the player. U can see split-screen effects.

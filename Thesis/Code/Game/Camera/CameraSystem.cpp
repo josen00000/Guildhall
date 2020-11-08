@@ -16,6 +16,8 @@ void CameraSystem::Startup()
 	m_controllers.reserve( 4 );
 	m_rng = new RandomNumberGenerator( 1 );
 	m_noSplitCamera = g_gameCamera;
+	m_noSplitCamera->EnableClearColor( Rgba8::DARK_GRAY );
+	m_multipleCameraShader = g_theRenderer->GetOrCreateShader( "data/Shader/multipleCamera.hlsl" );
 }
 
 void CameraSystem::Shutdown()
@@ -37,6 +39,9 @@ void CameraSystem::EndFrame()
 			m_controllers[i]->m_player->SetAliveState( AliveState::READY_TO_DELETE_PLAYER );
 			delete m_controllers[i];
 			m_controllers.erase( m_controllers.begin() + i );
+			for( int j = i; j < m_controllers.size(); j++ ) {
+				m_controllers[j]->SetIndex( j );
+			}
 		}
 	}
 }
@@ -51,23 +56,44 @@ void CameraSystem::Update( float deltaSeconds )
 
 }
 
-void CameraSystem::RenderGame()
+void CameraSystem::Render()
 {
-	switch( m_splitScreenState )
-	{
-	case NO_SPLIT_SCREEN:
+	if( m_splitScreenState == NO_SPLIT_SCREEN ) {
 		if( m_noSplitCamera == nullptr ) {
 			m_noSplitCamera = g_theGame->m_gameCamera;
 		}
-		m_noSplitCamera->EnableClearColor( Rgba8::DARK_GRAY );
 		g_theRenderer->BeginCamera( m_noSplitCamera );
 		g_theGame->RenderGame();
 		g_theRenderer->EndCamera();
-		break;
-	case AXIS_ALIGNED_SPLIT:
+	}
+	else {
+		// split screen and multiple camera
 		for( int i = 0; i < m_controllers.size(); i++ ) {
 			m_controllers[i]->Render();
 		}
+
+		g_theRenderer->BeginCamera( m_noSplitCamera ); 
+		g_theRenderer->BindShader( m_multipleCameraShader );
+		
+		for( int i = 0; i < m_controllers.size(); i++ ) {
+			g_theRenderer->SetDiffuseTexture( m_controllers[i]->GetColorTarget() );
+			g_theRenderer->SetMaterialTexture( m_controllers[i]->GetStencilTexture() );
+			g_theRenderer->SetOffsetBuffer( m_controllers[i]->GetOffsetBuffer(), 0 );
+			g_theRenderer->m_context->Draw( 3, 0 );
+		}
+		g_theRenderer->EndCamera();					   
+
+		for( int i = 0; i < m_controllers.size(); i++ ) {
+			m_controllers[i]->ReleaseRenderTarget();
+		}
+
+	}
+	switch( m_splitScreenState )
+	{
+	case NO_SPLIT_SCREEN:
+		break;
+	case AXIS_ALIGNED_SPLIT:
+
 		break;
 	default:
 		break;
@@ -358,6 +384,7 @@ void CameraSystem::CreateAndPushController( Player* player )
 	tempCamController->SetCameraWindowSize( Vec2( 12, 8 ) );
 	tempCamera->SetPosition( player->GetPosition() );
 	m_controllers.push_back( tempCamController );
+	tempCamController->SetIndex( m_controllers.size() - 1 );
 	float smoothTime = 2.f;
 	if( m_controllers.size() == 1 ){
 		smoothTime = 0.1f;

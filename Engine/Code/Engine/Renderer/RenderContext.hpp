@@ -59,6 +59,10 @@ enum BufferSlot {
 	UBO_SCENE_DATA_SLOT,
 	UBO_MATERIAL_SLOT,
 	UBO_DISSOLVE_SLOT,
+	UBO_OFFSET_SLOT1,
+	UBO_OFFSET_SLOT2,
+	UBO_OFFSET_SLOT3,
+	UBO_OFFSET_SLOT4,
 };
 
 enum TextureSlot: uint{
@@ -259,6 +263,7 @@ public:
 	void SetSpecularPow( float pow );
 	void SetModelAndSpecular( Mat44 model, float factor, float pow );
 	void SetMaterialBuffer( RenderBuffer* ubo );
+	void SetOffsetBuffer( RenderBuffer* ubo, int index );
 	void SetDissolveData( Vec3 startColor, Vec3 endColor, float width, float amount );
 	void SetTintColor( Vec4 color );
 	void SetTintColor( Rgba8 color );

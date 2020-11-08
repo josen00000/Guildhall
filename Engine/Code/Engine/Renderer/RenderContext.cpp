@@ -299,6 +299,7 @@ Texture* RenderContext::CreateRenderTarget( IntVec2 texSize )
 	desc.CPUAccessFlags		= 0;
 	desc.MiscFlags			= 0;
 
+
 	ID3D11Texture2D* texHandle = nullptr;
 	m_device->CreateTexture2D( &desc, nullptr, &texHandle );
 
@@ -386,6 +387,7 @@ Texture* RenderContext::AcquireRenderTargetMatching( Texture* texture )
 
 void RenderContext::ReleaseRenderTarget( Texture* tex )
 {
+	if( tex == nullptr ){ return; }
 	m_renderTargetPool.push_back( tex );
 }
 
@@ -669,6 +671,11 @@ void RenderContext::SetMaterialBuffer( RenderBuffer* ubo )
 	BindUniformBuffer( UBO_MATERIAL_SLOT, ubo );
 }
 
+void RenderContext::SetOffsetBuffer( RenderBuffer* ubo, int index )
+{
+	BindUniformBuffer( UBO_OFFSET_SLOT1 + index, ubo );
+}
+
 void RenderContext::SetDissolveData( Vec3 startColor, Vec3 endColor, float width, float amount )
 {
 	m_dissolveData.burnStartColor = startColor;
@@ -916,8 +923,8 @@ void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
 		// triangle2
 		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
-		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( 0, 1 ) ),
 		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
+		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( 0, 1 ) ),
 	};
 	DrawVertexArray( 6, temAABB2 );
 }

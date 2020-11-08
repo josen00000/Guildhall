@@ -20,17 +20,29 @@ extern Camera*			g_gameCamera;
 extern Game*			g_theGame;
 
 
+Texture* CameraController::s_stencilTexture = nullptr;
+
+
 CameraController::CameraController( CameraSystem* owner, Player* player, Camera* camera )
 	:m_owner( owner )
 	,m_player( player )
 	,m_camera( camera )
 {
 	m_timer = new Timer();
-	m_splitCamera = new Camera();
+	m_splitCamera = Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
 	m_splitCamera->EnableClearColor( Rgba8::BLACK );
-	m_splitBuffer = new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_camera->EnableClearColor( Rgba8::GRAY );
+	m_offsetBuffer = new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	m_boxShader		= g_theRenderer->GetOrCreateShader( "data/Shader/boxSplit.hlsl" );
 	m_voronoiShader = g_theRenderer->GetOrCreateShader( "data/Shader/voronoiSplit.hlsl" );
+
+	
+	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
+	int bufferSizeNum = backBuffer->GetHeight() * backBuffer->GetWidth();
+	std::vector<Rgba8> stencilData( bufferSizeNum, Rgba8::BLACK );
+	if( s_stencilTexture == nullptr ) {
+		s_stencilTexture = g_theRenderer->CreateRenderTargetWithSizeAndData( backBuffer->GetSize(), stencilData.data() );
+	}
 }
 
 CameraController::~CameraController()
@@ -38,8 +50,10 @@ CameraController::~CameraController()
 	// leave map delete player
 	// leave camera to future
 	delete m_timer;
-	delete m_boxShader;
-	delete m_voronoiShader;
+	SELF_SAFE_RELEASE(m_splitCamera);
+	SELF_SAFE_RELEASE(m_offsetBuffer);
+
+
 }
 
 void CameraController::Update( float deltaSeconds )
@@ -65,20 +79,19 @@ void CameraController::Update( float deltaSeconds )
 void CameraController::Render()
 {
 	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
-	Texture* colorTarget = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	m_colorTarget = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+
+	UpdateStencilTexture();
+	UpdateMultipleCameraOffset();
+	std::vector<Vec2> data;
+	data.push_back( m_multipleCameraRenderOffset );
+	data.push_back( Vec2::ZERO );
+	m_offsetBuffer->Update( data.data(), sizeof(Vec2) * 2, sizeof(Vec2) * 2 );
+	Vec2 offset = GetMultipleCameraOffset();
+	m_camera->SetColorTarget( m_colorTarget );
 	g_theRenderer->BeginCamera( m_camera );
-	m_camera->SetColorTarget( colorTarget );
-	//g_theRenderer->SetDiffuseTexture( m_stencilTexture );
 	g_theGame->RenderGame();
 	g_theRenderer->EndCamera();
-
-	if( m_owner->GetSplitScreenState() != NO_SPLIT_SCREEN ) {
-		UpdateStencilTexture( colorTarget );
-		g_theRenderer->CopyTexture( backBuffer, m_stencilTexture );
-	}
-
-	g_theRenderer->ReleaseRenderTarget( colorTarget );
-	g_theRenderer->ReleaseRenderTarget( m_stencilTexture );
 }
 
 void CameraController::EndFrame()
@@ -141,6 +154,11 @@ Vec2 CameraController::GetCuePos() const
 	return currentMap->GetCuePos();
 }
 
+void CameraController::SetIndex( int index )
+{
+	m_index = index;
+}
+
 void CameraController::SetIsDebug( bool isDebug )
 {
 	m_isDebug = isDebug;
@@ -188,6 +206,8 @@ void CameraController::UpdateCameraWindow( float deltaSeconds )
 	switch( m_owner->GetCameraWindowState() )
 	{
 	case NO_CAMERA_WINDOW:
+
+
 		// Camera Pos Lock
 		m_cameraWindowCenterPos = m_playerPos;
 		m_cameraWindow.SetCenter( m_cameraWindowCenterPos );
@@ -378,59 +398,85 @@ IntVec2 CameraController::GetTextureCoordsWithScreenCoords( int x, int y, IntVec
 	return IntVec2( x, y );
 }
 
-void CameraController::UpdateStencilTexture( Texture* src )
+void CameraController::UpdateStencilTexture()
 {
-	//TODO: optmize the time
-	// 1 calculate render area
-	// Create and update stencil texture
-// 	auto start = std::chrono::high_resolution_clock::now();
-// 
-// 	AABB2 quickOutBox = m_screenRenderArea.GetQuickOutBox();
-// 	for( int i = (int)quickOutBox.mins.x - 1; i < (int)quickOutBox.maxs.x + 1; i++ ) {
-// 		for( int j = (int)quickOutBox.mins.y - 1; j < (int)quickOutBox.maxs.y + 1; j++ ) {
-// 			if( m_screenRenderArea.IsPointInside( Vec2( (float)i , (float)j ) ) ) {
-// 				int TextureIndex = GetTextureIndexWithScreenCoords( i, j, bufferSize );
-// 				if( TextureIndex >= m_textureData.size() ){ continue; }
-// 				m_textureData[TextureIndex] = Rgba8::WHITE;
-// 			}
-// 		}
-// 	}
-// 
-// 	m_stencilTexture = g_theRenderer->CreateRenderTargetWithSizeAndData( bufferSize, m_textureData.data() );
-// 	auto stop = std::chrono::high_resolution_clock::now(); 
-// 	m_testDuration = std::chrono::duration_cast<std::chrono::microseconds>( stop - start );
-
-	
+	if( m_owner->GetSplitScreenState() == NO_SPLIT_SCREEN ) { return; }
 	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
  	IntVec2 bufferSize = backBuffer->GetSize();
 	m_stencilTexture = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
+	g_theRenderer->CopyTexture( m_stencilTexture, s_stencilTexture );
 
 	switch( m_owner->GetSplitScreenState() )
 	{
 		case AXIS_ALIGNED_SPLIT: {
- 			AABB2 screenRenderBox  = GetScreenRenderBox( bufferSize ); // render area in client space but not revert y
-			IntVec2 data[4];
-			data[0] = (IntVec2)screenRenderBox.mins;									// left-bottom
-			data[1] = (IntVec2)screenRenderBox.maxs;									// right-top
-		
+ 			AABB2 worldRenderBox  = GetWorldSpaceRenderBox(); // render area in client space but not revert y
+			
 
-			data[0] = GetTextureCoordsWithScreenCoords( data[0].x, data[0].y, bufferSize );
-			data[1] = GetTextureCoordsWithScreenCoords( data[1].x, data[1].y, bufferSize );
-
-			m_splitCamera->SetColorTarget( m_stencilTexture );
-			m_splitBuffer->Update( &data, ( sizeof(IntVec2) * 2 ), ( sizeof(IntVec2) * 2 ) );
-			g_theRenderer->BeginCamera( m_splitCamera );
+ 			m_camera->SetColorTarget( m_stencilTexture );
+			g_theRenderer->BeginCamera( m_camera );
 			g_theRenderer->BindShader( m_boxShader );
-			g_theRenderer->SetMaterialBuffer( m_splitBuffer );
-			g_theRenderer->SetDiffuseTexture( src );
-			g_theRenderer->m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-			g_theRenderer->m_context->Draw( 3, 0 );
+			g_theRenderer->DrawAABB2D( worldRenderBox, Rgba8::RED );
 			g_theRenderer->EndCamera();
+			
 		}
 		break;
 	}
+}
 
+void CameraController::UpdateMultipleCameraOffset()
+{
+	if( m_owner->GetSplitScreenState() == NO_SPLIT_SCREEN ) {
+		m_multipleCameraRenderOffset = Vec2::ZERO;
+		return;
+	}
 
+	Texture* backbuffer = g_theRenderer->GetSwapChainBackBuffer();
+	Vec2 bufferSize = (Vec2)backbuffer->GetSize();
+	switch( m_owner->GetSplitScreenState() )
+	{
+		case AXIS_ALIGNED_SPLIT: {
+			// controller num
+			int controllerNum = m_owner->GetControllersNum();
+			if( controllerNum == 1 ) {
+				m_multipleCameraRenderOffset = Vec2::ZERO;
+				return;
+			}
+			else if( controllerNum == 2 ) {
+				if( m_index == 0 ) {
+					m_multipleCameraRenderOffset = Vec2( -0.5f, 0.f );
+				}
+				else if( m_index == 1 ) {
+					m_multipleCameraRenderOffset = Vec2( 0.5f, 0.f );
+				}
+				else {
+					ERROR_RECOVERABLE(" should not exist third controller" );
+				}
+			}
+			else {
+				if( m_index == 0 ) {
+					m_multipleCameraRenderOffset = Vec2( -0.5f, 0.5f );
+				}
+				else if( m_index == 1 ) {
+					m_multipleCameraRenderOffset = Vec2( 0.5f, 0.5f );
+				}
+				else if( m_index == 2 ) {
+					m_multipleCameraRenderOffset = Vec2( -0.5f, -0.5f );
+				}
+				else if( m_index == 3 ) {
+					m_multipleCameraRenderOffset = Vec2( 0.5f, -0.5f );
+				}
+			}
+		}
+		break;
+		default:
+			break;
+	}
+}
+
+void CameraController::ReleaseRenderTarget()
+{
+	g_theRenderer->ReleaseRenderTarget( m_colorTarget );
+	g_theRenderer->ReleaseRenderTarget( m_stencilTexture );
 }
 
 bool CameraController::IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, Polygon2 renderArea, AABB2 quickOutBox )
@@ -467,18 +513,22 @@ Vec2 CameraController::GetSPlitScreenBoxDimension()
 	float totalWidth = GAME_CAMERA_MAX_X - GAME_CAMERA_MIN_X;
 	float totalHeight = GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y;
 	if( ControllerNum == 1 ) {
-		return Vec2( totalWidth, GAME_CAMERA_MAX_Y - totalHeight );
+		return Vec2( totalWidth, totalHeight );
 	}
 	else if( ControllerNum == 2 ) {
 		float width = totalWidth * ( m_currentMultipleFactor / totalFactor );
-		float height = totalHeight / 2 ;
-		return Vec2( width, height );
+		return Vec2( width, totalHeight );
 	}
 	else {
 		float width = totalWidth / 2;
 		float height = totalHeight / 2;
 		return Vec2( width, height );
 	}
+}
+
+Vec2 CameraController::GetMultipleCameraOffset()
+{
+	return Vec2::ZERO;
 }
 
 void CameraController::UpdateCameraPos()

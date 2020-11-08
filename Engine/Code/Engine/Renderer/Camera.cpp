@@ -275,7 +275,7 @@ void Camera::DisableClearStencil()
 void Camera::SetColorTarget( Texture* colorTarget, uint slot )
 {
 	if( slot >= m_colorTargets.size() ) {
-		m_colorTargets.resize( slot +1 );
+		m_colorTargets.resize( slot + 1 );
 	}
 	m_colorTargets[slot] = colorTarget;
 }

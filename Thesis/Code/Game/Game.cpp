@@ -231,7 +231,7 @@ void Game::RenderGameUI() const
 
 void Game::CheckIfExit()
 {
-	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) ) {
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ESC ) || g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_X ) ) {
 		g_theApp->HandleQuitRequested();
 	}
 }
