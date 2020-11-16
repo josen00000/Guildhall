@@ -78,9 +78,7 @@ public:
 
 	void SetCameraPos( Vec3 pos );
 	void SetCameraYaw( float yaw );
-	
-	TCPClient* GetClient() const { return m_testClient; }
-	TCPServer* GetServer() const { return m_testServer; }
+
 
 	Entity* GetPlayer() { return m_player; }
 
@@ -172,10 +170,6 @@ public:
 
 	SpriteSheet* m_viewModelSpriteSheet;
 
-	// Network Test
-	TCPClient* m_testClient = nullptr;
-	TCPServer* m_testServer = nullptr;
-
 private:
 	float m_DebugDeltaSeconds = 0.f;
 };
@@ -197,7 +191,6 @@ void Game::LoadFileDefinition( T t, const char* path )
 // Map Command
 bool MapCommandLoadMap( EventArgs& args );
 bool MapCommandWarp( EventArgs& args );
-bool ConnectTo( EventArgs& args );
 bool SendMessageTest( EventArgs& args );
 bool StartServer( EventArgs& args );
 bool SendData( EventArgs& args );

@@ -23,8 +23,13 @@ public:
 	void SetSendData( const char* data, int dataLen );
 
 	// Accessor
-	std::string GetClientIPAddr( SOCKET clientSocket ); // only able after accept
+	bool IsWaitingClients(){ return !m_waitingClientSockets.empty();}
+	SOCKET GetWaitingClientSocket();
+	SOCKET GetClientSocketWithIPAddress( IPAddress addr );
+	IPAddress GetClientIPAddressWithSocket( SOCKET clientSocket ); // only able after accept
 	std::string GetStringFromData();
+
+	void SendReadyForConnectionMessageToClientWithIPAddress( IPAddress addr, std::string key, Port port );
 
 private:
 	void ReceiveDataFromClient( SOCKET clientSocket );
@@ -43,13 +48,14 @@ private:
 	FD_SET m_listenSet;
 	std::vector<SOCKET> m_listenSockets;
 	std::vector<SOCKET> m_clientSockets;
+	std::queue<SOCKET> m_waitingClientSockets;
+
 
 	DataBuffer m_sendBuf;
 	DataBuffer m_recvBuf;
 	int	m_sendBufLen = 0;
 	bool	m_isSendBufDirty = false;
 	bool	m_isRecvBufDirty = false;
-	//std::vector<>
 	timeval m_timeval = timeval{ 00, 05 };
 };
 

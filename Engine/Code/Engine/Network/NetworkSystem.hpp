@@ -11,10 +11,18 @@ class TCPClient;
 class TCPServer;
 class UDPSocket;
 
+using Port			= std::string;
+using IPAddress		= std::string;
+using GameMessage	= std::string;
+
+using GameInfo = std::pair<IPAddress, GameMessage>;
+
 enum MESSAGE_ID: std::uint16_t {
 	NON_VALID_DATA		= 0,
 	SERVER_LISTENING,
 	TEXT_MESSAGE,
+	CLIENT_REQUEST_CONNECTION,
+	SERVER_READY_FOR_CONNECTION,
 	CLIENT_DISCONNECT,
 	SERVER_DISCONNECT,
 	NUM_OF_MESSAGE_ID
@@ -41,31 +49,46 @@ public:
 	void Update( float deltaSeconds );
 	void EndFrame();
 	void Shutdown();
-	void StartServerWithPort( const char* port );
+	void StartTCPServerWithPort( const char* port );
 
-	void CloseUDPSocket();
+	void CloseUDPSockets();
+	UDPSocket* CreateUDPSocket();
+	void SetUDPSocketTargetPortAndIPAddress( UDPSocket* socket, Port port, IPAddress addr);
+	void SetUDPSocketBindPort( UDPSocket* socket, Port port );
 
 	// Accessor
-	std::string GetReceivedMsg();
+	GameInfo GetReceivedUDPMsg();
+	std::vector<GameInfo> GetAllReceivedUDPMsgs();
+	std::string GetLocalIPAddress();
+	TCPServer* GetTCPServer() { return m_TCPServer; }
+	TCPClient* GetTCPClient(){ return m_TCPClient; }
+	Port GetValidPort();
+	UDPSocket* FindUDPSocketWithLocalPort( Port port );
+	UDPSocket* FindUDPSocketWithTargetIPAddressAndPort( IPAddress addr );
+
 	// mutator
-	void SetSendMsg( std::string msg );
+	void SetSendUDPData( GameInfo info );
 
 
-	TCPClient* CreateClient();
-	TCPServer*	CreateServer();
+	// tcp client
+	TCPServer*	CreateTCPServer();
+	TCPClient* CreateTCPClient();
+	void TCPConnectToServerWithIPAndPort( const char* hostName, const char* portNum );
 
-	static void ReadFromGameAndSendMessage();
-	static void ReceiveMessageAndWriteToGame();
+	static void ReadFromGameAndSendUDPMessage();
+	static void ReceiveUDPMessageAndWriteToGame();
+
 
 public:
-	std::vector<TCPClient*> m_clients;
-	std::vector<TCPServer*> m_servers;
+// 	std::vector<TCPClient*> m_clients;
+// 	std::vector<TCPServer*> m_servers;
 	// temp use
-	TCPClient* m_client;
-	TCPServer* m_server;
-	BlockingQueue <std::string> m_sendQueue{};
-	NonBlockingQueue <std::string> m_receiveQueue{};
-	UDPSocket* m_UDPSocket = nullptr;
+	TCPClient* m_TCPClient;
+	TCPServer* m_TCPServer;
+	std::vector<UDPSocket*> m_UDPSockets;
+	BlockingQueue <GameInfo> m_sendQueue{};
+	NonBlockingQueue <GameInfo> m_receiveQueue{};
+	//UDPSocket* m_UDPSocket = nullptr;
 	std::thread m_readFromGameAndSendThread;
 	std::thread m_receiveAndSendToGameThread;
 

@@ -4,10 +4,13 @@
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
+#include "Game/MultiPlayerGame.hpp"
 #include "Game/Network/PlayerClient.hpp"
 #include "Game/Network/RemoteServer.hpp"
 #include "Game/Network/Server.hpp"
 #include "Game/Network/AuthoritativeServer.hpp"
+#include "Game/SinglePlayerGame.hpp"
+
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/EventSystem.hpp"
@@ -86,7 +89,7 @@ void App::Startup()
 	g_theConsole		= DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
 	g_theConsole->Startup();
 
-	g_theNetworkSystem = new NetworkSystem;
+	g_theNetworkSystem = new NetworkSystem();
 	g_theNetworkSystem->StartUp();
 
 	g_theJobSystem = new JobSystem();
@@ -95,12 +98,12 @@ void App::Startup()
 	// network architecture
 
 	g_theServer = new AuthoritativeServer();
-	g_theGame	= new Game( g_camera, g_UICamera );
+	g_theGame	= new SinglePlayerGame( g_camera, g_UICamera );
 	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP ); // basis currently not use
 	g_convention = X_RIGHT_Y_UP_Z_BACKWARD;
 
-	g_theServer->Startup();
 	g_theGame->Startup();
+	g_theServer->Startup();
 	EnableDebugRendering();
 	g_theInputSystem->SetCursorMode( CURSOR_RELATIVE );
 
@@ -116,9 +119,10 @@ void App::Startup()
 	g_theConsole->AddCommandToCommandList( helpComd, helpComdDesc, helpFuncPtr );
 	g_theConsole->AddCommandToCommandList( quitComd, quitComdDesc, quitFuncPtr );
 
+	// network
 	g_theConsole->AddCommandToCommandList( std::string( "start_mul_server" ), std::string( "start multiplayer server"), StartMultiplayerServer );
 	g_theConsole->AddCommandToCommandList( std::string( "connect_to_mul_server" ), std::string( "connect to multiplayer server"), ConnectToMultiplayerServer );
-
+	
 }
 
 void App::TemplateTesting()
@@ -140,14 +144,14 @@ void App::TemplateTesting()
 
 void App::StringTesting()
 {
-	std::string test1 = "a      b     c d s fffff   eeewwa w wedfasdf    wer  ";
-	std::string test2 = "abcdesf";
-	std::string test3 = "abcdesf     ";
-	std::string test4 = "we are the worldsssss rea   lly  ddd ?";
-	std::string res1 = TrimStringWithOneSpace( test1 );
-	std::string res2 = TrimStringWithOneSpace( test2 );
-	std::string res3 = TrimStringWithOneSpace( test3 );
-	std::string res4 = TrimStringWithOneSpace( test4 );
+// 	std::string test1 = "a      b     c d s fffff   eeewwa w wedfasdf    wer  ";
+// 	std::string test2 = "abcdesf";
+// 	std::string test3 = "abcdesf     ";
+// 	std::string test4 = "we are the worldsssss rea   lly  ddd ?";
+// 	std::string res1 = TrimStringWithOneSpace( test1 );
+// 	std::string res2 = TrimStringWithOneSpace( test2 );
+// 	std::string res3 = TrimStringWithOneSpace( test3 );
+// 	std::string res4 = TrimStringWithOneSpace( test4 );
 	
 	//ObjectReader* test = new ObjectReader( "Data/Model/planet.obj" );
 	//test->LoadObject();
@@ -179,21 +183,22 @@ void App::NamedPropertyTesting()
 
 void App::BlockingQueueTesting()
 {
-	BlockingQueue<int> testQueue{};
-	testQueue.Push( 0 );
-	testQueue.Push( 1 );
-	testQueue.Push( 2 );
-	int a = testQueue.Pop();
-	int b = testQueue.Pop();
-	int c = testQueue.Pop();
+// 	BlockingQueue<int> testQueue{};
+// 	testQueue.Push( 0 );
+// 	testQueue.Push( 1 );
+// 	testQueue.Push( 2 );
+// 	int a = testQueue.Pop();
+// 	int b = testQueue.Pop();
+// 	int c = testQueue.Pop();
 }
 
 void App::HandleNetworkMsg()
 {
-	std::string msg = g_theNetworkSystem->GetReceivedMsg();
-	if( !msg.empty() ) {
-		g_theConsole->DebugLog( msg );
-	}
+	// TODO Move to server
+// 	std::string msg = g_theNetworkSystem->GetReceivedMsg();
+// 	if( !msg.empty() ) {
+// 		g_theConsole->DebugLog( msg );
+// 	}
 }
 
 void App::Shutdown()
@@ -326,13 +331,21 @@ bool QuitCommandEvent( EventArgs& args )
 
 bool ConnectToMultiplayerServer( EventArgs& args )
 {
-	delete g_theServer;
+	std::string targetIPAddr = args.GetValue( std::to_string( 0 ), "" );
+
+
+	delete g_theServer; // also delete the game
 	g_theServer = nullptr;
 	g_theGame = nullptr;
 	
-	g_theGame	= new Game( g_camera, g_UICamera );
+	g_theGame	= new MultiPlayerGame( g_camera, g_UICamera );
 	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP );
-	g_theServer = new RemoteServer();
+	g_theServer = new RemoteServer( g_theGame );
+	RemoteServer* tempServer = dynamic_cast<RemoteServer*>( g_theServer );
+	tempServer->SetTargetIPAddress( targetIPAddr );
+	g_theConsole->DebugLogf( " try connect to server :%s", targetIPAddr.c_str() );
+	/*g_theConsole*/
+	g_theNetworkSystem->TCPConnectToServerWithIPAndPort( targetIPAddr.c_str(), TCP_SERVER_PORT );
 	g_theGame->Startup();
 	g_theServer->Startup();
 	return true;
@@ -340,16 +353,21 @@ bool ConnectToMultiplayerServer( EventArgs& args )
 
 bool StartMultiplayerServer( EventArgs& args )
 {
+	UNUSED(args);
 	delete g_theServer;
 	g_theServer = nullptr;
 	g_theClient = nullptr;
 	g_theGame	= nullptr;
 
-	g_theGame	= new Game( g_camera, g_UICamera );
+	g_theGame	= dynamic_cast<Game*> (new MultiPlayerGame( g_camera, g_UICamera ));
 	g_theGame->SetConvention( X_FORWARD_Y_LEFT_Z_UP );
-	g_theServer = new AuthoritativeServer();
+	g_theNetworkSystem->StartTCPServerWithPort( TCP_SERVER_PORT );
+	g_theServer = new AuthoritativeServer( g_theGame );
+
 	g_theGame->Startup();
 	g_theServer->Startup();
+	
+
 	return true;
 }
 
@@ -364,8 +382,14 @@ bool HelpCommandEvent( EventArgs& args )
 	return true;
 }
 
-/*
-bool eventTest( EventArgs& args ) {
-	float a = args.GetValue<float>( "float test", 0 );
+bool ConnectTo( EventArgs& args )
+{
+	/*TCPClient* tempClient = g_theNetworkSystem->m_client;*/
+	std::string targetIPAddr = args.GetValue( std::to_string( 0 ), "" );
+	std::string targetPort	= args.GetValue( std::to_string( 1 ), "" );
+
+	g_theNetworkSystem->TCPConnectToServerWithIPAndPort( targetIPAddr.c_str(), targetPort.c_str());
+	//tempClient->ConnectToServerWithIPAndPort( targetIPAddr.c_str(), targetPort.c_str() );
+	g_theNetworkSystem->m_isServer = false;
 	return true;
-}*/
+}

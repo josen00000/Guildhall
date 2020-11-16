@@ -16,6 +16,17 @@ void Actor::Update( float deltaSeconds )
 {
 	static float totalSeconds = 0.f;
 	totalSeconds += deltaSeconds;
+	// AI
+	if( m_definition->m_name == "Pinky" ){
+		SetIsMoving( true );
+		int totalIndex = totalSeconds;
+		if( totalIndex % 2 == 0 ) {
+			SetMoveDirt( Vec2( 1.f, 0.f ) );
+		}
+		else {
+			SetMoveDirt( Vec2( -1.f, 0.f ) );
+		}
+	}
 
 	Vec2 cameraPosXY = g_theGame->m_gameCamera->GetPosition().GetXYVector();
 	Vec2 entityToCameraXY = cameraPosXY - m_2Dpos;

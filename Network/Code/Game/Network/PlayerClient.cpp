@@ -27,7 +27,7 @@ PlayerClient::PlayerClient( Server* owner, Camera* camera )
 
 void PlayerClient::Startup()
 {
-	m_player = m_owner->CreateAndPushPlayer();
+	m_entity = m_owner->CreateAndPushPlayer();
 }
 
 void PlayerClient::Shutdown()
@@ -37,7 +37,7 @@ void PlayerClient::Shutdown()
 
 void PlayerClient::Update( float deltaSeconds )
 {
-	Vec3 playerPos = m_player->GetPosition();
+	Vec3 playerPos = m_entity->GetPosition();
 	m_gameCamera->SetPosition( playerPos );
 }
 
@@ -62,16 +62,16 @@ void PlayerClient::PreUpdatePlayer()
 	static Vec3 testPos = Vec3::ZERO;
 	static Vec3 forward = Vec3::ZERO;
 	static float maxDist = 0.f;
-	if( m_player ) {
-		testPos = m_player->GetPosition();
+	if( m_entity ) {
+		testPos = m_entity->GetPosition();
 		forward = m_gameCamera->GetForwardDirt( m_owner->GetGameConvention() );
 		maxDist = 1.f;
 	}
 	
-	if( !m_player ) { return; }
+	if( !m_entity ) { return; }
 
 	float baseRotSpeed = 30.f;
-	float playerOrientation = m_player->m_orientation;
+	float playerOrientation = m_entity->m_orientation;
 
 	Vec2 mouseMove = g_theInputSystem->GetRelativeMovementPerFrame();
 	float deltaPlayerOrientation = -mouseMove.x * baseRotSpeed;
@@ -82,22 +82,22 @@ void PlayerClient::PreUpdatePlayer()
 	bool isMoving = false;
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_E ) ) {
 		isMoving = true;
-		m_player->SetMoveDirt( Vec2( 1.f, 0.f ) );
+		m_entity->SetMoveDirt( Vec2( 1.f, 0.f ) );
 	}
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
 		isMoving = true;
-		m_player->SetMoveDirt( Vec2( -1.f, 0.f ) );
+		m_entity->SetMoveDirt( Vec2( -1.f, 0.f ) );
 	}
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_F ) ) {
 		isMoving = true;
-		m_player->SetMoveDirt( Vec2( 0.f, -1.f ) );
+		m_entity->SetMoveDirt( Vec2( 0.f, -1.f ) );
 	}
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
 		isMoving = true;
-		m_player->SetMoveDirt( Vec2( 0.f, 1.f ) );
+		m_entity->SetMoveDirt( Vec2( 0.f, 1.f ) );
 	}
-	m_player->SetIsMoving( isMoving );
-	m_player->SetOrientation( playerOrientation );
+	m_entity->SetIsMoving( isMoving );
+	m_entity->SetOrientation( playerOrientation );
 // 	m_player->Update( deltaSeconds );
 // 
 // 	m_gameCamera->SetPosition( m_player->GetPosition() ); // TODO Move to somewhere correct
@@ -152,6 +152,11 @@ void PlayerClient::Render()
 	g_theConsole->Render( *g_theRenderer );
 }
 
+void PlayerClient::HandleInput( std::string input )
+{
+	UNUSED(input);
+}
+
 void PlayerClient::RenderUI()
 {
 	m_UICamera->SetDepthStencilTarget( nullptr ); // don't need depth stencil target set target to nullptr
@@ -191,6 +196,11 @@ void PlayerClient::RenderGun()
 	vertices[5] = Vertex_PCU( Vec3( 55.f, 61.7f, 0.f ), Rgba8::WHITE, Vec2( gunUVAtMin.x, gunUVAtMax.y ) );
 
 	g_theRenderer->DrawVertexArray( 6, vertices );
+}
+
+void PlayerClient::RequestServerCreatePlayer()
+{
+	m_owner->CreateAndPushPlayer();
 }
 
 void PlayerClient::PlayAudioWithSoundID( size_t id )

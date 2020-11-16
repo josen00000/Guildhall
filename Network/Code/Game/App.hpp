@@ -49,3 +49,4 @@ bool HelpCommandEvent( EventArgs& args );
 bool QuitCommandEvent( EventArgs& args );
 bool ConnectToMultiplayerServer( EventArgs& args );
 bool StartMultiplayerServer( EventArgs& args );
+bool ConnectTo( EventArgs& args );

@@ -17,6 +17,8 @@ std::string GetStringWithoutSpace( std::string originalString );
 std::string TrimStringWithOneSpace( std::string originalString );
 Strings GetStringsWithoutSpace( std::string originalString );
 
+std::string GetRidOfAllSpaceOfString( std::string originalString );
+
 Strings GetFileNamesInFolder( const std::string& folderPath, const char* filePattern );
 
 bool GetBoolFromText( const char* text );

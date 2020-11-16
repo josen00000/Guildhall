@@ -22,6 +22,7 @@ public:
 
 	void Push( const value_type& value );
 	value_type Pop();
+	std::vector<value_type> PopAll();
 
 protected:
 	void Lock();
@@ -31,6 +32,20 @@ private:
 	const int LOCKED = 1;
 	std::atomic<int> m_atomicLock;
 };
+
+template<typename T>
+std::vector<T> NonBlockingQueue<T>::PopAll()
+{
+	std::vector<T> result;
+	Lock();
+	while( !base::empty() ) {
+		T value = base::front();
+		base::pop();
+		result.push_back( value );
+	}
+	Unlock();
+	return result;
+}
 
 template<typename T>
 void NonBlockingQueue<T>::Lock()

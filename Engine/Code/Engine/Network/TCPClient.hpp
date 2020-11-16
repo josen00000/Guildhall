@@ -17,7 +17,6 @@ public:
 	// Accessor
 	std::string GetStringFromData();
 
-	
 	// Mutator
 	void SetTargetIP( const std::string& targetIP );
 	void SetTargetPort( const std::string& targetPort );
@@ -25,8 +24,10 @@ public:
 	void SetSelfPort( const std::string& selfPort );
 	void SetSendData( const char* data, int dataLen );
 
+	void SendRequestConnectionMessageToServer();
 	void ConnectToServerWithIPAndPort( const char* hostName, const char* portNum );
 	void DisconnectServer();
+
 
 private:
 	void CreateSocket();
@@ -58,6 +59,6 @@ public:
 	timeval m_timeval = timeval{ 00, 05 };
 	addrinfo* m_resultAddr = NULL;
 	bool	m_isConnected = false;
-	std::string m_message = ""; // temp as buffer
+	//std::string m_message = ""; // temp as buffer
 };
 

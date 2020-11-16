@@ -15,9 +15,9 @@ extern DevConsole* g_theConsole;
 // 	Close();
 // }
 
-void UDPSocket::CreateUDPSocket( char const* portNum, const char* hostName /*= "" */ )
+void UDPSocket::SetTargetPortAndIPAddress( char const* portNum, const char* hostName )
 {
-	UNUSED(hostName);
+	//UNUSED(hostName);
 	addrinfo addrHints;
 	ZeroMemory( &addrHints, sizeof( addrHints ) );
 
@@ -26,7 +26,12 @@ void UDPSocket::CreateUDPSocket( char const* portNum, const char* hostName /*= "
 	u_short iPortNum			= (u_short)atoi(portNum);
 	m_toAddr.sin_port			= htons(iPortNum);
 	m_toAddr.sin_addr.s_addr	= inet_addr(hostName);
+	m_remotePort = portNum;
+	m_remoteIPAddr = hostName;
+}
 
+void UDPSocket::CreateUDPSocket()
+{
 	m_socket = socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
 	if( m_socket == INVALID_SOCKET ) {
 		LOG_ERROR( "Invalid socket" );
@@ -35,6 +40,8 @@ void UDPSocket::CreateUDPSocket( char const* portNum, const char* hostName /*= "
 
 void UDPSocket::BindSocket( int port )
 {
+	m_localPort = std::to_string( port );
+
 	m_bindAddr.sin_family		= AF_INET;
 	m_bindAddr.sin_port			= htons((u_short)port);
 	m_bindAddr.sin_addr.s_addr	= INADDR_ANY;
@@ -45,8 +52,9 @@ void UDPSocket::BindSocket( int port )
 	}
 }
 
-void UDPSocket::SetHeader( std::uint16_t id, std::uint16_t length, std::uint32_t seq )
+void UDPSocket::SetHeader( std::uint32_t protocol, std::uint16_t id, std::uint16_t length, std::uint32_t seq )
 {
+	m_sendBuffer.header.protocol	= protocol;
 	m_sendBuffer.header.messageID	= id;
 	m_sendBuffer.header.messageLen	= length;
 	m_sendBuffer.header.messageSeq	= seq;
@@ -71,8 +79,15 @@ std::string UDPSocket::ReadDataAsString()
 	return result;
 }
 
+std::string UDPSocket::GetRemoteIPAddrAndPort() const
+{
+	return std::string( m_remoteIPAddr + ":" + m_remotePort );
+}
+
 int UDPSocket::UDPSend( int length )
 {
+	std::string sendMsg = std::string( (const char*)&m_sendBuffer.data, length );
+	//g_theConsole->DebugLogf( "sending udp msg: %s",sendMsg.c_str() );
 	int result = sendto( m_socket, (const char*)&m_sendBuffer, length, 0, reinterpret_cast<sockaddr*>(&m_toAddr), sizeof(m_toAddr) );
 	if( result == SOCKET_ERROR ) {
 		LOG_ERROR("Socket send error: %d", WSAGetLastError() );
@@ -89,7 +104,11 @@ int UDPSocket::UDPReceive()
 	if( result == SOCKET_ERROR ) {
 		LOG_ERROR("Socket recv error: %d", WSAGetLastError() );
 	}
-	m_fromAddrText = std::string( inet_ntoa(fromAddr.sin_addr) ) + std::string( "  :") + std::to_string( htons(fromAddr.sin_port) );
+	else {
+		m_fromAddrText = std::string( inet_ntoa(fromAddr.sin_addr) ) + std::string( "  :") + std::to_string( htons(fromAddr.sin_port) );
+// 		std::string recvMsg = std::string( m_receiveBuffer.data, result );
+// 		g_theConsole->DebugLogf( "receiving udp msg: %s", recvMsg.c_str() );
+	}
 	return result;
 }
 

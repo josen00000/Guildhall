@@ -87,6 +87,7 @@ void DevConsole::Update( float deltaSeconds )
 	UpdateAbleRenderCaret( deltaSeconds );
 	if( m_historyMode ) {
 		m_inputs = m_commandsHistory[m_historyCommandIndex];
+		UpdateCaretIndex( m_inputs.size() );
 	}
 }
 

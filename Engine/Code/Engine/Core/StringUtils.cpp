@@ -125,7 +125,7 @@ std::string GetStringWithoutSpace( const char* originalString )
 		}
 	}
 	size_t stringLength = endIndex - startIndex;
-	std::string result = std::string(originalString, startIndex, stringLength );
+	std::string result = std::string( originalString, startIndex, stringLength );
 	return result;
 }
 
@@ -163,6 +163,24 @@ std::string TrimStringWithOneSpace( std::string originalString )
 Strings GetStringsWithoutSpace( std::string originalString )
 {
 	return SplitStringOnDelimiter( originalString, ' ' );
+}
+
+std::string GetRidOfAllSpaceOfString( std::string originalString )
+{
+	std::string result = originalString;
+	int resultIndex = 0;
+	for( int i = 0; i < originalString.size(); i++ ) {
+		if( originalString[i] == '\0' || originalString[i] == ' '){
+			continue;
+		}
+		result[resultIndex] = originalString[i];
+		resultIndex++;
+	}
+	if( result.size() > resultIndex ) {
+		result.erase( resultIndex );
+	}
+
+	return result;
 }
 
 Strings GetFileNamesInFolder( const std::string& folderPath, const char* filePattern )

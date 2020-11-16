@@ -38,3 +38,5 @@ enum BillboardMode : unsigned int {
 	NUM_BILLBOARD_MODES
 };
 
+// network
+#define TCP_SERVER_PORT "50000"

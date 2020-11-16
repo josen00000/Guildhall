@@ -92,6 +92,10 @@ void TCPServer::BeginFrame()
 			ReceiveDataFromClient( m_clientSockets[i] );
 
 			if( m_isSendBufDirty ) {
+				if( i >= m_clientSockets.size() ) {
+					/*ERROR_RECOVERABLE( "wtf");*/
+					break;
+				}
 				SendDataToClient( m_clientSockets[i], MESSAGE_ID::TEXT_MESSAGE );
 			}
 		}
@@ -133,7 +137,7 @@ void TCPServer::ReceiveDataFromClient( SOCKET clientSocket )
 		}
 		return;
 	}
-	else if( iResult == 0 ) {
+	else if( iResult == 0 || tempData.header.protocol != TCP_HEADER_PROTOCOL ) {
 		g_theConsole->DebugError( "connection closed" );
 		DisconnectClientSocket( clientSocket );
 		return;
@@ -150,6 +154,10 @@ void TCPServer::ReceiveDataFromClient( SOCKET clientSocket )
 				DisconnectClientSocket( clientSocket );
 				g_theConsole->DebugLogf( "Client socket %d disconect",(int)clientSocket );
 				break;
+			case CLIENT_REQUEST_CONNECTION:
+				// add client to wait client
+				m_waitingClientSockets.push( clientSocket );
+				break;
 			default:
 				g_theConsole->DebugError( "message ID error" );
 				break;
@@ -161,7 +169,8 @@ void TCPServer::ReceiveDataFromClient( SOCKET clientSocket )
 void TCPServer::SendDataToClient( SOCKET clientSocket, MESSAGE_ID mid )
 {
 	DataPackage tempData;
-	tempData.header.messageID = mid;
+	tempData.header.messageID	= mid;
+	tempData.header.protocol	= TCP_HEADER_PROTOCOL;
 
 	switch( mid )
 	{
@@ -176,6 +185,10 @@ void TCPServer::SendDataToClient( SOCKET clientSocket, MESSAGE_ID mid )
 	case SERVER_DISCONNECT:
 		tempData.header.messageLen = (std::uint16_t)( sizeof(tempData.header) + 1 ) ;
 		tempData.message[0] = '0';
+		break;
+	case SERVER_READY_FOR_CONNECTION:
+		tempData.header.messageLen = (std::uint16_t)(sizeof( tempData.header ) + m_sendBufLen);
+		memcpy( tempData.message, m_sendBuf.data, m_sendBufLen );
 		break;
 	default:
 		g_theConsole->DebugError( "Error in Message ID" );
@@ -201,7 +214,23 @@ void TCPServer::SetSendData( const char* data, int dataLen )
 	m_isSendBufDirty = true;
 }
 
-std::string TCPServer::GetClientIPAddr( SOCKET clientSocket )
+SOCKET TCPServer::GetWaitingClientSocket()
+{
+	SOCKET result = m_waitingClientSockets.front();
+	m_waitingClientSockets.pop();
+	return result;
+}
+
+SOCKET TCPServer::GetClientSocketWithIPAddress( IPAddress addr )
+{
+	for( int i = 0; i < m_clientSockets.size(); i++ ) {
+		IPAddress tempAddr = GetClientIPAddressWithSocket( m_clientSockets[i] );
+		if( tempAddr == addr ){ return m_clientSockets[i]; }
+	}
+	return INVALID_SOCKET;
+}
+
+std::string TCPServer::GetClientIPAddressWithSocket( SOCKET clientSocket )
 {
 	sockaddr clientAddr;
 	int addrSize = sizeof(clientAddr);
@@ -223,6 +252,15 @@ std::string TCPServer::GetClientIPAddr( SOCKET clientSocket )
 std::string TCPServer::GetStringFromData()
 {
 	return std::string( m_recvBuf.data );
+}
+
+void TCPServer::SendReadyForConnectionMessageToClientWithIPAddress( IPAddress addr, std::string key, Port port )
+{
+	g_theConsole->DebugLogf(" send ready for connection message to :%s", addr.c_str() );
+	SOCKET clientSocket = GetClientSocketWithIPAddress( addr );
+	std::string sendData = key + "|" + port;
+	SetSendData( sendData.c_str(), sendData.size() );
+	SendDataToClient( clientSocket, MESSAGE_ID::SERVER_READY_FOR_CONNECTION );
 }
 
 SOCKET TCPServer::CreateSocket( addrinfo* socketAddr )
@@ -278,7 +316,7 @@ void TCPServer::AcceptConnectionFromClient( SOCKET listenSocket )
 		closesocket( listenSocket );
 		return;
 	}
-	g_theConsole->DebugLogf( "client IP: %s", GetClientIPAddr( clientSocket).c_str() );
+	g_theConsole->DebugLogf( "client IP: %s", GetClientIPAddressWithSocket( clientSocket).c_str() );
 	const char* gameName = "game name is shut!";
 	SetSendData( gameName, 20 );
 	SendDataToClient( clientSocket, SERVER_LISTENING );

@@ -37,7 +37,9 @@ void TCPClient::StartUp()
 
 void TCPClient::ShutDown()
 {
-	m_isConnected = false;
+	if( m_targetSocket != INVALID_SOCKET ) {
+		DisconnectAndCloseSocket();
+	}
 }
 
 void TCPClient::BeginFrame()
@@ -65,10 +67,10 @@ void TCPClient::BeginFrame()
 
 void TCPClient::Update()
 {
-	if( m_isRecvBufDirty ) {
-		g_theConsole->DebugLogf( "Handle data: %s", GetStringFromData().c_str() );
-		m_isRecvBufDirty = false;
-	}
+// 	if( m_isRecvBufDirty ) {
+// 		g_theConsole->DebugLogf( "Handle data: %s", GetStringFromData().c_str() );
+// 		m_isRecvBufDirty = false;
+// 	}
 }
 
 std::string TCPClient::GetStringFromData()
@@ -186,7 +188,8 @@ void TCPClient::SendDataToServer( MESSAGE_ID mid )
 	if( !m_isConnected ) { return; }
 
 	DataPackage tempData;
-	tempData.header.messageID = mid;
+	tempData.header.messageID	= mid;
+	tempData.header.protocol	= TCP_HEADER_PROTOCOL;
 
 	switch( mid )
 	{
@@ -195,6 +198,10 @@ void TCPClient::SendDataToServer( MESSAGE_ID mid )
 		memcpy( tempData.message, m_sendBuf.data, m_sendBufLen );
 		break;
 	case CLIENT_DISCONNECT:
+		tempData.header.messageLen = (std::uint16_t)(sizeof( tempData.header ) + 1);
+		tempData.message[0] = '0';
+		break;
+	case CLIENT_REQUEST_CONNECTION:
 		tempData.header.messageLen = (std::uint16_t)(sizeof( tempData.header ) + 1);
 		tempData.message[0] = '0';
 		break;
@@ -224,6 +231,15 @@ void TCPClient::SendDisconnectMessageToServer()
 	}
 }
 
+void TCPClient::SendRequestConnectionMessageToServer()
+{
+	if( !m_isConnected ) {
+		ERROR_RECOVERABLE("TCP client is not connected!");
+		return;
+	}
+	SendDataToServer( MESSAGE_ID::CLIENT_REQUEST_CONNECTION );
+}
+
 void TCPClient::ReceiveDataFromServer()
 {
 	DataPackage tempData = DataPackage();
@@ -248,6 +264,9 @@ void TCPClient::ReceiveDataFromServer()
 			case SERVER_LISTENING:
 				g_theConsole->DebugLogf( "server is listening!" );
 			case TEXT_MESSAGE:
+				WriteDataToRecvBuffer( tempData );
+				break;
+			case SERVER_READY_FOR_CONNECTION:
 				WriteDataToRecvBuffer( tempData );
 				break;
 			case SERVER_DISCONNECT:
@@ -281,6 +300,7 @@ void TCPClient::ReceiveData()
 
 void TCPClient::DisconnectAndCloseSocket()
 {
+	if( m_targetSocket == INVALID_SOCKET ){ return; }
 	int iResult = shutdown( m_targetSocket, SD_SEND );
 	if( iResult == SOCKET_ERROR ) {
 		g_theConsole->DebugErrorf( "shut down failed: %d", WSAGetLastError() );

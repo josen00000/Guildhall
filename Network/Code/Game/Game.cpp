@@ -83,11 +83,10 @@ void Game::Startup()
 	LoadMapsDefinitionsAndCreateMaps( "Data/Maps" );
 
 	m_world->LoadMap( startMapName );
-	Map* currentMap = m_world->GetCurrentMap();
+	//Map* currentMap = m_world->GetCurrentMap();
 	//currentMap->m_actors.push_back( m_player );
 	// command
 	g_theConsole->AddCommandToCommandList( std::string( "load_map" ), std::string( "Load one map with name." ), MapCommandLoadMap );
-	g_theConsole->AddCommandToCommandList( std::string( "client_connect" ), std::string( "Connect to target server" ), ConnectTo );
 	g_theConsole->AddCommandToCommandList( std::string( "send_message" ), std::string( "Connect to target server" ), SendMessageTest );
 	g_theConsole->AddCommandToCommandList( std::string( "start_server" ), std::string( "start server for listening" ), StartServer );
 	g_theConsole->AddCommandToCommandList( std::string( "send_data" ), std::string( "send Data to client" ), SendData );
@@ -99,10 +98,6 @@ void Game::Startup()
 
 	m_billBoardEntity = new Entity();
  	m_billBoardEntity->m_cylinder = Cylinder3( Vec3::ZERO, Vec3( 0.f, 0.f, 1.f ), 0.5f );
-
-	// network start up
-	m_testClient = g_theNetworkSystem->CreateClient();
-	m_testServer = g_theNetworkSystem->CreateServer();
 }
 
 void Game::Shutdown()
@@ -269,14 +264,15 @@ void Game::RaycastTest( Vec3 startPos, Vec3 forwardNormal, float maxDist )
 
 void Game::JobTest()
 {
-	for( int i = 0; i < 20; i++ ) {
-		TestJob* testJob = new TestJob();
-		//g_theJobSystem->PostJob( testJob );
-	}
+// 	for( int i = 0; i < 20; i++ ) {
+// 		TestJob* testJob = new TestJob();
+// 		//g_theJobSystem->PostJob( testJob );
+// 	}
 }
 
 void Game::UpdatePlayer( float delteSeconds )
 {
+	UNUSED(delteSeconds);
 // 	static Vec3 testPos = Vec3::ZERO;
 // 	static Vec3 forward = Vec3::ZERO;
 // 	static float maxDist = 0.f;
@@ -435,7 +431,7 @@ void Game::HandleAudioKeyboardInput()
 
 void Game::PlayerTestSound()
 {
-	SoundID testSound = g_theAudioSystem->CreateOrGetSound( "Data/Audio/TestSound.mp3" );
+	//SoundID testSound = g_theAudioSystem->CreateOrGetSound( "Data/Audio/TestSound.mp3" );
 	//g_theAudioSystem->PlaySound( testSound, false, m_rng->RollRandomFloatInRange( 0.5f, 1.f ), m_rng->RollRandomFloatInRange( -1.f, 1.f ), m_rng->RollRandomFloatInRange( 0.5f, 2.f ) );
 }
 
@@ -490,40 +486,40 @@ void Game::CheckIfGhost()
 void Game::RenderGame() const
 {
 	return;
- 	Rgba8 tempColor = Rgba8::DARK_GRAY;
- 	m_gameCamera->m_clearColor = tempColor;
-	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
-	m_gameCamera->SetColorTarget( backBuffer, 0 );
-
-
- 	g_theRenderer->BeginCamera( m_gameCamera, m_convension );
-	g_theRenderer->SetBlendMode( BlendMode::BLEND_ALPHA );
-	g_theRenderer->EnableDepth( COMPARE_DEPTH_LESS, true );
-	g_theRenderer->SetCullMode( RASTER_CULL_BACK );
-	g_theRenderer->SetTintColor( Rgba8::WHITE );
- 	g_theRenderer->BindShader( "Data/Shader/WorldOpaque.hlsl" );
-	
-	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
-
- 	g_theRenderer->SetDiffuseTexture( temp );
-
-	m_world->Render();
-
-	g_theRenderer->SetCullMode( RASTER_CULL_NONE );
-	g_theRenderer->DisableDepth();
-	g_theRenderer->BindShader( static_cast<Shader*>(nullptr) );
-	g_theRenderer->SetDiffuseTexture( nullptr );
-
-	if( m_debugMode ) {
-		RenderBasis();
-	}
-
-	g_theRenderer->EndCamera( );
-
-	RenderUI();
-
-	DebugRenderWorldToCamera( m_gameCamera, m_convension );
-	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
+//  	Rgba8 tempColor = Rgba8::DARK_GRAY;
+//  	m_gameCamera->m_clearColor = tempColor;
+// 	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
+// 	m_gameCamera->SetColorTarget( backBuffer, 0 );
+// 
+// 
+//  	g_theRenderer->BeginCamera( m_gameCamera, m_convension );
+// 	g_theRenderer->SetBlendMode( BlendMode::BLEND_ALPHA );
+// 	g_theRenderer->EnableDepth( COMPARE_DEPTH_LESS, true );
+// 	g_theRenderer->SetCullMode( RASTER_CULL_BACK );
+// 	g_theRenderer->SetTintColor( Rgba8::WHITE );
+//  	g_theRenderer->BindShader( "Data/Shader/WorldOpaque.hlsl" );
+// 	
+// 	Texture* temp = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );
+// 
+//  	g_theRenderer->SetDiffuseTexture( temp );
+// 
+// 	m_world->Render();
+// 
+// 	g_theRenderer->SetCullMode( RASTER_CULL_NONE );
+// 	g_theRenderer->DisableDepth();
+// 	g_theRenderer->BindShader( static_cast<Shader*>(nullptr) );
+// 	g_theRenderer->SetDiffuseTexture( nullptr );
+// 
+// 	if( m_debugMode ) {
+// 		RenderBasis();
+// 	}
+// 
+// 	g_theRenderer->EndCamera( );
+// 
+// 	RenderUI();
+// 
+// 	DebugRenderWorldToCamera( m_gameCamera, m_convension );
+// 	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
 }
 
 void Game::RenderUI() const
@@ -784,60 +780,49 @@ bool MapCommandWarp( EventArgs& args )
 	return true;
 }
 
-bool ConnectTo( EventArgs& args )
-{
-	TCPClient* tempClient = g_theNetworkSystem->m_client;
-	std::string targetIPAddr = args.GetValue( std::to_string( 0 ), "" );
-	std::string targetPort	= args.GetValue( std::to_string( 1 ), "" );
-
-	tempClient->ConnectToServerWithIPAndPort( targetIPAddr.c_str(), targetPort.c_str() );
-	g_theNetworkSystem->m_isServer = false;
-	return true;
-}
-
 bool SendMessageTest( EventArgs& args )
 {
-	TCPClient* tempClient = g_theNetworkSystem->m_client;
-	TCPServer* tempServer = g_theNetworkSystem->m_server;
-	if( !g_theNetworkSystem->m_isServer ) {
-		std::string message = args.GetValue( std::to_string( 0 ), "" );
-		tempClient->SetSendData( message.data(), (int)message.size() );
-	}
-	else {
-		std::string message = args.GetValue( std::to_string( 0 ), "" );
-		tempServer->SetSendData( message.data(), (int)message.size() );
-	}
-	return true;
+// 	TCPClient* tempClient = g_theNetworkSystem->m_client;
+// 	TCPServer* tempServer = g_theNetworkSystem->m_server;
+// 	if( !g_theNetworkSystem->m_isServer ) {
+// 		std::string message = args.GetValue( std::to_string( 0 ), "" );
+// 		tempClient->SetSendData( message.data(), (int)message.size() );
+// 	}
+// 	else {
+// 		std::string message = args.GetValue( std::to_string( 0 ), "" );
+// 		tempServer->SetSendData( message.data(), (int)message.size() );
+// 	}
+ 	return true;
 }
 
 bool StartServer( EventArgs& args )
 {
-	std::string port = args.GetValue( std::to_string( 0 ), "" );
-	g_theNetworkSystem->StartServerWithPort( port.c_str() );
-	if( !g_theNetworkSystem->m_isServer ) {
-		g_theNetworkSystem->m_isServer = true;
-	}
-	return true;
+// 	std::string port = args.GetValue( std::to_string( 0 ), "" );
+// 	g_theNetworkSystem->StartTCPServerWithPort( port.c_str() );
+// 	if( !g_theNetworkSystem->m_isServer ) {
+// 		g_theNetworkSystem->m_isServer = true;
+// 	}
+ 	return true;
 }
 
 bool SendData( EventArgs& args )
 {
-	std::string data = args.GetValue( std::to_string( 0 ), "" );
-	TCPServer* test = g_theNetworkSystem->m_server;
-	test->SetSendData( data.c_str(), (int)data.size()  );
-	
+// 	std::string data = args.GetValue( std::to_string( 0 ), "" );
+// 	TCPServer* test = g_theNetworkSystem->m_server;
+// 	test->SetSendData( data.c_str(), (int)data.size()  );
+// 	
 	return true;
 }
 
 bool StopServer( EventArgs& args )
 {
-	g_theNetworkSystem->m_server->ShutDown();
+	/*g_theNetworkSystem->m_server->ShutDown();*/
 	return true;
 }
 
 bool Disconnect( EventArgs& args )
 {
-	g_theNetworkSystem->m_client->DisconnectServer();
+	/*g_theNetworkSystem->m_client->DisconnectServer();*/
 	return true;
 }
 
@@ -845,9 +830,9 @@ bool OpenUDPPort( EventArgs& args )
 {
 	std::string bindportNum = args.GetValue( std::to_string( 0 ), "" );
 	std::string sendportNum = args.GetValue( std::to_string( 1 ), "" );
-	g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "192.168.1.206" );
+	//g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "192.168.1.206" );
 	//g_theNetworkSystem->m_UDPSocket->CreateUDPSocket( sendportNum.c_str(), "10.8.155.124" );
-	g_theNetworkSystem->m_UDPSocket->BindSocket( atoi(bindportNum.c_str()) );
+	//g_theNetworkSystem->m_UDPSocket->BindSocket( atoi(bindportNum.c_str()) );
 	g_theConsole->DebugLogf( "open success" );
 	return true;
 }
@@ -855,13 +840,13 @@ bool OpenUDPPort( EventArgs& args )
 bool SendUDPMessage( EventArgs& args )
 {
 	std::string msg = args.GetValue( std::to_string( 0 ), "" );
-	g_theNetworkSystem->SetSendMsg( msg );
+	//g_theNetworkSystem->SetSendMsg( msg );
 	return true;
 }
 
 bool CloseUDPPort( EventArgs& args )
 {
 	UNUSED(args);
-	g_theNetworkSystem->CloseUDPSocket();
+	//g_theNetworkSystem->CloseUDPSocket();
 	return true;
 }

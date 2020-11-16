@@ -31,10 +31,17 @@ public:
 	bool GetIsPlayer() const { return m_isPlayer; }
 	float GetMass() const { return m_mass; }
 	float GetRadius() const { return m_definition->m_radius; }
+	float GetOrientation() const { return m_orientation; }
 	float GetHeight() const { return m_definition->m_height; }
+	std::string GetEntityName() const { return m_definition->m_name; }
+
 	Vec2 Get2DPosition() const { return m_2Dpos; }
-	Vec3 GetPosition() const { return Vec3( m_2Dpos, 0.5f ); }
+	Vec2 GetMoveDirt() const { return m_moveDirt; }
 	Vec2 GetforwardNormal2D() const;
+	Vec3 GetPosition() const { return Vec3( m_2Dpos, 0.5f ); }
+
+	//std::string GetEntityType() const { return m_definition->}
+
 
 	// Mutator
 	void SetCanBePushedByWalls( bool isAble );

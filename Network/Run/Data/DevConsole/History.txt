@@ -20,3 +20,4 @@ open_udp_port
 send_udp_msg
 help
 start_mul_server
+connect_to_mul_server

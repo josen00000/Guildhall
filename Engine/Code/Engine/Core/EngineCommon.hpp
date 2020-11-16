@@ -19,6 +19,7 @@ enum Convention
 };
 
 struct DataHeader {
+	std::uint32_t protocol	= 0;
 	std::uint16_t messageID = 0;
 	std::uint16_t messageLen = 0;
 	std::uint32_t messageSeq = 0;
@@ -51,3 +52,5 @@ constexpr int MAX_LIGHTS_NUM = 8;
 // network
 constexpr int NET_BUFFER_SIZE		= 520;
 constexpr int NET_MESSAGE_SIZE		= 512;
+constexpr int TCP_HEADER_PROTOCOL	= 12345678;
+constexpr int UDP_HEADER_PROTOCOL	= 87654321;
