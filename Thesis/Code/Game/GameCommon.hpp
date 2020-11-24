@@ -24,6 +24,9 @@ constexpr float GAME_CAMERA_MIN_X	= -20.f;
 constexpr float GAME_CAMERA_MIN_Y	= -11.25f;
 constexpr float GAME_CAMERA_MAX_X	= 20.f;
 constexpr float GAME_CAMERA_MAX_Y	= 11.25f;
+constexpr float GAME_CHECK_WIDTH	= 20.f;
+constexpr float GAME_CHECK_HEIGHT	= 10.f;
+
 
 constexpr float UI_CAMERA_MIN_X		= 0;
 constexpr float UI_CAMERA_MIN_Y		= 0;

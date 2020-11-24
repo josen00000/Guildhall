@@ -18,6 +18,7 @@ public:
 	bool	IsPointMostlyInEdge( Vec2 point ) const;
 	float	GetLengthOfPointToLineSegment( const Vec2& refPos ) const; 
 	float	GetLength() const;
+	float	GetSlope() const;
 	Vec2	GetStartPos() const;
 	Vec2	GetEndPos() const;
 	Vec2	GetNormalizedDirection() const;

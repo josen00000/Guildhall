@@ -10,6 +10,7 @@ struct IntVec2;
 struct FloatRange;
 struct Polygon2;
 struct Mat44;
+struct LineSegment2;
 
 //
 //Angle utilities
@@ -138,3 +139,10 @@ bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon=0.001f );
 
 // Area
 float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c );
+
+
+// Line
+Vec2 GetIntersectionPointOfTwoLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec2 pointAInLineB, Vec2 pointBInLineB );
+Vec2 GetIntersectionPointOfTwoLines( LineSegment2 lineA, LineSegment2 lineB );
+std::vector<Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box );
+

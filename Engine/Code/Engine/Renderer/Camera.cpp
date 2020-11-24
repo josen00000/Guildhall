@@ -474,3 +474,8 @@ Vec2 Camera::GetCenterPosition2D() const
 	Vec2 pos = GetPosition2D();
 	return pos + ( m_dimension / 2 );
 }
+
+Vec2 Camera::Get2DDimension() const
+{
+	return m_dimension;
+}

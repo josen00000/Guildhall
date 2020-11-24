@@ -73,7 +73,8 @@ LineSegment2 LineSegment2::ClipSegmentToSegmentAlongDirection( LineSegment2 toCl
 bool LineSegment2::IsPointMostlyInEdge( Vec2 point ) const
 {
 	Vec2 pointInEdge = GetNearestPoint( point );
-	return ( point - pointInEdge ).GetLength();
+	float dist = ( point - pointInEdge ).GetLength() ;
+	return IsFloatMostlyEqual( dist, 0.f );
 }
 
 Vec2 LineSegment2::GetStartPos() const
@@ -111,6 +112,11 @@ float LineSegment2::GetLength() const
 	Vec2 direction = m_end - m_start;
 	float length = direction.GetLength();
 	return length;
+}
+
+float LineSegment2::GetSlope() const
+{
+	return ( m_end.y - m_start.y ) / ( m_end.x - m_start.x );
 }
 
 Vec2 LineSegment2::GetNearestPoint( const Vec2& refPos ) const

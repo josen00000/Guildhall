@@ -7,6 +7,7 @@
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Math/Cylinder3.hpp"
+#include "Engine/Math/Polygon2.hpp"
 #include "Engine/Platform/Window.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -927,6 +928,19 @@ void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( 0, 1 ) ),
 	};
 	DrawVertexArray( 6, temAABB2 );
+}
+
+void RenderContext::DrawPolygon2D( Polygon2 polygon, Rgba8 tint )
+{
+	Vec2 centerPos = polygon.m_center;
+	std::vector<Vertex_PCU> tempVertices;
+	for( int i = 0; i < polygon.GetEdgeCount(); i++ ) {
+		LineSegment2 lineSeg = polygon.GetEdge( i );
+		tempVertices.push_back( Vertex_PCU( Vec3( centerPos ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetStartPos() + centerPos ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetEndPos() + centerPos ), tint, Vec2::ZERO ) );
+	}
+	DrawVertexVector( tempVertices );
 }
 
 void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, const float thick, const Rgba8& lineColor )

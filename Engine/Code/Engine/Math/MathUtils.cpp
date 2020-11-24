@@ -828,3 +828,75 @@ float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c )
 	return area;
 }
 
+Vec2 GetIntersectionPointOfTwoLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec2 pointAInLineB, Vec2 pointBInLineB )
+{
+	float a1 = pointBInLineA.y - pointAInLineA.y;
+	float b1 = pointAInLineA.x - pointBInLineA.x;
+	float c1 = a1 * pointAInLineA.x + b1 * pointAInLineA.y;
+
+	float a2 = pointBInLineB.y - pointAInLineB.y;
+	float b2 = pointAInLineB.x - pointBInLineB.x;
+	float c2 = a2 * pointAInLineB.x + b2 * pointAInLineB.y;
+
+	float determinant = a1 * b2 - a2 * b1;
+
+	if( determinant == 0 ) {
+		return Vec2( NAN, NAN );
+	}
+	else {
+		Vec2 result;
+		result.x = ( ( b2 * c1 ) - ( b1 * c2) ) / determinant;
+		result.y = ( ( a1 * c2 ) - ( a2 * c1) ) / determinant;
+		return result;
+	}
+}
+
+Vec2 GetIntersectionPointOfTwoLines( LineSegment2 lineA, LineSegment2 lineB )
+{
+	return GetIntersectionPointOfTwoLines( lineA.GetStartPos(), lineA.GetEndPos(), lineB.GetStartPos(), lineB.GetEndPos() );
+}
+
+std::vector<Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box )
+{
+	LineSegment2 boxBottom	= LineSegment2( box.mins, Vec2( box.maxs.x, box.mins.y ) );
+	LineSegment2 boxTop		= LineSegment2( Vec2( box.mins.x, box.maxs.y ), box.maxs );
+	LineSegment2 boxLeft	= LineSegment2( box.mins, Vec2( box.mins.x, box.maxs.y ) );
+	LineSegment2 boxRight	= LineSegment2( Vec2( box.maxs.x, box.mins.y ), box.maxs );
+
+	std::vector<Vec2> result;
+	if( line.GetStartPos().y == line.GetEndPos().y ) {
+		Vec2 pointA = GetIntersectionPointOfTwoLines( boxLeft, line );
+		Vec2 pointB = GetIntersectionPointOfTwoLines( boxRight, line );
+		result.push_back( pointA );
+		result.push_back( pointB );
+	}
+	else if( line.GetStartPos().x == line.GetEndPos().x ) {
+		Vec2 pointA = GetIntersectionPointOfTwoLines( boxBottom, line );
+		Vec2 pointB = GetIntersectionPointOfTwoLines( boxTop, line );
+		result.push_back( pointA );
+		result.push_back( pointB );
+	}
+	else {
+		Vec2 pointA = GetIntersectionPointOfTwoLines( boxBottom, line );
+		Vec2 pointB = GetIntersectionPointOfTwoLines( boxTop, line );
+		Vec2 pointC = GetIntersectionPointOfTwoLines( boxLeft, line );
+		Vec2 pointD = GetIntersectionPointOfTwoLines( boxRight, line );
+		if( boxBottom.IsPointMostlyInEdge( pointA ) ) {
+			result.push_back( pointA );
+		}
+		if( boxTop.IsPointMostlyInEdge( pointB ) ) {
+			result.push_back( pointB );
+		}
+		if( boxLeft.IsPointMostlyInEdge( pointC ) ) {
+			result.push_back( pointC );
+		}
+		if( boxRight.IsPointMostlyInEdge( pointD ) ) {
+			result.push_back( pointD );
+		}
+		if( result.size() > 2 ) {
+			ERROR_RECOVERABLE( " should not have more than two intersect point!" );
+		}
+	}
+	return result;
+}
+

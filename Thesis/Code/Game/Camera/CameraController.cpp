@@ -199,6 +199,16 @@ void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalS
 	m_factorStableSeconds = totalSeconds;
 }
 
+void CameraController::SetVoronoiPolygon( Polygon2 poly )
+{
+	m_voronoiPolygon = poly;
+}
+
+void CameraController::SetVoronoiOffset( Vec2 offset )
+{
+	m_voronoiOffset = offset;
+}
+
 // Camera Window
 //////////////////////////////////////////////////////////////////////////
 void CameraController::UpdateCameraWindow( float deltaSeconds )
@@ -410,16 +420,20 @@ void CameraController::UpdateStencilTexture()
 	{
 		case AXIS_ALIGNED_SPLIT: {
  			AABB2 worldRenderBox  = GetWorldSpaceRenderBox(); // render area in client space but not revert y
-			
-
  			m_camera->SetColorTarget( m_stencilTexture );
 			g_theRenderer->BeginCamera( m_camera );
 			g_theRenderer->BindShader( m_boxShader );
 			g_theRenderer->DrawAABB2D( worldRenderBox, Rgba8::RED );
 			g_theRenderer->EndCamera();
-			
 		}
 		break;
+		case VORONOI_SPLIT: {
+			m_camera->SetColorTarget( m_stencilTexture );
+			g_theRenderer->BeginCamera( m_camera );
+			g_theRenderer->BindShader( m_boxShader );
+			g_theRenderer->DrawPolygon2D( m_voronoiPolygon, Rgba8::RED );
+			g_theRenderer->EndCamera();
+		}
 	}
 }
 
@@ -430,8 +444,6 @@ void CameraController::UpdateMultipleCameraOffset()
 		return;
 	}
 
-	Texture* backbuffer = g_theRenderer->GetSwapChainBackBuffer();
-	Vec2 bufferSize = (Vec2)backbuffer->GetSize();
 	switch( m_owner->GetSplitScreenState() )
 	{
 		case AXIS_ALIGNED_SPLIT: {
@@ -468,8 +480,24 @@ void CameraController::UpdateMultipleCameraOffset()
 			}
 		}
 		break;
+		case VORONOI_SPLIT:{
+			AABB2 splitCheckBox = m_owner->GetSplitCheckBox();
+			AABB2 worldCameraBox = m_owner->GetWorldCameraBox();
+			Vec2 posInSplitCheckBox = splitCheckBox.GetNearestPoint( m_cameraPos );
+			Vec2 disp = posInSplitCheckBox - splitCheckBox.GetCenter();
+			Vec2 dispInScreenSpace;
+			dispInScreenSpace.x = disp.x / splitCheckBox.GetDimensions().x;
+			dispInScreenSpace.y = disp.y / splitCheckBox.GetDimensions().y;
+			float xRatio = splitCheckBox.GetWidth() / worldCameraBox.GetWidth();
+			float yRatio = splitCheckBox.GetHeight() / worldCameraBox.GetHeight();
+			dispInScreenSpace.x *= xRatio;
+			dispInScreenSpace.y *= yRatio;
+			m_multipleCameraRenderOffset = dispInScreenSpace * 2;
+			//m_multipleCameraRenderOffset = Vec2::ZERO;
+		}
+		break;
 		default:
-			break;
+		break;
 	}
 }
 

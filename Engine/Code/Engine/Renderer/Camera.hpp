@@ -54,6 +54,7 @@ public:
 	Vec2	GetOrthoMin() const;
 	Vec2	GetOrthoMax() const;
 	Vec2	GetCenterPosition2D() const;
+	Vec2	Get2DDimension() const;
 
 	Vec3	GetPosition() const;
 	Vec2	GetPosition2D() const;

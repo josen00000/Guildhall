@@ -68,12 +68,14 @@ public:
 	void UpdateControllers( float deltaSeconds );
 	void UpdateSplitScreenEffects( float deltaSeconds );
 	void UpdateNoSplitScreenEffect( float deltaSeconds );
+	void UpdateVoronoiSplitScreenEffect( float delteSeconds );
 	void UpdateControllerCameras();
 	void DebugRender();
 	void DebugRenderControllers();
 
 	// Accessor
 	bool GetIsDebug() const { return m_isdebug; }
+	bool DoesNeedSplitScreen( AABB2 cameraBox ) const;
 	int GetControllersNum() const { return (int)m_controllers.size(); }
 	float GetTotalFactor() const ; 
 
@@ -90,6 +92,10 @@ public:
 	CameraFrameState	GetCameraFrameState() const { return m_cameraFrameState; }
 	SplitScreenState	GetSplitScreenState() const { return m_splitScreenState; }
 	NoSplitScreenStrat	GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
+
+	Vec2 GetAverageCameraPosition();
+	AABB2 GetWorldCameraBox();
+	AABB2 GetSplitCheckBox();
 
 	Camera*				GetNoSplitCamera() { return m_noSplitCamera; }
 	CameraController*	GetCameraControllerWithPlayer( Player* player );
@@ -159,4 +165,6 @@ private:
 	Shader* m_multipleCameraShader	= nullptr;
 	Map*	m_map					= nullptr;
 	//Timer*
+
+	std::vector<Vec2> m_testIntersectPoints;
 };

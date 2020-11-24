@@ -2,6 +2,7 @@
 #include "Game/Player.hpp"
 #include "Game/Game.hpp"
 #include "Engine/Math/Vec4.hpp"
+#include "Engine/Math/MathUtils.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
@@ -66,6 +67,44 @@ void CameraSystem::Render()
 		g_theGame->RenderGame();
 		g_theRenderer->EndCamera();
 	}
+	else if( m_splitScreenState == VORONOI_SPLIT ) {
+		
+		AABB2 splitCheckBox	= GetSplitCheckBox();
+		if( !DoesNeedSplitScreen( splitCheckBox ) ) {
+			g_theRenderer->BeginCamera( m_noSplitCamera );
+			g_theGame->RenderGame();
+			g_theRenderer->EndCamera();
+		}
+		else {
+// 			g_theRenderer->BeginCamera( m_noSplitCamera );
+// 			g_theGame->RenderGame();
+// 			if( m_controllers.size() == 2 ){
+// 				g_theRenderer->DrawPolygon2D( m_controllers[0]->GetVoronoiPoly(), Rgba8::RED );
+// 				g_theRenderer->DrawPolygon2D( m_controllers[1]->GetVoronoiPoly(), Rgba8::RED );
+// 			}
+// 			g_theRenderer->EndCamera();
+
+			
+			for( int i = 0; i < m_controllers.size(); i++ ) { // TODO test for -1
+				m_controllers[i]->Render();
+			}
+
+			g_theRenderer->BeginCamera( m_noSplitCamera );
+			g_theRenderer->BindShader( m_multipleCameraShader );
+
+			for( int i = 0; i < m_controllers.size(); i++ ) {
+				g_theRenderer->SetDiffuseTexture( m_controllers[i]->GetColorTarget() );
+				g_theRenderer->SetMaterialTexture( m_controllers[i]->GetStencilTexture() );
+				g_theRenderer->SetOffsetBuffer( m_controllers[i]->GetOffsetBuffer(), 0 );
+				g_theRenderer->m_context->Draw( 3, 0 );
+			}
+			g_theRenderer->EndCamera();
+
+			for( int i = 0; i < m_controllers.size(); i++ ) {
+				m_controllers[i]->ReleaseRenderTarget();
+			}
+		}
+	}
 	else {
 		// split screen and multiple camera
 		for( int i = 0; i < m_controllers.size(); i++ ) {
@@ -88,18 +127,6 @@ void CameraSystem::Render()
 		}
 
 	}
-	switch( m_splitScreenState )
-	{
-	case NO_SPLIT_SCREEN:
-		break;
-	case AXIS_ALIGNED_SPLIT:
-
-		break;
-	default:
-		break;
-	}
-
-	//g_gameCamera->EnableClearColor( Rgba8::DARK_GRAY );
 }
 
 void CameraSystem::UpdateControllers( float deltaSeconds )
@@ -115,8 +142,12 @@ void CameraSystem::UpdateSplitScreenEffects( float deltaSeconds )
 	{
 		case NO_SPLIT_SCREEN: {
 			UpdateNoSplitScreenEffect( deltaSeconds );
-			break;
 		}
+		break;
+		case VORONOI_SPLIT: {
+			UpdateVoronoiSplitScreenEffect( deltaSeconds );
+		}
+		break;
 		case NUM_OF_SPLIT_SCREEN_STATE:
 			break;
 	}
@@ -141,6 +172,56 @@ void CameraSystem::UpdateNoSplitScreenEffect( float deltaSeconds )
 			KillAndTeleportPlayers( notInsideControllers );
 		}
 	}
+}
+
+void CameraSystem::UpdateVoronoiSplitScreenEffect( float delteSeconds )
+{
+	AABB2 worldCameraBox = GetWorldCameraBox();
+	AABB2 splitCheckBox	= GetSplitCheckBox();
+	if( DoesNeedSplitScreen( splitCheckBox ) ) {
+		// temp for two player
+		if( m_controllers.size() != 2 ){ return; }
+		Vec2 player1CameraPos = m_controllers[0]->m_cameraPos;
+		Vec2 player2CameraPos = m_controllers[1]->m_cameraPos;
+		Vec2 dispAB		= player2CameraPos - player1CameraPos;
+		Vec2 centerPos	= ( player1CameraPos + player2CameraPos ) / 2;
+		Vec2 dirtAB		= dispAB.GetNormalized();
+		Vec2 dirtPerpendicularAB = Vec2( -dirtAB.y, dirtAB.x );
+		LineSegment2 perpendicularLine = LineSegment2( centerPos, centerPos + dirtPerpendicularAB * 5.f );
+		m_testIntersectPoints = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
+		std::vector<Vec2> pointsA = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
+		std::vector<Vec2> pointsB = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
+		Vec2 worldCameraBoxCorners[4];
+		worldCameraBox.GetCornerPositions( worldCameraBoxCorners );
+		for( int i = 0; i < 4; i++ ) {
+			float distToPointA = GetDistance2D( player1CameraPos, worldCameraBoxCorners[i] );
+			float distToPointB = GetDistance2D( player2CameraPos, worldCameraBoxCorners[i] );
+			if( distToPointA < distToPointB ) {
+				pointsA.push_back( worldCameraBoxCorners[i] );
+			}
+			else {
+				pointsB.push_back( worldCameraBoxCorners[i] );
+			}
+		}
+		Polygon2 polygonA = Polygon2::MakeConvexFromPointCloud( pointsA );
+		Polygon2 polygonB = Polygon2::MakeConvexFromPointCloud( pointsB );
+		Vec2 player1InCheckBox = splitCheckBox.GetNearestPoint( player1CameraPos );
+		Vec2 player2InCheckBox = splitCheckBox.GetNearestPoint( player2CameraPos );
+		Vec2 dispCheckBoxToPlayer1 = player1CameraPos - player1InCheckBox;
+		Vec2 dispCheckBoxToPlayer2 = player2CameraPos - player2InCheckBox;
+		polygonA.m_center += dispCheckBoxToPlayer1;
+		polygonB.m_center += dispCheckBoxToPlayer2;
+
+		m_controllers[0]->SetVoronoiOffset( dispCheckBoxToPlayer1 );
+		m_controllers[1]->SetVoronoiOffset( dispCheckBoxToPlayer2 );
+		m_controllers[0]->SetVoronoiPolygon( polygonA );
+		m_controllers[1]->SetVoronoiPolygon( polygonB );
+	}
+	else {
+		Vec2 pos = GetAverageCameraPosition();
+		 m_noSplitCamera->SetPosition2D( pos );
+	}
+
 }
 
 void CameraSystem::UpdateControllerCameras()
@@ -172,6 +253,11 @@ void CameraSystem::UpdateControllerCameras()
 
 void CameraSystem::DebugRender()
 {
+	// debug draw intersect points
+	for( int i = 0; i < m_testIntersectPoints.size(); i++ ) {
+		g_theRenderer->SetMaterialTexture( nullptr );
+		g_theRenderer->DrawCircle( m_testIntersectPoints[i], 0.5f, 1.f, Rgba8::RED );
+	}
 	DebugRenderControllers();
 }
 
@@ -180,6 +266,17 @@ void CameraSystem::DebugRenderControllers()
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 		m_controllers[i]->DebugRender();
 	}
+}
+
+bool CameraSystem::DoesNeedSplitScreen( AABB2 cameraBox ) const
+{
+	for( auto iter = m_controllers.begin(); iter != m_controllers.end(); ++iter ) {
+		Vec2 playerPos = (*iter)->m_player->GetPosition();
+		if( !IsPointInsideAABB2D( playerPos, cameraBox ) ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 float CameraSystem::GetTotalFactor() const
@@ -275,6 +372,8 @@ std::string CameraSystem::GetSplitScreenStateText() const
 		return result + std::string( "No split screen" );
 	case AXIS_ALIGNED_SPLIT:
 		return result + std::string( "axis aligned split screen" );
+	case VORONOI_SPLIT:
+		return result + std::string( "voronoi split screen" );
 	case NUM_OF_SPLIT_SCREEN_STATE:
 		return result + std::string( "Num of split screen" );
 	}
@@ -296,6 +395,32 @@ std::string CameraSystem::GetNoSplitScreenStratText() const
 		return result + std::string( "Number of no split screen strat" );
 	}
 	return result + "Error state.";
+}
+
+Vec2 CameraSystem::GetAverageCameraPosition()
+{
+	Vec2 totalPos = Vec2::ZERO;
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		CameraController* tempController = m_controllers[i];
+		totalPos += tempController->GetCameraPos();
+	}
+	totalPos /= (int)m_controllers.size();
+	return totalPos;
+}
+
+AABB2 CameraSystem::GetWorldCameraBox()
+{
+	Vec2 boxCenter = GetAverageCameraPosition();
+	Vec2 boxDimension = g_gameCamera->Get2DDimension();
+	AABB2 worldCameraBox = AABB2( boxCenter, boxDimension.x, boxDimension.y );
+	return worldCameraBox;
+}
+
+AABB2 CameraSystem::GetSplitCheckBox()
+{
+	Vec2 boxCenter = GetAverageCameraPosition();
+	AABB2 worldCameraBox = AABB2( boxCenter, GAME_CHECK_WIDTH, GAME_CHECK_HEIGHT );
+	return worldCameraBox;
 }
 
 CameraController* CameraSystem::GetCameraControllerWithPlayer( Player* player )

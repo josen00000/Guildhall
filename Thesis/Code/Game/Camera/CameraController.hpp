@@ -33,6 +33,9 @@ public:
 	float GetCurrentMultipleFactor() const { return m_currentMultipleFactor; }
 	Vec2 GetCuePos() const ;
 	Vec2 GetSmoothedGoalPos() const { return m_smoothedGoalCameraPos; }
+	Vec2 GetCameraPos() const { return m_cameraPos; }
+	Polygon2 GetVoronoiPoly() const { return m_voronoiPolygon; }
+
 	Texture* GetColorTarget() { return m_colorTarget; }
 	Texture* GetStencilTexture() { return m_stencilTexture; }
 	RenderBuffer* GetOffsetBuffer(){ return m_offsetBuffer; }
@@ -48,6 +51,8 @@ public:
 	void AddTrauma( float addTrauma );
 	void SetFwdFrameDist( float dist );
 	void SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor );
+	void SetVoronoiPolygon( Polygon2 poly );
+	void SetVoronoiOffset( Vec2 offset );
 
 	// Camera Window
 	void UpdateCameraWindow( float deltaSeconds );
@@ -155,6 +160,8 @@ private:
 	float m_factorStableSeconds		= 0.f; 
 
 	RenderBuffer* m_offsetBuffer	= nullptr;
+	Vec2	m_voronoiOffset = Vec2::ZERO;
+	Polygon2 m_voronoiPolygon;
 
 	std::chrono::microseconds m_testDuration;
 };
