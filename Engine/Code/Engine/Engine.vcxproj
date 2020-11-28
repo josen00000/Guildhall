@@ -219,6 +219,7 @@
     <ClCompile Include="Math\Vec3.cpp" />
     <ClCompile Include="Math\Vec4.cpp" />
     <ClCompile Include="Network\BlockingQueue.cpp" />
+    <ClCompile Include="Network\NonBlockingPriorityQueue.cpp" />
     <ClCompile Include="Network\TCPClient.cpp" />
     <ClCompile Include="Network\NetworkSystem.cpp" />
     <ClCompile Include="Network\NonBlockingQueue.cpp" />
@@ -319,6 +320,7 @@
     <ClInclude Include="Math\Vec3.hpp" />
     <ClInclude Include="Math\Vec4.hpp" />
     <ClInclude Include="Network\BlockingQueue.hpp" />
+    <ClInclude Include="Network\NonBlockingPriorityQueue.hpp" />
     <ClInclude Include="Network\TCPClient.hpp" />
     <ClInclude Include="Network\NetworkSystem.hpp" />
     <ClInclude Include="Network\NonBlockingQueue.hpp" />

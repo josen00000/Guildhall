@@ -52,6 +52,7 @@ public:
 	virtual void HandleInput( std::string input ) = 0;
 	virtual void SendDataToRemoteServer( Strings data );
 	virtual void SendDataToRemoteServer( std::string data );
+	virtual void SendReliableDataToRemoteServer( std::string data );
 	
 	Server* m_owner		= nullptr;
 	Entity* m_entity	= nullptr;

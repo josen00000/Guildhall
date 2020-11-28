@@ -18,7 +18,9 @@ public:
 
 public:
 	virtual void Update( float deltaSeconds );
-	void UpdateVerts( Vec2 uvAtMin, Vec2 uvAtMax );
+	virtual void UpdateVerts( float deltaSeconds );
+	virtual void UpdateVerts( Vec2 uvAtMin, Vec2 uvAtMax );
+
 	void UpdateTexCoords( const Camera* camera, BillboardMode billboardMode, Convention convention );
 
 	virtual void Render( ) const;
@@ -79,6 +81,5 @@ protected:
 	bool m_isMoving = false;
 	bool m_isPlayer = false;
 	float m_mass = 1.f;
-
 	const EntityDefinition* m_definition = nullptr;
 };

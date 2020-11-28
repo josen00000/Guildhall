@@ -52,7 +52,7 @@ void NetworkSystem::StartUp()
 	//m_UDPSocket = new UDPSocket();
 	
 	m_readFromGameAndSendThread = std::thread( &NetworkSystem::ReadFromGameAndSendUDPMessage );
-	m_receiveAndSendToGameThread = std::thread( &NetworkSystem::ReceiveUDPMessageAndWriteToGame );
+	//m_receiveAndSendToGameThread = std::thread( &NetworkSystem::ReceiveUDPMessageAndWriteToGame );
 }
 
 void NetworkSystem::BeginFrame()
@@ -92,7 +92,7 @@ void NetworkSystem::Shutdown()
 	WSACleanup();
 	CloseUDPSockets();
 	m_readFromGameAndSendThread.join();
-	m_receiveAndSendToGameThread.join();
+	//m_receiveAndSendToGameThread.join();
 }
 
 void NetworkSystem::StartTCPServerWithPort( const char* port )
@@ -107,8 +107,13 @@ void NetworkSystem::CloseUDPSockets()
 {
 	for( int i = 0; i < m_UDPSockets.size(); i++ ) {
 		m_UDPSockets[i]->Close();
+		m_udpReceiveThreads[i].join();
+		m_udpReliableSendThreads[i].join();
+		m_udpReliableWriteToGameThreads[i].join();
 	}
-	//m_UDPSocket->Close();
+	m_udpReliableWriteToGameThreads.clear();
+	m_udpReliableSendThreads.clear();
+	m_udpReceiveThreads.clear();
 	m_sendQueue.StopBlocking();
 	m_isEnd = true;
 }
@@ -117,7 +122,15 @@ UDPSocket* NetworkSystem::CreateUDPSocket()
 {
 	UDPSocket* tempUDPSocket = new UDPSocket();
 	tempUDPSocket->CreateUDPSocket();
+	std::thread tempRecvThread ( &NetworkSystem::ReceiveUDPMessageAndWriteToGame, tempUDPSocket );
+	std::thread tempReliableSendThread ( &NetworkSystem::SendReliableUDPMessage, tempUDPSocket );
+	std::thread tempReliableWriteGameThread ( &NetworkSystem::WriteReliableUDPMessageToGame, tempUDPSocket );
+
 	m_UDPSockets.push_back( tempUDPSocket );
+	m_udpReceiveThreads.push_back( std::move(tempRecvThread) );
+	m_udpReliableSendThreads.push_back( std::move( tempReliableSendThread ) );
+	m_udpReliableWriteToGameThreads.push_back( std::move( tempReliableWriteGameThread ) );
+	
 	return tempUDPSocket;
 }
 
@@ -137,10 +150,21 @@ GameInfo NetworkSystem::GetReceivedUDPMsg()
 	return m_receiveQueue.Pop();
 }
 
+GameInfo NetworkSystem::GetGameInfoWithReliableUDPMessage( ReliableUDPMsg msg )
+{
+	GameInfo tempInfo;
+	tempInfo.m_addr = std::string( msg.addr, msg.addrLen );
+	tempInfo.m_isReliable = true;
+	tempInfo.m_msg = std::string( msg.msg, msg.msgLen );
+	return tempInfo;
+}
+
 std::vector<GameInfo> NetworkSystem::GetAllReceivedUDPMsgs()
 {
 	std::vector<GameInfo> result;
-	result = m_receiveQueue.PopAll();
+	if( !m_receiveQueue.Empty() ){
+		result = m_receiveQueue.PopAll();
+	}
 	return result;
 }
 
@@ -235,35 +259,125 @@ void NetworkSystem::ReadFromGameAndSendUDPMessage()
 	{
 		//g_theConsole->DebugLogf( "trying to send message with index : %d in thread: %d", index, std::this_thread::get_id() );
 		GameInfo sendInfo = g_theNetworkSystem->m_sendQueue.Pop();
-		UDPSocket* targetUDPSocket = g_theNetworkSystem->FindUDPSocketWithTargetIPAddressAndPort( sendInfo.first );
-		if( !targetUDPSocket ){ continue; }
-		std::string sendMsg = sendInfo.second;
-		targetUDPSocket->SetHeader( UDP_HEADER_PROTOCOL, 0, (uint16_t)sendMsg.size(), index );
+		UDPSocket* targetUDPSocket = g_theNetworkSystem->FindUDPSocketWithTargetIPAddressAndPort( sendInfo.m_addr );
+		if( !targetUDPSocket ){ 
+			continue; 
+		}
+		std::string sendMsg = sendInfo.m_msg;
+		if( sendInfo.m_isReliable ) {
+			std::uint32_t sequence = targetUDPSocket->GetSendReliableSequence();
+			targetUDPSocket->SetHeader( UDP_HEADER_PROTOCOL, RELIABLE_MSG, (uint16_t)sendMsg.size(), sequence );
+			targetUDPSocket->AddReliableMsg( sequence, sendInfo.m_addr, sendMsg );
+		}
+		else {
+			targetUDPSocket->SetHeader( UDP_HEADER_PROTOCOL, NON_RELIABLE_MSG, (uint16_t)sendMsg.size(), index );
+			index++;	
+		}
 		targetUDPSocket->WriteData( sendMsg.data(), (int)sendMsg.size() );
 		targetUDPSocket->UDPSend( (int)(sizeof(targetUDPSocket->m_sendBuffer.header) + sendMsg.size() + 1) );
-		index++;	
 	}
 }
 
-void NetworkSystem::ReceiveUDPMessageAndWriteToGame()
+void NetworkSystem::WriteReliableUDPMessageToGame( UDPSocket* socket )
 {
-	DataHeader const* pMsg = nullptr;
-	while( !g_theNetworkSystem->m_isEnd )
-	{
-		for( int i = 0; i < g_theNetworkSystem->m_UDPSockets.size(); i++ ){
-			UDPSocket* socket = g_theNetworkSystem->m_UDPSockets[i];
-			int size = socket->UDPReceive();
-			if( size > 0 ) {
-				//g_theConsole->DebugLogf( "receive message with in thread: %d", std::this_thread::get_id() );
-				std::string dataStr;
-				std::string IPAddr;
-				IPAddr = /*std::string( "ip address is :") +*/ socket->GetReceiveIPAddr();
-				dataStr = /*std::string( "received data is :") +*/ socket->ReadDataAsString();
-				GameInfo result = GameInfo( IPAddr, dataStr );
-				pMsg = socket->GetReceiveHeader();
-				g_theNetworkSystem->m_receiveQueue.Push( result );
+	while( !socket->m_isClose ) {
+		if( socket->m_reliableRecvUDPMsgs.empty() ) {
+			continue;
+		}
+		ReliableUDPMsg topMsg;
+		while( !socket->m_reliableRecvUDPMsgs.empty() )
+		{
+			// Get rid of duplicate msg
+			topMsg = socket->m_reliableRecvUDPMsgs.top();
+			if( topMsg.id < socket->GetRecvReliableSequence() ) {
+				socket->m_reliableRecvUDPMsgs.pop();
+			}
+			else {
+				break;
 			}
 		}
+		if( topMsg.id == socket->GetRecvReliableSequence() ) {
+			GameInfo tempInfo = g_theNetworkSystem->GetGameInfoWithReliableUDPMessage( topMsg );
+			if( &tempInfo == NULL ) {
+				int a = 0;
+			}
+			g_theNetworkSystem->m_receiveQueue.Push( tempInfo );
+			socket->SetRecvReliableSequence( ( topMsg.id + 1 ) );
+		}
+
+		std::this_thread::sleep_for( std::chrono::microseconds( 1 ) );
+	}
+}
+
+void NetworkSystem::ReceiveUDPMessageAndWriteToGame( UDPSocket* socket )
+{
+	DataHeader const* pMsg = nullptr;
+	while( !socket->m_isClose )
+	{
+		int size = socket->UDPReceive();
+		if( size > 0 ) {
+			//g_theConsole->DebugLogf( "receive message with in thread: %d", std::this_thread::get_id() );
+			std::string dataStr;
+			std::string IPAddr;
+			IPAddr = /*std::string( "ip address is :") +*/ socket->GetReceiveIPAddr();
+			dataStr = /*std::string( "received data is :") +*/ socket->ReadDataAsString();
+			bool isReliable = socket->GetIsDataReliable();
+			GameInfo result = GameInfo( isReliable, IPAddr, dataStr );
+			if( &result == NULL ) {
+				int a =0;
+			}
+			pMsg = socket->GetReceiveHeader();
+			g_theNetworkSystem->m_receiveQueue.Push( result );
+		}
+		//std::this_thread::sleep_for( std::chrono::microseconds( 10 ) );
 	}
 
+}
+
+void NetworkSystem::SendReliableUDPMessage( UDPSocket* socket )
+{
+	while( !socket->m_isClose ) {
+		// Check ac package
+		// Resend reliable message
+		if( socket->m_reliableSendUDPMsgs.empty() ) {
+			std::this_thread::sleep_for( std::chrono::microseconds( 1 ) );
+			continue;
+		}
+		socket->LockACData();
+		// get rid of AC package received message
+		if( !socket->m_receivedACSequences.empty() ) {
+			std::uint32_t ACseq; 
+			ReliableUDPMsg topSendMsg; 
+			while( !socket->m_receivedACSequences.empty() && !socket->m_reliableSendUDPMsgs.empty() ) {
+				ACseq		= socket->m_receivedACSequences.top();
+				topSendMsg	= socket->m_reliableSendUDPMsgs.top();
+				if( ACseq < topSendMsg.id ) {
+					socket->m_receivedACSequences.pop();
+				}
+				else if ( ACseq == topSendMsg.id ) {
+					socket->m_receivedACSequences.pop();
+					socket->m_reliableSendUDPMsgs.pop();
+				}
+				else {
+					break;
+				}
+			}
+		}
+
+		// send un AC Msg
+		if( !socket->m_reliableSendUDPMsgs.empty() ) {
+			std::vector<ReliableUDPMsg> sendReliableMsgs = socket->GetSendReliableMsg();
+			for( int i = 0; i < sendReliableMsgs.size(); i++ ) {
+				ReliableUDPMsg tempMsg = sendReliableMsgs[i];
+				std::string sendMsg = std::string( tempMsg.msg, tempMsg.msgLen );
+				std::uint32_t sequence = tempMsg.id;
+				
+				socket->SetHeader( UDP_HEADER_PROTOCOL, RELIABLE_MSG, (uint16_t)sendMsg.size(), sequence );
+				socket->WriteReliableData( sendMsg.data(), (int)sendMsg.size() );
+				socket->reliableUDPSend( (int)(sizeof( socket->m_reliableSendBuffer.header ) + sendMsg.size() + 1) );
+			}
+		}
+		socket->UnlockACData();
+		std::this_thread::sleep_for( std::chrono::microseconds( 1 ) );
+	}
 }

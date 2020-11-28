@@ -31,7 +31,7 @@ TileMap::TileMap( const XmlElement& mapElement, std::string name, World* world )
 	m_name = name;
 	LoadMapDefinitions( mapElement );
 	CreateAndPopulateTiles();
-	CreateEntities();
+	//CreateEntities(); //TODO temp for testing
 	m_world = world;
 }
 

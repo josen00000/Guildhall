@@ -324,6 +324,9 @@
     <ClCompile Include="Network\TCPServer.cpp">
       <Filter>Network</Filter>
     </ClCompile>
+    <ClCompile Include="Network\NonBlockingPriorityQueue.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer\Camera.hpp">
@@ -624,6 +627,9 @@
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Network\TCPServer.hpp">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\NonBlockingPriorityQueue.hpp">
       <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>

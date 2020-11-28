@@ -39,6 +39,7 @@ public:
 	void MoveClientEntity( Client* client, std::string instruction );
 	void PrepareConnectionForClientWithIPAddress( IPAddress addr );
 	bool CheckIfClientApproved( IPAddress addr );
+	void ReliableUDPMessageTest();
 
 
 private:

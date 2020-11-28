@@ -78,26 +78,9 @@ void PlayerClient::PreUpdatePlayer()
 
 	playerOrientation += deltaPlayerOrientation;
 	m_gameCamera->m_transform.SetYawDegrees( playerOrientation );
-
-	bool isMoving = false;
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_E ) ) {
-		isMoving = true;
-		m_entity->SetMoveDirt( Vec2( 1.f, 0.f ) );
-	}
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
-		isMoving = true;
-		m_entity->SetMoveDirt( Vec2( -1.f, 0.f ) );
-	}
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_F ) ) {
-		isMoving = true;
-		m_entity->SetMoveDirt( Vec2( 0.f, -1.f ) );
-	}
-	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
-		isMoving = true;
-		m_entity->SetMoveDirt( Vec2( 0.f, 1.f ) );
-	}
-	m_entity->SetIsMoving( isMoving );
 	m_entity->SetOrientation( playerOrientation );
+	
+	HandleInput( std::string() );
 // 	m_player->Update( deltaSeconds );
 // 
 // 	m_gameCamera->SetPosition( m_player->GetPosition() ); // TODO Move to somewhere correct
@@ -155,6 +138,26 @@ void PlayerClient::Render()
 void PlayerClient::HandleInput( std::string input )
 {
 	UNUSED(input);
+
+	bool isMoving = false;
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_E ) ) {
+		isMoving = true;
+		m_entity->SetMoveDirt( Vec2( 1.f, 0.f ) );
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_D ) ) {
+		isMoving = true;
+		m_entity->SetMoveDirt( Vec2( -1.f, 0.f ) );
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_F ) ) {
+		isMoving = true;
+		m_entity->SetMoveDirt( Vec2( 0.f, -1.f ) );
+	}
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_S ) ) {
+		isMoving = true;
+		m_entity->SetMoveDirt( Vec2( 0.f, 1.f ) );
+	}
+	m_entity->SetIsMoving( isMoving );
+	
 }
 
 void PlayerClient::RenderUI()

@@ -3,10 +3,12 @@
 #include "Game/GameCommon.hpp"
 #include "Game/Entity.hpp"
 #include "Engine/Network/NetworkSystem.hpp"
+#include "Engine/Input/InputSystem.hpp"
 #include "Engine/Network/TCPServer.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 
-extern NetworkSystem* g_theNetworkSystem;
+extern NetworkSystem*	g_theNetworkSystem;
+extern InputSystem*		g_theInputSystem;
 
 AuthoritativeServer::AuthoritativeServer( Game* game )
 	:Server::Server(game)
@@ -32,6 +34,9 @@ void AuthoritativeServer::Shutdown()
 void AuthoritativeServer::Update( float deltaSeconds )
 {
 	__super::Update( deltaSeconds );
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_T ) ) {
+		ReliableUDPMessageTest();
+	}
 }
 
 void AuthoritativeServer::BeginFrame()
@@ -72,7 +77,7 @@ void AuthoritativeServer::ReceiveAndHandleUDPNetworkData()
 
 
 	for( int i = 0; i < gameInfos.size(); i++ ) {
-		if( gameInfos[i].first.size() == 0 ){ continue; }
+		if( gameInfos[i].m_addr.size() == 0 ){ continue; }
 		ParseAndExecuteRemoteMsg( gameInfos[i] );
 	}
 
@@ -80,11 +85,7 @@ void AuthoritativeServer::ReceiveAndHandleUDPNetworkData()
 
 void AuthoritativeServer::SendGameMsg( )
 {
-// 	for( auto iter = m_clients.begin(); iter != m_clients.end(); ++iter ) {
-// 		if( (*iter)->GetIsConnected() && (*iter)->GetIsDataReadyForSend() ) {
-// 			(*iter)->SendDataToRemoteServer();
-// 		}
-//	}
+
 }
 
 void AuthoritativeServer::SendNetworkData()
@@ -107,9 +108,8 @@ void AuthoritativeServer::SendNetworkData()
 
 	for( auto iter = m_clients.begin(); iter != m_clients.end(); ++iter ) {
 			(*iter)->SendDataToRemoteServer( gameMsgs );
-// 		if( (*iter)->GetIsConnected() && (*iter)->GetIsDataReadyForSend() ) {
-// 		}
 	}
+
 }
 
 Client* AuthoritativeServer::FindClientWithIPAddress( IPAddress addr )
@@ -189,10 +189,24 @@ bool AuthoritativeServer::CheckIfClientApproved( IPAddress addr )
 	return true;
 }
 
+void AuthoritativeServer::ReliableUDPMessageTest()
+{
+	static int a = 0;
+	for( int i = 0; i < 5; i++ ) {
+		if( m_clients.size() > 0 ) {
+			std::string testMsg = "testing" + std::to_string( a );
+			for( auto iter = m_clients.begin(); iter != m_clients.end(); ++iter ) {
+				(*iter)->SendReliableDataToRemoteServer( testMsg );
+			}
+			a++;
+		}
+	}
+}
+
 void AuthoritativeServer::ParseAndExecuteRemoteMsg( GameInfo msg )
 {
-	std::string clientAddr	= msg.first;
-	std::string gameMsg		= msg.second;
+	std::string clientAddr	= msg.m_addr;
+	std::string gameMsg		= msg.m_msg;
 
 	Strings addrs = SplitStringOnDelimiter( clientAddr, ":" );
 	addrs[0] = GetStringWithoutSpace( addrs[0] );
@@ -214,7 +228,7 @@ void AuthoritativeServer::ParseAndExecuteRemoteMsg( GameInfo msg )
 				std::string msg =	std::string( "ENTITY|CREATED|") +
 									std::to_string( m_entities.size()-1 ) + "|" + 
 									startPos.ToString();
-				tempClient->SendDataToRemoteServer( msg );
+				tempClient->SendReliableDataToRemoteServer( msg );
 			}
 			else {
 				g_theConsole->DebugErrorf( " key does not match: %s", gameMsg.c_str() );

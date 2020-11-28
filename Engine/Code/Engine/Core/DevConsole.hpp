@@ -107,6 +107,9 @@ private:
 	void DeleteCommandInHistory( int index );
 	void LoadHistory();
 	void SaveHistoryToFile();
+	void WriteLogToFile();
+
+	void MemoryCollect();
 
 	// Render
 	void AddVertForInput() const;
@@ -125,7 +128,7 @@ public:
 	BitmapFont* m_font	= nullptr;
 	Camera* m_camera	= nullptr;
 	std::string m_inputs;
-	std::vector<ColoredLine> m_lines;
+	std::deque<ColoredLine> m_lines;
 	mutable std::vector<Vertex_PCU> m_vertices;
 	std::vector<std::string> m_commandsHistory;
 	static std::map<std::string, std::string> s_commands;

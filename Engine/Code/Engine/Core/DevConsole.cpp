@@ -87,7 +87,7 @@ void DevConsole::Update( float deltaSeconds )
 	UpdateAbleRenderCaret( deltaSeconds );
 	if( m_historyMode ) {
 		m_inputs = m_commandsHistory[m_historyCommandIndex];
-		UpdateCaretIndex( m_inputs.size() );
+		UpdateCaretIndex( (int)m_inputs.size() );
 	}
 }
 
@@ -116,6 +116,7 @@ void DevConsole::PrintString( const Rgba8& textColor, const std::string& devCons
 {
 	ColoredLine tem = ColoredLine( textColor, devConsolePrintString );
 	m_lines.push_back( tem );
+	MemoryCollect();
 }
 
 void DevConsole::Render( RenderContext& renderer ) const
@@ -635,6 +636,29 @@ void DevConsole::SaveHistoryToFile()
 		ERROR_AND_DIE( " can not open file. " );
 	}
 }
+
+void DevConsole::WriteLogToFile()
+{
+	std::ofstream myFile;
+	myFile.open( "./Data/DevConsole/History.txt" );
+	if( !myFile.fail() ) {
+		for( int i = 0; i < m_lines.size(); i++ ) {
+			myFile << m_lines[i].text << std::endl;
+		}
+		myFile.close();
+	}
+	else {
+		ERROR_AND_DIE( " can not open file. " );
+	}
+}
+
+void DevConsole::MemoryCollect()
+{
+	if( m_lines.size() > 100 ) {
+		m_lines.pop_front();
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 // Render
@@ -652,8 +676,14 @@ void DevConsole::AddVertForContent() const
 	int maxDisplayedLinesNum = GetMaxLinesNum();
 	float deltaY = (float)1 / maxDisplayedLinesNum;
 	Vec2 alignment = Vec2( 0.f, deltaY );
-	for( int lineIndex = (int)(m_lines.size() - 1); lineIndex > (int)m_lines.size() - maxDisplayedLinesNum; lineIndex-- ) {
+	for( int lineIndex = ((int)m_lines.size() - 1); lineIndex > (int)m_lines.size() - maxDisplayedLinesNum; lineIndex-- ) {
 		if( lineIndex < 0 ) { break; }
+		if( lineIndex >= 100 ) {
+			break;
+		}
+		if( lineIndex >= m_lines.size() ) {
+			int a = 0;
+		}
 		ColoredLine tem = m_lines[lineIndex];
 		AABB2 cameraBox = m_camera->GetCameraAsBox();
 		m_font->AddVertsForTextInBox2D( m_vertices, m_camera->GetCameraAsBox(), m_lineHeight, tem.text, tem.color, 1.f, alignment );

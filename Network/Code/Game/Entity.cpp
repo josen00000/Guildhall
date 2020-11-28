@@ -41,6 +41,12 @@ void Entity::Update( float deltaSeconds )
 
 void Entity::UpdateVerts( Vec2 uvAtMin, Vec2 uvAtMax )
 {
+	if( !m_isPlayer ) {
+		std::string test = m_definition->m_billboardType;
+		BillboardMode billboardMode = GetBillboardModeWithString( m_definition->m_billboardType );
+		UpdateTexCoords( g_theGame->m_gameCamera, billboardMode, g_theGame->m_convension );
+	}
+
 	m_verts.clear();
 	float halfWidth;
 	float halfHeight;
@@ -66,6 +72,11 @@ void Entity::UpdateVerts( Vec2 uvAtMin, Vec2 uvAtMax )
 	m_verts.emplace_back( rightUpPos, Rgba8::WHITE, Vec2( uvAtMin.x, uvAtMax.y ) );
 	m_verts.emplace_back( leftDownPos, Rgba8::WHITE, Vec2( uvAtMax.x, uvAtMin.y ) );
 	m_verts.emplace_back( leftUpPos, Rgba8::WHITE, uvAtMax );
+}
+
+void Entity::UpdateVerts( float deltaSeconds )
+{
+
 }
 
 void Entity::UpdateTexCoords( const Camera* camera, BillboardMode billboardMode, Convention convention )
@@ -107,6 +118,7 @@ void Entity::UpdateTexCoords( const Camera* camera, BillboardMode billboardMode,
 void Entity::Render() const
 {
 	Texture* texture = m_definition->m_spriteTexture;
+	/*texture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );*/
 	g_theRenderer->SetDiffuseTexture( texture );
 	g_theRenderer->DrawVertexVector( m_verts );
 	if( g_theGame->m_debugMode && !m_isPlayer ) {

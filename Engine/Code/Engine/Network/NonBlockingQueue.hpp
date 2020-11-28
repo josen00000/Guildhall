@@ -21,6 +21,7 @@ public:
 
 
 	void Push( const value_type& value );
+	bool Empty() const{ return base::empty(); }
 	value_type Pop();
 	std::vector<value_type> PopAll();
 

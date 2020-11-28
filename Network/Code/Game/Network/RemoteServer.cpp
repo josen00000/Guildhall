@@ -40,9 +40,9 @@ void RemoteServer::Update( float deltaSeconds )
 	}
 	//m_playerClient->Update( deltaSeconds );
 	m_game->Update( deltaSeconds );
-// 	for( int i = 0; i < m_entities.size(); i++ ) {
-// 		m_entities[i]->Update( deltaSeconds );
-//	}
+	for( int i = 0; i < m_entities.size(); i++ ) {
+		m_entities[i]->UpdateVerts( deltaSeconds );
+	}
 	Map* currentMap = m_game->m_world->GetCurrentMap();
 	currentMap->CheckCollision();
 }
@@ -85,16 +85,22 @@ void RemoteServer::ReceiveAndHandleUDPNetworkData()
 	std::vector<GameInfo> gameinfos = g_theNetworkSystem->GetAllReceivedUDPMsgs();
 
 	for( int i = 0; i < gameinfos.size(); i++ ) {
-		if( gameinfos[i].first.size() == 0 ){ continue; }
+		if( gameinfos[i].m_addr.size() == 0 ){ continue; }
 		ParseAndExecuteRemoteMsg( gameinfos[i] );
 	}
 }
 
 void RemoteServer::ParseAndExecuteRemoteMsg( GameInfo msg )
 {
-	std::string instruction = msg.second;
+	std::string instruction = msg.m_msg;
 	Strings instructions = SplitStringOnDelimiter( instruction, "|" );
 	
+	// testing for reliable udp 
+	if( instruction.compare( 0, 7, "testing" ) == 0 ) {
+		g_theConsole->DebugLog( instruction );
+		return;
+	}
+
 	if( instructions.size() == 4 ) {
 		if( instructions[0] == "ENTITY" ) {
 			if( instructions[1] == "CREATED" ) {
@@ -140,7 +146,7 @@ void RemoteServer::ParseAndExecuteRemoteMsg( GameInfo msg )
 		}
 	}
 	else {
-		g_theConsole->DebugErrorf( "remote server receive wrong msg" );
+		//g_theConsole->DebugErrorf( "remote server receive wrong msg" );
 	}
 }
 
@@ -153,7 +159,7 @@ void RemoteServer::SendNetworkData()
 									moreDirt.ToString() + "|" +
 									std::to_string( m_playerClient->m_entity->GetOrientation() );
 			std::string targetIPAndPort = m_targetIPAddr + ":" + m_targetPort;
-			GameInfo tempInfo = GameInfo( targetIPAndPort, gameMsg );
+			GameInfo tempInfo = GameInfo( false, targetIPAndPort, gameMsg );
 			g_theNetworkSystem->SetSendUDPData( tempInfo );
 		}
 	}
@@ -193,6 +199,7 @@ void RemoteServer::SendUDPConnectionRequest()
 	Port validPort = g_theNetworkSystem->GetValidPort();
 	tempUDPSocket->BindSocket( atoi( validPort.c_str() )) ;
 	std::string targetIPAndPort = std::string( m_targetIPAddr + " :" + m_targetPort );
-	g_theNetworkSystem->SetSendUDPData( GameInfo( targetIPAndPort, m_key ));
-	/*g_theNetworkSystem->SetSendUDPData( GameInfo)*/
+	GameInfo test( true, targetIPAndPort, m_key );
+	std::string a = test.m_msg;
+	g_theNetworkSystem->SetSendUDPData( GameInfo( true, targetIPAndPort, m_key ));
 }

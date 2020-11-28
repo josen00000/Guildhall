@@ -90,12 +90,12 @@ void Client::SendDataToRemoteServer( Strings data )
 	std::string addr = m_clientInfo.IPAdress;
 	if( GetIsConnected() ) {
 		for( int i = 0; i < data.size(); i++ ) {
-			GameInfo tempInfo = GameInfo( addr, data[i] );
+			GameInfo tempInfo = GameInfo( false, addr, data[i] ); // TODO need check if reliable
 			g_theNetworkSystem->SetSendUDPData( tempInfo );
 		}
 	}
 	else {
-		g_theConsole->DebugErrorf( "try send data to remote server not connected" );
+		//g_theConsole->DebugErrorf( "try send data to remote server not connected" );
 	}
 }
 
@@ -103,8 +103,20 @@ void Client::SendDataToRemoteServer( std::string data )
 {
 	std::string addr = m_clientInfo.IPAdress;
 	if( GetIsConnected() ) {
-		GameInfo tempInfo = GameInfo( addr, data );
+		GameInfo tempInfo = GameInfo( false, addr, data );
 		g_theNetworkSystem->SetSendUDPData( tempInfo );
+	}
+	else {
+		g_theConsole->DebugErrorf( "try send data to remote server not connected" );
+	}
+}
+
+void Client::SendReliableDataToRemoteServer( std::string data )
+{
+	std::string addr = m_clientInfo.IPAdress;
+	if( GetIsConnected() ) {
+		GameInfo temInfo = GameInfo( true, addr, data );
+		g_theNetworkSystem->SetSendUDPData( temInfo );
 	}
 	else {
 		g_theConsole->DebugErrorf( "try send data to remote server not connected" );

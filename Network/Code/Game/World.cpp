@@ -50,7 +50,7 @@ bool World::LoadMap( std::string mapName )
 			m_maps[i]->PreparePlayer();
 			TileMap* tileMap = dynamic_cast<TileMap*>(m_maps[i]);
 			if( tileMap ) {
-				tileMap->CreateEntities();
+				//tileMap->CreateEntities(); //TODO: temp disable
 			}
 		}
 	}
