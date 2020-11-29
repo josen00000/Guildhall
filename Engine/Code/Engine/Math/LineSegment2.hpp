@@ -16,6 +16,7 @@ public:
 
 	//Accessor
 	bool	IsPointMostlyInEdge( Vec2 point ) const;
+	bool	IsPointMostlyInStraightLine( Vec2 point ) const;
 	float	GetLengthOfPointToLineSegment( const Vec2& refPos ) const; 
 	float	GetLength() const;
 	float	GetSlope() const;

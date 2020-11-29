@@ -900,3 +900,24 @@ std::vector<Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 b
 	return result;
 }
 
+LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB )
+{
+	Vec2 centerAB = ( pointA + pointB ) / 2;
+	Vec2 dirtAB;
+	if( pointA == pointB ) {
+		ERROR_RECOVERABLE( " can not get perpendicular bisector of same point" );
+	}
+	if( pointA.x = pointB.x ) {
+		dirtAB = Vec2( 0, 1 );
+	}
+	else if( pointA.y = pointB.y ) {
+		dirtAB = Vec2( 1, 0 );
+	}
+	else {
+		dirtAB = pointB - pointA;
+		dirtAB.Normalize();
+	}
+	LineSegment2 PB_AB = LineSegment2( centerAB, centerAB + dirtAB );
+	return PB_AB; 
+}
+

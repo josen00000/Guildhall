@@ -179,43 +179,7 @@ void CameraSystem::UpdateVoronoiSplitScreenEffect( float delteSeconds )
 	AABB2 worldCameraBox = GetWorldCameraBox();
 	AABB2 splitCheckBox	= GetSplitCheckBox();
 	if( DoesNeedSplitScreen( splitCheckBox ) ) {
-		// temp for two player
-		if( m_controllers.size() != 2 ){ return; }
-		Vec2 player1CameraPos = m_controllers[0]->m_cameraPos;
-		Vec2 player2CameraPos = m_controllers[1]->m_cameraPos;
-		Vec2 dispAB		= player2CameraPos - player1CameraPos;
-		Vec2 centerPos	= ( player1CameraPos + player2CameraPos ) / 2;
-		Vec2 dirtAB		= dispAB.GetNormalized();
-		Vec2 dirtPerpendicularAB = Vec2( -dirtAB.y, dirtAB.x );
-		LineSegment2 perpendicularLine = LineSegment2( centerPos, centerPos + dirtPerpendicularAB * 5.f );
-		m_testIntersectPoints = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
-		std::vector<Vec2> pointsA = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
-		std::vector<Vec2> pointsB = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
-		Vec2 worldCameraBoxCorners[4];
-		worldCameraBox.GetCornerPositions( worldCameraBoxCorners );
-		for( int i = 0; i < 4; i++ ) {
-			float distToPointA = GetDistance2D( player1CameraPos, worldCameraBoxCorners[i] );
-			float distToPointB = GetDistance2D( player2CameraPos, worldCameraBoxCorners[i] );
-			if( distToPointA < distToPointB ) {
-				pointsA.push_back( worldCameraBoxCorners[i] );
-			}
-			else {
-				pointsB.push_back( worldCameraBoxCorners[i] );
-			}
-		}
-		Polygon2 polygonA = Polygon2::MakeConvexFromPointCloud( pointsA );
-		Polygon2 polygonB = Polygon2::MakeConvexFromPointCloud( pointsB );
-		Vec2 player1InCheckBox = splitCheckBox.GetNearestPoint( player1CameraPos );
-		Vec2 player2InCheckBox = splitCheckBox.GetNearestPoint( player2CameraPos );
-		Vec2 dispCheckBoxToPlayer1 = player1CameraPos - player1InCheckBox;
-		Vec2 dispCheckBoxToPlayer2 = player2CameraPos - player2InCheckBox;
-		polygonA.m_center += dispCheckBoxToPlayer1;
-		polygonB.m_center += dispCheckBoxToPlayer2;
-
-		m_controllers[0]->SetVoronoiOffset( dispCheckBoxToPlayer1 );
-		m_controllers[1]->SetVoronoiOffset( dispCheckBoxToPlayer2 );
-		m_controllers[0]->SetVoronoiPolygon( polygonA );
-		m_controllers[1]->SetVoronoiPolygon( polygonB );
+		ConstructVoronoiDiagramForControllers( worldCameraBox, splitCheckBox );
 	}
 	else {
 		Vec2 pos = GetAverageCameraPosition();
@@ -451,6 +415,48 @@ void CameraSystem::SetControllerSmooth( bool isSmooth )
 	}
 }
 
+void CameraSystem::SetCameraWindowState( CameraWindowState newState )
+{
+	m_cameraWindowState = newState;
+}
+
+void CameraSystem::SetCameraSnappingState( CameraSnappingState newState )
+{
+	m_cameraSnappingState = newState;
+}
+
+void CameraSystem::SetCameraShakeState( CameraShakeState newState )
+{
+	m_cameraShakeState = newState;
+}
+
+void CameraSystem::SetCameraFrameState( CameraFrameState newState )
+{
+	m_cameraFrameState = newState;
+}
+
+void CameraSystem::SetSplitScreenState( SplitScreenState newState )
+{
+	m_splitScreenState = newState;
+}
+
+void CameraSystem::SetNoSplitScreenStrat( NoSplitScreenStrat newStrat )
+{
+	m_noSplitScreenStrat = newStrat;
+}
+
+void CameraSystem::SetMap( Map* map )
+{
+	m_map = map;
+}
+
+void CameraSystem::AddCameraShake( int index, float shakeTrauma )
+{
+	if( index < m_controllers.size() ) {
+		m_controllers[index]->AddTrauma( shakeTrauma );
+	}
+}
+
 void CameraSystem::UpdateDebugInfo()
 {
 	std::string windowStateText		= GetCameraWindowStateText();
@@ -664,45 +670,197 @@ float CameraSystem::ComputeCameraHeight( std::vector<CameraController*> const& v
 	return ( newHalfHeight * 2 );
 }
 
-void CameraSystem::SetCameraWindowState( CameraWindowState newState )
+void CameraSystem::ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
 {
-	m_cameraWindowState = newState;
-}
-
-void CameraSystem::SetCameraSnappingState( CameraSnappingState newState )
-{
-	m_cameraSnappingState = newState;
-}
-
-void CameraSystem::SetCameraShakeState( CameraShakeState newState )
-{
-	m_cameraShakeState = newState;
-}
-
-void CameraSystem::SetCameraFrameState( CameraFrameState newState )
-{
-	m_cameraFrameState = newState;
-}
-
-void CameraSystem::SetSplitScreenState( SplitScreenState newState )
-{
-	m_splitScreenState = newState;
-}
-
-void CameraSystem::SetNoSplitScreenStrat( NoSplitScreenStrat newStrat )
-{
-	m_noSplitScreenStrat = newStrat;
-}
-
-void CameraSystem::SetMap( Map* map )
-{
-	m_map = map;
-}
-
-void CameraSystem::AddCameraShake( int index, float shakeTrauma )
-{
-	if( index < m_controllers.size() ) {
-		m_controllers[index]->AddTrauma( shakeTrauma );
+	if( m_controllers.size() == 2 ) {
+		ConstructVoronoiDiagramForTwoControllers( worldCameraBox, splitCheckBox );
 	}
+	else if( m_controllers.size() == 3 ) {
+		ConstructVoronoiDiagramForThreeControllers( worldCameraBox, splitCheckBox );
+	}
+	else if( m_controllers.size() == 4 ) {
+		ConstructVoronoiDiagramForFourControllers( worldCameraBox, splitCheckBox );
+	}
+}
+
+void CameraSystem::ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
+{
+	Vec2 player1CameraPos = m_controllers[0]->m_cameraPos;
+	Vec2 player2CameraPos = m_controllers[1]->m_cameraPos;
+	Vec2 dispAB		= player2CameraPos - player1CameraPos;
+	Vec2 centerPos	= (player1CameraPos + player2CameraPos) / 2;
+	Vec2 dirtAB		= dispAB.GetNormalized();
+	Vec2 dirtPerpendicularAB = Vec2( -dirtAB.y, dirtAB.x );
+	LineSegment2 perpendicularLine = LineSegment2( centerPos, centerPos + dirtPerpendicularAB * 5.f );
+	//m_testIntersectPoints = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
+	std::vector<Vec2> pointsA = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
+	std::vector<Vec2> pointsB = GetIntersectionPointOfLineAndAABB2( perpendicularLine, worldCameraBox );
+	Vec2 worldCameraBoxCorners[4];
+	worldCameraBox.GetCornerPositions( worldCameraBoxCorners );
+	for( int i = 0; i < 4; i++ ) {
+		float distToPointA = GetDistance2D( player1CameraPos, worldCameraBoxCorners[i] );
+		float distToPointB = GetDistance2D( player2CameraPos, worldCameraBoxCorners[i] );
+		if( distToPointA < distToPointB ) {
+			pointsA.push_back( worldCameraBoxCorners[i] );
+		}
+		else {
+			pointsB.push_back( worldCameraBoxCorners[i] );
+		}
+	}
+	Polygon2 polygonA = Polygon2::MakeConvexFromPointCloud( pointsA );
+	Polygon2 polygonB = Polygon2::MakeConvexFromPointCloud( pointsB );
+	Vec2 player1InCheckBox = splitCheckBox.GetNearestPoint( player1CameraPos );
+	Vec2 player2InCheckBox = splitCheckBox.GetNearestPoint( player2CameraPos );
+	Vec2 dispCheckBoxToPlayer1 = player1CameraPos - player1InCheckBox;
+	Vec2 dispCheckBoxToPlayer2 = player2CameraPos - player2InCheckBox;
+	polygonA.m_center += dispCheckBoxToPlayer1;
+	polygonB.m_center += dispCheckBoxToPlayer2;
+
+	m_controllers[0]->SetVoronoiOffset( dispCheckBoxToPlayer1 );
+	m_controllers[1]->SetVoronoiOffset( dispCheckBoxToPlayer2 );
+	m_controllers[0]->SetVoronoiPolygon( polygonA );
+	m_controllers[1]->SetVoronoiPolygon( polygonB );
+}
+
+void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
+{
+	Vec2 playerCameraPosA = m_controllers[0]->GetCameraPos();
+	Vec2 playerCameraPosB = m_controllers[1]->GetCameraPos();
+	Vec2 playerCameraPosC = m_controllers[2]->GetCameraPos();
+	
+	Vec2 pointA	= splitCheckBox.GetNearestPoint( playerCameraPosA );
+	Vec2 pointB = splitCheckBox.GetNearestPoint( playerCameraPosB );
+	Vec2 pointC = splitCheckBox.GetNearestPoint( playerCameraPosC );
+
+	LineSegment2 PB_AB = GetPerpendicularBisectorOfTwoPoints( pointA, pointB );
+	LineSegment2 PB_BC = GetPerpendicularBisectorOfTwoPoints( pointB, pointC );
+	LineSegment2 PB_CA = GetPerpendicularBisectorOfTwoPoints( pointC, pointA );
+	// Check if abc colinear
+	LineSegment2 AB = LineSegment2( pointA, pointB );
+	std::vector<Vec2> intersectPointsA;
+	std::vector<Vec2> intersectPointsB;
+	std::vector<Vec2> intersectPointsC;
+		
+	if( AB.IsPointMostlyInStraightLine( pointC ) ) {
+		// abc colinear
+		Vec2 disp_AB = pointB - pointA;
+		Vec2 disp_AC = pointC - pointA;
+		float CP_AB_AC = CrossProduct2D( disp_AB, disp_AC );
+		float CP_AB_AB = CrossProduct2D( disp_AB, disp_AB );
+		if( CP_AB_AC < 0 ) {
+			// order is CAB
+			GetVoronoiPointsWithThreePointsInCollinearOrder( pointC, pointA, pointB, worldCameraBox, intersectPointsC, intersectPointsA, intersectPointsB );
+		}
+		else if( CP_AB_AC < CP_AB_AB ){
+			// order is acb
+			GetVoronoiPointsWithThreePointsInCollinearOrder( pointA, pointC, pointB, worldCameraBox, intersectPointsA, intersectPointsC, intersectPointsB );
+		}
+		else{
+			// order is abc
+			GetVoronoiPointsWithThreePointsInCollinearOrder( pointA, pointB, pointC, worldCameraBox, intersectPointsA, intersectPointsB, intersectPointsC );
+		}
+	}
+	else {
+		GetVoronoiPointsWithThreePointsNotCollinear( pointA, pointB, pointC, worldCameraBox, intersectPointsA, intersectPointsB, intersectPointsC );
+	}
+	Polygon2 polygonA = Polygon2::MakeConvexFromPointCloud( intersectPointsA );
+	Polygon2 polygonB = Polygon2::MakeConvexFromPointCloud( intersectPointsB );
+	Polygon2 polygonC = Polygon2::MakeConvexFromPointCloud( intersectPointsC );
+	m_controllers[0]->SetVoronoiPolygon( polygonA );
+	m_controllers[1]->SetVoronoiPolygon( polygonB );
+	m_controllers[2]->SetVoronoiPolygon( polygonC );
+	m_controllers[0]->SetVoronoiOffset( Vec2::ZERO );
+	m_controllers[0]->SetVoronoiOffset( Vec2::ZERO );
+	m_controllers[0]->SetVoronoiOffset( Vec2::ZERO );
+}
+
+void CameraSystem::ConstructVoronoiDiagramForFourControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
+{
+
+}
+
+void CameraSystem::GetVoronoiPointsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC )
+{
+	LineSegment2 PB_AB = GetPerpendicularBisectorOfTwoPoints( a, b );
+	LineSegment2 PB_BC = GetPerpendicularBisectorOfTwoPoints( b, c );
+	// abc same line in order a b c 
+		// point order c a b 
+	pointsA = GetIntersectionPointOfLineAndAABB2( PB_AB, worldCameraBox );
+	pointsC = GetIntersectionPointOfLineAndAABB2( PB_BC, worldCameraBox );
+	for( int i = 0; i < pointsA.size(); i++ ) {
+		pointsB.push_back( pointsA[i] );
+		pointsB.push_back( pointsC[i] );
+	}
+
+	Vec2 worldCameraBoxCorners[4];
+	worldCameraBox.GetCornerPositions( worldCameraBoxCorners );
+	for( int i = 0; i < 4; i++ ) {
+		float distToPointA = GetDistance2D( a, worldCameraBoxCorners[i] );
+		float distToPointC = GetDistance2D( c, worldCameraBoxCorners[i] );
+		if( distToPointA < distToPointC ) {
+			pointsA.push_back( worldCameraBoxCorners[i] );
+		}
+		else {
+			pointsC.push_back( worldCameraBoxCorners[i] );
+		}
+	}
+}
+
+void CameraSystem::GetVoronoiPointsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC )
+{
+	LineSegment2 PB_AB = GetPerpendicularBisectorOfTwoPoints( a, b );
+	LineSegment2 PB_BC = GetPerpendicularBisectorOfTwoPoints( b, c );
+	LineSegment2 PB_AC = GetPerpendicularBisectorOfTwoPoints( a, c );
+	Vec2 centerABC = GetIntersectionPointOfTwoLines( PB_AB, PB_AC );
+	std::vector<Vec2> PBIntersectWithBoxPoints_AB = GetIntersectionPointOfLineAndAABB2( PB_AB, worldCameraBox );
+	std::vector<Vec2> PBIntersectWithBoxPoints_AC = GetIntersectionPointOfLineAndAABB2( PB_AC, worldCameraBox );
+	std::vector<Vec2> PBIntersectWithBoxPoints_BC = GetIntersectionPointOfLineAndAABB2( PB_BC, worldCameraBox );
+
+	pointsA = GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( a, b, c, worldCameraBox, PBIntersectWithBoxPoints_AB, PBIntersectWithBoxPoints_AC );
+	pointsB = GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( b, a, c, worldCameraBox, PBIntersectWithBoxPoints_AB, PBIntersectWithBoxPoints_BC );
+	pointsC = GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( c, a, b, worldCameraBox, PBIntersectWithBoxPoints_AC, PBIntersectWithBoxPoints_BC );
+
+	if( worldCameraBox.IsPointInside( centerABC ) ) {
+		pointsA.push_back( centerABC );
+		pointsB.push_back( centerABC );
+		pointsC.push_back( centerABC );
+	}
+}
+
+std::vector<Vec2> CameraSystem::GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::vector<Vec2> PBAPoints, std::vector<Vec2> PBBPoints )
+{
+	std::vector<Vec2> result;
+	// get rid of far PB intersect points with box
+	for( int i = 0; i < PBAPoints.size(); i++ ) {
+		Vec2 tempPBPoint = PBAPoints[i];
+		float distToPoint = GetDistance2D( point, tempPBPoint );
+		float distToHelpPointA = GetDistance2D( point, helpPointA );
+		float distToHelpPointB = GetDistance2D( point, helpPointB );
+		if( distToPoint < distToHelpPointA && distToPoint <= distToHelpPointB ) {
+			result.push_back( tempPBPoint );
+		}
+	}
+
+	for( int i = 0; i < PBBPoints.size(); i++ ) {
+		Vec2 tempPBPoint = PBBPoints[i];
+		float distToPoint = GetDistance2D( point, tempPBPoint );
+		float distToHelpPointA = GetDistance2D( point, helpPointA );
+		float distToHelpPointB = GetDistance2D( point, helpPointB );
+		if( distToPoint < distToHelpPointA && distToPoint <= distToHelpPointB ) {
+			result.push_back( tempPBPoint );
+		}
+	}
+	// Get nearest AABB point
+	Vec2 worldCameraBoxCorners[4];
+	worldCameraBox.GetCornerPositions( worldCameraBoxCorners );
+	for( int i = 0; i < 4; i++ ) {
+		float distToPoint	= GetDistance2D( point, worldCameraBoxCorners[i] );
+		float distToPointA	= GetDistance2D( helpPointA, worldCameraBoxCorners[i] );
+		float distToPointB	= GetDistance2D( helpPointB, worldCameraBoxCorners[i] );
+		if( distToPoint < distToPointA && distToPointA < distToPointB ) {
+			result.push_back( worldCameraBoxCorners[i] );
+		}
+	}
+	return result;
 }
 

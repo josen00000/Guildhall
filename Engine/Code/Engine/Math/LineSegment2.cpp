@@ -77,6 +77,20 @@ bool LineSegment2::IsPointMostlyInEdge( Vec2 point ) const
 	return IsFloatMostlyEqual( dist, 0.f );
 }
 
+bool LineSegment2::IsPointMostlyInStraightLine( Vec2 point ) const
+{
+	if( point.x == m_start.x || point.x == m_end.x ) {
+		if( point.x == m_start.x && point.x == m_end.x ) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	return IsFloatMostlyEqual( ( point.y - m_start.y ) / ( point.x - m_start.x ), ( point.y - m_end.y ) / ( point.y - m_end.y ) );
+}
+
 Vec2 LineSegment2::GetStartPos() const
 {
 	return m_start;

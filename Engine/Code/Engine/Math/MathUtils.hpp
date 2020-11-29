@@ -145,4 +145,4 @@ float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c );
 Vec2 GetIntersectionPointOfTwoLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec2 pointAInLineB, Vec2 pointBInLineB );
 Vec2 GetIntersectionPointOfTwoLines( LineSegment2 lineA, LineSegment2 lineB );
 std::vector<Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box );
-
+LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB );
