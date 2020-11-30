@@ -274,7 +274,7 @@ void NetworkSystem::ReadFromGameAndSendUDPMessage()
 			index++;	
 		}
 		targetUDPSocket->WriteData( sendMsg.data(), (int)sendMsg.size() );
-		targetUDPSocket->UDPSend( (int)(sizeof(targetUDPSocket->m_sendBuffer.header) + sendMsg.size() + 1) );
+		targetUDPSocket->UDPSend( (int)(sizeof( targetUDPSocket->m_sendBuffer.header ) + sendMsg.size() + 1) );
 	}
 }
 
@@ -305,7 +305,7 @@ void NetworkSystem::WriteReliableUDPMessageToGame( UDPSocket* socket )
 			socket->SetRecvReliableSequence( ( topMsg.id + 1 ) );
 		}
 
-		std::this_thread::sleep_for( std::chrono::microseconds( 10 ) );
+		std::this_thread::sleep_for( std::chrono::microseconds( 1 ) );
 	}
 }
 
@@ -372,12 +372,12 @@ void NetworkSystem::SendReliableUDPMessage( UDPSocket* socket )
 				std::string sendMsg = std::string( tempMsg.msg, tempMsg.msgLen );
 				std::uint32_t sequence = tempMsg.id;
 				
-				socket->SetHeader( UDP_HEADER_PROTOCOL, RELIABLE_MSG, (uint16_t)sendMsg.size(), sequence );
+				socket->SetReliableHeader( UDP_HEADER_PROTOCOL, RELIABLE_MSG, (uint16_t)sendMsg.size(), sequence );
 				socket->WriteReliableData( sendMsg.data(), (int)sendMsg.size() );
 				socket->reliableUDPSend( (int)(sizeof( socket->m_reliableSendBuffer.header ) + sendMsg.size() + 1) );
 			}
 		}
 		socket->UnlockACData();
-		std::this_thread::sleep_for( std::chrono::microseconds( 50 ) );
+		std::this_thread::sleep_for( std::chrono::microseconds( 10 ) );
 	}
 }

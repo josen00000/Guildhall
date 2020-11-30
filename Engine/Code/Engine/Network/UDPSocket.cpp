@@ -65,6 +65,19 @@ void UDPSocket::SetHeader( DataHeader header )
 	m_sendBuffer.header = header;
 }
 
+void UDPSocket::SetReliableHeader( std::uint32_t protocol, std::uint16_t id, std::uint16_t length, std::uint32_t seq )
+{
+	m_reliableSendBuffer.header.protocol	= protocol;
+	m_reliableSendBuffer.header.messageID	= id;
+	m_reliableSendBuffer.header.messageLen	= length;
+	m_reliableSendBuffer.header.messageSeq	= seq;
+}
+
+void UDPSocket::SetReliableHeader( DataHeader header )
+{
+	m_reliableSendBuffer.header = header;
+}
+
 void UDPSocket::AddReliableMsg( std::uint32_t seq, std::string addr, std::string msg )
 {
 	ReliableUDPMsg tempMsg( seq, true, addr, msg );
@@ -168,7 +181,7 @@ int UDPSocket::UDPSend( int length )
 int UDPSocket::reliableUDPSend( int length )
 {
 	std::string sendMsg = std::string( (const char*)&m_reliableSendBuffer.data, length );
-	//g_theConsole->DebugLogf( "sending reliable udp msg: %s",sendMsg.c_str() );
+	g_theConsole->DebugLogf( "sending reliable udp msg: %s",sendMsg.c_str() );
 	int result = sendto( m_socket, (const char*)&m_reliableSendBuffer, length, 0, reinterpret_cast<sockaddr*>(&m_toAddr), sizeof( m_toAddr ) );
 	if( result == SOCKET_ERROR ) {
 		LOG_ERROR( "Socket send error: %d", WSAGetLastError() );

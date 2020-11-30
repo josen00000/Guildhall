@@ -52,6 +52,8 @@ public:
 	// Mutator
 	void SetHeader( std::uint32_t protocol, std::uint16_t id, std::uint16_t length, std::uint32_t seq );
 	void SetHeader( DataHeader header );
+	void SetReliableHeader( std::uint32_t protocol, std::uint16_t id, std::uint16_t length, std::uint32_t seq );
+	void SetReliableHeader( DataHeader header );
 	void AddReliableMsg( std::uint32_t seq, std::string addr, std::string msg );
 	void WriteData( char const* dataPtr, int dataLen );
 	void WriteReliableData( char const* dataPtr, int dataLen );
