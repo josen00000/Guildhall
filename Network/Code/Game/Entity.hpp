@@ -21,9 +21,12 @@ public:
 	virtual void UpdateVerts( float deltaSeconds );
 	virtual void UpdateVerts( Vec2 uvAtMin, Vec2 uvAtMax );
 
+	void Shoot();
+	void GetShot();
 	void UpdateTexCoords( const Camera* camera, BillboardMode billboardMode, Convention convention );
 
 	virtual void Render( ) const;
+	void RenderHealth() const;
 
 	// Accessor
 	bool GetCanBePushedByWalls() const { return m_canBePushedByWalls; } 
@@ -31,10 +34,12 @@ public:
 	bool GetCanPushEntities() const { return m_canPushEntities; }
 	bool GetIsMoving() const { return m_isMoving; }
 	bool GetIsPlayer() const { return m_isPlayer; }
+	bool GetIsDead() const{ return m_isDead; }
 	float GetMass() const { return m_mass; }
 	float GetRadius() const { return m_definition->m_radius; }
 	float GetOrientation() const { return m_orientation; }
 	float GetHeight() const { return m_definition->m_height; }
+	int GetHP() const { return m_hp; }
 	std::string GetEntityName() const { return m_definition->m_name; }
 
 	Vec2 Get2DPosition() const { return m_2Dpos; }
@@ -55,6 +60,8 @@ public:
 	void Set2DPos( Vec2 pos );
 	void SetOrientation( float orientation );
 	void SetMoveDirt( Vec2 moveDirt );
+	void SetHP( int hp );
+	void SetIsDead( bool isDead );
 
 	void SetTexForward( Vec3 texForward );
 	void SetTexLeft( Vec3 texLeft );
@@ -79,7 +86,10 @@ protected:
 	bool m_canPushEntities			= true;
 
 	bool m_isMoving = false;
+	bool m_isDead	= false;
 	bool m_isPlayer = false;
 	float m_mass = 1.f;
+	int m_hp = 50;
 	const EntityDefinition* m_definition = nullptr;
+	std::vector<Vertex_PCU> m_healthVerts;
 };

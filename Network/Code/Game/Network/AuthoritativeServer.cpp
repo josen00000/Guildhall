@@ -1,4 +1,7 @@
 #include "AuthoritativeServer.hpp"
+#include "Game/World.hpp"
+#include "Game/Map.hpp"
+#include "Game/Game.hpp"
 #include "Game/Network/RemoteClient.hpp"
 #include "Game/GameCommon.hpp"
 #include "Game/Entity.hpp"
@@ -103,7 +106,18 @@ void AuthoritativeServer::SendNetworkData()
 								tempEntity->GetEntityName() + "|" +
 								currentPos.ToString() + "|" + 
 								std::to_string( currentOrient );
+
+		std::string gameHealthMsg = std::string( "ENTITY|HEALTH|" ) +
+									std::to_string( i ) + "|" +
+									std::to_string( tempEntity->GetHP() );
+		if( tempEntity->GetIsDead() ) {
+
+			std::string gameDeadMsg =	std::string( "ENTITY|DEAD|" ) +
+										std::to_string( i );
+			gameMsgs.push_back( gameDeadMsg );
+		}
 		gameMsgs.push_back( gameMsg );
+		gameMsgs.push_back( gameHealthMsg );
 	}
 
 	for( auto iter = m_clients.begin(); iter != m_clients.end(); ++iter ) {
@@ -238,14 +252,34 @@ void AuthoritativeServer::ParseAndExecuteRemoteMsg( GameInfo msg )
 	}
 
 	tempClient->m_entity->SetIsMoving( false );
-	Strings gameMsgs = SplitStringOnDelimiter( gameMsg, "|", 2 );
+	Strings gameMsgs = SplitStringOnDelimiter( gameMsg, "|" , 2 );
 	if( gameMsgs[0].compare( "ENTITY" ) == 0 ) {
 		if( gameMsgs[1].compare( "MOVE" ) == 0 ) {
 			MoveClientEntity( tempClient, gameMsgs[2] );
+		}
+		else if( gameMsgs[1].compare( "SHOOT" )  == 0 ) {
+			int entityIndex = std::stoi( gameMsgs[2] );
+			HandleShoot( entityIndex );
 		}
 	}
 	else {
 		g_theConsole->DebugErrorf( "invalid remote msg " );
 	}
 
+}
+
+void AuthoritativeServer::HandleShoot( int entityIndex )
+{
+ 	Map* currentMap = m_game->m_world->GetCurrentMap();
+ 	Entity* shootEntity = GetEntityWithIndex( entityIndex );
+	Vec2 startPos = shootEntity->Get2DPosition();
+	Vec2 shootDirt = Vec2::ONE_ZERO;
+	shootDirt.SetAngleDegrees( shootEntity->GetOrientation() );
+	startPos += ( shootDirt * 1.5f );
+	Vec2 endPos = startPos + ( shootDirt * 5 );
+	MapRaycastResult result = currentMap->RayCast( Vec3( startPos, 0.5f ), Vec3( endPos, 0.5f )) ;
+	if( result.impactEntity ) {
+		Entity* shotEntity = result.impactEntity;
+		shotEntity->GetShot();
+	}
 }

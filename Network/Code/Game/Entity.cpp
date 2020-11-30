@@ -1,12 +1,15 @@
 #include "Entity.hpp"
 #include "Game/Game.hpp"
+#include "Game/Network/Server.hpp"
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Math/LineSegment2.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
 
 extern Game* g_theGame;
 extern RenderContext* g_theRenderer;
+extern Server* g_theServer;
 
 Entity::Entity()
 {
@@ -23,6 +26,7 @@ Entity::Entity( const EntityDefinition& entityDef )
 
 void Entity::Update( float deltaSeconds )
 {
+	if( m_isDead ){ return; }
 	if( m_isMoving ) {
 		Vec2 forwardNormal = Vec2( 1.f, 0.f );
 		forwardNormal.SetAngleDegrees( m_orientation );
@@ -79,6 +83,18 @@ void Entity::UpdateVerts( float deltaSeconds )
 
 }
 
+void Entity::Shoot()
+{
+}
+
+void Entity::GetShot()
+{
+	m_hp -= 10;
+	if( m_hp <= 0 ) {
+		m_isDead = true;
+	}
+}
+
 void Entity::UpdateTexCoords( const Camera* camera, BillboardMode billboardMode, Convention convention )
 {
  	Vec3 cameraPos = camera->GetPosition();
@@ -117,6 +133,7 @@ void Entity::UpdateTexCoords( const Camera* camera, BillboardMode billboardMode,
 
 void Entity::Render() const
 {
+	if( m_isDead ){ return; }
 	Texture* texture = m_definition->m_spriteTexture;
 	/*texture = g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/Test_StbiFlippedAndOpenGL.png" );*/
 	g_theRenderer->SetDiffuseTexture( texture );
@@ -132,6 +149,26 @@ void Entity::Render() const
 		LineSegment2 tempLine = LineSegment2( startPos2D, startPos2D + forwardNormal2D );
 		g_theRenderer->DrawLineWithHeight( tempLine, startPos.z, 0.05f, Rgba8::WHITE );
 		g_theRenderer->SetFillMode( RASTER_FILL_SOLID );
+	}
+	
+		RenderHealth();
+}
+
+void Entity::RenderHealth() const
+{
+	std::string health = "health" + std::to_string( m_hp );
+	Vec3 pos = Vec3( m_2Dpos + Vec2( 0.f, 0.3f ), 0.8f );
+	Transform wordTrans;
+	wordTrans.SetPosition( pos );
+	wordTrans.SetPitchDegrees( 0.f );
+	wordTrans.SetRollDegrees( 90.f );
+	wordTrans.SetYawDegrees( 90.f );
+	wordTrans.SetScale( Vec3( 0.1f, 0.1f, 0.1f ) );
+	if( m_isPlayer ) {
+		DebugAddScreenLeftAlignTextf( 0.8f, 0.5f, Vec2::ZERO, Rgba8::RED, "Health: %i", m_hp );
+	}
+	else {
+		DebugAddWorldText( wordTrans, Vec2::ZERO, Rgba8::GREEN, Rgba8::GREEN, 0.016f, DEBUG_RENDER_ALWAYS, health );	
 	}
 }
 
@@ -194,6 +231,16 @@ void Entity::SetOrientation( float orientation )
 void Entity::SetMoveDirt( Vec2 moveDirt )
 {
 	m_moveDirt = moveDirt;
+}
+
+void Entity::SetHP( int hp )
+{
+	m_hp = hp;
+}
+
+void Entity::SetIsDead( bool isDead )
+{
+	m_isDead = isDead;
 }
 
 void Entity::SetTexForward( Vec3 texForward )

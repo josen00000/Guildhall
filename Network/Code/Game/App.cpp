@@ -239,6 +239,7 @@ void App::RunFrame()
 {
 	BeginFrame();
 	Update( (float)m_clock->GetLastDeltaSeconds() );
+	//Update( 0.005f );
 	Render();
 	EndFrame();
 }

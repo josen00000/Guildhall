@@ -29,6 +29,8 @@ public:
 	virtual void SendGameMsg( ) override;
 	virtual void SendNetworkData() override ;
 	virtual void ParseAndExecuteRemoteMsg( GameInfo msg ) override;
+	virtual void HandleShoot( int entityIndex );
+
 	// Accessor
 	Client* FindClientWithIPAddress( IPAddress addr );
 	Client* FindClientWithIPAddressAndPort( IPAddress addr );

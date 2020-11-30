@@ -100,8 +100,16 @@ void RemoteServer::ParseAndExecuteRemoteMsg( GameInfo msg )
 		g_theConsole->DebugLog( instruction );
 		return;
 	}
-
-	if( instructions.size() == 4 ) {
+	if( instructions.size() == 3 ) {
+		if( instructions[0] == "ENTITY" ) {
+			if( instructions[1] == "DEAD" ) {
+				int entityIndex = stoi( instructions[2] );
+				Entity* tempEntity = GetEntityWithIndex( entityIndex );
+				tempEntity->SetIsDead( true );
+			}
+		}
+	}
+	else if( instructions.size() == 4 ) {
 		if( instructions[0] == "ENTITY" ) {
 			if( instructions[1] == "CREATED" ) {
 				Vec2 startPos;
@@ -115,6 +123,12 @@ void RemoteServer::ParseAndExecuteRemoteMsg( GameInfo msg )
 				m_playerClient->m_entity->Set2DPos( startPos );
 				m_playerClient->m_gameCamera->SetPosition( m_playerClient->m_entity->GetPosition() );
 				m_isConnectFinished = true;
+			}
+			if( instructions[1] == "HEALTH" ) {
+				int entityIndex = stoi( instructions[2] );
+				int entityHealth = stoi( instructions[3] ); 
+				Entity* tempEntity = GetEntityWithIndex( entityIndex );
+				tempEntity->SetHP( entityHealth );
 			}
 		}
 
@@ -162,6 +176,18 @@ void RemoteServer::SendNetworkData()
 			GameInfo tempInfo = GameInfo( false, targetIPAndPort, gameMsg );
 			g_theNetworkSystem->SetSendUDPData( tempInfo );
 		}
+	}
+}
+
+void RemoteServer::HandleShoot( int entityIndex )
+{
+	// unused entityindex
+	UNUSED( entityIndex ); 
+	if( m_isConnectFinished ) {
+		std::string gameMsg = std::string( "ENTITY|SHOOT|" ) + std::to_string( m_playerIndex );
+		std::string targetIPAndPort = m_targetIPAddr + ":" + m_targetPort;
+		GameInfo tempInfo = GameInfo( false, targetIPAndPort, gameMsg );
+		g_theNetworkSystem->SetSendUDPData( tempInfo );
 	}
 }
 

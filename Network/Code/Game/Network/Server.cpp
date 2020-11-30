@@ -130,6 +130,21 @@ Convention Server::GetGameConvention() const
 	return m_game->m_convension;
 }
 
+int Server::GetEntitiyIndex( Entity* entity )
+{
+	for( int i = 0; i < m_entities.size(); i++ ) {
+		if( entity == m_entities[i] ) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+Entity* Server::GetEntityWithIndex( int entityIndex )
+{
+	return m_entities[entityIndex];
+}
+
 std::vector<Entity*> Server::GetEntities()
 {
 	return m_entities;

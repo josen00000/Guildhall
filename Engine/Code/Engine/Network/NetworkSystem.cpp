@@ -305,7 +305,7 @@ void NetworkSystem::WriteReliableUDPMessageToGame( UDPSocket* socket )
 			socket->SetRecvReliableSequence( ( topMsg.id + 1 ) );
 		}
 
-		std::this_thread::sleep_for( std::chrono::microseconds( 1 ) );
+		std::this_thread::sleep_for( std::chrono::microseconds( 10 ) );
 	}
 }
 
@@ -378,6 +378,6 @@ void NetworkSystem::SendReliableUDPMessage( UDPSocket* socket )
 			}
 		}
 		socket->UnlockACData();
-		std::this_thread::sleep_for( std::chrono::microseconds( 1 ) );
+		std::this_thread::sleep_for( std::chrono::microseconds( 50 ) );
 	}
 }

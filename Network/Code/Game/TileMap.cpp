@@ -98,7 +98,7 @@ void TileMap::PreparePlayer()
 MapRaycastResult TileMap::RayCast( Vec3 startPos, Vec3 forwardNormal, float maxDistance )
 {
 	if( m_isDebug ) {
-		DebugAddWorldLine( startPos, startPos + forwardNormal * maxDistance, Rgba8::WHITE, 0.f, DEBUG_RENDER_ALWAYS );
+		DebugAddWorldLine( startPos, startPos + forwardNormal * maxDistance, Rgba8::RED, 5.f, DEBUG_RENDER_ALWAYS );
 	}
 	MapRaycastResult result[2];
 	for( int i = 0; i < 2; i++ ) {
@@ -160,9 +160,11 @@ void TileMap::CheckEntitiesCollision()
 	std::vector<Entity*> entity = g_theServer->GetEntities();
 	for( int i = 0; i < entity.size(); i++ ) {
 		Entity* tempEntityA = entity[i];
+		if( tempEntityA->GetIsDead() ){ continue; }
 		for( int j = i; j < entity.size(); j++ ) {
 			if( i == j ){ continue; }
 			Entity* tempEntityB = entity[j];
+			if( tempEntityB->GetIsDead() ){ continue; }
 			CheckCollisionBetweenTwoEntities( tempEntityA, tempEntityB );
 
 		}

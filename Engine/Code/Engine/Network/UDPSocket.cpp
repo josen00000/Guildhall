@@ -168,7 +168,7 @@ int UDPSocket::UDPSend( int length )
 int UDPSocket::reliableUDPSend( int length )
 {
 	std::string sendMsg = std::string( (const char*)&m_reliableSendBuffer.data, length );
-	g_theConsole->DebugLogf( "sending reliable udp msg: %s",sendMsg.c_str() );
+	//g_theConsole->DebugLogf( "sending reliable udp msg: %s",sendMsg.c_str() );
 	int result = sendto( m_socket, (const char*)&m_reliableSendBuffer, length, 0, reinterpret_cast<sockaddr*>(&m_toAddr), sizeof( m_toAddr ) );
 	if( result == SOCKET_ERROR ) {
 		LOG_ERROR( "Socket send error: %d", WSAGetLastError() );

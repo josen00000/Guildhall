@@ -31,11 +31,14 @@ public:
 	virtual void SendNetworkData();
 	virtual void SendGameMsg();
 	virtual void ParseAndExecuteRemoteMsg( GameInfo msg ) = 0;
+	virtual void HandleShoot( int entityIndex ) = 0;
 	Entity* CreateAndPushPlayer();
 	Entity* CreateAndPushEntityWithPos( EntityType entityType, Vec2 pos );
 
 	// Accessor
 	Convention GetGameConvention() const;
+	int GetEntitiyIndex( Entity* entity );
+	Entity* GetEntityWithIndex( int entityIndex );
 	std::vector<Entity*> GetEntities();
 
 public:

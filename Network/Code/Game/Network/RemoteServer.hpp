@@ -19,6 +19,7 @@ public:
 	virtual void ReceiveAndHandleUDPNetworkData() override;
 	virtual void ParseAndExecuteRemoteMsg( GameInfo msg ) override;
 	virtual void SendNetworkData() override ;
+	virtual void HandleShoot( int entityIndex ) override;
 
 	// Accessor
 	bool GetIsConnectedFinished() const { return m_isConnectFinished; }

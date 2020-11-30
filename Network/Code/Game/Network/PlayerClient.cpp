@@ -3,6 +3,7 @@
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Core/DevConsole.hpp"
 #include "Game/Network/Server.hpp"
 #include "Game/EntityFactory.hpp"
@@ -13,6 +14,7 @@ extern InputSystem*		g_theInputSystem;
 extern AudioSystem*		g_theAudioSystem;
 extern RenderContext*	g_theRenderer;
 extern DevConsole*		g_theConsole;
+extern Game*			g_theGame;
 
 PlayerClient::~PlayerClient()
 {
@@ -127,9 +129,9 @@ void PlayerClient::Render()
 	g_theRenderer->EndCamera();
 
  	RenderUI();
-// 
-// 	DebugRenderWorldToCamera( m_gameCamera, m_convension );
-// 	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
+
+	DebugRenderWorldToCamera( m_gameCamera, m_owner->GetGameConvention() );
+	DebugRenderScreenTo( m_gameCamera->GetColorTarget() );
 // 	
 	// render dev console
 	g_theConsole->Render( *g_theRenderer );
@@ -158,6 +160,10 @@ void PlayerClient::HandleInput( std::string input )
 	}
 	m_entity->SetIsMoving( isMoving );
 	
+	if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_LEFT ) ) {
+		int entityIndex = m_owner->GetEntitiyIndex( m_entity );
+		m_owner->HandleShoot( entityIndex );
+	}
 }
 
 void PlayerClient::RenderUI()
