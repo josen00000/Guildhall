@@ -203,6 +203,7 @@ void Player::FakeDeadForSeconds( float seconds )
 
 bool Player::Reborn( EventArgs& args )
 {
+	UNUSED( args );
 	Vec2 teleportPos = (Vec2)m_map->GetRandomInsideCameraNotSolidTileCoords( g_theCameraSystem->GetNoSplitCamera() );
 	SetPosition( teleportPos );
 	m_aliveState = ALIVE;

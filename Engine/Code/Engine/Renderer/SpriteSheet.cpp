@@ -54,7 +54,7 @@ void SpriteSheet::CreateSpriteDefinitions( const IntVec2 simpleGridLayout )
 
 	for( int spriteY = 0; spriteY < simpleGridLayout.y; spriteY++ ) {
 		for( int spriteX = 0; spriteX < simpleGridLayout.x; spriteX++ ) {
-			int spriteIndex = spriteX + spriteY * simpleGridLayout.x;
+			//int spriteIndex = spriteX + spriteY * simpleGridLayout.x;
 			Vec2 uvAtMins = Vec2( temWidth * spriteX , 1 - ( temHeight * ( spriteY + 1 )));
 			Vec2 uvAtMaxs = Vec2( temWidth * (spriteX + 1) , 1 - ( temHeight * spriteY ));
 			IntVec2 textureSize = m_texture->GetSize();

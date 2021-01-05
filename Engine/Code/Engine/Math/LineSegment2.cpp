@@ -87,8 +87,16 @@ bool LineSegment2::IsPointMostlyInStraightLine( Vec2 point ) const
 			return false;
 		}
 	}
+// 	if( point.y == m_start.y || point.y == m_end.y ) {
+// 		if( point.y == m_start.y && point.y == m_end.y ) {
+// 			return true;
+// 		}
+// 		else {
+// 			return false;
+// 		}
+// 	}
 
-	return IsFloatMostlyEqual( ( point.y - m_start.y ) / ( point.x - m_start.x ), ( point.y - m_end.y ) / ( point.y - m_end.y ) );
+	return IsFloatMostlyEqual( ( point.y - m_start.y ) / ( point.x - m_start.x ), ( point.y - m_end.y ) / ( point.x - m_end.x ) );
 }
 
 Vec2 LineSegment2::GetStartPos() const

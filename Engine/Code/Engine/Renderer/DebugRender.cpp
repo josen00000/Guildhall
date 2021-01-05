@@ -845,11 +845,6 @@ void DebugAddScreenRightAlignTextf( float relativeY, float absoluteY, Vec2 pivot
 	
 }
 
-void DebugAddScreenRightAlignStrings( float relativeY, float absoluteY, Rgba8 color, Strings strings )
-{
-	
-}
-
 void DebugAddScreenLeftAlignTextf( float relativeY, float absoluteY, Vec2 pivot, Rgba8 color, const char* format, ... )
 {
 	va_list args;

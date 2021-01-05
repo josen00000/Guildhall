@@ -69,39 +69,42 @@ void CameraSystem::Render()
 	}
 	else if( m_splitScreenState == VORONOI_SPLIT ) {
 		
-		AABB2 splitCheckBox	= GetSplitCheckBox();
-		if( !DoesNeedSplitScreen( splitCheckBox ) ) {
+		if( m_isdebug ) {
 			g_theRenderer->BeginCamera( m_noSplitCamera );
 			g_theGame->RenderGame();
+			for( int i = 0; i < m_controllers.size(); i++ ){
+				g_theRenderer->DrawPolygon2D( m_controllers[i]->GetVoronoiPoly(), Rgba8( 255, 0, 0, 50 ) );
+				//g_theRenderer->DrawPolygon2D( m_controllers[1]->GetVoronoiPoly(), Rgba8::RED );
+			}
 			g_theRenderer->EndCamera();
 		}
 		else {
-// 			g_theRenderer->BeginCamera( m_noSplitCamera );
-// 			g_theGame->RenderGame();
-// 			if( m_controllers.size() == 2 ){
-// 				g_theRenderer->DrawPolygon2D( m_controllers[0]->GetVoronoiPoly(), Rgba8::RED );
-// 				g_theRenderer->DrawPolygon2D( m_controllers[1]->GetVoronoiPoly(), Rgba8::RED );
-// 			}
-// 			g_theRenderer->EndCamera();
 
-			
-			for( int i = 0; i < m_controllers.size(); i++ ) { // TODO test for -1
-				m_controllers[i]->Render();
+			AABB2 splitCheckBox	= GetSplitCheckBox();
+			if( !DoesNeedSplitScreen( splitCheckBox ) ) {
+				g_theRenderer->BeginCamera( m_noSplitCamera );
+				g_theGame->RenderGame();
+				g_theRenderer->EndCamera();
 			}
+			else {
+				for( int i = 0; i < m_controllers.size(); i++ ) { // TODO test for -1
+					m_controllers[i]->Render();
+				}
 
-			g_theRenderer->BeginCamera( m_noSplitCamera );
-			g_theRenderer->BindShader( m_multipleCameraShader );
+				g_theRenderer->BeginCamera( m_noSplitCamera );
+				g_theRenderer->BindShader( m_multipleCameraShader );
 
-			for( int i = 0; i < m_controllers.size(); i++ ) {
-				g_theRenderer->SetDiffuseTexture( m_controllers[i]->GetColorTarget() );
-				g_theRenderer->SetMaterialTexture( m_controllers[i]->GetStencilTexture() );
-				g_theRenderer->SetOffsetBuffer( m_controllers[i]->GetOffsetBuffer(), 0 );
-				g_theRenderer->m_context->Draw( 3, 0 );
-			}
-			g_theRenderer->EndCamera();
+				for( int i = 0; i < m_controllers.size(); i++ ) {
+					g_theRenderer->SetDiffuseTexture( m_controllers[i]->GetColorTarget() );
+					g_theRenderer->SetMaterialTexture( m_controllers[i]->GetStencilTexture() );
+					g_theRenderer->SetOffsetBuffer( m_controllers[i]->GetOffsetBuffer(), 0 );
+					g_theRenderer->m_context->Draw( 3, 0 );
+				}
+				g_theRenderer->EndCamera();
 
-			for( int i = 0; i < m_controllers.size(); i++ ) {
-				m_controllers[i]->ReleaseRenderTarget();
+				for( int i = 0; i < m_controllers.size(); i++ ) {
+					m_controllers[i]->ReleaseRenderTarget();
+				}
 			}
 		}
 	}
@@ -174,8 +177,9 @@ void CameraSystem::UpdateNoSplitScreenEffect( float deltaSeconds )
 	}
 }
 
-void CameraSystem::UpdateVoronoiSplitScreenEffect( float delteSeconds )
+void CameraSystem::UpdateVoronoiSplitScreenEffect( float deltaSeconds )
 {
+	UNUSED( deltaSeconds ); 
 	AABB2 worldCameraBox = GetWorldCameraBox();
 	AABB2 splitCheckBox	= GetSplitCheckBox();
 	if( DoesNeedSplitScreen( splitCheckBox ) ) {
@@ -368,7 +372,7 @@ Vec2 CameraSystem::GetAverageCameraPosition()
 		CameraController* tempController = m_controllers[i];
 		totalPos += tempController->GetCameraPos();
 	}
-	totalPos /= (int)m_controllers.size();
+	totalPos /= (float)m_controllers.size();
 	return totalPos;
 }
 
@@ -459,25 +463,29 @@ void CameraSystem::AddCameraShake( int index, float shakeTrauma )
 
 void CameraSystem::UpdateDebugInfo()
 {
-	std::string windowStateText		= GetCameraWindowStateText();
-	std::string snappingStateText	= GetCameraSnappingStateText(); 
-	std::string shakeStateText		= GetCameraShakeStateText();
-	std::string frameStateText		= GetCameraFrameStateText();
-	std::string splitStateText		= GetSplitScreenStateText();
+	std::string debugText			= "Press F1 to enable debug mode.";
+	std::string windowStateText		= "Press F2 to change: " + GetCameraWindowStateText();
+	std::string snappingStateText	= "Press F3 to change: " + GetCameraSnappingStateText(); 
+	std::string shakeStateText		= "Press F4 to change: " + GetCameraShakeStateText();
+	std::string frameStateText		= "Press F5 to change: " + GetCameraFrameStateText();
+	std::string splitStateText		= "Press F6 to change: " + GetSplitScreenStateText();
 	std::string splitStratText;
+	std::string tutorialText = "Press p to create player. Press e to create enemy.";
 	switch( m_splitScreenState )
 	{
 	case NO_SPLIT_SCREEN:
-		splitStratText = GetNoSplitScreenStratText();
+		splitStratText += GetNoSplitScreenStratText();
 		break;
 	case NUM_OF_SPLIT_SCREEN_STATE:
 		break;
 	default:
+		splitStratText += "Split screen";
 		break;
 	}
 
 
 	Strings debugInfos;
+	debugInfos.push_back( debugText );
 	debugInfos.push_back( windowStateText );
 	debugInfos.push_back( snappingStateText );
 	debugInfos.push_back( shakeStateText );
@@ -515,7 +523,7 @@ void CameraSystem::CreateAndPushController( Player* player )
 	tempCamController->SetCameraWindowSize( Vec2( 12, 8 ) );
 	tempCamera->SetPosition( player->GetPosition() );
 	m_controllers.push_back( tempCamController );
-	tempCamController->SetIndex( m_controllers.size() - 1 );
+	tempCamController->SetIndex( (int)m_controllers.size() - 1 );
 	float smoothTime = 2.f;
 	if( m_controllers.size() == 1 ){
 		smoothTime = 0.1f;
@@ -759,9 +767,15 @@ void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCamera
 			// order is abc
 			GetVoronoiPointsWithThreePointsInCollinearOrder( pointA, pointB, pointC, worldCameraBox, intersectPointsA, intersectPointsB, intersectPointsC );
 		}
+		if( intersectPointsA.size() == 0 || intersectPointsB.size() == 0 || intersectPointsC.size() == 0 ) {
+			ERROR_RECOVERABLE( "intersectpoints should not be zero" );
+		}
 	}
 	else {
 		GetVoronoiPointsWithThreePointsNotCollinear( pointA, pointB, pointC, worldCameraBox, intersectPointsA, intersectPointsB, intersectPointsC );
+		if( intersectPointsA.size() == 0 || intersectPointsB.size() == 0 || intersectPointsC.size() == 0 ) {
+			ERROR_RECOVERABLE( "intersectpoints should not be zero" );
+		}
 	}
 	Polygon2 polygonA = Polygon2::MakeConvexFromPointCloud( intersectPointsA );
 	Polygon2 polygonB = Polygon2::MakeConvexFromPointCloud( intersectPointsB );
@@ -770,13 +784,37 @@ void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCamera
 	m_controllers[1]->SetVoronoiPolygon( polygonB );
 	m_controllers[2]->SetVoronoiPolygon( polygonC );
 	m_controllers[0]->SetVoronoiOffset( Vec2::ZERO );
-	m_controllers[0]->SetVoronoiOffset( Vec2::ZERO );
-	m_controllers[0]->SetVoronoiOffset( Vec2::ZERO );
+	m_controllers[1]->SetVoronoiOffset( Vec2::ZERO );
+	m_controllers[2]->SetVoronoiOffset( Vec2::ZERO );
+
 }
 
 void CameraSystem::ConstructVoronoiDiagramForFourControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
 {
+	Vec2 playerCameraPosA = m_controllers[0]->GetCameraPos();
+	Vec2 playerCameraPosB = m_controllers[1]->GetCameraPos();
+	Vec2 playerCameraPosC = m_controllers[2]->GetCameraPos();
+	Vec2 playerCameraPosD = m_controllers[3]->GetCameraPos();
 
+	Vec2 pointA	= splitCheckBox.GetNearestPoint( playerCameraPosA );
+	Vec2 pointB = splitCheckBox.GetNearestPoint( playerCameraPosB );
+	Vec2 pointC = splitCheckBox.GetNearestPoint( playerCameraPosC );
+	Vec2 pointD = splitCheckBox.GetNearestPoint( playerCameraPosD );
+
+	// Check if abcd colinear
+	LineSegment2 AD = LineSegment2( pointA, pointD );
+	if( AD.IsPointMostlyInStraightLine( pointB ) && AD.IsPointMostlyInStraightLine( pointC ) ) {
+		Vec2 dispAD = pointD - pointA;
+		Vec2 dispAB = pointB - pointA;
+		Vec2 dispAC = pointC - pointA; 
+		float CP_AD_AB = CrossProduct2D( dispAD, dispAB );
+// 		float CP_AD_AD = CrossProduct2D( dispAD, dispAD );
+// 		float CP_AD_AC = CrossProduct2D( dispAD, dispAC );
+
+		if( CP_AD_AB < 0 ) {
+
+		}
+	}
 }
 
 void CameraSystem::GetVoronoiPointsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC )

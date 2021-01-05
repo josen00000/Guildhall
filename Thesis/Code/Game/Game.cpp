@@ -221,7 +221,7 @@ void Game::UpdateGame( float deltaSeconds )
 
 void Game::UpdateUI( float deltaSeconds )
 {
-
+	UNUSED( deltaSeconds );
 }
 
 void Game::RenderGameUI() const

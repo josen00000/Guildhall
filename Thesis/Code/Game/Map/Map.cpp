@@ -75,6 +75,7 @@ bool Map::IsTileOfTypeInsideWithCoords( TileType type, IntVec2 tileCoords ) cons
 
 bool Map::IsTileOfTypeWithIndex( TileType type, int index ) const
 {
+	UNUSED( index );
 	return true;
 }
 
@@ -354,7 +355,7 @@ void Map::UpdateProjectiles( float deltaSeconds )
 
 void Map::UpdateItems( float deltaSeconds )
 {
-
+	UNUSED( deltaSeconds );
 }
 
 void Map::RenderMap()

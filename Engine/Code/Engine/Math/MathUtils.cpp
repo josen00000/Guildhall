@@ -907,10 +907,10 @@ LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB )
 	if( pointA == pointB ) {
 		ERROR_RECOVERABLE( " can not get perpendicular bisector of same point" );
 	}
-	if( pointA.x = pointB.x ) {
+	if( pointA.x == pointB.x ) {
 		dirtAB = Vec2( 0, 1 );
 	}
-	else if( pointA.y = pointB.y ) {
+	else if( pointA.y == pointB.y ) {
 		dirtAB = Vec2( 1, 0 );
 	}
 	else {
