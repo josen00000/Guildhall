@@ -205,7 +205,6 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Camera\CameraController.cpp" />
     <ClCompile Include="Camera\CameraSystem.cpp" />
-    <ClCompile Include="Coroutine.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -229,7 +228,6 @@
     <ClInclude Include="App.hpp" />
     <ClInclude Include="Camera\CameraController.hpp" />
     <ClInclude Include="Camera\CameraSystem.hpp" />
-    <ClInclude Include="Coroutine.hpp" />
     <ClInclude Include="Enemy.hpp" />
     <ClInclude Include="EngineBuildPreferences.hpp" />
     <ClInclude Include="GameObject.hpp" />

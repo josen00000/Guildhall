@@ -68,6 +68,9 @@ void Game::RunFrame( float deltaSeconds )
 	if( !g_theConsole->IsOpen() ) {
 		HandleInput();
 	}
+	if( m_isPaused ) {
+		deltaSeconds = 0.f;
+	}
 	UpdateGame( deltaSeconds );
 	UpdateUI( deltaSeconds );
 
@@ -76,7 +79,6 @@ void Game::RunFrame( float deltaSeconds )
 void Game::RenderGame() const
 {
 	m_world->RenderWorld();
-	g_theCameraSystem->DebugRender();
 }
 
 void Game::RenderUI() const
@@ -159,7 +161,7 @@ void Game::HandleInput()
 		}
 		g_theCameraSystem->SetCameraFrameState( currentState );
 	}
-	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F6 ) ) {
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F8 ) || g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F6 ) ) {
 		SplitScreenState currentState = g_theCameraSystem->GetSplitScreenState();
 		if( currentState < SplitScreenState::NUM_OF_SPLIT_SCREEN_STATE - 1 ) {
 			currentState = static_cast<SplitScreenState>(currentState + 1);
@@ -179,7 +181,16 @@ void Game::HandleInput()
 		}
 		g_theCameraSystem->SetNoSplitScreenStrat( currentStrat );
 	}
-
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F9 ) ){
+		DebugMode currentMode = g_theCameraSystem->GetDebugMode();
+		if( currentMode < DebugMode::NUM_OF_DEBUG_MODE - 1 ) {
+			currentMode = static_cast<DebugMode>( currentMode + 1 );
+		}
+		else {
+			currentMode = static_cast<DebugMode>(0);
+		}
+		g_theCameraSystem->SetDebugMode( currentMode );
+	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_SHIFT ) ) {
 		Map* currentMap = m_world->GetCurrentMap();
 		if( currentMap != nullptr ) {
@@ -207,6 +218,9 @@ void Game::HandleInput()
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
 		g_theCameraSystem->AddCameraShake( 0, 0.5f );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_0 ) ) {
+		m_isPaused = !m_isPaused;
 	}
 }
 

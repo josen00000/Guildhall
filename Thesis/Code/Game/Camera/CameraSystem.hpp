@@ -53,6 +53,12 @@ enum NoSplitScreenStrat : unsigned int {
 	NUM_OF_NO_SPLIT_SCREEN_STRAT
 };
 
+enum DebugMode: unsigned int {
+	CONTROLLER_INFO = 0,
+	HELP_MODE,
+	NUM_OF_DEBUG_MODE
+};
+
 class CameraSystem {
 public:
 	CameraSystem(){}
@@ -85,6 +91,7 @@ public:
 	std::string GetCameraFrameStateText() const;
 	std::string GetSplitScreenStateText() const;
 	std::string GetNoSplitScreenStratText() const;
+	std::string GetDebugModeText() const;
 
 	CameraWindowState	GetCameraWindowState() const { return m_cameraWindowState; }
 	CameraSnappingState GetCameraSnappingState() const { return m_cameraSnappingState; }
@@ -92,6 +99,7 @@ public:
 	CameraFrameState	GetCameraFrameState() const { return m_cameraFrameState; }
 	SplitScreenState	GetSplitScreenState() const { return m_splitScreenState; }
 	NoSplitScreenStrat	GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
+	DebugMode			GetDebugMode() const { return m_debugMode; }
 
 	Vec2 GetAverageCameraPosition();
 	AABB2 GetWorldCameraBox();
@@ -112,6 +120,7 @@ public:
 	void SetCameraFrameState( CameraFrameState newState );
 	void SetSplitScreenState( SplitScreenState newState );
 	void SetNoSplitScreenStrat( NoSplitScreenStrat newStrat ); 
+	void SetDebugMode( DebugMode newMode );
 	void SetMap( Map* map );
 
 	void AddCameraShake( int index, float shakeTrauma );
@@ -137,10 +146,10 @@ public:
 	void ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
-	void ConstructVoronoiDiagramForFourControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
+	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void GetVoronoiPointsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC );
 	void GetVoronoiPointsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC );
-	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::vector<Vec2> PBAPoints, std::vector<Vec2> PBBPoints );
+	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints );
 	
 private:
 	bool m_isdebug = false;
@@ -153,6 +162,7 @@ private:
 	CameraFrameState	m_cameraFrameState		= NO_FRAMEING;
 	SplitScreenState	m_splitScreenState		= NO_SPLIT_SCREEN;
 	NoSplitScreenStrat	m_noSplitScreenStrat	= NO_STRAT;
+	DebugMode			m_debugMode				= CONTROLLER_INFO;
 	RandomNumberGenerator* m_rng	= nullptr;
 
 	float m_shakeBlendAmount	= 0.f;
@@ -175,5 +185,18 @@ private:
 	Map*	m_map					= nullptr;
 	//Timer*
 
-	std::vector<Vec2> m_testIntersectPoints;
+	// debug
+	std::vector<Vec2> m_playerDebugPositions;
+	Vec2 m_playerDebugPosA;
+	Vec2 m_playerDebugPosB;
+	Vec2 m_playerDebugPosC;
+	std::vector<Vec2> m_debugIntersectPointsA;
+	std::vector<Vec2> m_debugIntersectPointsB;
+	std::vector<Vec2> m_debugIntersectPointsC;
+	std::vector<Vec2> m_debugLineIntersectWithBoxPointsAB;
+	std::vector<Vec2> m_debugLineIntersectWithBoxPointsAC;
+	std::vector<Vec2> m_debugLineIntersectWithBoxPointsBC;
+	std::vector<LineSegment2> m_debugPBLines;
+	
+
 };

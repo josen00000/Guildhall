@@ -73,9 +73,6 @@
     <ClCompile Include="Map\Room.cpp">
       <Filter>Game\Map</Filter>
     </ClCompile>
-    <ClCompile Include="Coroutine.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="Player.cpp">
       <Filter>Game\Actor</Filter>
     </ClCompile>
@@ -143,9 +140,6 @@
     </ClInclude>
     <ClInclude Include="Map\Room.hpp">
       <Filter>Game\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="Coroutine.hpp">
-      <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="Player.hpp">
       <Filter>Game\Actor</Filter>

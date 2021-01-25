@@ -40,6 +40,7 @@ public:
 	static Rgba8 GRAY;
 	static Rgba8 DARK_GRAY;
 	static Rgba8 CYAN;
+	static Rgba8 MAGENTA;
 
 	//static Rgba8 RED;
 };

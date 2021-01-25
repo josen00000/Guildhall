@@ -36,6 +36,8 @@ public:
 	Vec2	GetMassCenter( std::vector<Vec2> rawPoints ) const;
 	Vec2	GetMassCenter() const { return m_center; }
 	Vec2	GetEdgeNormal( int edgeIndex ) const;
+	std::pair<Vec2, Vec2> GetIntersectPointWithStraightLine( LineSegment2 line );
+	std::vector<Vec2> GetAllPoints();
 
 	bool GetEdgeInWorldWithPoint( Vec2 point,  LineSegment2& seg ) const;
 

@@ -46,7 +46,7 @@ AABB2::AABB2( Vec2 const& center, float width, float height )
 
 bool AABB2::IsPointInside( const Vec2& point ) const
 {
-	if(( point.x > mins.x && point.x < maxs.x ) && (point.y > mins.y && point.y < maxs.y )){
+	if(( point.x >= mins.x && point.x <= maxs.x ) && (point.y >= mins.y && point.y <= maxs.y )){
 		return true;
 	}
 	else{

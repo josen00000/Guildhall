@@ -1,5 +1,7 @@
 #pragma once
 #include <math.h>
+#include <stack>
+#include <algorithm>
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/Mat44.hpp"
 #include "Engine/Math/IntVec2.hpp"
@@ -245,6 +247,23 @@ float GetDistanceSquared2D( const Vec2& positionA, const Vec2& positionB ){
 	const float dis_Y=positionB.y-positionA.y;
 	return dis_X*dis_X+dis_Y*dis_Y;
 }
+
+float GetSignedDistanceSquared2D( const Vec2& positionA, const Vec2& positionB, const Vec2& reference )
+{
+	const float dis_X = positionB.x - positionA.x;
+	const float dis_Y = positionB.y - positionA.y;
+	Vec2 dispAB = positionB - positionA;
+	Vec2 dispAR = reference - positionA;
+	float DP_AB_AR = DotProduct2D( dispAB , dispAR );
+	float result = ( dis_X * dis_X ) + ( dis_Y * dis_Y );
+	if( DP_AB_AR > 0 ) {
+		return result;
+	}
+	else {
+		return -result;
+	}
+}
+
 float GetDistance3D( const Vec3& positionA, const Vec3& positionB ){
 	const float dis_X=positionB.x-positionA.x;
 	const float dis_Y=positionB.y-positionA.y;
@@ -828,7 +847,7 @@ float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c )
 	return area;
 }
 
-Vec2 GetIntersectionPointOfTwoLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec2 pointAInLineB, Vec2 pointBInLineB )
+Vec2 GetIntersectionPointOfTwoStraightLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec2 pointAInLineB, Vec2 pointBInLineB )
 {
 	float a1 = pointBInLineA.y - pointAInLineA.y;
 	float b1 = pointAInLineA.x - pointBInLineA.x;
@@ -851,51 +870,70 @@ Vec2 GetIntersectionPointOfTwoLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec
 	}
 }
 
-Vec2 GetIntersectionPointOfTwoLines( LineSegment2 lineA, LineSegment2 lineB )
+Vec2 GetIntersectionPointOfTwoStraightLines( LineSegment2 lineA, LineSegment2 lineB )
 {
-	return GetIntersectionPointOfTwoLines( lineA.GetStartPos(), lineA.GetEndPos(), lineB.GetStartPos(), lineB.GetEndPos() );
+	return GetIntersectionPointOfTwoStraightLines( lineA.GetStartPos(), lineA.GetEndPos(), lineB.GetStartPos(), lineB.GetEndPos() );
 }
 
-std::vector<Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box )
+bool GetIntersectionPointOfTwoLineSegments( Vec2& point, LineSegment2 lineA, LineSegment2 lineB )
+{
+	point = GetIntersectionPointOfTwoStraightLines( lineA, lineB );
+	return lineA.IsPointMostlyInEdge( point );
+}
+
+bool SortCompareFunc( const std::pair<float, Vec2>& a, const std::pair<float, Vec2>& b ) {
+	return ( a.first < b.first );
+}
+
+std::pair<Vec2, Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box )
 {
 	LineSegment2 boxBottom	= LineSegment2( box.mins, Vec2( box.maxs.x, box.mins.y ) );
 	LineSegment2 boxTop		= LineSegment2( Vec2( box.mins.x, box.maxs.y ), box.maxs );
 	LineSegment2 boxLeft	= LineSegment2( box.mins, Vec2( box.mins.x, box.maxs.y ) );
 	LineSegment2 boxRight	= LineSegment2( Vec2( box.maxs.x, box.mins.y ), box.maxs );
 
-	std::vector<Vec2> result;
+	std::pair<Vec2, Vec2> result;
 	if( line.GetStartPos().y == line.GetEndPos().y ) {
-		Vec2 pointA = GetIntersectionPointOfTwoLines( boxLeft, line );
-		Vec2 pointB = GetIntersectionPointOfTwoLines( boxRight, line );
-		result.push_back( pointA );
-		result.push_back( pointB );
+		Vec2 pointA = GetIntersectionPointOfTwoStraightLines( boxLeft, line );
+		Vec2 pointB = GetIntersectionPointOfTwoStraightLines( boxRight, line );
+		result.first = pointA;
+		result.second = pointB;
 	}
 	else if( line.GetStartPos().x == line.GetEndPos().x ) {
-		Vec2 pointA = GetIntersectionPointOfTwoLines( boxBottom, line );
-		Vec2 pointB = GetIntersectionPointOfTwoLines( boxTop, line );
-		result.push_back( pointA );
-		result.push_back( pointB );
+		Vec2 pointA = GetIntersectionPointOfTwoStraightLines( boxBottom, line );
+		Vec2 pointB = GetIntersectionPointOfTwoStraightLines( boxTop, line );
+		result.first = pointA;
+		result.second = pointB;
 	}
 	else {
-		Vec2 pointA = GetIntersectionPointOfTwoLines( boxBottom, line );
-		Vec2 pointB = GetIntersectionPointOfTwoLines( boxTop, line );
-		Vec2 pointC = GetIntersectionPointOfTwoLines( boxLeft, line );
-		Vec2 pointD = GetIntersectionPointOfTwoLines( boxRight, line );
-		if( boxBottom.IsPointMostlyInEdge( pointA ) ) {
-			result.push_back( pointA );
-		}
-		if( boxTop.IsPointMostlyInEdge( pointB ) ) {
-			result.push_back( pointB );
-		}
-		if( boxLeft.IsPointMostlyInEdge( pointC ) ) {
-			result.push_back( pointC );
-		}
-		if( boxRight.IsPointMostlyInEdge( pointD ) ) {
-			result.push_back( pointD );
-		}
-		if( result.size() > 2 ) {
-			ERROR_RECOVERABLE( " should not have more than two intersect point!" );
-		}
+		Vec2 pointA = GetIntersectionPointOfTwoStraightLines( boxBottom, line );
+		Vec2 pointB = GetIntersectionPointOfTwoStraightLines( boxTop, line );
+		Vec2 pointC = GetIntersectionPointOfTwoStraightLines( boxLeft, line );
+		Vec2 pointD = GetIntersectionPointOfTwoStraightLines( boxRight, line );
+		Vec2 nearestPointA = box.GetNearestPoint( pointA );
+		Vec2 nearestPointB = box.GetNearestPoint( pointB );
+		Vec2 nearestPointC = box.GetNearestPoint( pointC );
+		Vec2 nearestPointD = box.GetNearestPoint( pointD );
+
+		// TODO debug
+		std::vector<std::pair<float, Vec2>> dists_points;
+		float distSQA =	GetDistanceSquared2D( nearestPointA, pointA );
+		float distSQB = GetDistanceSquared2D( nearestPointB, pointB );
+		float distSQC = GetDistanceSquared2D( nearestPointC, pointC );
+		float distSQD = GetDistanceSquared2D( nearestPointD, pointD );
+
+		dists_points.push_back( std::pair<float, Vec2 >( distSQA, pointA ) );
+		dists_points.push_back( std::pair<float, Vec2 >( distSQB, pointB ) );
+		dists_points.push_back( std::pair<float, Vec2 >( distSQC, pointC ) );
+		dists_points.push_back( std::pair<float, Vec2 >( distSQD, pointD ) );
+ 
+		std::sort( dists_points.begin(), dists_points.end(), SortCompareFunc );
+		result.first = dists_points[0].second;
+		result.second = dists_points[1].second;
+
+		if( result.first == Vec2::ZERO || result.second == Vec2::ZERO ) {
+			ERROR_RECOVERABLE( "intersect point not find. result is default vec2" );
+ 		}
 	}
 	return result;
 }
@@ -908,14 +946,15 @@ LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB )
 		ERROR_RECOVERABLE( " can not get perpendicular bisector of same point" );
 	}
 	if( pointA.x == pointB.x ) {
-		dirtAB = Vec2( 0, 1 );
+		dirtAB = Vec2( 1, 0 );
 	}
 	else if( pointA.y == pointB.y ) {
-		dirtAB = Vec2( 1, 0 );
+		dirtAB = Vec2( 0, 1 );
 	}
 	else {
 		dirtAB = pointB - pointA;
 		dirtAB.Normalize();
+		dirtAB.Rotate90Degrees();
 	}
 	LineSegment2 PB_AB = LineSegment2( centerAB, centerAB + dirtAB );
 	return PB_AB; 

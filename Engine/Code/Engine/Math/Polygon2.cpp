@@ -27,12 +27,20 @@ Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 	result.push_back( start );
 
 	Vec2 current = start;
+	bool isFinished = false;
 	while( true ) {
-		Vec2 next = points[0];
+		int nextIndex = 0;
+		Vec2 next = points[nextIndex];
+		while( next == current )
+		{
+			nextIndex++;
+			next = points[nextIndex];
+		}
+
 		std::vector<Vec2> coLinear;
-		for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
+		for( int pointIndex = 0; pointIndex < points.size(); pointIndex++ ) {
 			const Vec2& tempPoint = points[pointIndex];
-			if( tempPoint == current ) { continue; }
+			if( tempPoint == current || tempPoint == next ) { continue; }
 
 			float crossPro = CrossProduct2D( current, next, tempPoint );
 			if( crossPro < 0 ) {
@@ -41,26 +49,36 @@ Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 			}
 			else if( crossPro == 0 ) {
 				float distSqarA = GetDistanceSquared2D( current, next );
-				float distSqarB = GetDistanceSquared2D( current, tempPoint );
-				if( distSqarB > distSqarA ) {
-					coLinear.push_back( next );
-					next = tempPoint;
-				}
-				else {
-					coLinear.push_back( tempPoint );
+				float distSqarB = GetSignedDistanceSquared2D( current, tempPoint, next );
+				if( distSqarB >= 0 ){
+					if( distSqarB > distSqarA ) {
+						coLinear.push_back( next );
+						next = tempPoint;
+					}
+					else {
+						coLinear.push_back( tempPoint );
+					}
 				}
 			}
+			if( next == start ) { 
+				isFinished = true;
+				coLinear.clear();
+				break; 
+			}
+		}
+
+		if( isFinished ) {
+			break;
 		}
 
 		for( int coIndex = 0; coIndex < coLinear.size(); coIndex++ ) {
 			result.push_back( coLinear[coIndex] );
 		}
 
-		if( next == start ) { break; }
-
 		result.push_back( next );
 		current = next;
 	}
+
 	for( int i = 0; i < result.size(); i++ ) {
 		for( int j = i; j < result.size(); j++ ) {
 			if( IsVec2MostlyEqual( result[i], result[j] ) && i != j ) {
@@ -238,6 +256,43 @@ Vec2 Polygon2::GetEdgeNormal( int edgeIndex ) const
 	LineSegment2 edge = GetEdge( edgeIndex );
 	Vec2 direction = edge.GetNormalizedDirection();
 	return direction.GetRotatedMinus90Degrees();
+}
+
+std::pair<Vec2, Vec2> Polygon2::GetIntersectPointWithStraightLine( LineSegment2 line )
+{
+	float lDist = GetLongestDistance();
+	if( line.GetLength() < 2 * lDist ) {
+		Vec2 lineDirt = line.GetDirection();
+		lineDirt.Normalize();
+		Vec2 lineCenter = ( line.GetStartPos() + line.GetEndPos() ) / 2;
+		line.SetStartPos( lineCenter - lDist * lineDirt );
+		line.SetEndPos( lineCenter + lDist * lineDirt );
+	}
+	Vec2 intersectPoint;
+	std::pair<Vec2, Vec2> result;
+	int intersectPointNum = 0;
+	for( int i = 0; i < m_edges.size(); i++ ) {
+		 if( GetIntersectionPointOfTwoLineSegments( intersectPoint, m_edges[i], line ) ) {
+			 if( intersectPointNum == 0 ) {
+				 result.first = intersectPoint;
+				 intersectPointNum++;
+			 }
+			 else if( intersectPointNum == 1 ){
+				result.second = intersectPoint;
+				break;
+			 }
+		 }
+	}
+	return result;
+}
+
+std::vector<Vec2> Polygon2::GetAllPoints()
+{
+	std::vector<Vec2> result;
+	for( int i = 0; i < m_edges.size(); i++ ) {
+		result.push_back( m_center + m_edges[i].GetStartPos() );
+	}
+	return result;
 }
 
 LineSegment2 Polygon2::GetEdge( int index ) const

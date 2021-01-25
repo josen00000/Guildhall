@@ -28,6 +28,7 @@ Vec2	GetNormalDirectionWithDegrees( const float degrees );
 //
 float	GetDistance2D(const Vec2& positionA, const Vec2& positionB);
 float	GetDistanceSquared2D(const Vec2& positionA, const Vec2& positionB);
+float	GetSignedDistanceSquared2D( const Vec2& positionA, const Vec2& positionB, const Vec2& reference );
 float	GetDistance3D(const Vec3& positionA, const Vec3& positionB);
 float	GetDistanceSquared3D(const Vec3& positionA, const Vec3& positionB);
 float	GetDistanceXY3D(const Vec3& positionA, const Vec3& positionB);
@@ -142,7 +143,8 @@ float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c );
 
 
 // Line
-Vec2 GetIntersectionPointOfTwoLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec2 pointAInLineB, Vec2 pointBInLineB );
-Vec2 GetIntersectionPointOfTwoLines( LineSegment2 lineA, LineSegment2 lineB );
-std::vector<Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box );
+Vec2 GetIntersectionPointOfTwoStraightLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec2 pointAInLineB, Vec2 pointBInLineB );
+Vec2 GetIntersectionPointOfTwoStraightLines( LineSegment2 lineA, LineSegment2 lineB );
+bool GetIntersectionPointOfTwoLineSegments( Vec2& point, LineSegment2 lineA, LineSegment2 lineB );
+std::pair<Vec2, Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box );
 LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB );

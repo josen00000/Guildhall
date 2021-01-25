@@ -49,6 +49,19 @@ void App::StartupStage1()
 {
 	// memory system and log system
 	Clock::SystemStartUp();
+	// test
+	std::vector<Vec2> testPoints;
+// 	Vec2 testA = Vec2( 32.29f, 22.42f );
+// 	Vec2 testB = Vec2( 72.29f, 13.87f );
+// 	Vec2 testC = Vec2( 32.29f, 6.67f );
+// 	Vec2 testD = Vec2( 32.29f, 29.17f );
+	testPoints.emplace_back( 32.29f, 22.42f );
+	testPoints.emplace_back( 72.29f, 13.87f );
+	testPoints.emplace_back( 32.29f, 6.67f );
+	testPoints.emplace_back( 32.29f, 29.17f );
+
+	Polygon2 testPoly = Polygon2::MakeConvexFromPointCloud( testPoints );
+
 }
 
 void App::StartupStage2()

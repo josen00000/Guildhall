@@ -55,6 +55,7 @@ private:
 
 public:
 	bool m_isAppQuit		= false;
+	bool m_isPaused			= false;
 	bool m_isDebug			= false;
 	bool m_isFighting		= false;
 	bool m_isOnSettingPage	= false;
