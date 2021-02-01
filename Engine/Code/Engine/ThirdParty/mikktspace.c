@@ -21,6 +21,9 @@
  *  3. This notice may not be removed or altered from any source distribution.
  */
 
+#pragma warning( disable : 4204 )
+#pragma warning( disable : 4456 )
+
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>

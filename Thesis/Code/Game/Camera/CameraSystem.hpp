@@ -150,7 +150,10 @@ public:
 	void GetVoronoiPointsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC );
 	void GetVoronoiPointsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC );
 	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints );
-	
+	void GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<Vec2, Vec2> intersectPoints, const CameraController* currentController, std::stack<CameraController*>& nextControllers );
+
+	// helper function
+	bool GetSharedEdgeOfTwoPolygon( LineSegment2& sharedLine, Polygon2 polyA, Polygon2 polyB );
 private:
 	bool m_isdebug = false;
 	std::vector<CameraController*> m_controllers;
@@ -185,18 +188,27 @@ private:
 	Map*	m_map					= nullptr;
 	//Timer*
 
+	// voronoi split
+	std::stack<CameraController*> m_nextControllers;
+
 	// debug
 	std::vector<Vec2> m_playerDebugPositions;
 	Vec2 m_playerDebugPosA;
 	Vec2 m_playerDebugPosB;
 	Vec2 m_playerDebugPosC;
+	Vec2 m_playerDebugPosX;
+	Polygon2 m_DebugPolyA;
+	Polygon2 m_DebugPolyB;
+	Polygon2 m_DebugPolyC;
+	Polygon2 m_DebugPolyD;
 	std::vector<Vec2> m_debugIntersectPointsA;
 	std::vector<Vec2> m_debugIntersectPointsB;
 	std::vector<Vec2> m_debugIntersectPointsC;
+	std::vector<Vec2> m_debugIntersectPointsX;
+	std::vector<std::vector<Vec2>> m_debugAfterDeletePoints;
 	std::vector<Vec2> m_debugLineIntersectWithBoxPointsAB;
 	std::vector<Vec2> m_debugLineIntersectWithBoxPointsAC;
 	std::vector<Vec2> m_debugLineIntersectWithBoxPointsBC;
-	std::vector<LineSegment2> m_debugPBLines;
-	
+	std::vector<LineSegment2> m_debugPBLines;	
 
 };

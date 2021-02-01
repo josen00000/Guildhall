@@ -25,6 +25,7 @@ class Window;
 class Material;
 
 struct AABB2;
+struct ConvexPoly2;
 struct Cylinder3;
 struct Polygon2;
 struct D3D11_RASTERIZER_DESC;
@@ -290,6 +291,7 @@ public:
 	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
 	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
 	void DrawPolygon2D( Polygon2 polygon, Rgba8 tint );
+	void DrawConvexPoly2D( ConvexPoly2 convPoly, Rgba8 tint );
 	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );
 	void DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor );
 	void DrawLineWithHeight( const LineSegment2& lineSeg, float height, float thick, const Rgba8& lineColor );

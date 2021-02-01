@@ -17,13 +17,15 @@ public:
 	//Accessor
 	bool	IsPointMostlyInEdge( Vec2 point ) const;
 	bool	IsPointMostlyInStraightLine( Vec2 point ) const;
+	bool	IsLineOverlapWith( LineSegment2 line ) const;
+	bool	IsLineParallelWith( LineSegment2 line ) const;
 	float	GetLengthOfPointToLineSegment( const Vec2& refPos ) const; 
 	float	GetLength() const;
 	float	GetSlope() const;
 	Vec2	GetStartPos() const;
 	Vec2	GetEndPos() const;
 	Vec2	GetNormalizedDirection() const;
-	Vec2	GetDirection() const;
+	Vec2	GetDisplacement() const;
 	Vec2	GetNearestPoint( const Vec2& refPos ) const;
 
 	//Mutator

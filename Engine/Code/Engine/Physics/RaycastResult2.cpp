@@ -1,6 +1,6 @@
-#include "RaycastResult.hpp"
+#include "RaycastResult2.hpp"
 
-RaycastResult::RaycastResult( bool DidImpact, float ImpactDist, int ImpactTileType, Vec2 ImpactPos, Vec2 start )
+RaycastResult2::RaycastResult2( bool DidImpact, float ImpactDist, int ImpactTileType, Vec2 ImpactPos, Vec2 start )
 	:m_didImpact(DidImpact)
 	,m_impactDist(ImpactDist)
 	,m_impactTileType(ImpactTileType)

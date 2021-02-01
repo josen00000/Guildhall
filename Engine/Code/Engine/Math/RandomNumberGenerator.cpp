@@ -1,4 +1,5 @@
 #include "RandomNumberGenerator.hpp"
+#include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/RawNoise.hpp"
 #include "Engine/Math/MathUtils.hpp"
 
@@ -87,6 +88,13 @@ float RandomNumberGenerator::RollRandomFloatLessThan( float maxNotInclusive )
 	 float tempX = RollRandomFloatInRange( minInclusive.x, maxInclusive.x );
 	 float tempY = RollRandomFloatInRange( minInclusive.y, maxInclusive.y );
 	 return Vec2( tempX, tempY );
+ }
+
+ Vec2 RandomNumberGenerator::RollPositionInBox( const AABB2& box )
+ {
+	float x = RollRandomFloatInRange( box.mins.x, box.maxs.x );
+	float y = RollRandomFloatInRange( box.mins.y, box.maxs.y );
+	return Vec2( x, y );
  }
 
  Vec3 RandomNumberGenerator::RollRandomVec3InRange( const Vec3& minInclusive, const Vec3& maxInclusive )

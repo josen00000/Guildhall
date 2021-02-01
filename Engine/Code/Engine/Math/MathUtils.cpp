@@ -960,3 +960,16 @@ LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB )
 	return PB_AB; 
 }
 
+LineSegment2 GetAdjacentEdgeOfTwoPolygon( Polygon2 polyA, Polygon2 polyB )
+{
+	for( int i = 0; i < polyA.GetEdgeCount(); i++ ) {
+		LineSegment2 lineA = polyA.GetEdge( i );
+		for( int j = 0; j < polyB.GetEdgeCount(); j++ ) {
+			LineSegment2 lineB = polyB.GetEdge( j );
+			if( lineA.IsLineOverlapWith( lineB ) ) {
+				return lineA;
+			}
+		}
+	}
+}
+

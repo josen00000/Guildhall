@@ -54,6 +54,16 @@ bool AABB2::IsPointInside( const Vec2& point ) const
 	}
 }
 
+bool AABB2::IsPointMostInEdge( const Vec2& point ) const
+{
+	if( IsFloatMostlyEqual( point.x, mins.x ) || IsFloatMostlyEqual( point.x, maxs.x ) ) {
+		return( point.y >= mins.y && point.y <= maxs.y );
+	}
+	else if( IsFloatMostlyEqual( point.y, mins.y ) || IsFloatMostlyEqual( point.y, maxs.y ) ) {
+		return( point.x >= mins.x && point.x <= maxs.x );
+	}
+}
+
 const Vec2 AABB2::GetCenter() const
 {
 	float centerX = (mins.x+ maxs.x) / 2;

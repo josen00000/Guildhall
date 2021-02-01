@@ -25,6 +25,7 @@ public:
 
 	//Accessors(const methods)
 	bool IsPointInside(const Vec2& point) const;
+	bool IsPointMostInEdge( const Vec2& point ) const;
 	const Vec2	GetCenter() const;
 	const Vec2	GetDimensions() const;
 	const Vec2	GetNearestPoint( const Vec2& referencePosition ) const;

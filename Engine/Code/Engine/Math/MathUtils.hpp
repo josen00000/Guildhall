@@ -148,3 +148,6 @@ Vec2 GetIntersectionPointOfTwoStraightLines( LineSegment2 lineA, LineSegment2 li
 bool GetIntersectionPointOfTwoLineSegments( Vec2& point, LineSegment2 lineA, LineSegment2 lineB );
 std::pair<Vec2, Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box );
 LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB );
+
+// polygon
+LineSegment2 GetAdjacentEdgeOfTwoPolygon( Polygon2 polyA, Polygon2 polyB ); // get first adjacent edge

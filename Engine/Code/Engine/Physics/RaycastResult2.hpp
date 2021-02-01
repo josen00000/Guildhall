@@ -1,12 +1,12 @@
 #pragma once
 #include "Engine/Math/vec2.hpp"
 
-struct RaycastResult
+struct RaycastResult2
 {
 public:
-	RaycastResult(){}
-	~RaycastResult(){}
-	explicit RaycastResult(bool DidImpact, float ImpactDist, int ImpactTileType, Vec2 ImpactPos , Vec2 start);/*, Vec2 ImpactNormal*/
+	RaycastResult2(){}
+	~RaycastResult2(){}
+	explicit RaycastResult2(bool DidImpact, float ImpactDist, int ImpactTileType, Vec2 ImpactPos , Vec2 start);/*, Vec2 ImpactNormal*/
 public:
 	bool m_didImpact = false;
 	float m_impactDist = 0.f;

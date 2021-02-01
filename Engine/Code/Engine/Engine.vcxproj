@@ -199,6 +199,8 @@
     <ClCompile Include="Math\Algorithm.cpp" />
     <ClCompile Include="Math\Capsule2.cpp" />
     <ClCompile Include="Math\Cone3.cpp" />
+    <ClCompile Include="Math\ConvexHull2.cpp" />
+    <ClCompile Include="Math\ConvexPoly2.cpp" />
     <ClCompile Include="Math\Cylinder3.cpp" />
     <ClCompile Include="Math\Disc2.cpp" />
     <ClCompile Include="Math\FloatRange.cpp" />
@@ -214,6 +216,7 @@
     <ClCompile Include="Math\Polygon2.cpp" />
     <ClCompile Include="Math\RandomNumberGenerator.cpp" />
     <ClCompile Include="Math\RawNoise.cpp" />
+    <ClCompile Include="Math\ShapeUtils.cpp" />
     <ClCompile Include="Math\SmoothNoise.cpp" />
     <ClCompile Include="Math\Vec2.cpp" />
     <ClCompile Include="Math\Vec3.cpp" />
@@ -224,7 +227,7 @@
     <ClCompile Include="Physics\Physics2D.cpp" />
     <ClCompile Include="Physics\PhysicsMaterial.cpp" />
     <ClCompile Include="Physics\PolygonCollider2D.cpp" />
-    <ClCompile Include="Physics\RaycastResult.cpp" />
+    <ClCompile Include="Physics\RaycastResult2.cpp" />
     <ClCompile Include="Physics\RigidBody2D.cpp" />
     <ClCompile Include="Platform\Window.cpp" />
     <ClCompile Include="Renderer\BitmapFont.cpp" />
@@ -293,6 +296,8 @@
     <ClInclude Include="Math\Algorithm.hpp" />
     <ClInclude Include="Math\Capsule2.hpp" />
     <ClInclude Include="Math\Cone3.hpp" />
+    <ClInclude Include="Math\ConvexHull2.hpp" />
+    <ClInclude Include="Math\ConvexPoly2.hpp" />
     <ClInclude Include="Math\Cylinder3.hpp" />
     <ClInclude Include="Math\Disc2.hpp" />
     <ClInclude Include="Math\FloatRange.hpp" />
@@ -308,6 +313,7 @@
     <ClInclude Include="Math\Polygon2.hpp" />
     <ClInclude Include="Math\RandomNumberGenerator.hpp" />
     <ClInclude Include="Math\RawNoise.hpp" />
+    <ClInclude Include="Math\ShapeUtils.hpp" />
     <ClInclude Include="Math\SmoothNoise.hpp" />
     <ClInclude Include="Math\vec2.hpp" />
     <ClInclude Include="Math\Vec3.hpp" />
@@ -318,7 +324,7 @@
     <ClInclude Include="Physics\Physics2D.hpp" />
     <ClInclude Include="Physics\PhysicsMaterial.hpp" />
     <ClInclude Include="Physics\PolygonCollider2D.hpp" />
-    <ClInclude Include="Physics\RaycastResult.hpp" />
+    <ClInclude Include="Physics\RaycastResult2.hpp" />
     <ClInclude Include="Physics\RigidBody2D.hpp" />
     <ClInclude Include="Platform\Window.hpp" />
     <ClInclude Include="Renderer\BitmapFont.hpp" />

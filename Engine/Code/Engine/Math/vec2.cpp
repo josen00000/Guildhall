@@ -91,14 +91,12 @@ float Vec2::GetAngleDegrees() const
 
 const Vec2 Vec2::GetRotated90Degrees() const
 {	
-	
 	return GetRotatedRadians(M_PI/2);
 }
 
 const Vec2 Vec2::GetRotatedMinus90Degrees() const
 {
 	return GetRotatedRadians(-M_PI/2);
-
 }
 
 const Vec2 Vec2::GetRotatedRadians( float deltaRadians ) const

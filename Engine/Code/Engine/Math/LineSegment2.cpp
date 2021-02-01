@@ -99,6 +99,36 @@ bool LineSegment2::IsPointMostlyInStraightLine( Vec2 point ) const
 	return IsFloatMostlyEqual( ( point.y - m_start.y ) / ( point.x - m_start.x ), ( point.y - m_end.y ) / ( point.x - m_end.x ) );
 }
 
+bool LineSegment2::IsLineOverlapWith( LineSegment2 lineB ) const
+{
+	// A is self linesegment, B is other line
+	if( !IsLineParallelWith( lineB ) ) { return false; }
+
+	float lengthA = GetLength();
+	Vec2 disp_BS_AS = lineB.GetStartPos() - GetStartPos();
+	Vec2 dispB = lineB.GetDisplacement();
+	Vec2 dirtA = GetNormalizedDirection();
+	float lengthBInA = DotProduct2D( dispB, dirtA );
+	float lengthBSInA = DotProduct2D( disp_BS_AS, dirtA );
+	FloatRange range1( 0.f, lengthA );
+	FloatRange range2( lengthBSInA, lengthBSInA + lengthBInA );
+	return range1.DoesOverlap( range2 );
+}
+
+bool LineSegment2::IsLineParallelWith( LineSegment2 line ) const
+{
+	Vec2 dirt1 = line.GetDisplacement();
+	Vec2 dirt2 = GetDisplacement();
+	float length1 = dirt1.GetLength();
+	float length2 = dirt2.GetLength();
+	if( length1 == 0 || length2 == 0 ){ return false; }
+
+	dirt1 /= length1;
+	dirt2 /= length2;
+
+	return ( dirt1 == dirt2 );
+}
+
 Vec2 LineSegment2::GetStartPos() const
 {
 	return m_start;
@@ -116,7 +146,7 @@ Vec2 LineSegment2::GetNormalizedDirection() const
 	return direction;
 }
 
-Vec2 LineSegment2::GetDirection() const
+Vec2 LineSegment2::GetDisplacement() const
 {
 	return ( m_end - m_start );
 }

@@ -249,9 +249,6 @@
     <ClCompile Include="Physics\PolygonCollider2D.cpp">
       <Filter>physics</Filter>
     </ClCompile>
-    <ClCompile Include="Physics\RaycastResult.cpp">
-      <Filter>physics</Filter>
-    </ClCompile>
     <ClCompile Include="Physics\RigidBody2D.cpp">
       <Filter>physics</Filter>
     </ClCompile>
@@ -294,9 +291,6 @@
     <ClCompile Include="Core\Delegate.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Convention.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="Job\Job.cpp">
       <Filter>Job</Filter>
     </ClCompile>
@@ -305,6 +299,18 @@
     </ClCompile>
     <ClCompile Include="Job\JobSystemWorkerThread.cpp">
       <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\ConvexHull2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\ConvexPoly2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\ShapeUtils.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\RaycastResult2.cpp">
+      <Filter>physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -533,9 +539,6 @@
     <ClInclude Include="Physics\PolygonCollider2D.hpp">
       <Filter>physics</Filter>
     </ClInclude>
-    <ClInclude Include="Physics\RaycastResult.hpp">
-      <Filter>physics</Filter>
-    </ClInclude>
     <ClInclude Include="Physics\RigidBody2D.hpp">
       <Filter>physics</Filter>
     </ClInclude>
@@ -581,9 +584,6 @@
     <ClInclude Include="Core\ConsumableDelegate.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Convention.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Job\Job.hpp">
       <Filter>Job</Filter>
     </ClInclude>
@@ -592,6 +592,18 @@
     </ClInclude>
     <ClInclude Include="Job\JobSystemWorkerThread.hpp">
       <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\ConvexHull2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\ConvexPoly2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\ShapeUtils.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\RaycastResult2.hpp">
+      <Filter>physics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

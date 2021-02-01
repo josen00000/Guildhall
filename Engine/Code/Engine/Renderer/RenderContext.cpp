@@ -3,11 +3,13 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/core/Time/Clock.hpp"
 #include "Engine/Core/Time/Time.hpp"
+#include "Engine/Core/Image.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Math/Cylinder3.hpp"
 #include "Engine/Math/Polygon2.hpp"
+#include "Engine/Math/ConvexPoly2.hpp"
 #include "Engine/Platform/Window.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -23,7 +25,6 @@
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
-#include "Engine/Core/Image.hpp"
 #include "Engine/Renderer/Material.hpp"
 //third party library
 #include "Engine/stb_image.h"
@@ -943,6 +944,30 @@ void RenderContext::DrawPolygon2D( Polygon2 polygon, Rgba8 tint )
 	DrawVertexVector( tempVertices );
 }
 
+void RenderContext::DrawConvexPoly2D( ConvexPoly2 convPoly, Rgba8 tint )
+{
+	std::vector<Vec2> convPolyPoints = convPoly.GetPoints();
+	Vec2 ConvPolyCenter = convPoly.GetCenter();
+	std::vector<Vertex_PCU> tempVertices;
+	for( int i = 0; i < convPolyPoints.size() - 1; i++ ) {
+		tempVertices.push_back( Vertex_PCU( Vec3( ConvPolyCenter ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( convPolyPoints[i] ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( convPolyPoints[i+1] ), tint, Vec2::ZERO ) );
+	}
+	tempVertices.push_back( Vertex_PCU( Vec3( ConvPolyCenter ), tint, Vec2::ZERO ) );
+	tempVertices.push_back( Vertex_PCU( Vec3( convPolyPoints.back() ), tint, Vec2::ZERO ) );
+	tempVertices.push_back( Vertex_PCU( Vec3( convPolyPoints.front() ), tint, Vec2::ZERO ) );
+
+	for( int i = 0; i < convPolyPoints.size() - 1; i++ ) {
+		DrawLine( convPolyPoints[i], convPolyPoints[i+1], 0.2f, Rgba8::RED );
+	}
+	DrawLine( convPolyPoints.back(), convPolyPoints.front(), 0.2f, Rgba8::RED );
+
+	DrawVertexVector( tempVertices );
+
+
+}
+
 void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, const float thick, const Rgba8& lineColor )
 {
 	LineSegment2 tem = LineSegment2( startPoint, endPoint );
@@ -953,7 +978,7 @@ void RenderContext::DrawLine( const LineSegment2& lineSeg, float thick, const Rg
 {
 	//BindVertexBuffer( m_immediateVBO );
 	float halfThick = thick / 2;
-	Vec2 direction = lineSeg.GetDirection();
+	Vec2 direction = lineSeg.GetDisplacement();
 	direction.SetLength( halfThick );
 	Vec2 tem_position = lineSeg.GetEndPos() + direction;
 	Vec2 rightTop = tem_position + (Vec2( -direction.y, direction.x ));
@@ -977,7 +1002,7 @@ void RenderContext::DrawLine( const LineSegment2& lineSeg, float thick, const Rg
 void RenderContext::DrawLineWithHeight( const LineSegment2& lineSeg, float height, float thick, const Rgba8& lineColor )
 {
 	float halfThick = thick / 2;
-	Vec2 direction = lineSeg.GetDirection();
+	Vec2 direction = lineSeg.GetDisplacement();
 	direction.SetLength( halfThick );
 	Vec2 tem_position = lineSeg.GetEndPos() + direction;
 	Vec2 rightTop = tem_position + (Vec2( -direction.y, direction.x ));

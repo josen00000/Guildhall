@@ -27,7 +27,6 @@ Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 	result.push_back( start );
 
 	Vec2 current = start;
-	bool isFinished = false;
 	while( true ) {
 		int nextIndex = 0;
 		Vec2 next = points[nextIndex];
@@ -60,21 +59,23 @@ Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 					}
 				}
 			}
-			if( next == start ) { 
-				isFinished = true;
-				coLinear.clear();
-				break; 
-			}
+			
 		}
 
-		if( isFinished ) {
+		bool isFinished = false;
+		for( int i = 0; i < coLinear.size(); i++ ) {
+			if( coLinear[i] == start ){
+				isFinished = true;
+				break;
+			}
+		}
+		if( next == start || isFinished ) {
 			break;
 		}
 
 		for( int coIndex = 0; coIndex < coLinear.size(); coIndex++ ) {
 			result.push_back( coLinear[coIndex] );
 		}
-
 		result.push_back( next );
 		current = next;
 	}
@@ -115,16 +116,16 @@ bool Polygon2::IsConvex() const
 	if( !IsValid() ){ return false; }
 
 	for( int edgeIndex = 1; edgeIndex < m_edges.size(); edgeIndex++ ) {
-		Vec2 nVecOfEdge = m_edges[edgeIndex-1].GetDirection();
+		Vec2 nVecOfEdge = m_edges[edgeIndex-1].GetDisplacement();
 		nVecOfEdge.Rotate90Degrees();
-		Vec2 drctnOfEdge = m_edges[edgeIndex].GetDirection();
+		Vec2 drctnOfEdge = m_edges[edgeIndex].GetDisplacement();
 		if( DotProduct2D( nVecOfEdge, drctnOfEdge ) < 0 ) { return false; }
 	}
 	
 	// Check last edge with first edge
-	Vec2 nVecOfEdge = m_edges.back().GetDirection();
+	Vec2 nVecOfEdge = m_edges.back().GetDisplacement();
 	nVecOfEdge.Rotate90Degrees();
-	Vec2 drctnOfEdge = m_edges[0].GetDirection();
+	Vec2 drctnOfEdge = m_edges[0].GetDisplacement();
 	if( DotProduct2D( nVecOfEdge, drctnOfEdge ) < 0 ){ return false; }
 
 	return true;
@@ -136,7 +137,7 @@ bool Polygon2::IsPointInside( Vec2 point ) const
 	for( int edgeIndex = 0; edgeIndex < m_edges.size(); edgeIndex++ ) {
 		const LineSegment2& edge = m_edges[edgeIndex];
 		Vec2 PS = point - edge.GetStartPos();
-		Vec2 edgeNormalDrctn = edge.GetDirection().GetRotated90Degrees();
+		Vec2 edgeNormalDrctn = edge.GetDisplacement().GetRotated90Degrees();
 		if( DotProduct2D( PS, edgeNormalDrctn ) < 0 ){ return false; }
 	}
 
@@ -262,7 +263,7 @@ std::pair<Vec2, Vec2> Polygon2::GetIntersectPointWithStraightLine( LineSegment2 
 {
 	float lDist = GetLongestDistance();
 	if( line.GetLength() < 2 * lDist ) {
-		Vec2 lineDirt = line.GetDirection();
+		Vec2 lineDirt = line.GetDisplacement();
 		lineDirt.Normalize();
 		Vec2 lineCenter = ( line.GetStartPos() + line.GetEndPos() ) / 2;
 		line.SetStartPos( lineCenter - lDist * lineDirt );
@@ -272,14 +273,18 @@ std::pair<Vec2, Vec2> Polygon2::GetIntersectPointWithStraightLine( LineSegment2 
 	std::pair<Vec2, Vec2> result;
 	int intersectPointNum = 0;
 	for( int i = 0; i < m_edges.size(); i++ ) {
-		 if( GetIntersectionPointOfTwoLineSegments( intersectPoint, m_edges[i], line ) ) {
+		 if( GetIntersectionPointOfTwoLineSegments( intersectPoint, GetEdgeInWorld( i ), line ) ) {
 			 if( intersectPointNum == 0 ) {
 				 result.first = intersectPoint;
 				 intersectPointNum++;
 			 }
 			 else if( intersectPointNum == 1 ){
 				result.second = intersectPoint;
+				intersectPointNum++;
 				break;
+			 }
+			 else {
+				 ERROR_RECOVERABLE( "should not have more that 2 intersect points " );
 			 }
 		 }
 	}

@@ -376,20 +376,13 @@ void Camera::UpdateCameraYaw( float deltaYaw )
 
 Vec3 Camera::ClientToWorld( Vec2 client, float ndcZ )const
 {
-	Vec3 ndc = RangeMapVec3(  Vec3::ZERO, Vec3::ONE, Vec3( -1.f, -1.f, 0 ), Vec3( 1.f, 1.f, 1.f ),Vec3( client, ndcZ) );
+	Vec3 ndc = RangeMapVec3(  Vec3::ZERO, Vec3::ONE, Vec3( -1.f, -1.f, 0 ), Vec3( 1.f, 1.f, 1.f ),Vec3( client, ndcZ ) );
 
 	Mat44 proj = GetProjectionMatrix();
 	Mat44 worldToClip = proj;
 	worldToClip.Multiply( GetViewMatrix() );
 
 	Mat44 clipToWorld = worldToClip.GetInvertMatrix(); // no bug
-	Mat44 test = clipToWorld;
-	test.Multiply( worldToClip );
-
-	test = GetViewMatrix();
-
-
-
 	Vec4 worldHomogenous = clipToWorld.TransformHomogeneousPoint3D( Vec4( ndc.x, ndc.y, ndc.z, 1.f) );
 	Vec3 worldPos;
 	worldPos.x = worldHomogenous.x / worldHomogenous.w;
