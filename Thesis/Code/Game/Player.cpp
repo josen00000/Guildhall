@@ -91,7 +91,7 @@ void Player::HandleInput( float deltaSeconds, int playerIndex )
 			m_movingDir.Normalize();
 		}
 		if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_LEFT ) ) {
-			//__super::Shoot( deltaSeconds );
+			__super::Shoot( deltaSeconds );
 		}
 		break;
 	case AI_INPUT:

@@ -25,6 +25,26 @@ ConvexHull2 ConvexHull2::MakeConvexHullFromConvexPoly( ConvexPoly2 poly )
 	return ConvexHull2( planes );
 }
 
+std::pair<Vec2, Plane2> ConvexHull2::GetMostPossibleIntersectPointAndPlaneWithRaycast( Vec2 startPos, Vec2 fwdDirt, float maxDist /*= LONGEST_RAYCAST_DETECT_DIST */ ) const
+{
+	Vec2 resultIntersectPoint;
+	float LargestDistSQ = 0;
+	Plane2 candidatePlane;
+
+	float longestDistSq = 0;
+	for( Plane2 plane : m_planes ) {
+		if( plane.IsPointInBack( startPos ) ) { continue; }
+		
+		Vec2 tempIntersectPoint = plane.GetIntersectPointWithRaycast( startPos, fwdDirt, maxDist );
+		float distSQ = GetDistanceSquared2D( tempIntersectPoint, startPos );
+		if( distSQ > LargestDistSQ ) {
+			LargestDistSQ = distSQ;
+			candidatePlane = plane;
+			resultIntersectPoint = tempIntersectPoint;
+		}
+	}
+	return std::pair<Vec2, Plane2>( resultIntersectPoint, candidatePlane );
+}
 
 bool ConvexHull2::IsPointInside( Vec2 point ) const
 {
@@ -32,6 +52,16 @@ bool ConvexHull2::IsPointInside( Vec2 point ) const
 		if( plane.IsPointInFront( point ) ) {
 			return false;
 		}
+	}
+	return true;
+}
+
+
+bool ConvexHull2::IsPointInsideWithoutPlane( Vec2 point, Plane2 plane ) const
+{
+	for( Plane2 tempPlane : m_planes ) {
+		if( tempPlane == plane ) { continue; }
+		if( plane.IsPointInFront( point ) ) { return false; }
 	}
 	return true;
 }

@@ -40,7 +40,32 @@ float Plane2::GetDistanceFromPlane( Vec2 point )
 	return abs( signedDist );
 }
 
+Vec2 Plane2::GetNromal() const
+{
+	return m_normal;
+}
+
 Vec2 Plane2::GetplaneOriginalPoint()
 {
 	return m_normal * m_dist;
+}
+
+Vec2 Plane2::GetIntersectPointWithRaycast( Vec2 startPos, Vec2 fwdDirt, float maxDist /*= LONGEST_RAYCAST_DETECT_DIST */ )
+{
+	// intersect point P
+	// Project startPos to plane get point N.
+	float DistOSInPlaneNormal = DotProduct2D( startPos, m_normal );
+	float distSN = DistOSInPlaneNormal - m_dist;
+	Vec2 SNNormalized = IsPointInFront( startPos ) ? -m_normal : m_normal;
+
+	float distProjectSNNormalizedToSP = DotProduct2D( SNNormalized, fwdDirt );
+	// SP / distprojectsnnormalziedtosp = dist / 1
+	float SPDist = distProjectSNNormalizedToSP * distSN;
+	return startPos + fwdDirt * SPDist;
+}
+
+// Operator
+bool Plane2::operator==( const Plane2& plane ) const
+{
+	return IsFloatMostlyEqual( m_dist, plane.GetDistance()) && IsVec2MostlyEqual( m_normal, plane.GetNromal() );
 }

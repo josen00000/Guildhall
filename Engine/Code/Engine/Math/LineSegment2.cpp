@@ -129,6 +129,13 @@ bool LineSegment2::IsLineParallelWith( LineSegment2 line ) const
 	return ( dirt1 == dirt2 );
 }
 
+bool LineSegment2::IsLineIntersectWithDisc( Vec2 center, float radius )
+{
+	Vec2 nearestPoint = GetNearestPoint( center );
+	float distSq = GetDistanceSquared2D( nearestPoint, center );
+	return distSq < ( radius * radius );
+}
+
 Vec2 LineSegment2::GetStartPos() const
 {
 	return m_start;

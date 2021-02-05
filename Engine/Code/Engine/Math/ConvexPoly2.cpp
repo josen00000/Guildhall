@@ -88,6 +88,14 @@ bool ConvexPoly2::IsPointInside( Vec2 point ) const
 	return true;
 }
 
+bool ConvexPoly2::EarlyCheckDoesNeedRaycast( LineSegment2 line ) const
+{
+	Vec2 polygonCenter = GetCenter();
+	float polygonDiscRadius = GetBounderDiscRadius();
+	return line.IsLineIntersectWithDisc( polygonCenter, polygonDiscRadius );
+	
+}
+
 Vec2 ConvexPoly2::GetCenter() const
 {
 	Vec2 result = Vec2::ZERO;
@@ -98,4 +106,17 @@ Vec2 ConvexPoly2::GetCenter() const
 		result /= m_points.size();
 	}
 	return result;
+}
+
+float ConvexPoly2::GetBounderDiscRadius() const
+{
+	Vec2 center = GetCenter();
+	float LongestDistSq = 0;
+	for( Vec2 point : m_points ) {
+		float tempDistSq = GetDistanceSquared2D( point, center );
+		if( tempDistSq > LongestDistSq ) {
+			LongestDistSq = tempDistSq;
+		}
+	}
+	return sqrt( LongestDistSq );
 }

@@ -27,6 +27,8 @@ extern BitmapFont* g_defaultFont;
 extern NamedStrings g_gameConfigBlackboard;
 extern Convention g_convention;
 
+constexpr float LONGEST_RAYCAST_DETECT_DIST = 20.f;
+
 const Vec2 ALIGN_BOTTOM_LEFT	= Vec2( 0.f, 0.f);
 const Vec2 ALIGN_BOTTOM_CENTER	= Vec2( 0.5f, 0.f);
 const Vec2 ALIGN_BOTTOM_RIGHT	= Vec2( 1.f, 0.f);

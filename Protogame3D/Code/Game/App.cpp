@@ -29,7 +29,6 @@ InputSystem*	g_theInputSystem	= nullptr;
 EventSystem*	g_theEventSystem	= nullptr;
 AudioSystem*	g_theAudioSystem	= nullptr;
 DevConsole*		g_theConsole		= nullptr;
-Convention		g_convention;
 
 #include <vector>
 #include <functional>

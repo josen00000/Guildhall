@@ -243,7 +243,7 @@ void CameraSystem::DebugRender()
 	g_theRenderer->DrawPolygon2D( m_DebugPolyA, Rgba8( 255, 0, 0, alpha ) );
 	g_theRenderer->DrawPolygon2D( m_DebugPolyB, Rgba8( 0, 255, 0, alpha ) );
 	g_theRenderer->DrawPolygon2D( m_DebugPolyC, Rgba8( 0, 0, 255, alpha ) );
-	//g_theRenderer->DrawPolygon2D( m_DebugPolyD, Rgba8( 0, 0, 0, 255 ) );
+	g_theRenderer->DrawPolygon2D( m_DebugPolyD, Rgba8( 1, 1, 1, 255 ) );
 
 // 	for( int i = 0; i < m_debugLineIntersectWithBoxPointsAB.size(); i++ ) {
 // 		g_theRenderer->DrawCircle( m_debugLineIntersectWithBoxPointsAB[i],intersectPointRadius, thick, Rgba8::YELLOW );
@@ -280,18 +280,18 @@ void CameraSystem::DebugRender()
 // 			g_theRenderer->DrawLine( m_debugPBLines[i], thick, Rgba8::BLACK );
 // 		}
 // 	}
-// 	for( int i = 0; i < m_debugIntersectPointsA.size(); i++ ) {
-// 		g_theRenderer->DrawCircle( m_debugIntersectPointsA[i], intersectPointRadius, thick, Rgba8::RED );
-// 	}
-// 	for( int i = 0; i < m_debugIntersectPointsB.size(); i++ ) {
-// 		g_theRenderer->DrawCircle( m_debugIntersectPointsB[i], intersectPointRadius + 0.3f, thick, Rgba8::GREEN );
-// 	}
-// 	for( int i = 0; i < m_debugIntersectPointsC.size(); i++ ) {
-// 		g_theRenderer->DrawCircle( m_debugIntersectPointsC[i], intersectPointRadius + 0.5f, thick, Rgba8::BLUE );
-// 	}
-// 	for( int i = 0; i < m_debugIntersectPointsX.size(); i++ ) {
-// 		g_theRenderer->DrawCircle( m_debugIntersectPointsX[i], intersectPointRadius + 0.7f, thick, Rgba8::BLACK );
-// 	}
+	for( int i = 0; i < m_debugIntersectPointsA.size(); i++ ) {
+		g_theRenderer->DrawCircle( m_debugIntersectPointsA[i], intersectPointRadius, thick, Rgba8::RED );
+	}
+	for( int i = 0; i < m_debugIntersectPointsB.size(); i++ ) {
+		g_theRenderer->DrawCircle( m_debugIntersectPointsB[i], intersectPointRadius + 0.3f, thick, Rgba8::GREEN );
+	}
+	for( int i = 0; i < m_debugIntersectPointsC.size(); i++ ) {
+		g_theRenderer->DrawCircle( m_debugIntersectPointsC[i], intersectPointRadius + 0.5f, thick, Rgba8::BLUE );
+	}
+	for( int i = 0; i < m_debugIntersectPointsX.size(); i++ ) {
+		g_theRenderer->DrawCircle( m_debugIntersectPointsX[i], intersectPointRadius + 0.7f, thick, Rgba8::BLACK );
+	}
 
 	AABB2 splitCheckBox = GetSplitCheckBox();
 	AABB2 worldCameraBox = GetWorldCameraBox();
@@ -1001,51 +1001,58 @@ void CameraSystem::ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 wor
 			if( checkedControllers.find( currentController ) != checkedControllers.end() ){ break; }
 		}
 			
-		m_debugIntersectPointsX.insert( m_debugIntersectPointsX.end(), pointsX.begin(), pointsX.end() ) ;
 
 		//reassign the box cornor
-// 		Vec2 boxCornors[4];
-// 		worldCameraBox.GetCornerPositions( boxCornors );
-// 		for( int j = 0; j < currentCellNum; j++ ) {
-// 			Polygon2 tempPoly = m_controllers[j]->GetVoronoiPoly();
-// 			Vec2 playerCameraPos = m_controllers[j]->GetCameraPos();
-// 			Vec2 point	= splitCheckBox.GetNearestPoint( playerCameraPos );
-// 			std::vector<Vec2> tempPolyPoints = tempPoly.GetAllPoints();
-// 
-// 			for( int k = 0; k < tempPolyPoints.size(); k++ ) {
-// 				for( int l = 0; l < 4; l++ ) {
-// 					if( tempPolyPoints[k] == boxCornors[l] && (GetDistanceSquared2D( pointX, boxCornors[l] ) <= (GetDistanceSquared2D( point, boxCornors[l] )))) {
-// 						pointsX.push_back( tempPolyPoints[k] );
-// 						tempPolyPoints.erase( tempPolyPoints.begin() + k );
-// 						k--;
-// 					}
-// 				}
-// 			}
-// 		}
+		Vec2 boxCornors[4];
+		worldCameraBox.GetCornerPositions( boxCornors );
+		for( int j = 0; j < currentCellNum; j++ ) {
+			Polygon2 tempPoly = m_controllers[j]->GetVoronoiPoly();
+			Vec2 playerCameraPos = m_controllers[j]->GetCameraPos();
+			Vec2 point	= splitCheckBox.GetNearestPoint( playerCameraPos );
+			std::vector<Vec2> tempPolyPoints = tempPoly.GetAllPoints();
+
+			for( int k = 0; k < 4; k++ ) {
+				for( int l = 0; l < tempPolyPoints.size(); l++ ) {
+					if( tempPolyPoints[l] == boxCornors[k] && (GetDistanceSquared2D( pointX, boxCornors[k] ) <= (GetDistanceSquared2D( point, boxCornors[k] )))) {
+						pointsX.push_back( tempPolyPoints[l] );
+						tempPolyPoints.erase( tempPolyPoints.begin() + l );
+						l--;
+						break;
+					}
+				}
+			}
+		}
+		m_debugIntersectPointsX.insert( m_debugIntersectPointsX.end(), pointsX.begin(), pointsX.end() ) ;
 // 		
-// 		Polygon2 polygonX = Polygon2::MakeConvexFromPointCloud( pointsX );
-		//m_DebugPolyD = polygonX;
+		if( pointsX.size() == 3 ) {
+			int a = 0;
+		}
+ 		Polygon2 polygonX = Polygon2::MakeConvexFromPointCloud( pointsX );
+		m_DebugPolyD = polygonX;
 
 		// get rid of points in polygonX
-// 		for( int j = 0; j < currentCellNum; j++ ) {
-// 			Polygon2 tempPoly = m_controllers[j]->GetVoronoiPoly();
-// 			Vec2 playerCameraPos = m_controllers[j]->GetCameraPos();
-// 			Vec2 point	= splitCheckBox.GetNearestPoint( playerCameraPos );
-// 
-// 			std::vector<Vec2> tempPolyPoints = tempPoly.GetAllPoints();
-// 			for( auto iter = tempPolyPoints.begin(); iter != tempPolyPoints.end(); ) {
-// 				if( polygonX.IsPointInside( *iter ) ){
-// 					iter = tempPolyPoints.erase( iter );
-// 				}
-// 				else {
-// 					++iter;
-// 				}
-// 			}
-// 			m_debugAfterDeletePoints.push_back( tempPolyPoints );
-// 			Polygon2 newPoly = Polygon2::MakeConvexFromPointCloud( tempPolyPoints );
-// 			m_controllers[j]->SetVoronoiPolygon( newPoly );
-// 
-// 		}	
+		for( int j = 0; j < currentCellNum; j++ ) {
+			Polygon2 tempPoly = m_controllers[j]->GetVoronoiPoly();
+			Vec2 playerCameraPos = m_controllers[j]->GetCameraPos();
+			Vec2 point	= splitCheckBox.GetNearestPoint( playerCameraPos );
+
+			std::vector<Vec2> tempPolyPoints = tempPoly.GetAllPoints();
+			for( auto iter = tempPolyPoints.begin(); iter != tempPolyPoints.end(); ) {
+				if( polygonX.IsPointInside( *iter ) ){
+					iter = tempPolyPoints.erase( iter );
+				}
+				else {
+					++iter;
+				}
+			}
+			m_debugAfterDeletePoints.push_back( tempPolyPoints );
+			if( tempPolyPoints.size() == 0 ) {
+				int a = 0;
+			}
+			Polygon2 newPoly = Polygon2::MakeConvexFromPointCloud( tempPolyPoints );
+			m_controllers[j]->SetVoronoiPolygon( newPoly );
+
+		}	
 		currentCellNum++;
 	}
 }

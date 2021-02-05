@@ -19,6 +19,7 @@ public:
 	bool	IsPointMostlyInStraightLine( Vec2 point ) const;
 	bool	IsLineOverlapWith( LineSegment2 line ) const;
 	bool	IsLineParallelWith( LineSegment2 line ) const;
+	bool	IsLineIntersectWithDisc( Vec2 center, float radius );
 	float	GetLengthOfPointToLineSegment( const Vec2& refPos ) const; 
 	float	GetLength() const;
 	float	GetSlope() const;
