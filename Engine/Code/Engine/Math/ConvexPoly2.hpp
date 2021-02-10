@@ -4,7 +4,9 @@
 #include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Math/AABB2.hpp"
 
+
 struct LineSegment2;
+struct ConvexHull2;
 
 struct ConvexPoly2{
 public:
@@ -15,11 +17,11 @@ public:
 	~ConvexPoly2(){}
 	ConvexPoly2( std::vector<Vec2> points );
 	static ConvexPoly2 MakeConvexPolyFromPointCloud( std::vector<Vec2> points );
-
+	static ConvexPoly2 MakeConvexPolyFromConvexHull( ConvexHull2 hull );
 
 	// Accessor
 	bool IsPointInside( Vec2 point ) const;
-	bool EarlyCheckDoesNeedRaycast( LineSegment2 line ) const;
+	bool IsPossibleIntersectWithLine( LineSegment2 line ) const;
 
 	Vec2 GetCenter() const;
 	float GetBounderDiscRadius() const;

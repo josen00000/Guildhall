@@ -3,11 +3,13 @@
 #include "Game/GameCommon.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine//Renderer/MeshUtils.hpp"
+
 
 int GameObject::s_minPointNum	= 5;
 int GameObject::s_maxPointNum	= 10;
-int GameObject::s_maxXDist		= 5;
-int GameObject::s_maxYDist		= 5;
+float GameObject::s_maxXDist	= 5.f;
+float GameObject::s_maxYDist	= 5.f;
 
 
 RandomNumberGenerator GameObject::s_RNG = RandomNumberGenerator( 1 );
@@ -52,7 +54,7 @@ void GameObject::UpdateObject( float deltaSeconds )
 
 	if( m_isRotating ) {
 		std::vector<Vec2>& polyPoints = m_poly.GetPoints();
-		float deltaDegree;
+		float deltaDegree = 0.f;
 		switch ( m_rotateDirt )
 		{
 		case ROTATE_LEFT:
@@ -90,6 +92,14 @@ bool GameObject::IsPointInside( Vec2 point )
 	return m_hull.IsPointInside( point );
 }
 
+bool GameObject::IsObjectInConvexHull( ConvexHull2 hull ) const
+{
+	for( Vec2 point : m_poly.m_points ) {
+		if( hull.IsPointInside( point ) ){ return true; }
+	}
+	return false;
+}
+
 void GameObject::SetConvexPoly( ConvexPoly2 poly )
 {
 	m_poly = poly;
@@ -114,4 +124,9 @@ void GameObject::SetRotateDirt( RotateDirection rotDirt )
 void GameObject::SetCenter( Vec2 point )
 {
 	m_center = point;
+}
+
+void GameObject::AppendPointsToVector( std::vector<Vertex_PCU>& points, std::vector<uint>& indexes )
+{
+	ManuallyAppendIndexedVertsForConvexPoly2D( points, indexes, m_poly, m_color );
 }

@@ -218,6 +218,7 @@
     <ClCompile Include="Math\RawNoise.cpp" />
     <ClCompile Include="Math\ShapeUtils.cpp" />
     <ClCompile Include="Math\SmoothNoise.cpp" />
+    <ClCompile Include="Math\SpacePartition\SymmetricQuadTree.cpp" />
     <ClCompile Include="Math\Vec2.cpp" />
     <ClCompile Include="Math\Vec3.cpp" />
     <ClCompile Include="Math\Vec4.cpp" />
@@ -315,6 +316,7 @@
     <ClInclude Include="Math\RawNoise.hpp" />
     <ClInclude Include="Math\ShapeUtils.hpp" />
     <ClInclude Include="Math\SmoothNoise.hpp" />
+    <ClInclude Include="Math\SpacePartition\SymmetricQuadTree.hpp" />
     <ClInclude Include="Math\vec2.hpp" />
     <ClInclude Include="Math\Vec3.hpp" />
     <ClInclude Include="Math\Vec4.hpp" />

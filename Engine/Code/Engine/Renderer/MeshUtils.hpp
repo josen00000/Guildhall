@@ -9,11 +9,14 @@
 #include "Engine/Math/Capsule2.hpp"
 #include "Engine/Math/Cone3.hpp"
 #include "Engine/Math/Cylinder3.hpp"
+#include "Engine/Math/ConvexPoly2.hpp"
+
 
 struct OBB3;
 
 //Append Vertices for Vertex_PCU
 void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
+void AppendVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, const ConvexPoly2& poly, const Rgba8& tintColor );
 void AppendVertsForAABB2DWithHeight( std::vector<Vertex_PCU>& vertices, const AABB2& bound, float height, const Rgba8& tintColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
 void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
 void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor );
@@ -38,6 +41,8 @@ void AppendTBNVertsForSphere3D( std::vector<Vertex_PCUTBN>& vertices, Vec3 cente
 // Append Indice Vertices
 void AppendIndexedVerts( std::vector<Vertex_PCU>& dest, std::vector<uint>& index, const std::vector<Vertex_PCU> source );
 void AppendIndexedVertsForAABB2D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs );
+void AppendIndexedVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, const ConvexPoly2& poly, const Rgba8& tintColor );
+void ManuallyAppendIndexedVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, const ConvexPoly2& poly, const Rgba8& tintColor );
 void AppendIndexedVertsForSphere3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, Vec3 center, float radius, int hCut, int vCut, Rgba8& tintColor );
 void AppendIndexedVertsForAABB3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, AABB3 box, Rgba8& tintColor, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
 void AppendIndexedVertsForCubeSphere3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, const AABB3& cube, int level );

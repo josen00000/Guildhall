@@ -1,5 +1,7 @@
 #include "ConvexPoly2.hpp"
 #include "Engine/Math/MathUtils.hpp"
+#include "Engine/Math/ConvexHull2.hpp"
+
 
 ConvexPoly2::ConvexPoly2( std::vector<Vec2> points )
 {
@@ -83,17 +85,23 @@ ConvexPoly2 ConvexPoly2::MakeConvexPolyFromPointCloud( std::vector<Vec2> points 
 	return tempPoly;
 }
 
+ConvexPoly2 ConvexPoly2::MakeConvexPolyFromConvexHull( ConvexHull2 hull )
+{
+	std::vector<Vec2> intersectPoints = hull.GetConvexPolyPoints();
+	ConvexPoly2 poly = ConvexPoly2::MakeConvexPolyFromPointCloud( intersectPoints );
+	return poly;
+}
+
 bool ConvexPoly2::IsPointInside( Vec2 point ) const
 {
 	return true;
 }
 
-bool ConvexPoly2::EarlyCheckDoesNeedRaycast( LineSegment2 line ) const
+bool ConvexPoly2::IsPossibleIntersectWithLine( LineSegment2 line ) const
 {
 	Vec2 polygonCenter = GetCenter();
 	float polygonDiscRadius = GetBounderDiscRadius();
 	return line.IsLineIntersectWithDisc( polygonCenter, polygonDiscRadius );
-	
 }
 
 Vec2 ConvexPoly2::GetCenter() const
@@ -103,7 +111,7 @@ Vec2 ConvexPoly2::GetCenter() const
 		result += m_points[i];
 	}
 	if( m_points.size() > 0 ) {
-		result /= m_points.size();
+		result /= (float)m_points.size();
 	}
 	return result;
 }
@@ -118,5 +126,5 @@ float ConvexPoly2::GetBounderDiscRadius() const
 			LongestDistSq = tempDistSq;
 		}
 	}
-	return sqrt( LongestDistSq );
+	return (float)sqrt( LongestDistSq );
 }

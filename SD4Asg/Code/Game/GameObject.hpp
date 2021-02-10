@@ -19,6 +19,7 @@ public:
 
 	// Accessor
 	bool IsPointInside( Vec2 point );
+	bool IsObjectInConvexHull( ConvexHull2 hull ) const;
 	ConvexPoly2 GetPoly() const{ return m_poly; }
 
 	// Mutator
@@ -27,11 +28,12 @@ public:
 	void SetIsRotating( bool isRotating );
 	void SetRotateDirt( RotateDirection rotDirt );
 	void SetCenter( Vec2 point );
+	void AppendPointsToVector( std::vector<Vertex_PCU>& points, std::vector<uint>& indexes );
 
 	static int s_minPointNum;
 	static int s_maxPointNum;
-	static int s_maxXDist;
-	static int s_maxYDist;
+	static float s_maxXDist;
+	static float s_maxYDist;
 
 
 private:

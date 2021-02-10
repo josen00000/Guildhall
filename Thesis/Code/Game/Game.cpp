@@ -106,6 +106,12 @@ void Game::SetIsDebug( bool isDebug )
 	m_isDebug = isDebug;
 	g_theCameraSystem->SetIsDebug( isDebug );
 }
+
+void Game::SetIsPaused( bool isPaused )
+{
+	m_isPaused = isPaused;
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 

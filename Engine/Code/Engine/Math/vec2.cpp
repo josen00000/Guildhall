@@ -16,11 +16,14 @@
 
 
 //Static objects
-Vec2 Vec2::ZERO		= Vec2( 0, 0 );
-Vec2 Vec2::ONE		= Vec2( 1, 1 );
-Vec2 Vec2::ZERO_ONE = Vec2( 0, 1 );
-Vec2 Vec2::ONE_ZERO = Vec2( 1, 0 );
-
+Vec2 Vec2::ZERO						= Vec2( 0.f, 0.f );
+Vec2 Vec2::ONE						= Vec2( 1.f, 1.f );
+Vec2 Vec2::ZERO_ONE					= Vec2( 0.f, 1.f );
+Vec2 Vec2::ONE_ZERO					= Vec2( 1.f, 0.f );
+Vec2 Vec2::UP_NORMAL_DIRECTION		= Vec2( 0.f, 1.f );
+Vec2 Vec2::DOWN_NORMAL_DIRECTION	= Vec2( 0.f, -1.f );
+Vec2 Vec2::LEFT_NORMAL_DIRECTION	= Vec2( -1.f, 0.f );
+Vec2 Vec2::RIGHT_NORMAL_DIRECTION	= Vec2( 1.f, 0.f );
 
 //-----------------------------------------------------------------------------------------------
 Vec2::Vec2( const Vec2& copy )

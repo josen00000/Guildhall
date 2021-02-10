@@ -5,8 +5,11 @@
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/Vertex_PCUTBN.hpp"
 #include "Engine/Math/Mat44.hpp"
+#include "Engine/Math/Plane2.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
+#include "Engine/Math/ConvexHull2.hpp"
+
 
 class BitmapFont;
 class Camera;
@@ -288,14 +291,17 @@ public:
 	void DrawMesh( GPUMesh* mesh );
 
 	void DrawVertexVector( const std::vector<Vertex_PCU>& vertices );
+	void DrawIndexedVertexVector( const std::vector<Vertex_PCU>& vertices, const std::vector<uint>& indexes );
 	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
+	void DrawPlane2D( Plane2 const& plane, float DrawLength, Rgba8 tint );
+	void DrawConvexHull( ConvexHull2 const& hull, Rgba8 tint );
 	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
 	void DrawPolygon2D( Polygon2 polygon, Rgba8 tint );
 	void DrawConvexPoly2D( ConvexPoly2 convPoly, Rgba8 tint );
 	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );
 	void DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor );
 	void DrawLineWithHeight( const LineSegment2& lineSeg, float height, float thick, const Rgba8& lineColor );
-	void DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor );
+	void DrawCircle( Vec3 center, float radius, float thick, const Rgba8& circleColor );
 	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
 
 	// 3d Draw

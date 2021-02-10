@@ -3,11 +3,13 @@
 #include "Game/Player.hpp"
 #include "Game/Game.hpp"
 #include "Engine/Math/Vec4.hpp"
+#include "Engine/Math/ConvexHull2.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+
 
 extern Game*			g_theGame;
 extern Camera*			g_gameCamera;
@@ -245,6 +247,8 @@ void CameraSystem::DebugRender()
 	g_theRenderer->DrawPolygon2D( m_DebugPolyC, Rgba8( 0, 0, 255, alpha ) );
 	g_theRenderer->DrawPolygon2D( m_DebugPolyD, Rgba8( 1, 1, 1, 255 ) );
 
+
+
 // 	for( int i = 0; i < m_debugLineIntersectWithBoxPointsAB.size(); i++ ) {
 // 		g_theRenderer->DrawCircle( m_debugLineIntersectWithBoxPointsAB[i],intersectPointRadius, thick, Rgba8::YELLOW );
 // 	}
@@ -255,22 +259,13 @@ void CameraSystem::DebugRender()
 // 		g_theRenderer->DrawCircle( m_debugLineIntersectWithBoxPointsAC[i], intersectPointRadius, thick, Rgba8::MAGENTA );
 // 	}
 
-// 	if( m_debugAfterDeletePoints.size() > 0 ) {
-// 		for( int j = 0; j < m_debugAfterDeletePoints[0].size(); j++ ) {
-// 			g_theRenderer->DrawCircle( m_debugAfterDeletePoints[0][j], 0.3f, 0.1f, Rgba8::RED );
-// 		}
-// 	}
-// 	if( m_debugAfterDeletePoints.size() > 1 ) {
-// 		for( int j = 0; j < m_debugAfterDeletePoints[1].size(); j++ ) {
-// 			g_theRenderer->DrawCircle( m_debugAfterDeletePoints[1][j], 0.3f, 0.1f, Rgba8::GREEN );
-// 		}
-// 	}
-// 	if( m_debugAfterDeletePoints.size() > 2 ) {
-// 		for( int j = 0; j < m_debugAfterDeletePoints[2].size(); j++ ) {
-// 			g_theRenderer->DrawCircle( m_debugAfterDeletePoints[2][j], 0.3f, 0.1f, Rgba8::BLUE );
-// 		}
-// 	}
+	if( m_controllers.size() >= 3 ) {
+		g_theRenderer->DrawPolygon2D( m_controllers[0]->GetVoronoiPoly(), Rgba8( 255, 0, 0, alpha ) );
+		g_theRenderer->DrawPolygon2D( m_controllers[1]->GetVoronoiPoly(), Rgba8( 0, 255, 0, alpha ) );
+		g_theRenderer->DrawPolygon2D( m_controllers[2]->GetVoronoiPoly(), Rgba8( 0, 0, 255, alpha ) );
+
 	
+	}
 
 // 	for( int i = 0; i < m_debugPBLines.size(); i++ ) {
 // 		if( i < 3 ) {
@@ -845,6 +840,7 @@ void CameraSystem::ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBo
 
 void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
 {
+	// debug initialize
 	m_playerDebugPositions.clear();
 	m_debugPBLines.clear();
 	m_debugIntersectPointsA.clear();
@@ -890,6 +886,9 @@ void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCamera
 	std::vector<Vec2> intersectPointsA;
 	std::vector<Vec2> intersectPointsB;
 	std::vector<Vec2> intersectPointsC;
+	ConvexHull2 hullA;
+	ConvexHull2 hullB;
+	ConvexHull2 hullC;
 		
 	if( AB.IsPointMostlyInStraightLine( pointC ) ) {
 		// abc colinear
@@ -899,34 +898,41 @@ void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCamera
 		float CP_AB_AB = CrossProduct2D( disp_AB, disp_AB );
 		if( CP_AB_AC < 0 ) {
 			// order is CAB
-			GetVoronoiPointsWithThreePointsInCollinearOrder( pointC, pointA, pointB, worldCameraBox, intersectPointsC, intersectPointsA, intersectPointsB );
+			GetVoronoiHullsWithThreePointsInCollinearOrder( pointC, pointA, pointB, worldCameraBox, hullA, hullB, hullC );
 		}
 		else if( CP_AB_AC < CP_AB_AB ){
 			// order is acb
-			GetVoronoiPointsWithThreePointsInCollinearOrder( pointA, pointC, pointB, worldCameraBox, intersectPointsA, intersectPointsC, intersectPointsB );
+			GetVoronoiHullsWithThreePointsInCollinearOrder( pointA, pointC, pointB, worldCameraBox, hullA, hullB, hullC );
 		}
 		else{
 			// order is abc
-			GetVoronoiPointsWithThreePointsInCollinearOrder( pointA, pointB, pointC, worldCameraBox, intersectPointsA, intersectPointsB, intersectPointsC );
+			GetVoronoiHullsWithThreePointsInCollinearOrder( pointA, pointB, pointC, worldCameraBox, hullA, hullB, hullC );
 		}
 		if( intersectPointsA.size() == 0 || intersectPointsB.size() == 0 || intersectPointsC.size() == 0 ) {
 			ERROR_RECOVERABLE( "intersectpoints should not be zero" );
 		}
 	}
 	else {
-		GetVoronoiPointsWithThreePointsNotCollinear( pointA, pointB, pointC, worldCameraBox, intersectPointsA, intersectPointsB, intersectPointsC );
+		GetVoronoiHullsWithThreePointsNotCollinear( pointA, pointB, pointC, worldCameraBox, hullA, hullB, hullC );
 		if( intersectPointsA.size() == 0 || intersectPointsB.size() == 0 || intersectPointsC.size() == 0 ) {
 			//ERROR_RECOVERABLE( "intersectpoints should not be zero" );
 		}
 	}
-// 	if( intersectPointsA.size() < 3 || intersectPointsB.size() < 3 || intersectPointsC.size() < 3 ) {
-// 		ERROR_RECOVERABLE( "intersectpoints should not be zero" );
+//  	if( intersectPointsA.size() < 3 || intersectPointsB.size() < 3 || intersectPointsC.size() < 3 ) {
+//  		//ERROR_RECOVERABLE( "intersectpoints should not be zero" );
+// 		g_theGame->SetIsPaused( true );
+// 	 	m_debugIntersectPointsA = std::vector<Vec2>( intersectPointsA );
+// 	 	m_debugIntersectPointsB = std::vector<Vec2>( intersectPointsB );
+// 	 	m_debugIntersectPointsC = std::vector<Vec2>( intersectPointsC );
 // 	}
-// 	m_debugIntersectPointsA = std::vector<Vec2>( intersectPointsA );
-// 	m_debugIntersectPointsB = std::vector<Vec2>( intersectPointsB );
-// 	m_debugIntersectPointsC = std::vector<Vec2>( intersectPointsC );
+	
+	m_controllers[0]->SetVoronoiHull( hullA );
+	m_controllers[0]->SetVoronoiHull( hullB );
+	m_controllers[0]->SetVoronoiHull( hullC );
 
-	// temp disable for debug
+	intersectPointsA = hullA.GetConvexPolyPoints();
+	intersectPointsB = hullB.GetConvexPolyPoints();
+	intersectPointsC = hullC.GetConvexPolyPoints();
 	Polygon2 polygonA = Polygon2::MakeConvexFromPointCloud( intersectPointsA );
 	Polygon2 polygonB = Polygon2::MakeConvexFromPointCloud( intersectPointsB );
 	Polygon2 polygonC = Polygon2::MakeConvexFromPointCloud( intersectPointsC );
@@ -938,25 +944,39 @@ void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCamera
 	m_controllers[1]->SetVoronoiOffset( Vec2::ZERO );
 	m_controllers[2]->SetVoronoiOffset( Vec2::ZERO );
 
-	m_DebugPolyA = polygonA;
-	m_DebugPolyB = polygonB;
-	m_DebugPolyC = polygonC;
-	
 
-// 	std::vector<std::vector<Vec2>> result;
-// 	result.push_back( intersectPointsA );
-// 	result.push_back( intersectPointsB );
-// 	result.push_back( intersectPointsC );
+
 }
 
 void CameraSystem::ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
 {
 	ConstructVoronoiDiagramForThreeControllers( worldCameraBox, splitCheckBox );
+	ConvexHull2 worldCameraHull = ConvexHull2( worldCameraBox );
+	ConvexHull2 hullX = worldCameraHull;
 	// step 1 find which cell is point in
 	// for each cell
 	// create PB and update intersect point
 	// construct cell for new point
 	// remove the old points
+
+	
+	const CameraController* currentController = nullptr;
+	int ConstructedCellNum = 3;
+	for( int i = ConstructedCellNum; i < m_controllers.size(); i++ ) {
+		Vec2 playerCameraPosX = m_controllers[i]->GetCameraPos();
+		Vec2 pointX = splitCheckBox.GetNearestPoint( playerCameraPosX );
+
+		currentController = FindCurrentControllerContainsPointWithConstructedCellNum( pointX, ConstructedCellNum );
+		Vec2 playerCameraPosY = currentController->GetCameraPos();
+		Vec2 pointY = splitCheckBox.GetNearestPoint( playerCameraPosY );
+		Vec2 center_XY = ( pointX + pointY ) / 2.f;
+		Plane2 PB_XY = Plane2( ( pointY - pointX ).GetNormalized(), center_XY );
+
+	}
+
+
+	/*
+
 	const CameraController* currentController = nullptr;
 	int currentCellNum = 3;
 	for( int i = currentCellNum; i < m_controllers.size(); i++ ) {
@@ -1055,64 +1075,71 @@ void CameraSystem::ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 wor
 		}	
 		currentCellNum++;
 	}
+	*/
 }
 
-void CameraSystem::GetVoronoiPointsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC )
+void CameraSystem::GetVoronoiHullsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC )
 {
-	LineSegment2 PB_AB = GetPerpendicularBisectorOfTwoPoints( a, b );
-	LineSegment2 PB_BC = GetPerpendicularBisectorOfTwoPoints( b, c );
-	// abc same line in order a b c 
-		// point order c a b 
-	std::pair<Vec2,Vec2> intersectPointsA = GetIntersectionPointOfLineAndAABB2( PB_AB, worldCameraBox );
-	std::pair<Vec2,Vec2> intersectPointsC = GetIntersectionPointOfLineAndAABB2( PB_BC, worldCameraBox );
+	// construct planes for convex hull
+	// Construct intersect point for polygon
+	ConvexHull2 worldCameraHull = ConvexHull2( worldCameraBox );
+	hullA = worldCameraHull;
+	hullB = worldCameraHull;
+	hullC = worldCameraHull;
 
-	pointsA.push_back( intersectPointsA.first );
-	pointsA.push_back( intersectPointsA.second );
-	pointsC.push_back( intersectPointsC.first );
-	pointsC.push_back( intersectPointsC.second );
+	Vec2 center_AB = ( a + b ) / 2.f;
+	Vec2 center_BC = ( b + c ) / 2.f;
+	Plane2 PB_AB = Plane2( ( b - a ).GetNormalized(), center_AB );
+	Plane2 PB_CB = Plane2( ( b - c ).GetNormalized(), center_BC );
+	Plane2 PB_BA = PB_AB;
+	Plane2 PB_BC = PB_CB;
+	PB_BA.Flip();
+	PB_BC.Flip();
 
-	for( int i = 0; i < pointsA.size(); i++ ) {
-		pointsB.push_back( pointsA[i] );
-		pointsB.push_back( pointsC[i] );
-	}
+	hullA.AddPlane( PB_AB );
+	hullC.AddPlane( PB_CB );
+	hullB.AddPlane( PB_BC );
+	hullB.AddPlane( PB_BA );
 
-	Vec2 worldCameraBoxCorners[4];
-	worldCameraBox.GetCornerPositions( worldCameraBoxCorners );
-	for( int i = 0; i < 4; i++ ) {
-		float distToPointA = GetDistance2D( a, worldCameraBoxCorners[i] );
-		float distToPointC = GetDistance2D( c, worldCameraBoxCorners[i] );
-		if( distToPointA < distToPointC ) {
-			pointsA.push_back( worldCameraBoxCorners[i] );
-		}
-		else {
-			pointsC.push_back( worldCameraBoxCorners[i] );
-		}
-	}
+// 	pointsA = hullA.GetConvexPolyPoints();
+// 	pointsB = hullB.GetConvexPolyPoints();
+// 	pointsC = hullC.GetConvexPolyPoints();
 }
 
-void CameraSystem::GetVoronoiPointsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC )
+
+void CameraSystem::GetVoronoiHullsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC )
 {
-	LineSegment2 PB_AB = GetPerpendicularBisectorOfTwoPoints( a, b );
-	LineSegment2 PB_BC = GetPerpendicularBisectorOfTwoPoints( b, c );
-	LineSegment2 PB_AC = GetPerpendicularBisectorOfTwoPoints( a, c );
-	Vec2 centerABC = GetIntersectionPointOfTwoStraightLines( PB_AB, PB_AC );
-	std::pair<Vec2,Vec2> PBIntersectWithBoxPoints_AB = GetIntersectionPointOfLineAndAABB2( PB_AB, worldCameraBox );
-	std::pair<Vec2,Vec2> PBIntersectWithBoxPoints_AC = GetIntersectionPointOfLineAndAABB2( PB_AC, worldCameraBox );
-	std::pair<Vec2,Vec2> PBIntersectWithBoxPoints_BC = GetIntersectionPointOfLineAndAABB2( PB_BC, worldCameraBox );
-	 
-// 	m_debugLineIntersectWithBoxPointsAB = PBIntersectWithBoxPoints_AB;
-// 	m_debugLineIntersectWithBoxPointsBC = PBIntersectWithBoxPoints_BC;
-// 	m_debugLineIntersectWithBoxPointsAC = PBIntersectWithBoxPoints_AC;
+	// construct convex hull for abc
+	ConvexHull2 worldCameraHull = ConvexHull2( worldCameraBox );
+	hullA = worldCameraHull;
+	hullB = worldCameraHull;
+	hullC = worldCameraHull;
 
-	pointsA = GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( a, b, c, worldCameraBox, PBIntersectWithBoxPoints_AB, PBIntersectWithBoxPoints_AC );
-	pointsB = GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( b, a, c, worldCameraBox, PBIntersectWithBoxPoints_AB, PBIntersectWithBoxPoints_BC );
-	pointsC = GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( c, a, b, worldCameraBox, PBIntersectWithBoxPoints_AC, PBIntersectWithBoxPoints_BC );
+	Vec2 center_AB = (a + b) / 2.f;
+	Vec2 center_BC = (b + c) / 2.f;
+	Vec2 center_AC = (a + c) / 2.f;
+	Plane2 PB_AB = Plane2( (b - a).GetNormalized(), center_AB );
+	Plane2 PB_AC = Plane2( (c - a).GetNormalized(), center_AC );
+	Plane2 PB_BC = Plane2( (c - b).GetNormalized(), center_BC );
 
-	if( worldCameraBox.IsPointInside( centerABC ) ) {
-		pointsA.push_back( centerABC );
-		pointsB.push_back( centerABC );
-		pointsC.push_back( centerABC );
-	}
+	Plane2 PB_BA = PB_AB.GetFlipped();
+	Plane2 PB_CA = PB_AC.GetFlipped();
+	Plane2 PB_CB = PB_BC.GetFlipped();
+
+	hullA.AddPlane( PB_AB );
+	hullA.AddPlane( PB_AC );
+	hullB.AddPlane( PB_BA );
+	hullB.AddPlane( PB_BC );
+	hullC.AddPlane( PB_CA );
+	hullC.AddPlane( PB_CB );
+
+// 	pointsA = hullA.GetConvexPolyPoints();
+// 	pointsB = hullB.GetConvexPolyPoints();
+// 	pointsC = hullC.GetConvexPolyPoints();
+// 
+// 	m_debugHullA = hullA;
+// 	m_debugHullB = hullB;
+// 	m_debugHullC = hullC;
 }
 
 std::vector<Vec2> CameraSystem::GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox,std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints )
@@ -1193,7 +1220,19 @@ void CameraSystem::GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<
 	}
 }
 
- bool CameraSystem::GetSharedEdgeOfTwoPolygon( LineSegment2& sharedLine, Polygon2 polyA, Polygon2 polyB )
+CameraController* CameraSystem::FindCurrentControllerContainsPointWithConstructedCellNum( Vec2 point, int constructedCellNum )
+{
+	for( int i = 0; i < constructedCellNum; i++ ) {
+		ConvexHull2 hull = m_controllers[i]->GetVoronoiHull();
+		if( hull.IsPointInside( point ) ) {
+			return m_controllers[i];
+		}
+	}
+	ERROR_RECOVERABLE( "Should find one contains point" );
+	return nullptr;
+}
+
+bool CameraSystem::GetSharedEdgeOfTwoPolygon( LineSegment2& sharedLine, Polygon2 polyA, Polygon2 polyB )
  {
 	 for( int i = 0; i < polyA.GetEdgeCount(); i++ ) {
 		 for( int j = 0; j < polyB.GetEdgeCount(); j++ ) {

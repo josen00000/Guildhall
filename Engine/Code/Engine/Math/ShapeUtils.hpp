@@ -7,9 +7,6 @@
 #include "Engine/Core/EngineCommon.hpp"
 
 
-RaycastResult2 Raycast2DWithConvexPolygons( std::vector<ConvexPoly2> const& polygons, Vec2 startPos, Vec2 forwardDirt );
-RaycastResult2 Raycast2DWithConvexPolygon( ConvexPoly2 const& polygon, Vec2 startPos, Vec2 forwardDirt );
-RaycastResult2 Raycast2DWithConvexHull( ConvexHull2 const& hull, Vec2 startPos, Vec2 forwardDirt );
-RaycastResult2 Raycast2DWithConvexPolygonsWithDist( std::vector<ConvexPoly2> const& polygons, Vec2 startPos, Vec2 forwardDirt );
-RaycastResult2 Raycast2DWithConvexPolygonWithDist( ConvexPoly2 const& polygon, Vec2 startPos, Vec2 forwardDirt );
-RaycastResult2 Raycast2DWithConvexHullWithDist( ConvexHull2 const& hull, Vec2 startPos, Vec2 forwardDirt );
+RaycastResult2 Raycast2DWithConvexPolygons( std::vector<ConvexPoly2> const& polygons, Vec2 startPos, Vec2 forwardDirt, float dist = LONGEST_RAYCAST_DETECT_DIST );
+RaycastResult2 Raycast2DWithConvexPolygon( ConvexPoly2 const& polygon, Vec2 startPos, Vec2 forwardDirt, float dist = LONGEST_RAYCAST_DETECT_DIST );
+RaycastResult2 Raycast2DWithConvexHull( ConvexHull2 const& hull, Vec2 startPos, Vec2 forwardDirt, float dist = LONGEST_RAYCAST_DETECT_DIST );

@@ -89,5 +89,9 @@ public:
 	static Vec2 ONE;
 	static Vec2 ZERO_ONE;
 	static Vec2 ONE_ZERO;
+	static Vec2 UP_NORMAL_DIRECTION;
+	static Vec2 DOWN_NORMAL_DIRECTION;
+	static Vec2 LEFT_NORMAL_DIRECTION;
+	static Vec2 RIGHT_NORMAL_DIRECTION;
 };
 

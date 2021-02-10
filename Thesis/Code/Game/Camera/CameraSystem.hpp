@@ -3,6 +3,7 @@
 #include "Game/Camera/CameraController.hpp"
 #include "Game/GameCommon.hpp"
 #include "Game/Map/Map.hpp"
+#include "Engine/Math/ConvexHull2.hpp"
 
 class Player;
 class Camera;
@@ -147,12 +148,13 @@ public:
 	void ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
-	void GetVoronoiPointsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC );
-	void GetVoronoiPointsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, std::vector<Vec2>& pointsA, std::vector<Vec2>& pointsB, std::vector<Vec2>& pointsC );
+	void GetVoronoiHullsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
+	void GetVoronoiHullsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints );
 	void GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<Vec2, Vec2> intersectPoints, const CameraController* currentController, std::stack<CameraController*>& nextControllers );
 
 	// helper function
+	CameraController* FindCurrentControllerContainsPointWithConstructedCellNum( Vec2 point, int constructedCellNum );
 	bool GetSharedEdgeOfTwoPolygon( LineSegment2& sharedLine, Polygon2 polyA, Polygon2 polyB );
 private:
 	bool m_isdebug = false;
@@ -201,6 +203,10 @@ private:
 	Polygon2 m_DebugPolyB;
 	Polygon2 m_DebugPolyC;
 	Polygon2 m_DebugPolyD;
+	ConvexHull2 m_debugHullA;
+	ConvexHull2 m_debugHullB;
+	ConvexHull2 m_debugHullC;
+
 	std::vector<Vec2> m_debugIntersectPointsA;
 	std::vector<Vec2> m_debugIntersectPointsB;
 	std::vector<Vec2> m_debugIntersectPointsC;

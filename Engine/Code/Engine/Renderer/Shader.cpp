@@ -12,7 +12,6 @@
 
 
 void* FileReadToNewBuffer( std::string const& fileName, size_t* out_size ) {
-	
 	FILE* fp = nullptr;
 	fopen_s( &fp, fileName.c_str(), "r" );
 	GUARANTEE_RECOVERABLE( fp != nullptr, "Create Shader with wrong name." );

@@ -9,6 +9,12 @@ LineSegment2::LineSegment2( const Vec2& start, const Vec2& end )
 {
 }
 
+LineSegment2::LineSegment2( Vec2 const& start, Vec2 const& fwdDirt, float dist )
+	:m_start(start)
+{
+	m_end = m_start + fwdDirt * dist;
+}
+
 LineSegment2 LineSegment2::ClipSegmentToSegment( LineSegment2 toClip, LineSegment2 refSeg )
 {
 	Vec2 onto = refSeg.GetEndPos() - refSeg.GetStartPos();

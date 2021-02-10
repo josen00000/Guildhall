@@ -52,6 +52,9 @@
     <Filter Include="Job">
       <UniqueIdentifier>{dd09c0ca-7073-4b08-92e8-ebd50d6d5670}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Math\SpacePartition">
+      <UniqueIdentifier>{69c9286b-3a35-426a-ae9a-d6ea9e981edc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Camera.cpp">
@@ -311,6 +314,9 @@
     </ClCompile>
     <ClCompile Include="Physics\RaycastResult2.cpp">
       <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\SpacePartition\SymmetricQuadTree.cpp">
+      <Filter>Math\SpacePartition</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -604,6 +610,9 @@
     </ClInclude>
     <ClInclude Include="Physics\RaycastResult2.hpp">
       <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\SpacePartition\SymmetricQuadTree.hpp">
+      <Filter>Math\SpacePartition</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

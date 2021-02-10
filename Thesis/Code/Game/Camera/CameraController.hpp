@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Polygon2.hpp"
+#include "Engine/Math/ConvexHull2.hpp"
 #include <chrono>
 
 class Camera;
@@ -35,6 +36,7 @@ public:
 	Vec2 GetSmoothedGoalPos() const { return m_smoothedGoalCameraPos; }
 	Vec2 GetCameraPos() const { return m_cameraPos; }
 	Polygon2 GetVoronoiPoly() const { return m_voronoiPolygon; }
+	ConvexHull2 GetVoronoiHull() const { return m_voronoiHull; }
 
 	Texture* GetColorTarget() { return m_colorTarget; }
 	Texture* GetStencilTexture() { return m_stencilTexture; }
@@ -52,6 +54,7 @@ public:
 	void SetFwdFrameDist( float dist );
 	void SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor );
 	void SetVoronoiPolygon( Polygon2 poly );
+	void SetVoronoiHull( ConvexHull2 hull );
 	void SetVoronoiOffset( Vec2 offset );
 
 	// Camera Window
@@ -162,6 +165,7 @@ private:
 	RenderBuffer* m_offsetBuffer	= nullptr;
 	Vec2	m_voronoiOffset = Vec2::ZERO;
 	Polygon2 m_voronoiPolygon;
+	ConvexHull2 m_voronoiHull;
 
 	std::chrono::microseconds m_testDuration;
 };

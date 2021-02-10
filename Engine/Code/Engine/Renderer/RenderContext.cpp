@@ -900,6 +900,23 @@ void RenderContext::DrawVertexVector( const std::vector<Vertex_PCU>& vertices )
 	Draw( (int)vertices.size(), 0 );
 }
 
+void RenderContext::DrawIndexedVertexVector( const std::vector<Vertex_PCU>& vertices, const std::vector<uint>& indexes )
+{
+	if( vertices.size() == 0 ) { return;}
+	size_t elementSize = sizeof( Vertex_PCU );
+	size_t bufferByteSize = vertices.size() * elementSize;
+	m_immediateVBO->Update( &vertices[0], bufferByteSize, elementSize );
+
+	// bind
+	BindVertexBuffer( m_immediateVBO );
+
+	IndexBuffer indexBuf = IndexBuffer( "test", this, MEMORY_HINT_DYNAMIC );
+	indexBuf.Update( indexes );
+	BindIndexBuffer( &indexBuf );
+	
+	DrawIndexed( (int)indexes.size() );
+}
+
 void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 {
 	// Update a vertex buffer
@@ -912,6 +929,23 @@ void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 
 	// Draw
 	Draw( vertexNum, 0 );
+}
+
+void RenderContext::DrawPlane2D( Plane2 const& plane, float drawLength, Rgba8 tint )
+{
+	Vec2 point = plane.GetDistance() * plane.GetNormal();
+	Vec2 tangent = plane.GetNormal();
+	tangent.Rotate90Degrees();
+	LineSegment2 drawLine( ( point + tangent * drawLength), ( point - tangent * drawLength ));
+	DrawLine( drawLine, 0.5f, tint );
+	DrawLine( point, point + plane.GetNormal(), 0.5f, tint );
+}
+
+void RenderContext::DrawConvexHull( ConvexHull2 const& hull, Rgba8 tint )
+{
+	for( Plane2 plane : hull.m_planes ) {
+		DrawPlane2D( plane, 200.f, tint );
+	}
 }
 
 void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
@@ -1023,7 +1057,7 @@ void RenderContext::DrawLineWithHeight( const LineSegment2& lineSeg, float heigh
 	DrawVertexArray( 6, line );
 }
 
-void RenderContext::DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor )
+void RenderContext::DrawCircle( Vec3 center, float radius, float thick, const Rgba8& circleColor )
 {
 	float degree = 0;
 	float nextDegree = 0;
@@ -1031,10 +1065,10 @@ void RenderContext::DrawCircle( Vec3 center, float radiu, float thick, const Rgb
 	for( int i = 0; i < vertexNum; i++ ) {
 		nextDegree = (i + 1) * (360.f / vertexNum);
 		Vec2 startPoint = Vec2();
-		startPoint.SetPolarDegrees( degree, radiu );
+		startPoint.SetPolarDegrees( degree, radius );
 		startPoint += Vec2( center );
 		Vec2 endPoint = Vec2();
-		endPoint.SetPolarDegrees( nextDegree, radiu );
+		endPoint.SetPolarDegrees( nextDegree, radius );
 		endPoint += Vec2( center );
 		degree = nextDegree;
 		DrawLine( startPoint, endPoint, thick, circleColor );

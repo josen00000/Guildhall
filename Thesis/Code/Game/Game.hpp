@@ -38,6 +38,7 @@ public:
 
 	// mutator
 	void SetIsDebug( bool isDebug );
+	void SetIsPaused( bool isPaused );
 
 private:
 	void HandleInput();

@@ -25,6 +25,21 @@ void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound
 	vertices.push_back( rightup );
 }
 
+void AppendVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, const ConvexPoly2& poly, const Rgba8& tintColor )
+{
+	vertices.reserve( poly.m_points.size() * 3 );
+	float posZ = 0.f;
+	Vec2 center = poly.GetCenter();
+	for( int i = 0; i < poly.m_points.size() - 1; i++ ) {
+		vertices.push_back( Vertex_PCU( Vec3( poly.m_points[i], posZ ), tintColor, Vec2::ZERO ) );
+		vertices.push_back( Vertex_PCU( Vec3( poly.m_points[i + 1], posZ ), tintColor, Vec2::ZERO ) );
+		vertices.push_back( Vertex_PCU( Vec3( center, posZ ), tintColor, Vec2::ZERO ) );
+	}
+	vertices.push_back( Vertex_PCU( Vec3( poly.m_points.back(), posZ ), tintColor, Vec2::ZERO ) );
+	vertices.push_back( Vertex_PCU( Vec3( poly.m_points.front(), posZ ), tintColor, Vec2::ZERO ) );
+	vertices.push_back( Vertex_PCU( Vec3( center, posZ ), tintColor, Vec2::ZERO ) );
+}
+
 void AppendVertsForAABB2DWithHeight( std::vector<Vertex_PCU>& vertices, const AABB2& bound, float height, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
 {
 	Vertex_PCU leftdown		= Vertex_PCU( Vec3( bound.mins, height ), tintColor, uvAtMins );
@@ -863,6 +878,36 @@ void AppendIndexedVertsForAABB2D( std::vector<Vertex_PCU>& vertices, std::vector
 	std::vector<Vertex_PCU> verticesNotIndexed;
 	AppendVertsForAABB2D( verticesNotIndexed, bound, tintColor, uvAtMins, uvAtMaxs );
 	AppendIndexedVerts( vertices, index, verticesNotIndexed );
+}
+
+void AppendIndexedVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, const ConvexPoly2& poly, const Rgba8& tintColor )
+{
+	std::vector<Vertex_PCU> verticesNotIndexed;
+	AppendVertsForConvexPoly2D( verticesNotIndexed, poly, tintColor );
+	AppendIndexedVerts( vertices, index, verticesNotIndexed );
+}
+
+void ManuallyAppendIndexedVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, const ConvexPoly2& poly, const Rgba8& tintColor )
+{
+	// construct vertices
+	float posZ = 0.f;
+	int currentVerticesNum = (int)vertices.size();
+	Vec2 center = poly.GetCenter();
+	for( int i = 0; i < poly.m_points.size(); i++ ) {
+		vertices.push_back( Vertex_PCU( Vec3( poly.m_points[i], posZ ), tintColor, Vec2::ZERO ) );
+	}
+	vertices.push_back( Vertex_PCU( Vec3( center, posZ ), tintColor, Vec2::ZERO ) );
+
+	// construct index
+	for( int i = 0; i < poly.m_points.size() - 1; i++ ) {
+		index.push_back( i + currentVerticesNum );
+		index.push_back( i + 1 + currentVerticesNum );
+		index.push_back(  (uint)vertices.size() - 1 );
+	}
+	index.push_back( (uint)(currentVerticesNum + poly.m_points.size() - 1 ));
+	index.push_back( currentVerticesNum );
+	index.push_back( (uint)vertices.size() - 1 );
+
 }
 
 void AppendIndexedVertsForSphere3D( std::vector<Vertex_PCU>& vertices, std::vector<uint>& index, Vec3 center, float radius,  int hCut, int vCut, Rgba8& tintColor )

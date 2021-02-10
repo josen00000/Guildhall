@@ -202,6 +202,12 @@ void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalS
 void CameraController::SetVoronoiPolygon( Polygon2 poly )
 {
 	m_voronoiPolygon = poly;
+	
+}
+
+void CameraController::SetVoronoiHull( ConvexHull2 hull )
+{
+	m_voronoiHull = hull;
 }
 
 void CameraController::SetVoronoiOffset( Vec2 offset )
