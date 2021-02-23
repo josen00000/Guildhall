@@ -394,7 +394,10 @@ Vec3 Camera::ClientToWorld( Vec2 client, float ndcZ )const
 
 Vec3 Camera::WorldToClient( Vec3 worldPos )
 {
-	return Vec3::ZERO;
+	Mat44 worldToClip = GetProjectionMatrix();
+	worldToClip.Multiply( GetViewMatrix() );
+	Vec4 screenPos = worldToClip.TransformHomogeneousPoint3D( Vec4( worldPos, 0.f) );
+	return screenPos.getVec3();
 }
 
 Vec2 Camera::WorldToScreen2D( Vec2 worldPos )

@@ -81,6 +81,7 @@ void CameraController::Render()
 	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
 	m_colorTarget = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 
+	// draw render area to stencil texture
 	UpdateStencilTexture();
 	UpdateMultipleCameraOffset();
 	std::vector<Vec2> data;
@@ -90,7 +91,9 @@ void CameraController::Render()
 	Vec2 offset = GetMultipleCameraOffset();
 	m_camera->SetColorTarget( m_colorTarget );
 	g_theRenderer->BeginCamera( m_camera );
-	g_theGame->RenderGame();
+	/*if( m_index == 0 ) {*/
+	g_theGame->RenderGame(); //debug
+	//}
 	g_theRenderer->EndCamera();
 }
 
@@ -111,6 +114,7 @@ void CameraController::DebugRender()
 		g_theRenderer->DrawCircle( m_goalCameraPos, 0.1f, 0.1f, Rgba8::BLACK );
 		g_theRenderer->DrawCircle( m_smoothedGoalCameraPos, 0.1f, 0.1f, Rgba8::RED );
 	}
+	DebugAddScreenPoint( Vec2( 80.f, 45.f ), 10.f, Rgba8::RED, Rgba8::RED, 0.5f );
 }
 
 void CameraController::DebugCameraInfoAt( Vec4 pos )
@@ -131,8 +135,9 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_goalMultipleFactor ));
 	std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
 	std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
+	std::string offsetText						= std::string( " offset is : ") + m_multipleCameraRenderOffset.ToString();
 	std::string testing							= std::to_string( m_testDuration.count() );
-
+	
 
 	debugStrings.push_back( playerPosText );
 	debugStrings.push_back( cameraPosText );
@@ -144,6 +149,7 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	debugStrings.push_back( currentFactorSecondsText );
 	debugStrings.push_back( totalFactorSecondsText );
 	debugStrings.push_back( testing );
+	debugStrings.push_back( offsetText );
 	//DebugAddScreenLeftAlignStrings( 0.15f, 0, Rgba8::WHITE, debugStrings );
 	DebugAddScreenStrings( pos, Vec2::ZERO, 1.5f, Rgba8( 255, 255, 255, 125), debugStrings );
 }
@@ -152,6 +158,11 @@ Vec2 CameraController::GetCuePos() const
 {
 	Map* currentMap = g_theGame->GetCurrentMap();
 	return currentMap->GetCuePos();
+}
+
+Polygon2 CameraController::GetVoronoiPoly() 
+{
+	return m_voronoiPolygon;
 }
 
 void CameraController::SetIndex( int index )
@@ -202,12 +213,20 @@ void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalS
 void CameraController::SetVoronoiPolygon( Polygon2 poly )
 {
 	m_voronoiPolygon = poly;
+	//UpdateVoronoiPoly();
+	m_voronoiPolyArea = m_voronoiPolygon.GetArea();
 	
 }
 
 void CameraController::SetVoronoiHull( ConvexHull2 hull )
 {
 	m_voronoiHull = hull;
+	UpdateVoronoiPoly();
+}
+
+void CameraController::AddPlaneToVoronoiHull( Plane2 plane )
+{
+	m_voronoiHull.AddPlane( plane );
 }
 
 void CameraController::SetVoronoiOffset( Vec2 offset )
@@ -429,7 +448,7 @@ void CameraController::UpdateStencilTexture()
  			m_camera->SetColorTarget( m_stencilTexture );
 			g_theRenderer->BeginCamera( m_camera );
 			g_theRenderer->BindShader( m_boxShader );
-			g_theRenderer->DrawAABB2D( worldRenderBox, Rgba8::RED );
+			g_theRenderer->DrawAABB2DWithBound( worldRenderBox, Rgba8::RED, 0.5f, Rgba8::GREEN );
 			g_theRenderer->EndCamera();
 		}
 		break;
@@ -437,7 +456,8 @@ void CameraController::UpdateStencilTexture()
 			m_camera->SetColorTarget( m_stencilTexture );
 			g_theRenderer->BeginCamera( m_camera );
 			g_theRenderer->BindShader( m_boxShader );
-			g_theRenderer->DrawPolygon2D( m_voronoiPolygon, Rgba8::RED );
+			g_theRenderer->DrawPolygon2DWithBound( m_voronoiPolygon, Rgba8::RED, 0.5f, Rgba8::GREEN );
+			//g_theRenderer->DrawLine( m_voronoiPolygon.GetCenter(), Vec2::ZERO, 1.f, Rgba8::GREEN );
 			g_theRenderer->EndCamera();
 		}
 	}
@@ -487,19 +507,13 @@ void CameraController::UpdateMultipleCameraOffset()
 		}
 		break;
 		case VORONOI_SPLIT:{
-			AABB2 splitCheckBox = m_owner->GetSplitCheckBox();
-			AABB2 worldCameraBox = m_owner->GetWorldCameraBox();
-			Vec2 posInSplitCheckBox = splitCheckBox.GetNearestPoint( m_cameraPos );
-			Vec2 disp = posInSplitCheckBox - splitCheckBox.GetCenter();
-			Vec2 dispInScreenSpace;
-			dispInScreenSpace.x = disp.x / splitCheckBox.GetDimensions().x;
-			dispInScreenSpace.y = disp.y / splitCheckBox.GetDimensions().y;
-			float xRatio = splitCheckBox.GetWidth() / worldCameraBox.GetWidth();
-			float yRatio = splitCheckBox.GetHeight() / worldCameraBox.GetHeight();
-			dispInScreenSpace.x *= xRatio;
-			dispInScreenSpace.y *= yRatio;
-			m_multipleCameraRenderOffset = dispInScreenSpace * 2;
-			//m_multipleCameraRenderOffset = Vec2::ZERO;
+			m_multipleCameraRenderOffset = GetVoronoiOffset();
+			m_camera->UpdateViewMatrix( X_RIGHT_Y_UP_Z_BACKWARD );
+			Vec3 clipedOffset = m_camera->WorldToClient( Vec3( m_multipleCameraRenderOffset ));
+			m_multipleCameraRenderOffset = clipedOffset.GetXYVector();
+			if( m_multipleCameraRenderOffset.x > 1 || m_multipleCameraRenderOffset.x < -1 ) {
+				int a = 0;
+			}
 		}
 		break;
 		default:
@@ -536,11 +550,11 @@ AABB2 CameraController::GetScreenRenderBox( IntVec2 size )
 
 AABB2 CameraController::GetWorldSpaceRenderBox()
 {
-	Vec2 boxDimension = GetSPlitScreenBoxDimension();
+	Vec2 boxDimension = GetSplitScreenBoxDimension();
 	return AABB2( m_cameraPos, boxDimension.x, boxDimension.y );
 }
 
-Vec2 CameraController::GetSPlitScreenBoxDimension()
+Vec2 CameraController::GetSplitScreenBoxDimension()
 {
 	int ControllerNum = m_owner->GetControllersNum();
 	float totalFactor = m_owner->GetTotalFactor();
@@ -606,5 +620,13 @@ Vec2 CameraController::ComputeCameraWindowSnappedPosition( float deltaSeconds )
 		break;
 	}
 	return snappedPos;
+}
+
+void CameraController::UpdateVoronoiPoly()
+{
+	std::vector<Vec2> polyPoints = m_voronoiHull.GetConvexPolyPoints();
+	m_voronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
+	m_voronoiPolyArea = m_voronoiPolygon.GetArea();
+	//m_voronoiPolygon.SetCenter( m_playerPos );
 }
 

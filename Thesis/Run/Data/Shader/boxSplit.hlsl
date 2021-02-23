@@ -92,5 +92,5 @@ float4 FragmentFunction( v2f_t input ) : SV_Target0
 {
 	//float4 color = tDiffuse.Sample( sSampler, input.uv );
 	//return color * input.color;
-	return float4( 1.f, 1.f, 1.f, 1.f );
+	return input.color;
 }

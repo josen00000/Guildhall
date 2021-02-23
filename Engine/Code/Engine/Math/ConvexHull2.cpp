@@ -87,6 +87,9 @@ std::vector<Vec2> ConvexHull2::GetAllIntersectPoints() const
 
 std::vector<Vec2> ConvexHull2::GetConvexPolyPoints() const
 {
+	if( m_planes.size() == 0 ) {
+		ERROR_RECOVERABLE( "should not have convexhull with zero plane" );
+	}
 	std::vector<Vec2> result;
 	for( int i = 0; i < m_planes.size() - 1; i++ ) {
 		for( int j = i + 1; j < m_planes.size(); j++ ){
@@ -140,4 +143,15 @@ bool ConvexHull2::IsPointInsideWithoutPlanes( Vec2 point, std::vector<Plane2> pl
 		if( tempPlane.IsPointInFront( point ) ){ return false; }
 	}
 	return true;
+}
+
+bool ConvexHull2::IsSlicedByPlane( Plane2 plane ) const
+{
+	std::vector<Vec2> points = GetConvexPolyPoints();
+	for( Vec2 point : points ) {
+		if( plane.IsPointInFront( point ) ) {
+			return true;
+		}
+	}
+	return false;
 }

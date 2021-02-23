@@ -32,10 +32,12 @@ public:
 	int GetIndex() const { return m_index; }
 	bool GetIsDebug() const { return m_isDebug; }
 	float GetCurrentMultipleFactor() const { return m_currentMultipleFactor; }
+	float GetVoronoiArea() const { return m_voronoiPolyArea; }
 	Vec2 GetCuePos() const ;
 	Vec2 GetSmoothedGoalPos() const { return m_smoothedGoalCameraPos; }
 	Vec2 GetCameraPos() const { return m_cameraPos; }
-	Polygon2 GetVoronoiPoly() const { return m_voronoiPolygon; }
+	Vec2 GetVoronoiOffset() const{ return m_voronoiOffset; }
+	Polygon2 GetVoronoiPoly();
 	ConvexHull2 GetVoronoiHull() const { return m_voronoiHull; }
 
 	Texture* GetColorTarget() { return m_colorTarget; }
@@ -55,6 +57,7 @@ public:
 	void SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor );
 	void SetVoronoiPolygon( Polygon2 poly );
 	void SetVoronoiHull( ConvexHull2 hull );
+	void AddPlaneToVoronoiHull( Plane2 plane );
 	void SetVoronoiOffset( Vec2 offset );
 
 	// Camera Window
@@ -86,7 +89,7 @@ public:
 	bool IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, Polygon2 renderArea, AABB2 quickOutBox );
 	AABB2 GetScreenRenderBox( IntVec2 size );
 	AABB2 GetWorldSpaceRenderBox();
-	Vec2 GetSPlitScreenBoxDimension();
+	Vec2 GetSplitScreenBoxDimension();
 	Vec2 GetMultipleCameraOffset();
 
 	void UpdateCameraPos();
@@ -95,6 +98,7 @@ private:
 	// camera snapping
 	float ComputeCameraSnapSpeed();
 	Vec2 ComputeCameraWindowSnappedPosition( float deltaSeconds );
+	void UpdateVoronoiPoly();
 
 public:
 	static Texture* s_stencilTexture;
@@ -162,10 +166,12 @@ private:
 	float m_currentMultipleFactor	= 0.f;
 	float m_factorStableSeconds		= 0.f; 
 
+	// multiple camera setting
 	RenderBuffer* m_offsetBuffer	= nullptr;
-	Vec2	m_voronoiOffset = Vec2::ZERO;
-	Polygon2 m_voronoiPolygon;
-	ConvexHull2 m_voronoiHull;
+	float			m_voronoiPolyArea = 0.f;
+	Vec2			m_voronoiOffset = Vec2::ZERO;
+	Polygon2		m_voronoiPolygon;
+	ConvexHull2		m_voronoiHull;
 
 	std::chrono::microseconds m_testDuration;
 };

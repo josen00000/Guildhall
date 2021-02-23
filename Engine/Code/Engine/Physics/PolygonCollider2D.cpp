@@ -9,7 +9,7 @@ PolygonCollider2D::PolygonCollider2D( Polygon2 polygon )
 	:m_localPolygon(polygon)
 {
 	m_type = COLLIDER2D_POLYGON;
-	m_worldPos = m_localPolygon.GetMassCenter();
+	m_worldPos = m_localPolygon.GetCenter();
 	m_worldPolygon = m_localPolygon;
 }
 
@@ -17,7 +17,7 @@ PolygonCollider2D::PolygonCollider2D( std::vector <Vec2> points )
 {
 
 	m_localPolygon = Polygon2( points );
-	m_worldPos = m_localPolygon.GetMassCenter();
+	m_worldPos = m_localPolygon.GetCenter();
 	m_type = COLLIDER2D_POLYGON;
 	m_worldPolygon = m_localPolygon;
 }

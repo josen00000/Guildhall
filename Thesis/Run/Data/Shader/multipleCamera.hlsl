@@ -79,9 +79,15 @@ VertexToFragment_t VertexFunction( vs_input_t input )
 float4 FragmentFunction( VertexToFragment_t input ) : SV_Target0 // semeantic of what I'm returning
 {
     float4 color = tDiffuse.Sample( sSampler, input.uv );
-    float stencilColor = tStencil.Sample( sSampler, input.uv );
-    if( stencilColor.x < 1.f ) {
-        discard;
+    float4 stencilColor = tStencil.Sample( sSampler, input.uv );
+    if( stencilColor.y == 1.f ) {
+        return float4( 0.f, 0.f, 0.f, 1.f );
     }
-    return color;
+    else if( stencilColor.x == 1.f ) {
+        return color;
+    }
+    else {
+        discard;
+        return float4( 0.f, 0.f, 0.f, 0.f);
+    }
 }

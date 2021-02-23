@@ -5,7 +5,7 @@
 
 Polygon2::Polygon2( std::vector<Vec2> points )
 {
-	m_center = GetMassCenter( points );
+	m_center = GetCenter( points );
 	for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
 		Vec2 firstPoint = points[pointIndex - 1] - m_center;
 		Vec2 secondPoint = points[pointIndex] - m_center;
@@ -171,6 +171,18 @@ float Polygon2::GetDistanceToEdge( Vec2 point ) const
 	return ( pointOnEdge - point).GetLength(); 
 }
 
+float Polygon2::GetArea() const
+{
+	float a = 0;
+	float b = 0;
+	for( int i = 0; i < m_edges.size(); i++ ) {
+		LineSegment2 lineSeg1 = m_edges[i];
+		a += lineSeg1.GetStartPos().x * lineSeg1.GetEndPos().y;
+		b += lineSeg1.GetStartPos().y * lineSeg1.GetEndPos().x;
+	}
+	return 0.5f * ( a - b );
+}
+
 Vec2 Polygon2::GetLowestPoint() const
 {
 	Vec2 point = m_edges[0].GetStartPos();
@@ -233,7 +245,7 @@ Vec2 Polygon2::GetClosestPointOnEdges( Vec2 point ) const
 	return closestPoint + m_center;
 }
 
-Vec2 Polygon2::GetMassCenter( std::vector<Vec2> rawPoints ) const
+Vec2 Polygon2::GetCenter( std::vector<Vec2> rawPoints ) const
 {
 	//if( m_edges.size() < 3 ){ return Vec2::ZERO; }
 	float totalArea = 0;
@@ -382,7 +394,7 @@ void Polygon2::GetAllVerticesInWorld( std::vector<Vec2>& vertices ) const
 
 void Polygon2::SetEdgesFromPoints( std::vector<Vec2> points )
 {
-	m_center = GetMassCenter( points );
+	m_center = GetCenter( points );
 	m_edges.clear();
 	for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
 		Vec2 firstPoint = points[pointIndex - 1];

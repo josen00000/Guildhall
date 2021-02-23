@@ -38,9 +38,10 @@ public:
 	AABB2		GetBoxAtTop( float fractionOfHeight, float additionalWidth=0.f ) const;
 	float		GetOuterRadius() const;
 	float		GetInnerRadius() const;
-	float		GetWidth();
-	float		GetHeight();
+	float		GetWidth() const;
+	float		GetHeight() const;
 	float		GetDiagonalLength();
+	float		GetArea() const ;
 	void		GetCornerPositions( Vec2* out_fourPoints ) const;
 
 

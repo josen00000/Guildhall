@@ -222,11 +222,24 @@ void Game::HandleInput()
 			currentMap->SpawnNewEnemy( spawnPos );
 		}
 	}
-	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
+	
+	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
 		g_theCameraSystem->AddCameraShake( 0, 0.5f );
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_0 ) ) {
 		m_isPaused = !m_isPaused;
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
+		g_theCameraSystem->AddTestingVoronoiOffsetX( );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_3 ) ) {
+		g_theCameraSystem->AddTestingVoronoiOffsetY( );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_4 ) ) {
+		g_theCameraSystem->DecreaseTestingVoronoiOffsetX();
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_5 ) ) {
+		g_theCameraSystem->DecreaseTestingVoronoiOffsetY();
 	}
 }
 

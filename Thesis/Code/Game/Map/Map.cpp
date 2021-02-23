@@ -302,7 +302,7 @@ void Map::UpdateMap( float deltaSeconds )
 			stepIndex++;
 			break;
 		case 1:
-			/*GenerateRooms();*/
+			GenerateRooms();
 			GenerateEdges();
 			PopulateTiles();
 			stepIndex++;

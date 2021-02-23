@@ -296,7 +296,9 @@ public:
 	void DrawPlane2D( Plane2 const& plane, float DrawLength, Rgba8 tint );
 	void DrawConvexHull( ConvexHull2 const& hull, Rgba8 tint );
 	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
+	void DrawAABB2DWithBound( const AABB2& bounds, const Rgba8& tint, float boundThick, const Rgba8& boundColor );
 	void DrawPolygon2D( Polygon2 polygon, Rgba8 tint );
+	void DrawPolygon2DWithBound( Polygon2 polygon, Rgba8 tint, float boundThick, Rgba8& boundColor );
 	void DrawConvexPoly2D( ConvexPoly2 convPoly, Rgba8 tint );
 	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );
 	void DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor );

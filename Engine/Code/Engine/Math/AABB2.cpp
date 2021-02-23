@@ -80,7 +80,7 @@ const Vec2 AABB2::GetDimensions() const
 
 const Vec2 AABB2::GetNearestPoint( const Vec2& referencePosition ) const
 {
-	Vec2 nearestPoint=Vec2();
+	Vec2 nearestPoint;
 	if(referencePosition.x <= mins.x){
 		nearestPoint.x = mins.x;
 	}
@@ -182,12 +182,12 @@ float AABB2::GetInnerRadius() const
 	return result;
 }
 
-float AABB2::GetWidth()
+float AABB2::GetWidth() const
 {
 	return ( maxs.x - mins.x );
 }
 
-float AABB2::GetHeight()
+float AABB2::GetHeight() const
 {
 	return ( maxs.y - mins.y );
 }
@@ -198,6 +198,11 @@ float AABB2::GetDiagonalLength()
 	float height = GetHeight();
 	float diagonalLength = sqrtf( ( width * width ) + ( height * height ) );
 	return diagonalLength;
+}
+
+float AABB2::GetArea() const
+{
+	return GetWidth() * GetHeight();
 }
 
 void AABB2::GetCornerPositions( Vec2* out_fourPoints ) const

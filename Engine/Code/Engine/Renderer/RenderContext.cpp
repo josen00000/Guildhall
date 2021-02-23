@@ -965,6 +965,15 @@ void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
 	DrawVertexArray( 6, temAABB2 );
 }
 
+void RenderContext::DrawAABB2DWithBound( const AABB2& bounds, const Rgba8& tint, float boundThick, const Rgba8& boundColor )
+{
+	DrawAABB2D( bounds, tint );
+	DrawLine( bounds.mins, Vec2( bounds.maxs.x, bounds.mins.y), boundThick, boundColor );
+	DrawLine( Vec2( bounds.maxs.x, bounds.mins.y), bounds.maxs, boundThick, boundColor );
+	DrawLine( bounds.maxs, Vec2( bounds.mins.x, bounds.maxs.y), boundThick, boundColor );
+	DrawLine( Vec2( bounds.mins.x, bounds.maxs.y), bounds.mins, boundThick, boundColor );
+}
+
 void RenderContext::DrawPolygon2D( Polygon2 polygon, Rgba8 tint )
 {
 	Vec2 centerPos = polygon.m_center;
@@ -976,6 +985,16 @@ void RenderContext::DrawPolygon2D( Polygon2 polygon, Rgba8 tint )
 		tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetEndPos() + centerPos ), tint, Vec2::ZERO ) );
 	}
 	DrawVertexVector( tempVertices );
+}
+
+void RenderContext::DrawPolygon2DWithBound( Polygon2 polygon, Rgba8 tint, float boundThick, Rgba8& boundColor )
+{
+	DrawPolygon2D( polygon, tint );
+	
+ 	for( int i = 0; i < polygon.GetEdgeCount(); i++ ) {
+		LineSegment2 lineSeg = polygon.GetEdgeInWorld( i );
+		DrawLine( lineSeg, boundThick, boundColor );
+	}
 }
 
 void RenderContext::DrawConvexPoly2D( ConvexPoly2 convPoly, Rgba8 tint )

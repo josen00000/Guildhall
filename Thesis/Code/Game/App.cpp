@@ -51,17 +51,12 @@ void App::StartupStage1()
 	Clock::SystemStartUp();
 	// test
 	std::vector<Vec2> testPoints;
-// 	Vec2 testA = Vec2( 32.29f, 22.42f );
-// 	Vec2 testB = Vec2( 72.29f, 13.87f );
-// 	Vec2 testC = Vec2( 32.29f, 6.67f );
-// 	Vec2 testD = Vec2( 32.29f, 29.17f );
-	testPoints.emplace_back( 32.29f, 22.42f );
-	testPoints.emplace_back( 72.29f, 13.87f );
-	testPoints.emplace_back( 32.29f, 6.67f );
-	testPoints.emplace_back( 32.29f, 29.17f );
+	testPoints.emplace_back( 2.f,5.f );
+	testPoints.emplace_back( -4.f, 3.f );
+	testPoints.emplace_back( 5.f, 1.f );
 
 	Polygon2 testPoly = Polygon2::MakeConvexFromPointCloud( testPoints );
-
+	float area = testPoly.GetArea();
 }
 
 void App::StartupStage2()

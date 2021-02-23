@@ -74,6 +74,7 @@ public:
 	void Render();
 	void UpdateControllers( float deltaSeconds );
 	void UpdateSplitScreenEffects( float deltaSeconds );
+	void UpdatePostSplitScreenEffects( float deltaSeconds );
 	void UpdateNoSplitScreenEffect( float deltaSeconds );
 	void UpdateVoronoiSplitScreenEffect( float delteSeconds );
 	void UpdateControllerCameras();
@@ -125,6 +126,10 @@ public:
 	void SetMap( Map* map );
 
 	void AddCameraShake( int index, float shakeTrauma );
+	void AddTestingVoronoiOffsetX();
+	void AddTestingVoronoiOffsetY();
+	void DecreaseTestingVoronoiOffsetX();
+	void DecreaseTestingVoronoiOffsetY();
 
 	void UpdateDebugInfo();
 
@@ -151,10 +156,14 @@ public:
 	void GetVoronoiHullsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	void GetVoronoiHullsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints );
-	void GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<Vec2, Vec2> intersectPoints, const CameraController* currentController, std::stack<CameraController*>& nextControllers );
+	void GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<Vec2, Vec2> intersectPoints, CameraController* currentController, std::stack<CameraController*>& nextControllers );
+	bool DoesNeedExpendVoronoiScreen();
+	void ExpandMinVoronoiPoly( CameraController* minAreaController );
 
 	// helper function
 	CameraController* FindCurrentControllerContainsPointWithConstructedCellNum( Vec2 point, int constructedCellNum );
+	CameraController* FindControllerWithMinArea();
+	CameraController* FindNextAdjacentControllerWithPlane( Plane2 plane, std::vector<bool>& controllerCheckStates );
 	bool GetSharedEdgeOfTwoPolygon( LineSegment2& sharedLine, Polygon2 polyA, Polygon2 polyB );
 private:
 	bool m_isdebug = false;
@@ -191,8 +200,9 @@ private:
 	//Timer*
 
 	// voronoi split
+	float m_expandVoronoiAreaThreshold = 20.f;
 	std::stack<CameraController*> m_nextControllers;
-
+	std::vector<std::pair<CameraController*, std::vector<Plane2>>> m_controllerVoronoiEdges;
 	// debug
 	std::vector<Vec2> m_playerDebugPositions;
 	Vec2 m_playerDebugPosA;
