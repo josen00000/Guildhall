@@ -112,8 +112,9 @@ private:
 	Camera* m_splitCamera			= nullptr;
 	Texture* m_stencilTexture		= nullptr;
 	Texture* m_colorTarget			= nullptr;
-	Shader* m_boxShader				= nullptr;
-	Shader* m_voronoiShader			= nullptr;
+	Shader* m_boxStencilShader		= nullptr;
+	Shader* m_voronoiStencilShader	= nullptr;
+	Shader* m_voronoiDiffuseShader	= nullptr;
 
 	CameraSystem* m_owner		= nullptr;
 	Timer*	m_timer				= nullptr;
@@ -167,7 +168,8 @@ private:
 	float m_factorStableSeconds		= 0.f; 
 
 	// multiple camera setting
-	RenderBuffer* m_offsetBuffer	= nullptr;
+	RenderBuffer* m_offsetBuffer		= nullptr;
+	RenderBuffer* m_voronoiOffsetBuffer	= nullptr;
 	float			m_voronoiPolyArea = 0.f;
 	Vec2			m_voronoiOffset = Vec2::ZERO;
 	Polygon2		m_voronoiPolygon;

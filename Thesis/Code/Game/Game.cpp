@@ -167,7 +167,7 @@ void Game::HandleInput()
 		}
 		g_theCameraSystem->SetCameraFrameState( currentState );
 	}
-	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F8 ) || g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F6 ) ) {
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F6 ) ) {
 		SplitScreenState currentState = g_theCameraSystem->GetSplitScreenState();
 		if( currentState < SplitScreenState::NUM_OF_SPLIT_SCREEN_STATE - 1 ) {
 			currentState = static_cast<SplitScreenState>(currentState + 1);
@@ -186,6 +186,16 @@ void Game::HandleInput()
 			currentStrat = static_cast<NoSplitScreenStrat>((uint)0);
 		}
 		g_theCameraSystem->SetNoSplitScreenStrat( currentStrat );
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F8 ) ) {
+		PostVoronoiSetting currentPostVoronoiSetting = g_theCameraSystem->GetPostVoronoiSetting();
+		if( currentPostVoronoiSetting < NUM_OF_POST_VORONOI_SETTING - 1 ) {
+			currentPostVoronoiSetting = static_cast<PostVoronoiSetting>(currentPostVoronoiSetting + 1);
+		}
+		else {
+			currentPostVoronoiSetting = static_cast<PostVoronoiSetting>((uint)0);
+		}
+		g_theCameraSystem->SetPostVoronoiSetting( currentPostVoronoiSetting );
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F9 ) ){
 		DebugMode currentMode = g_theCameraSystem->GetDebugMode();

@@ -971,5 +971,6 @@ LineSegment2 GetAdjacentEdgeOfTwoPolygon( Polygon2 polyA, Polygon2 polyB )
 			}
 		}
 	}
+	return LineSegment2();
 }
 

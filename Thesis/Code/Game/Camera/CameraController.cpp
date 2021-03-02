@@ -32,9 +32,12 @@ CameraController::CameraController( CameraSystem* owner, Player* player, Camera*
 	m_splitCamera = Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
 	m_splitCamera->EnableClearColor( Rgba8::BLACK );
 	m_camera->EnableClearColor( Rgba8::GRAY );
-	m_offsetBuffer = new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
-	m_boxShader		= g_theRenderer->GetOrCreateShader( "data/Shader/boxSplit.hlsl" );
-	m_voronoiShader = g_theRenderer->GetOrCreateShader( "data/Shader/voronoiSplit.hlsl" );
+	m_offsetBuffer			= new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+	m_voronoiOffsetBuffer	= new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
+
+	m_boxStencilShader		= g_theRenderer->GetOrCreateShader( "data/Shader/boxStencil.hlsl" );
+	m_voronoiStencilShader	= g_theRenderer->GetOrCreateShader( "data/Shader/VoronoiStencil.hlsl" );
+	m_voronoiDiffuseShader	= g_theRenderer->GetOrCreateShader( "data/Shader/VoronoiDiffuse.hlsl" );
 
 	
 	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
@@ -52,8 +55,7 @@ CameraController::~CameraController()
 	delete m_timer;
 	SELF_SAFE_RELEASE(m_splitCamera);
 	SELF_SAFE_RELEASE(m_offsetBuffer);
-
-
+	SELF_SAFE_RELEASE(m_voronoiOffsetBuffer);
 }
 
 void CameraController::Update( float deltaSeconds )
@@ -82,18 +84,20 @@ void CameraController::Render()
 	m_colorTarget = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 
 	// draw render area to stencil texture
-	UpdateStencilTexture();
 	UpdateMultipleCameraOffset();
 	std::vector<Vec2> data;
 	data.push_back( m_multipleCameraRenderOffset );
 	data.push_back( Vec2::ZERO );
 	m_offsetBuffer->Update( data.data(), sizeof(Vec2) * 2, sizeof(Vec2) * 2 );
-	Vec2 offset = GetMultipleCameraOffset();
+
+	UpdateStencilTexture();
 	m_camera->SetColorTarget( m_colorTarget );
 	g_theRenderer->BeginCamera( m_camera );
-	/*if( m_index == 0 ) {*/
-	g_theGame->RenderGame(); //debug
-	//}
+	if( m_owner->GetSplitScreenState() == VORONOI_SPLIT ) {
+		g_theRenderer->BindShader( m_voronoiDiffuseShader );
+		g_theRenderer->SetOffsetBuffer( m_voronoiOffsetBuffer, 0 );
+	}
+	g_theGame->RenderGame();
 	g_theRenderer->EndCamera();
 }
 
@@ -227,6 +231,7 @@ void CameraController::SetVoronoiHull( ConvexHull2 hull )
 void CameraController::AddPlaneToVoronoiHull( Plane2 plane )
 {
 	m_voronoiHull.AddPlane( plane );
+	UpdateVoronoiPoly();
 }
 
 void CameraController::SetVoronoiOffset( Vec2 offset )
@@ -447,7 +452,7 @@ void CameraController::UpdateStencilTexture()
  			AABB2 worldRenderBox  = GetWorldSpaceRenderBox(); // render area in client space but not revert y
  			m_camera->SetColorTarget( m_stencilTexture );
 			g_theRenderer->BeginCamera( m_camera );
-			g_theRenderer->BindShader( m_boxShader );
+			g_theRenderer->BindShader( m_boxStencilShader );
 			g_theRenderer->DrawAABB2DWithBound( worldRenderBox, Rgba8::RED, 0.5f, Rgba8::GREEN );
 			g_theRenderer->EndCamera();
 		}
@@ -455,8 +460,10 @@ void CameraController::UpdateStencilTexture()
 		case VORONOI_SPLIT: {
 			m_camera->SetColorTarget( m_stencilTexture );
 			g_theRenderer->BeginCamera( m_camera );
-			g_theRenderer->BindShader( m_boxShader );
+			g_theRenderer->BindShader( m_voronoiStencilShader );
+			g_theRenderer->SetOffsetBuffer( m_voronoiOffsetBuffer, 0 );
 			g_theRenderer->DrawPolygon2DWithBound( m_voronoiPolygon, Rgba8::RED, 0.5f, Rgba8::GREEN );
+			g_theRenderer->DrawCircle( m_voronoiPolygon.GetCenter(), 0.1f, 0.2f, Rgba8::GREEN);
 			//g_theRenderer->DrawLine( m_voronoiPolygon.GetCenter(), Vec2::ZERO, 1.f, Rgba8::GREEN );
 			g_theRenderer->EndCamera();
 		}
@@ -507,13 +514,11 @@ void CameraController::UpdateMultipleCameraOffset()
 		}
 		break;
 		case VORONOI_SPLIT:{
-			m_multipleCameraRenderOffset = GetVoronoiOffset();
-			m_camera->UpdateViewMatrix( X_RIGHT_Y_UP_Z_BACKWARD );
-			Vec3 clipedOffset = m_camera->WorldToClient( Vec3( m_multipleCameraRenderOffset ));
-			m_multipleCameraRenderOffset = clipedOffset.GetXYVector();
-			if( m_multipleCameraRenderOffset.x > 1 || m_multipleCameraRenderOffset.x < -1 ) {
-				int a = 0;
-			}
+			m_multipleCameraRenderOffset = Vec2::ZERO;
+			std::vector<Vec2> data;
+			data.push_back( m_voronoiOffset );
+			data.push_back( Vec2::ZERO );
+			m_voronoiOffsetBuffer->Update( data.data(), sizeof( Vec2 ) * 2, sizeof( Vec2 ) * 2 );
 		}
 		break;
 		default:

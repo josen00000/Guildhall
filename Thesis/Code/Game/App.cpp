@@ -55,8 +55,8 @@ void App::StartupStage1()
 	testPoints.emplace_back( -4.f, 3.f );
 	testPoints.emplace_back( 5.f, 1.f );
 
-	Polygon2 testPoly = Polygon2::MakeConvexFromPointCloud( testPoints );
-	float area = testPoly.GetArea();
+	//Polygon2 testPoly = Polygon2::MakeConvexFromPointCloud( testPoints );
+	//float area = testPoly.GetArea();
 }
 
 void App::StartupStage2()

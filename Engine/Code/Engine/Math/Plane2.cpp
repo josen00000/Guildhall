@@ -47,6 +47,11 @@ bool Plane2::IsParallelWithPlane( Plane2 plane ) const
 	return ( IsVec2MostlyEqual( m_normal, plane.m_normal ) || IsVec2MostlyEqual( -m_normal, plane.m_normal ) );
 }
 
+bool Plane2::IsFlippedWith( Plane2 plane )
+{
+	return IsFloatMostlyEqual( m_dist, -plane.m_dist ) && IsVec2MostlyEqual( m_normal, -plane.m_normal );
+}
+
 float Plane2::GetSignedDistanceFromPlane( Vec2 point )
 {
 	float pointDistFromPlane = DotProduct2D( point, m_normal );

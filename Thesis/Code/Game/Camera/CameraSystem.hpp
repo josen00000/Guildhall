@@ -60,6 +60,12 @@ enum DebugMode: unsigned int {
 	NUM_OF_DEBUG_MODE
 };
 
+enum PostVoronoiSetting : unsigned int{
+	NO_POST_EFFECT = 0,
+	AVER_AREA_VORONOI,
+	NUM_OF_POST_VORONOI_SETTING
+};
+
 class CameraSystem {
 public:
 	CameraSystem(){}
@@ -74,9 +80,10 @@ public:
 	void Render();
 	void UpdateControllers( float deltaSeconds );
 	void UpdateSplitScreenEffects( float deltaSeconds );
-	void UpdatePostSplitScreenEffects( float deltaSeconds );
 	void UpdateNoSplitScreenEffect( float deltaSeconds );
-	void UpdateVoronoiSplitScreenEffect( float delteSeconds );
+	void UpdatePreVoronoiSplitScreenEffect( float delteSeconds );	// different split dicision, confirm the voronoi cells for cameraController
+	void UpdateVoronoiSplitScreenEffect( float delteSeconds );		// Construct the convexhull for each camera
+	void UpdatePostVoronoiSplitScreenEffects( float deltaSeconds );	// Get voronoi poly base on convexhull and do area average.
 	void UpdateControllerCameras();
 	void DebugRender();
 	void DebugRenderControllers();
@@ -94,6 +101,7 @@ public:
 	std::string GetSplitScreenStateText() const;
 	std::string GetNoSplitScreenStratText() const;
 	std::string GetDebugModeText() const;
+	std::string GetPostVoronoiSettingText() const;
 
 	CameraWindowState	GetCameraWindowState() const { return m_cameraWindowState; }
 	CameraSnappingState GetCameraSnappingState() const { return m_cameraSnappingState; }
@@ -101,6 +109,7 @@ public:
 	CameraFrameState	GetCameraFrameState() const { return m_cameraFrameState; }
 	SplitScreenState	GetSplitScreenState() const { return m_splitScreenState; }
 	NoSplitScreenStrat	GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
+	PostVoronoiSetting	GetPostVoronoiSetting() const { return m_postVoronoiSetting; }
 	DebugMode			GetDebugMode() const { return m_debugMode; }
 
 	Vec2 GetAverageCameraPosition();
@@ -123,6 +132,7 @@ public:
 	void SetSplitScreenState( SplitScreenState newState );
 	void SetNoSplitScreenStrat( NoSplitScreenStrat newStrat ); 
 	void SetDebugMode( DebugMode newMode );
+	void SetPostVoronoiSetting( PostVoronoiSetting postSetting );
 	void SetMap( Map* map );
 
 	void AddCameraShake( int index, float shakeTrauma );
@@ -153,12 +163,13 @@ public:
 	void ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
-	void GetVoronoiHullsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
-	void GetVoronoiHullsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
+	void UpdateVoronoiPolyAndOffset();
+	void GetVoronoiEdgesWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
+	void GetVoronoiEdgesWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints );
 	void GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<Vec2, Vec2> intersectPoints, CameraController* currentController, std::stack<CameraController*>& nextControllers );
 	bool DoesNeedExpendVoronoiScreen();
-	void ExpandMinVoronoiPoly( CameraController* minAreaController );
+	void ExpandMinVoronoiPoly();
 
 	// helper function
 	CameraController* FindCurrentControllerContainsPointWithConstructedCellNum( Vec2 point, int constructedCellNum );
@@ -177,6 +188,7 @@ private:
 	SplitScreenState	m_splitScreenState		= NO_SPLIT_SCREEN;
 	NoSplitScreenStrat	m_noSplitScreenStrat	= NO_STRAT;
 	DebugMode			m_debugMode				= CONTROLLER_INFO;
+	PostVoronoiSetting	m_postVoronoiSetting	= NO_POST_EFFECT;
 	RandomNumberGenerator* m_rng	= nullptr;
 
 	float m_shakeBlendAmount	= 0.f;
@@ -200,9 +212,14 @@ private:
 	//Timer*
 
 	// voronoi split
-	float m_expandVoronoiAreaThreshold = 20.f;
+	float m_expandVoronoiAreaThreshold = 50.f;
 	std::stack<CameraController*> m_nextControllers;
-	std::vector<std::pair<CameraController*, std::vector<Plane2>>> m_controllerVoronoiEdges;
+	std::vector<ConvexHull2> m_controllerVoronoiEdges;
+	
+	
+	
+	
+	
 	// debug
 	std::vector<Vec2> m_playerDebugPositions;
 	Vec2 m_playerDebugPosA;
@@ -216,7 +233,6 @@ private:
 	ConvexHull2 m_debugHullA;
 	ConvexHull2 m_debugHullB;
 	ConvexHull2 m_debugHullC;
-
 	std::vector<Vec2> m_debugIntersectPointsA;
 	std::vector<Vec2> m_debugIntersectPointsB;
 	std::vector<Vec2> m_debugIntersectPointsC;

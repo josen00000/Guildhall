@@ -175,16 +175,19 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\..\Run\Data\Shader\boxSplit.hlsl">
-      <Filter>Data\shader</Filter>
-    </FxCompile>
-    <FxCompile Include="..\..\Run\Data\Shader\voronoiSplit.hlsl">
-      <Filter>Data\shader</Filter>
-    </FxCompile>
     <FxCompile Include="..\..\Run\Data\Shader\Default.hlsl">
       <Filter>Data\shader</Filter>
     </FxCompile>
     <FxCompile Include="..\..\Run\Data\Shader\multipleCamera.hlsl">
+      <Filter>Data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\VoronoiDiffuse.hlsl">
+      <Filter>Data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\VoronoiStencil.hlsl">
+      <Filter>Data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\boxStencil.hlsl">
       <Filter>Data\shader</Filter>
     </FxCompile>
   </ItemGroup>

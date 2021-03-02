@@ -20,6 +20,7 @@ public:
 	bool	IsPointInBack( Vec2 point ) const;
 	bool	IsPossibleIntersectWith( LineSegment2 line ) const;
 	bool	IsParallelWithPlane( Plane2 plane ) const;
+	bool	IsFlippedWith( Plane2 plane );
 	float	GetDistance() const { return m_dist; }
 	float	GetSignedDistanceFromPlane( Vec2 point );
 	float	GetDistanceFromPlane( Vec2 point );

@@ -77,6 +77,7 @@ void Actor::RenderActor()
 
 void Actor::Shoot( float deltaSeconds )
 {
+	UNUSED(deltaSeconds);
 	if( m_shootTimer < m_shootCoolDown ){ return; }
 
 	m_shootTimer = 0.f;

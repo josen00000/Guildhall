@@ -30,7 +30,7 @@ static float g_basisCylinderLength = 0.7f;
 static float g_basisConeLength = 0.3f;
 static float g_basisCylinderRadius = 0.01f;
 static float g_basisConeRadius = 0.05f;
-static float g_defaultTextSize = 2.f;
+static float g_defaultTextSize = 1.5f;
 
 static Vec2 g_screenMax = Vec2( 1.f, 1.f );
 static Vec2 g_screenMin = Vec2::ZERO;

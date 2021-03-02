@@ -62,6 +62,7 @@ bool AABB2::IsPointMostInEdge( const Vec2& point ) const
 	else if( IsFloatMostlyEqual( point.y, mins.y ) || IsFloatMostlyEqual( point.y, maxs.y ) ) {
 		return( point.x >= mins.x && point.x <= maxs.x );
 	}
+	return false;
 }
 
 const Vec2 AABB2::GetCenter() const
