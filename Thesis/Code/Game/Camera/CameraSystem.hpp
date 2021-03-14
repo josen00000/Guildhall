@@ -5,6 +5,9 @@
 #include "Game/Map/Map.hpp"
 #include "Engine/Math/ConvexHull2.hpp"
 
+typedef	std::pair<Vec2, std::vector<CameraController*>> VoronoiVertexAndControllersPair;
+
+
 class Player;
 class Camera;
 class RandomNumberGenerator;
@@ -62,7 +65,8 @@ enum DebugMode: unsigned int {
 
 enum PostVoronoiSetting : unsigned int{
 	NO_POST_EFFECT = 0,
-	AVER_AREA_VORONOI,
+	PUSH_PLANE_AND_REARRANGE_VORONOI_VERTEX,
+	MOVR_VORONOI_POINT_AND_RECONSTRUCT_VORNOI_DIAGRAM,
 	NUM_OF_POST_VORONOI_SETTING
 };
 
@@ -168,10 +172,17 @@ public:
 	void GetVoronoiEdgesWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints );
 	void GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<Vec2, Vec2> intersectPoints, CameraController* currentController, std::stack<CameraController*>& nextControllers );
-	bool DoesNeedExpendVoronoiScreen();
+	bool DoesNeedBalanceVoronoiScreen();
 	void ExpandMinVoronoiPoly();
+	bool ConstructAllAndIsAnyVoronoiVertex();
+	bool RearrangeVoronoiVertexForMinVoronoiPoly( CameraController* controller, std::vector<Vec2> voronoiVertexPos );
+	void ComputeAndSetVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox );
+	void ComputeAndSetBalancedVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox );
+	void ReConstructVoronoiDiagram();
 
 	// helper function
+	bool GetSharedPointOfVoronoiPolygonABC( Polygon2 polygonA, Polygon2 polygonB, Polygon2 polygonC, Vec2& sharedPoint );
+	bool GetAllVoronoiVertexPosWithController( const CameraController* controller, std::vector<Vec2>& vertexPosArray );
 	CameraController* FindCurrentControllerContainsPointWithConstructedCellNum( Vec2 point, int constructedCellNum );
 	CameraController* FindControllerWithMinArea();
 	CameraController* FindNextAdjacentControllerWithPlane( Plane2 plane, std::vector<bool>& controllerCheckStates );
@@ -212,10 +223,13 @@ private:
 	//Timer*
 
 	// voronoi split
-	float m_expandVoronoiAreaThreshold = 50.f;
+	int m_postVoronoiIteration			= 0;
+	int m_targetPostVoronoiIteration	= 5;
+	float m_expandVoronoiAreaThreshold	= 50.f;
+	float m_expandVoronoiLeastStep		= 2.f;
 	std::stack<CameraController*> m_nextControllers;
 	std::vector<ConvexHull2> m_controllerVoronoiEdges;
-	
+	std::vector<VoronoiVertexAndControllersPair> m_voronoiVertices;
 	
 	
 	

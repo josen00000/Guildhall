@@ -161,6 +161,7 @@ void App::BeginFrame()
 	g_thePhysics->BeginFrame();
 	g_theRenderer->BeginFrame();
 	g_theAudioSystem->BeginFrame();
+	g_theCameraSystem->BeginFrame();
 }
 
 void App::Update( float deltaSeconds )

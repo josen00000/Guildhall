@@ -36,7 +36,7 @@ bool g_isQuitting = false;							// ...becomes App::m_isQuitting
 													// HWND g_hWnd = nullptr;								// ...becomes WindowContext::m_windowHandle
 													// HDC g_displayDeviceContext = nullptr;				// ...becomes WindowContext::m_displayContext
 													// HGLRC g_openGLRenderingContext = nullptr;			// ...becomes RenderContext::m_apiRenderingContext
-const char* APP_NAME = "Windows OpenGL Test App";	// ...becomes ??? (Change this per project!)
+const char* APP_NAME = "Multle Player-camera System";	// ...becomes ??? (Change this per project!)
 
 
 													//-----------------------------------------------------------------------------------------------

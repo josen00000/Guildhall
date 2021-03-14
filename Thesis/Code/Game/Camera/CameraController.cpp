@@ -8,6 +8,7 @@
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Math/Vec4.hpp"
+#include "Engine/Math/ConvexPoly2.hpp"
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
@@ -239,6 +240,18 @@ void CameraController::SetVoronoiOffset( Vec2 offset )
 	m_voronoiOffset = offset;
 }
 
+void CameraController::SetVoronoiAnchorPointPos( Vec2 voronoiAnchorPoint )
+{
+	m_voronoiAnchorPointPos = voronoiAnchorPoint;
+}
+
+bool CameraController::ReplaceVoronoiPointWithPoint( Vec2 replacedPoint, Vec2 newPoint )
+{
+	bool result = m_voronoiPolygon.ReplacePointWithPoint( replacedPoint, newPoint );
+	UpdateVoronoiHull();
+	return result;
+}
+
 // Camera Window
 //////////////////////////////////////////////////////////////////////////
 void CameraController::UpdateCameraWindow( float deltaSeconds )
@@ -246,8 +259,6 @@ void CameraController::UpdateCameraWindow( float deltaSeconds )
 	switch( m_owner->GetCameraWindowState() )
 	{
 	case NO_CAMERA_WINDOW:
-
-
 		// Camera Pos Lock
 		m_cameraWindowCenterPos = m_playerPos;
 		m_cameraWindow.SetCenter( m_cameraWindowCenterPos );
@@ -633,5 +644,13 @@ void CameraController::UpdateVoronoiPoly()
 	m_voronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
 	m_voronoiPolyArea = m_voronoiPolygon.GetArea();
 	//m_voronoiPolygon.SetCenter( m_playerPos );
+}
+
+void CameraController::UpdateVoronoiHull()
+{
+	std::vector<Vec2> voronoiPoints;
+	m_voronoiPolygon.GetAllVerticesInWorld( voronoiPoints );
+	ConvexPoly2 tempPoly = ConvexPoly2( voronoiPoints );
+	m_voronoiHull = ConvexHull2::MakeConvexHullFromConvexPoly( tempPoly );
 }
 

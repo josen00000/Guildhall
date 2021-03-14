@@ -409,4 +409,29 @@ void Polygon2::SetCenter( Vec2 center )
 	m_center = center;
 }
 
+bool Polygon2::ReplacePointWithPoint( Vec2 replacedPoint, Vec2 newPoint )
+{
+	replacedPoint -= m_center;
+	newPoint -= m_center;
+	int startIndex = 0;
+	int endIndex = 0;
+	for( int i = 0; i < m_edges.size(); i++ ) {
+		Vec2 startPoint = m_edges[i].GetStartPos();
+		Vec2 endPoint	= m_edges[i].GetEndPos();
+		if( IsVec2MostlyEqual( startPoint, replacedPoint ) ) {
+			m_edges[i].SetStartPos( newPoint );
+			startIndex = i;
+		}
+		if(  IsVec2MostlyEqual( endPoint, replacedPoint ) ) {
+			m_edges[i].SetEndPos( newPoint );
+			endIndex = i;
+		}
+	}
+	if( !IsConvex() ) {
+		m_edges[startIndex].SetStartPos( replacedPoint );
+		m_edges[endIndex].SetEndPos( replacedPoint );
+		return false;
+	}
+	return true;
+}
 

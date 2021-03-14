@@ -54,6 +54,7 @@ public:
 	// Mutator
 	void	SetEdgesFromPoints( std::vector<Vec2> points );
 	void	SetCenter( Vec2 center );
+	bool	ReplacePointWithPoint( Vec2 replacedPoint, Vec2 newPoint );
 
 	void Normalize();
 

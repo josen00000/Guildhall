@@ -43,7 +43,7 @@ void Collider2D::Destroy()
 
 void Collider2D::InitDelegate()
 {
-// 	SubscribeEnterEvent( g_theGame, &Game::OnCollliderEnter );
+ 	//SubscribeEnterEvent( g_theGame, &Game::OnCollliderEnter );
 // 	SubscribeStayEvent( g_theGame, &Game::OnCollliderStay );
 // 	SubscribeLeaveEvent( g_theGame, &Game::OnCollliderLeave );
 // 	SubscribeTriggerEnterEvent( g_theGame, &Game::OnTriggerEnter );

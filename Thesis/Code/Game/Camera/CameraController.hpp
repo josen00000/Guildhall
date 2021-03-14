@@ -37,6 +37,7 @@ public:
 	Vec2 GetSmoothedGoalPos() const { return m_smoothedGoalCameraPos; }
 	Vec2 GetCameraPos() const { return m_cameraPos; }
 	Vec2 GetVoronoiOffset() const{ return m_voronoiOffset; }
+	Vec2 GetVoronoiAnchorPointPos() const { return m_voronoiAnchorPointPos; }
 	Polygon2 GetVoronoiPoly();
 	ConvexHull2 GetVoronoiHull() const { return m_voronoiHull; }
 
@@ -59,6 +60,8 @@ public:
 	void SetVoronoiHull( ConvexHull2 hull );
 	void AddPlaneToVoronoiHull( Plane2 plane );
 	void SetVoronoiOffset( Vec2 offset );
+	void SetVoronoiAnchorPointPos( Vec2 voronoiAnchorPoint );
+	bool ReplaceVoronoiPointWithPoint( Vec2 replacedPoint,  Vec2 newPoint );
 
 	// Camera Window
 	void UpdateCameraWindow( float deltaSeconds );
@@ -99,6 +102,7 @@ private:
 	float ComputeCameraSnapSpeed();
 	Vec2 ComputeCameraWindowSnappedPosition( float deltaSeconds );
 	void UpdateVoronoiPoly();
+	void UpdateVoronoiHull();
 
 public:
 	static Texture* s_stencilTexture;
@@ -125,6 +129,7 @@ private:
 	Vec2 m_cameraPos					= Vec2::ZERO;
 	Vec2 m_cameraWindowCenterPos		= Vec2::ZERO;
 	Vec2 m_multipleCameraRenderOffset	= Vec2::ZERO;
+	Vec2 m_voronoiAnchorPointPos		= Vec2::ZERO;
 
 	// Camera winodw
 	AABB2 m_cameraWindow;
