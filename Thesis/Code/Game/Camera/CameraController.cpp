@@ -140,9 +140,10 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_goalMultipleFactor ));
 	std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
 	std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
-	std::string offsetText						= std::string( " offset is : ") + m_multipleCameraRenderOffset.ToString();
-	std::string testing							= std::to_string( m_testDuration.count() );
-	
+	//std::string offsetText						= std::string( " offset is : ") + m_multipleCameraRenderOffset.ToString();
+	//std::string testing							= std::to_string( m_testDuration.count() );
+	std::string voronoiAreaText					= Stringf( "voronoi area is: %.2f" , m_voronoiPolyArea );
+	std::string voronoiInCircleRadiusText		= Stringf( "voronoi radius is: %.2f" , m_voronoiInCircleRadius );
 
 	debugStrings.push_back( playerPosText );
 	debugStrings.push_back( cameraPosText );
@@ -153,8 +154,10 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	debugStrings.push_back( goalMultipleStableFactorText );
 	debugStrings.push_back( currentFactorSecondsText );
 	debugStrings.push_back( totalFactorSecondsText );
-	debugStrings.push_back( testing );
-	debugStrings.push_back( offsetText );
+	debugStrings.push_back( voronoiInCircleRadiusText );
+	//debugStrings.push_back( testing );
+	//debugStrings.push_back( offsetText );
+	debugStrings.push_back( voronoiAreaText );
 	//DebugAddScreenLeftAlignStrings( 0.15f, 0, Rgba8::WHITE, debugStrings );
 	DebugAddScreenStrings( pos, Vec2::ZERO, 1.5f, Rgba8( 255, 255, 255, 125), debugStrings );
 }
@@ -223,16 +226,39 @@ void CameraController::SetVoronoiPolygon( Polygon2 poly )
 	
 }
 
-void CameraController::SetVoronoiHull( ConvexHull2 hull )
+void CameraController::SetOriginalVoronoiPolygon( Polygon2 poly )
 {
-	m_voronoiHull = hull;
-	UpdateVoronoiPoly();
+	m_originalVoronoiPolygon = poly;
+	m_originalVoronoiPolyArea = m_originalVoronoiPolygon.GetArea();
 }
 
-void CameraController::AddPlaneToVoronoiHull( Plane2 plane )
+void CameraController::SetVoronoiHullAndUpdateVoronoiPoly( ConvexHull2 hull, PolyType type )
+{
+	m_voronoiHull = hull;
+	switch( type )
+	{
+	case ORIGINAL_POLY:
+		break;
+	case CURRENT_POLY:
+		break;
+	default:
+		break;
+	}
+	UpdateVoronoiPoly( type );
+	float minRadius = hull.m_planes[0].GetDistanceFromPlane( m_voronoiAnchorPointPos );
+	for( Plane2 plane : hull.m_planes ) {
+		float radius = plane.GetDistanceFromPlane( m_voronoiAnchorPointPos );
+		if( radius < minRadius ) {
+			minRadius = radius;
+		}
+	}
+	m_voronoiInCircleRadius = minRadius;
+}
+
+void CameraController::AddPlaneToVoronoiHull( Plane2 plane, PolyType type )
 {
 	m_voronoiHull.AddPlane( plane );
-	UpdateVoronoiPoly();
+	UpdateVoronoiPoly( type );
 }
 
 void CameraController::SetVoronoiOffset( Vec2 offset )
@@ -243,6 +269,16 @@ void CameraController::SetVoronoiOffset( Vec2 offset )
 void CameraController::SetVoronoiAnchorPointPos( Vec2 voronoiAnchorPoint )
 {
 	m_voronoiAnchorPointPos = voronoiAnchorPoint;
+}
+
+void CameraController::SetTargetVoronoiAnchorPointPos( Vec2 targetVoronoiAnchorPoint )
+{
+	m_targetVoronoiAnchorPointPos = targetVoronoiAnchorPoint;
+}
+
+void CameraController::SetOriginalVoronoiAnchorPointPos( Vec2 originalVoronoiAnchorPoint )
+{
+	m_originalVoronoiAnchorPointPos = originalVoronoiAnchorPoint;
 }
 
 bool CameraController::ReplaceVoronoiPointWithPoint( Vec2 replacedPoint, Vec2 newPoint )
@@ -638,11 +674,24 @@ Vec2 CameraController::ComputeCameraWindowSnappedPosition( float deltaSeconds )
 	return snappedPos;
 }
 
-void CameraController::UpdateVoronoiPoly()
+void CameraController::UpdateVoronoiPoly( PolyType type )
 {
 	std::vector<Vec2> polyPoints = m_voronoiHull.GetConvexPolyPoints();
-	m_voronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
-	m_voronoiPolyArea = m_voronoiPolygon.GetArea();
+	switch( type )
+	{
+	case ORIGINAL_POLY:
+		m_originalVoronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
+		m_originalVoronoiPolyArea = m_originalVoronoiPolygon.GetArea();
+		m_voronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
+		m_voronoiPolyArea = m_voronoiPolygon.GetArea();
+		break;
+	case CURRENT_POLY:
+		m_voronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
+		m_voronoiPolyArea = m_voronoiPolygon.GetArea();
+		break;
+	default:
+		break;
+	}
 	//m_voronoiPolygon.SetCenter( m_playerPos );
 }
 

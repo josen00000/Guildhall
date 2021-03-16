@@ -190,7 +190,7 @@ void CameraSystem::UpdateVoronoiSplitScreenEffect( float deltaSeconds )
 	m_noSplitCamera->SetPosition2D( pos );
 	if( DoesNeedSplitScreen( splitCheckBox ) ) {
 		ComputeAndSetVoronoiAnchorPoints( worldCameraBox, splitCheckBox );
-		ConstructVoronoiDiagramForControllers( worldCameraBox, splitCheckBox );
+		ConstructVoronoiDiagramForControllers( worldCameraBox, splitCheckBox, ORIGINAL_POLY );
 	}
 }
 
@@ -226,8 +226,10 @@ void CameraSystem::UpdatePostVoronoiSplitScreenEffects( float deltaSeconds )
 				m_postVoronoiIteration++;
 			}
 		}
+		break;
 		case MOVR_VORONOI_POINT_AND_RECONSTRUCT_VORNOI_DIAGRAM: {
 			ReConstructVoronoiDiagram();
+			
 		}
 		break;
 	}
@@ -279,26 +281,26 @@ void CameraSystem::DebugRender()
  	//g_theRenderer->DrawPolygon2D( m_DebugPolyD, Rgba8( 1, 1, 1, 255 ) );
 
 
-// 	if( m_controllers.size() == 3 ) {
-// 		g_theRenderer->DrawPolygon2D( m_controllers[0]->GetVoronoiPoly(), Rgba8( 255, 0, 0, alpha ) );
-// 		g_theRenderer->DrawPolygon2D( m_controllers[1]->GetVoronoiPoly(), Rgba8( 0, 255, 0, alpha ) );
-// 		g_theRenderer->DrawPolygon2D( m_controllers[2]->GetVoronoiPoly(), Rgba8( 0, 0, 255, alpha ) );
-// 	}
-// 	else if( m_controllers.size() == 4 ) {
-// 		g_theRenderer->DrawPolygon2D( m_controllers[0]->GetVoronoiPoly(), Rgba8( 255, 0, 0, alpha ) );
-// 		g_theRenderer->DrawPolygon2D( m_controllers[1]->GetVoronoiPoly(), Rgba8( 0, 255, 0, alpha ) );
-// 		g_theRenderer->DrawPolygon2D( m_controllers[2]->GetVoronoiPoly(), Rgba8( 0, 0, 255, alpha ) );
-// 		g_theRenderer->DrawPolygon2D( m_controllers[3]->GetVoronoiPoly(), Rgba8( 0, 0, 0, alpha ) );
-// 	}
-
-	for( VoronoiVertexAndControllersPair vertex : m_voronoiVertices ){
-		g_theRenderer->DrawCircle( Vec3(vertex.first ), 1.f, 1.f, Rgba8::YELLOW );
+	if( m_controllers.size() == 3 ) {
+		g_theRenderer->DrawPolygon2D( m_controllers[0]->m_debugVoronoiPoly, Rgba8( 255, 0, 0, alpha ) );
+		g_theRenderer->DrawPolygon2D( m_controllers[1]->m_debugVoronoiPoly, Rgba8( 0, 255, 0, alpha ) );
+		g_theRenderer->DrawPolygon2D( m_controllers[2]->m_debugVoronoiPoly, Rgba8( 0, 0, 255, alpha ) );
 	}
+	else if( m_controllers.size() == 4 ) {
+		g_theRenderer->DrawPolygon2D( m_controllers[0]->m_debugVoronoiPoly, Rgba8( 255, 0, 0, alpha ) );
+		g_theRenderer->DrawPolygon2D( m_controllers[1]->m_debugVoronoiPoly, Rgba8( 0, 255, 0, alpha ) );
+		g_theRenderer->DrawPolygon2D( m_controllers[2]->m_debugVoronoiPoly, Rgba8( 0, 0, 255, alpha ) );
+		g_theRenderer->DrawPolygon2D( m_controllers[3]->m_debugVoronoiPoly, Rgba8( 0, 0, 0, alpha ) );
+	}
+
+// 	for( VoronoiVertexAndControllersPair vertex : m_voronoiVertices ){
+// 		g_theRenderer->DrawCircle( Vec3(vertex.first ), 1.f, 1.f, Rgba8::YELLOW );
+// 	}
 
 	AABB2 splitCheckBox = GetSplitCheckBox();
 	AABB2 worldCameraBox = GetWorldCameraBox();
-	g_theRenderer->DrawAABB2D( splitCheckBox, Rgba8( 255, 0, 0, 50 ) );
-	g_theRenderer->DrawAABB2D( worldCameraBox, Rgba8( 0, 0, 255, 50 ) );
+	//g_theRenderer->DrawAABB2D( splitCheckBox, Rgba8( 255, 0, 0, 50 ) );
+	//g_theRenderer->DrawAABB2D( worldCameraBox, Rgba8( 0, 0, 255, 50 ) );
 
 	DebugRenderControllers();
 }
@@ -465,6 +467,19 @@ std::string CameraSystem::GetPostVoronoiSettingText() const {
 	return result + "Error state.";
 }
 
+std::string CameraSystem::GetVoronoiAreaCheckStateText() const
+{
+	std::string result = "Voronoi area check state : ";
+	switch( m_voronoiAreaCheckState )
+	{
+	case POLYGON_AREA:
+		return result + "polygon area";
+	case INCIRCLE_RADIUS:
+		return result + "incircle area";
+	}
+	return result + "Error state.";
+}
+
 Vec2 CameraSystem::GetAverageCameraPosition()
 {
 	Vec2 totalPos = Vec2::ZERO;
@@ -543,6 +558,7 @@ void CameraSystem::SetCameraFrameState( CameraFrameState newState )
 void CameraSystem::SetSplitScreenState( SplitScreenState newState )
 {
 	m_splitScreenState = newState;
+	m_isVoronoiAnchorPointInitialized = false;
 }
 
 void CameraSystem::SetNoSplitScreenStrat( NoSplitScreenStrat newStrat )
@@ -559,6 +575,11 @@ void CameraSystem::SetPostVoronoiSetting( PostVoronoiSetting newSetting ) {
 	m_postVoronoiSetting = newSetting;
 }
 
+void CameraSystem::SetVoronoiAreaCheckState( VoronoiAreaCheckState voronoiAreaCheckState )
+{
+	m_voronoiAreaCheckState = voronoiAreaCheckState;
+}
+
 void CameraSystem::SetMap( Map* map )
 {
 	m_map = map;
@@ -571,41 +592,6 @@ void CameraSystem::AddCameraShake( int index, float shakeTrauma )
 	}
 }
 
-void CameraSystem::AddTestingVoronoiOffsetX()
-{
-	if( m_controllers[0] ) {
-		Vec2 offset = m_controllers[0]->GetVoronoiOffset();
-		offset.x += 1.f;
-		m_controllers[0]->SetVoronoiOffset( offset );
-	}
-}
-
-void CameraSystem::AddTestingVoronoiOffsetY()
-{
-	if( m_controllers[0] ) {
-		Vec2 offset = m_controllers[0]->GetVoronoiOffset();
-		offset.y += 1.f;
-		m_controllers[0]->SetVoronoiOffset( offset );
-	}
-}
-
-void CameraSystem::DecreaseTestingVoronoiOffsetX()
-{
-	if( m_controllers[0] ) {
-		Vec2 offset = m_controllers[0]->GetVoronoiOffset();
-		offset.x -= 1.f;
-		m_controllers[0]->SetVoronoiOffset( offset );
-	}
-}
-
-void CameraSystem::DecreaseTestingVoronoiOffsetY()
-{
-	if( m_controllers[0] ) {
-		Vec2 offset = m_controllers[0]->GetVoronoiOffset();
-		offset.y -= 1.f;
-		m_controllers[0]->SetVoronoiOffset( offset );
-	}
-}
 
 void CameraSystem::UpdateDebugInfo()
 {
@@ -617,6 +603,7 @@ void CameraSystem::UpdateDebugInfo()
 	std::string splitStateText			= "Press F6 to change: " + GetSplitScreenStateText();
 	std::string splitStratText			= "Press F7 to change: ";
 	std::string postVoronoiSettingText	= "Press F8 to change: " + GetPostVoronoiSettingText();
+	std::string voronoiAreaCheckText	= "Press 2 to change: " + GetVoronoiAreaCheckStateText(); 
 	std::string debugModeText			= "Press F9 to change: " + GetDebugModeText();
 
 	std::string tutorialText = "Press p to create player. Press e to create enemy.";
@@ -642,7 +629,8 @@ void CameraSystem::UpdateDebugInfo()
 	debugInfos.push_back( splitStateText );
 	debugInfos.push_back( splitStratText );
 	debugInfos.push_back( postVoronoiSettingText );
-	debugInfos.push_back(debugModeText); 
+	debugInfos.push_back( debugModeText ); 
+	debugInfos.push_back( voronoiAreaCheckText );
 
 	// coe debug
 	if( m_noSplitCamera ) {
@@ -840,17 +828,17 @@ float CameraSystem::ComputeCameraHeight( std::vector<CameraController*> const& v
 	return ( newHalfHeight * 2 );
 }
 
-void CameraSystem::ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
+void CameraSystem::ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type )
 {
 	if( m_controllers.size() <= 1 ){ return; }
 	else if( m_controllers.size() == 2 ) {
 		ConstructVoronoiDiagramForTwoControllers( worldCameraBox, splitCheckBox );
 	}
 	else if( m_controllers.size() == 3 ) {
-		ConstructVoronoiDiagramForThreeControllers( worldCameraBox, splitCheckBox );
+		ConstructVoronoiDiagramForThreeControllers( worldCameraBox, splitCheckBox,type );
 	}
 	else{
-		ConstructVoronoiDiagramForMoreThanThreeControllers( worldCameraBox, splitCheckBox );
+		ConstructVoronoiDiagramForMoreThanThreeControllers( worldCameraBox, splitCheckBox,type );
 	}
 }
 
@@ -907,12 +895,27 @@ void CameraSystem::ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBo
 	m_controllers[1]->SetVoronoiPolygon( polygonB );
 }
 
-void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
+void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type )
 {
 	m_controllerVoronoiEdges.clear();
-	Vec2 pointA	= m_controllers[0]->GetVoronoiAnchorPointPos();
-	Vec2 pointB = m_controllers[1]->GetVoronoiAnchorPointPos();
-	Vec2 pointC = m_controllers[2]->GetVoronoiAnchorPointPos();
+	Vec2 pointA;
+	Vec2 pointB;
+	Vec2 pointC;
+	switch( type )
+	{
+	case ORIGINAL_POLY:
+		pointA = m_controllers[0]->GetOriginalVoronoiAnchorPointPos();
+		pointB = m_controllers[1]->GetOriginalVoronoiAnchorPointPos();
+		pointC = m_controllers[2]->GetOriginalVoronoiAnchorPointPos();
+		break;
+	case CURRENT_POLY:
+		pointA = m_controllers[0]->GetVoronoiAnchorPointPos();
+		pointB = m_controllers[1]->GetVoronoiAnchorPointPos();
+		pointC = m_controllers[2]->GetVoronoiAnchorPointPos();
+		break;
+	default:
+		break;
+	}
 
 	LineSegment2 PB_AB = GetPerpendicularBisectorOfTwoPoints( pointA, pointB );
 	LineSegment2 PB_BC = GetPerpendicularBisectorOfTwoPoints( pointB, pointC );
@@ -955,12 +958,12 @@ void CameraSystem::ConstructVoronoiDiagramForThreeControllers( AABB2 worldCamera
 	hullA.AddAABB2Planes( worldCameraBox );
 	hullB.AddAABB2Planes( worldCameraBox );
 	hullC.AddAABB2Planes( worldCameraBox );
-	m_controllers[0]->SetVoronoiHull( hullA );
-	m_controllers[1]->SetVoronoiHull( hullB );
-	m_controllers[2]->SetVoronoiHull( hullC );
+	m_controllers[0]->SetVoronoiHullAndUpdateVoronoiPoly( hullA, type );
+	m_controllers[1]->SetVoronoiHullAndUpdateVoronoiPoly( hullB, type );
+	m_controllers[2]->SetVoronoiHullAndUpdateVoronoiPoly( hullC, type );
 }
 
-void CameraSystem::ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox )
+void CameraSystem::ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type )
 {
 	// step 1 find which cell is point in
 	// for each cell
@@ -968,14 +971,25 @@ void CameraSystem::ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 wor
 	// construct cell for new point
 	// remove the old points
 
-	ConstructVoronoiDiagramForThreeControllers( worldCameraBox, splitCheckBox );
+	ConstructVoronoiDiagramForThreeControllers( worldCameraBox, splitCheckBox, type );
 	ConvexHull2 worldCameraHull = ConvexHull2( worldCameraBox );
 
 	
 	CameraController* currentController = nullptr;
 	int ConstructedCellNum = 3;
 	for( int i = ConstructedCellNum; i < m_controllers.size(); i++ ) {
-		Vec2 pointX = m_controllers[i]->GetVoronoiAnchorPointPos();
+		Vec2 pointX;
+		switch( type )
+		{
+		case ORIGINAL_POLY:
+			pointX = m_controllers[i]->GetOriginalVoronoiAnchorPointPos();
+			break;
+		case CURRENT_POLY:
+			pointX = m_controllers[i]->GetVoronoiAnchorPointPos();
+			break;
+		default:
+			break;
+		}
 
 		// construct hull X
 		ConvexHull2 hullX = worldCameraHull;
@@ -987,17 +1001,26 @@ void CameraSystem::ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 wor
 
 		controllerCheckStates[currentController->GetIndex()] = true;
 		while( currentController ) {
-			Vec2 playerCameraPosY = currentController->GetCameraPos();
-			Vec2 pointY = splitCheckBox.GetNearestPoint( playerCameraPosY );
+			Vec2 pointY;
+			switch( type )
+			{
+			case ORIGINAL_POLY:
+				pointY = currentController->GetOriginalVoronoiAnchorPointPos();
+				break;
+			case CURRENT_POLY:
+				pointY = currentController->GetVoronoiAnchorPointPos();
+				break;
+			default:
+				break;
+			}
 			Vec2 center_XY = ( pointX + pointY ) / 2.f;
 			Plane2 PB_XY = Plane2( ( pointY - pointX ).GetNormalized(), center_XY );
 			Plane2 PB_YX = PB_XY.GetFlipped();
 			hullX.AddPlane( PB_XY );
-			currentController->SetVoronoiAnchorPointPos( pointY );
-			currentController->AddPlaneToVoronoiHull( PB_YX );
+			currentController->AddPlaneToVoronoiHull( PB_YX, type );
 			currentController = FindNextAdjacentControllerWithPlane( PB_YX, controllerCheckStates );
 		}
-		m_controllers[i]->SetVoronoiHull( hullX );
+		m_controllers[i]->SetVoronoiHullAndUpdateVoronoiPoly( hullX,type );
 		ConstructedCellNum++;
 	}
 }
@@ -1008,6 +1031,7 @@ void CameraSystem::UpdateVoronoiPolyAndOffset()
 		Vec2 cameraPos = m_controllers[i]->GetCameraPos();
 		Vec2 offset = cameraPos - m_noSplitCamera->GetPosition2D();
 		Polygon2 polygon = m_controllers[i]->GetVoronoiPoly();
+		m_controllers[i]->m_debugVoronoiPoly = polygon;
 		Vec2 polyCenter = polygon.GetCenter();
  		offset += (polyCenter - cameraPos);
  		polygon.SetCenter( cameraPos );
@@ -1147,9 +1171,20 @@ bool CameraSystem::DoesNeedBalanceVoronoiScreen()
 	if( m_controllers.size() <= 2 ){ return false; }
 
 	AABB2 worldCamerBox = GetWorldCameraBox();
-	float averageVoronoiArea = worldCamerBox.GetArea() / m_controllers.size();
-	CameraController* minAreaController = FindControllerWithMinArea();
-	return ( averageVoronoiArea - minAreaController->GetVoronoiArea() > m_expandVoronoiAreaThreshold );
+	switch( m_voronoiAreaCheckState )
+	{
+		case POLYGON_AREA: {
+			float averageVoronoiArea = worldCamerBox.GetArea() / m_controllers.size();
+			CameraController* minAreaController = FindControllerWithMinArea();
+			return ( averageVoronoiArea - minAreaController->GetOriginalVoronoiArea() > m_expandVoronoiAreaThreshold );
+		}
+		case INCIRCLE_RADIUS: {
+			float averageVoronoiIncircleRadius = GetArerageVoronoiIncircleRadius();
+			float minVoronoiIncircleRadius = GetMinVoronoiInCircleRadius();
+			return ( averageVoronoiIncircleRadius - minVoronoiIncircleRadius > m_expandVoronoiAreaThreshold );
+		}
+	}
+	return false;
 }
 
 void CameraSystem::ExpandMinVoronoiPoly( )
@@ -1178,7 +1213,7 @@ void CameraSystem::ExpandMinVoronoiPoly( )
 	for( int i = 0; i < m_controllerVoronoiEdges.size(); i++ ) {
 		ConvexHull2 hull = m_controllerVoronoiEdges[i];
 		hull.AddAABB2Planes( worldCameraBox );
-		m_controllers[i]->SetVoronoiHull( hull );
+		m_controllers[i]->SetVoronoiHullAndUpdateVoronoiPoly( hull, CURRENT_POLY );
 	}
 // 	float areaA = m_controllers[0]->GetVoronoiArea();
 // 	float areaB = m_controllers[1]->GetVoronoiArea();
@@ -1246,22 +1281,136 @@ void CameraSystem::ComputeAndSetVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2
 	for( CameraController* controller : m_controllers ) {
 		Vec2 playerCameraPos = controller->GetCameraPos();
 		Vec2 point	= splitCheckBox.GetNearestPoint( playerCameraPos );
-		controller->SetVoronoiAnchorPointPos( point );
+		controller->SetOriginalVoronoiAnchorPointPos( point );
+		controller->SetTargetVoronoiAnchorPointPos( point );
+		if( !m_isVoronoiAnchorPointInitialized ) {
+			controller->SetVoronoiAnchorPointPos( point );
+		}
 	}
+	if( !m_isVoronoiAnchorPointInitialized ) {
+		m_isVoronoiAnchorPointInitialized = true;
+	}
+	
 }
 
 void CameraSystem::ComputeAndSetBalancedVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox )
 {
+	// balance all points
+// 	for( CameraController* controllerA : m_controllers ) {
+// 		Vec2 originalAnchorPointA = controllerA->GetOriginalVoronoiAnchorPointPos();
+// 		float voronoiAreaA = controllerA->GetVoronoiArea();
+// 		
+// 		for( CameraController* controllerB : m_controllers ) {
+// 			if( controllerA == controllerB ){ continue; }
+// 			Vec2 originalAnchorPointB = controllerB->GetOriginalVoronoiAnchorPointPos();
+// 			float voronoiAreaB = controllerB->GetVoronoiArea();
+// 			Vec2 moveDirt = Vec2::ZERO;
+// 			if( voronoiAreaA < voronoiAreaB ) {
+// 				moveDirt = ( originalAnchorPointB - originalAnchorPointA ).GetNormalized();
+// 			}
+// 			else {
+// 				moveDirt = ( originalAnchorPointA - originalAnchorPointB ).GetNormalized();
+// 			}
+// 
+// 			float moveDist = abs( voronoiAreaB - voronoiAreaA ) / voronoiAreaA * m_maxBalancedVoronoiMoveDist;
+// 			controllerB->SetTargetVoronoiAnchorPointPos( controllerB->GetTargetVoronoiAnchorPointPos() + moveDirt * moveDist );
+// 		}
+// 	}
+ 	// balance only min area point
+	CameraController* minController = nullptr;
+	Vec2 minOriginalAnchorPoint = Vec2::ZERO;
+	float minValue = 0;
+
+	switch( m_voronoiAreaCheckState )
+	{
+		case POLYGON_AREA: {
+			minController = FindControllerWithMinArea();
+			minOriginalAnchorPoint = minController->GetOriginalVoronoiAnchorPointPos();
+			minValue = minController->GetVoronoiArea();
+		}
+		break;
+		case INCIRCLE_RADIUS: {
+			minController = FindControllerWithMinRadius();
+			minOriginalAnchorPoint = minController->GetOriginalVoronoiAnchorPointPos();
+			minValue = minController->GetVoronoiInCircleRadius();
+		}
+		break;
+	}
+
 	for( CameraController* controller : m_controllers ) {
-		Vec2 playerCameraPos = controller->GetCameraPos();
-		Vec2 point	= splitCheckBox.GetNearestPoint( playerCameraPos );
-		controller->SetVoronoiAnchorPointPos( point );
+		if( controller == minController ){ continue; }
+ 		Vec2 originalAnchorPoint	= controller->GetOriginalVoronoiAnchorPointPos();
+		float comparedValue = 0;
+		float maxMoveDist = 0;
+		switch ( m_voronoiAreaCheckState)
+		{
+			case POLYGON_AREA: {
+				comparedValue = controller->GetVoronoiArea();
+				maxMoveDist = m_maxVoronoiAnchorPointMoveDistWithPolyArea;
+			}
+			break;	
+			case INCIRCLE_RADIUS: {
+				comparedValue = controller->GetVoronoiInCircleRadius();
+				maxMoveDist = m_maxVoronoiAnchorPointMoveDistWithIncircleRadius;
+			}
+		}
+		Vec2 moveDirt = ( originalAnchorPoint - minOriginalAnchorPoint ).GetNormalized();
+ 		float moveDist = abs( comparedValue - minValue ) / minValue * maxMoveDist;
+		Vec2 targetPos = controller->GetTargetVoronoiAnchorPointPos() + moveDirt * moveDist;
+		targetPos = worldCameraBox.GetNearestPointInside( targetPos );
+		controller->SetTargetVoronoiAnchorPointPos( targetPos );
+	}
+
+
+	// smooth the change
+	for( CameraController* controller : m_controllers ) {
+		Vec2 targetAnchorPoint		= controller->GetTargetVoronoiAnchorPointPos();
+		Vec2 anchorPoint = controller->GetVoronoiAnchorPointPos();
+		anchorPoint = anchorPoint * 0.95f + targetAnchorPoint * 0.05f;
+		controller->SetVoronoiAnchorPointPos( anchorPoint );
 	}
 }
 
 void CameraSystem::ReConstructVoronoiDiagram()
 {
-	
+	AABB2 worldCameraBox = GetWorldCameraBox();
+	AABB2 splitCheckBox = GetSplitCheckBox();
+	if( DoesNeedBalanceVoronoiScreen() ) {
+		while( m_postVoronoiIteration < m_targetPostVoronoiIteration ) {
+			ComputeAndSetBalancedVoronoiAnchorPoints( worldCameraBox, splitCheckBox );
+			m_postVoronoiIteration++;
+		}
+		ConstructVoronoiDiagramForControllers( worldCameraBox, splitCheckBox, CURRENT_POLY );
+	}
+	else {
+		for( CameraController* controller : m_controllers ) {
+			Vec2 anchorPoint = controller->GetVoronoiAnchorPointPos();
+			anchorPoint = anchorPoint * 0.95f + 0.05f * controller->GetTargetVoronoiAnchorPointPos();
+			controller->SetVoronoiAnchorPointPos( anchorPoint );
+		}
+		ConstructVoronoiDiagramForControllers( worldCameraBox, splitCheckBox, CURRENT_POLY );
+	}
+}
+
+float CameraSystem::GetArerageVoronoiIncircleRadius()
+{
+	float totalRadius = 0.f;
+	for( CameraController* controller : m_controllers ) {
+		totalRadius += controller->GetVoronoiInCircleRadius();
+	}
+	return totalRadius / m_controllers.size(); 
+}
+
+float CameraSystem::GetMinVoronoiInCircleRadius()
+{
+	float minRadius = m_controllers[0]->GetVoronoiInCircleRadius();
+	for( CameraController* controller : m_controllers ) {
+		float radius = controller->GetVoronoiInCircleRadius();
+		if( radius < minRadius ) {
+			minRadius = radius;
+		}
+	}
+	return minRadius;
 }
 
 bool CameraSystem::GetSharedPointOfVoronoiPolygonABC( Polygon2 polygonA, Polygon2 polygonB, Polygon2 polygonC, Vec2& sharedPoint )
@@ -1333,6 +1482,23 @@ CameraController* CameraSystem::FindControllerWithMinArea()
 	}
 	if( IsFloatMostlyEqual( minArea, 0 ) || result == nullptr ) {
 		ERROR_RECOVERABLE(" min area should not be zero!" );
+	}
+	return result;
+}
+
+CameraController* CameraSystem::FindControllerWithMinRadius()
+{
+	CameraController* result = nullptr;
+	float minRadius = m_controllers[0]->GetVoronoiInCircleRadius();
+	result = m_controllers[0];
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		if( m_controllers[i]->GetVoronoiInCircleRadius() < minRadius ) {
+			result = m_controllers[i];
+			minRadius = result->GetVoronoiInCircleRadius();
+		}
+	}
+	if( IsFloatMostlyEqual( minRadius, 0 ) || result == nullptr ) {
+		ERROR_RECOVERABLE( " min Radius should not be zero!" );
 	}
 	return result;
 }

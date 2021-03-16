@@ -70,6 +70,12 @@ enum PostVoronoiSetting : unsigned int{
 	NUM_OF_POST_VORONOI_SETTING
 };
 
+enum VoronoiAreaCheckState : unsigned int {
+	POLYGON_AREA,
+	INCIRCLE_RADIUS,
+	NUM_OF_AREA_CHECK_STATE
+};
+
 class CameraSystem {
 public:
 	CameraSystem(){}
@@ -106,14 +112,16 @@ public:
 	std::string GetNoSplitScreenStratText() const;
 	std::string GetDebugModeText() const;
 	std::string GetPostVoronoiSettingText() const;
+	std::string GetVoronoiAreaCheckStateText() const;
 
-	CameraWindowState	GetCameraWindowState() const { return m_cameraWindowState; }
-	CameraSnappingState GetCameraSnappingState() const { return m_cameraSnappingState; }
-	CameraShakeState	GetCameraShakeState() const { return m_cameraShakeState; }
-	CameraFrameState	GetCameraFrameState() const { return m_cameraFrameState; }
-	SplitScreenState	GetSplitScreenState() const { return m_splitScreenState; }
-	NoSplitScreenStrat	GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
-	PostVoronoiSetting	GetPostVoronoiSetting() const { return m_postVoronoiSetting; }
+	CameraWindowState		GetCameraWindowState() const { return m_cameraWindowState; }
+	CameraSnappingState		GetCameraSnappingState() const { return m_cameraSnappingState; }
+	CameraShakeState		GetCameraShakeState() const { return m_cameraShakeState; }
+	CameraFrameState		GetCameraFrameState() const { return m_cameraFrameState; }
+	SplitScreenState		GetSplitScreenState() const { return m_splitScreenState; }
+	NoSplitScreenStrat		GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
+	PostVoronoiSetting		GetPostVoronoiSetting() const { return m_postVoronoiSetting; }
+	VoronoiAreaCheckState	GetVoronoiAreaCheckState() const { return m_voronoiAreaCheckState; }
 	DebugMode			GetDebugMode() const { return m_debugMode; }
 
 	Vec2 GetAverageCameraPosition();
@@ -137,13 +145,10 @@ public:
 	void SetNoSplitScreenStrat( NoSplitScreenStrat newStrat ); 
 	void SetDebugMode( DebugMode newMode );
 	void SetPostVoronoiSetting( PostVoronoiSetting postSetting );
+	void SetVoronoiAreaCheckState( VoronoiAreaCheckState voronoiAreaCheckState );
 	void SetMap( Map* map );
 
 	void AddCameraShake( int index, float shakeTrauma );
-	void AddTestingVoronoiOffsetX();
-	void AddTestingVoronoiOffsetY();
-	void DecreaseTestingVoronoiOffsetX();
-	void DecreaseTestingVoronoiOffsetY();
 
 	void UpdateDebugInfo();
 
@@ -163,15 +168,17 @@ public:
 	float ComputeCameraHeight( std::vector<CameraController*> const& vec );
 
 		// voronoi split
-	void ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
+	void ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type );
 	void ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
-	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
-	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
+	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type );
+	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type );
 	void UpdateVoronoiPolyAndOffset();
 	void GetVoronoiEdgesWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	void GetVoronoiEdgesWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints );
 	void GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<Vec2, Vec2> intersectPoints, CameraController* currentController, std::stack<CameraController*>& nextControllers );
+	
+	// post voronoi
 	bool DoesNeedBalanceVoronoiScreen();
 	void ExpandMinVoronoiPoly();
 	bool ConstructAllAndIsAnyVoronoiVertex();
@@ -179,12 +186,15 @@ public:
 	void ComputeAndSetVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ComputeAndSetBalancedVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ReConstructVoronoiDiagram();
+	float GetArerageVoronoiIncircleRadius();
+	float GetMinVoronoiInCircleRadius();
 
 	// helper function
 	bool GetSharedPointOfVoronoiPolygonABC( Polygon2 polygonA, Polygon2 polygonB, Polygon2 polygonC, Vec2& sharedPoint );
 	bool GetAllVoronoiVertexPosWithController( const CameraController* controller, std::vector<Vec2>& vertexPosArray );
 	CameraController* FindCurrentControllerContainsPointWithConstructedCellNum( Vec2 point, int constructedCellNum );
 	CameraController* FindControllerWithMinArea();
+	CameraController* FindControllerWithMinRadius();
 	CameraController* FindNextAdjacentControllerWithPlane( Plane2 plane, std::vector<bool>& controllerCheckStates );
 	bool GetSharedEdgeOfTwoPolygon( LineSegment2& sharedLine, Polygon2 polyA, Polygon2 polyB );
 private:
@@ -192,14 +202,15 @@ private:
 	std::vector<CameraController*> m_controllers;
 	
 	// states
-	CameraWindowState	m_cameraWindowState		= NO_CAMERA_WINDOW;
-	CameraSnappingState m_cameraSnappingState	= NO_CAMERA_SNAPPING;
-	CameraShakeState	m_cameraShakeState		= POSITION_SHAKE;
-	CameraFrameState	m_cameraFrameState		= NO_FRAMEING;
-	SplitScreenState	m_splitScreenState		= NO_SPLIT_SCREEN;
-	NoSplitScreenStrat	m_noSplitScreenStrat	= NO_STRAT;
-	DebugMode			m_debugMode				= CONTROLLER_INFO;
-	PostVoronoiSetting	m_postVoronoiSetting	= NO_POST_EFFECT;
+	CameraWindowState		m_cameraWindowState		= NO_CAMERA_WINDOW;
+	CameraSnappingState		m_cameraSnappingState	= NO_CAMERA_SNAPPING;
+	CameraShakeState		m_cameraShakeState		= POSITION_SHAKE;
+	CameraFrameState		m_cameraFrameState		= NO_FRAMEING;
+	SplitScreenState		m_splitScreenState		= NO_SPLIT_SCREEN;
+	NoSplitScreenStrat		m_noSplitScreenStrat	= NO_STRAT;
+	DebugMode				m_debugMode				= CONTROLLER_INFO;
+	PostVoronoiSetting		m_postVoronoiSetting	= NO_POST_EFFECT;
+	VoronoiAreaCheckState	m_voronoiAreaCheckState	= POLYGON_AREA;
 	RandomNumberGenerator* m_rng	= nullptr;
 
 	float m_shakeBlendAmount	= 0.f;
@@ -223,16 +234,19 @@ private:
 	//Timer*
 
 	// voronoi split
-	int m_postVoronoiIteration			= 0;
-	int m_targetPostVoronoiIteration	= 5;
-	float m_expandVoronoiAreaThreshold	= 50.f;
-	float m_expandVoronoiLeastStep		= 2.f;
 	std::stack<CameraController*> m_nextControllers;
 	std::vector<ConvexHull2> m_controllerVoronoiEdges;
 	std::vector<VoronoiVertexAndControllersPair> m_voronoiVertices;
 	
-	
-	
+	// post voronoi setting
+	bool m_isVoronoiAnchorPointInitialized					= false;
+	int m_postVoronoiIteration								= 0;
+	int m_targetPostVoronoiIteration						= 3;
+	float m_maxVoronoiAnchorPointMoveDistWithPolyArea		= 5.f;	
+	float m_maxVoronoiAnchorPointMoveDistWithIncircleRadius	= 3.f;	
+	float m_expandVoronoiAreaThreshold						= 50.f;
+	float m_expandVoronoiLeastStep							= 2.f;
+	float m_voronoiInCircleRadiusThreshold					= 5.f;
 	
 	// debug
 	std::vector<Vec2> m_playerDebugPositions;

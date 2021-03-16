@@ -29,6 +29,7 @@ public:
 	const Vec2	GetCenter() const;
 	const Vec2	GetDimensions() const;
 	const Vec2	GetNearestPoint( const Vec2& referencePosition ) const;
+	const Vec2	GetNearestPointInside( const Vec2& refPos ) const;
 	const Vec2	GetPointAtUV( const Vec2& uvCoordsZeroToOne ) const;
 	const Vec2	GetUVForPoint( const Vec2& point ) const;
 	AABB2		GetBoxWithin( const Vec2& dimensions, const Vec2& alignment ) const;

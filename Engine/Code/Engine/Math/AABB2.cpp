@@ -104,6 +104,14 @@ const Vec2 AABB2::GetNearestPoint( const Vec2& referencePosition ) const
 	return nearestPoint;
 }
 
+const Vec2 AABB2::GetNearestPointInside( const Vec2& refPos ) const
+{
+	AABB2 tempCheckBox = *this;
+	Vec2 dimension = GetDimensions() - Vec2( 5 );
+	tempCheckBox.SetDimensions( dimension );
+	return tempCheckBox.GetNearestPoint( refPos );
+}
+
 const Vec2 AABB2::GetPointAtUV( const Vec2& uvCoordsZeroToOne ) const
 {
 	Vec2 AABB2Point = Vec2();

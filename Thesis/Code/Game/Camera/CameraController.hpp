@@ -13,6 +13,12 @@ struct Vec4;
 class RenderBuffer;
 class Shader;
 
+enum PolyType {
+	ORIGINAL_POLY,
+	CURRENT_POLY
+};
+
+
 class CameraController {
 	friend class Player;
 	friend class CameraSystem;
@@ -29,21 +35,25 @@ public:
 
 
 	// Accessor
-	int GetIndex() const { return m_index; }
-	bool GetIsDebug() const { return m_isDebug; }
-	float GetCurrentMultipleFactor() const { return m_currentMultipleFactor; }
-	float GetVoronoiArea() const { return m_voronoiPolyArea; }
+	int GetIndex() const							{ return m_index; }
+	bool GetIsDebug() const							{ return m_isDebug; }
+	float GetCurrentMultipleFactor() const			{ return m_currentMultipleFactor; }
+	float GetVoronoiArea() const					{ return m_voronoiPolyArea; }
+	float GetOriginalVoronoiArea() const			{ return m_originalVoronoiPolyArea; }
+	float GetVoronoiInCircleRadius() const			{ return m_voronoiInCircleRadius; }
 	Vec2 GetCuePos() const ;
-	Vec2 GetSmoothedGoalPos() const { return m_smoothedGoalCameraPos; }
-	Vec2 GetCameraPos() const { return m_cameraPos; }
-	Vec2 GetVoronoiOffset() const{ return m_voronoiOffset; }
-	Vec2 GetVoronoiAnchorPointPos() const { return m_voronoiAnchorPointPos; }
+	Vec2 GetSmoothedGoalPos() const					{ return m_smoothedGoalCameraPos; }
+	Vec2 GetCameraPos() const						{ return m_cameraPos; }
+	Vec2 GetVoronoiOffset() const					{ return m_voronoiOffset; }
+	Vec2 GetVoronoiAnchorPointPos() const			{ return m_voronoiAnchorPointPos; }
+	Vec2 GetOriginalVoronoiAnchorPointPos() const	{ return m_originalVoronoiAnchorPointPos; }
+	Vec2 GetTargetVoronoiAnchorPointPos() const		{ return m_targetVoronoiAnchorPointPos; }
 	Polygon2 GetVoronoiPoly();
-	ConvexHull2 GetVoronoiHull() const { return m_voronoiHull; }
+	ConvexHull2 GetVoronoiHull() const				{ return m_voronoiHull; }
 
-	Texture* GetColorTarget() { return m_colorTarget; }
-	Texture* GetStencilTexture() { return m_stencilTexture; }
-	RenderBuffer* GetOffsetBuffer(){ return m_offsetBuffer; }
+	Texture* GetColorTarget()						{ return m_colorTarget; }
+	Texture* GetStencilTexture()					{ return m_stencilTexture; }
+	RenderBuffer* GetOffsetBuffer()					{ return m_offsetBuffer; }
 
 	Camera* GetCamera(){ return m_camera; }
 
@@ -57,10 +67,13 @@ public:
 	void SetFwdFrameDist( float dist );
 	void SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor );
 	void SetVoronoiPolygon( Polygon2 poly );
-	void SetVoronoiHull( ConvexHull2 hull );
-	void AddPlaneToVoronoiHull( Plane2 plane );
+	void SetOriginalVoronoiPolygon( Polygon2 poly );
+	void SetVoronoiHullAndUpdateVoronoiPoly( ConvexHull2 hull, PolyType type  );
+	void AddPlaneToVoronoiHull( Plane2 plane, PolyType type );
 	void SetVoronoiOffset( Vec2 offset );
 	void SetVoronoiAnchorPointPos( Vec2 voronoiAnchorPoint );
+	void SetTargetVoronoiAnchorPointPos( Vec2 targetVoronoiAnchorPoint );
+	void SetOriginalVoronoiAnchorPointPos( Vec2 smoothedVoronoiAnchorPoint );
 	bool ReplaceVoronoiPointWithPoint( Vec2 replacedPoint,  Vec2 newPoint );
 
 	// Camera Window
@@ -101,7 +114,7 @@ private:
 	// camera snapping
 	float ComputeCameraSnapSpeed();
 	Vec2 ComputeCameraWindowSnappedPosition( float deltaSeconds );
-	void UpdateVoronoiPoly();
+	void UpdateVoronoiPoly( PolyType type );
 	void UpdateVoronoiHull();
 
 public:
@@ -123,13 +136,15 @@ private:
 	CameraSystem* m_owner		= nullptr;
 	Timer*	m_timer				= nullptr;
 
-	Vec2 m_playerPos					= Vec2::ZERO;
-	Vec2 m_goalCameraPos				= Vec2::ZERO;
-	Vec2 m_smoothedGoalCameraPos		= Vec2::ZERO;
-	Vec2 m_cameraPos					= Vec2::ZERO;
-	Vec2 m_cameraWindowCenterPos		= Vec2::ZERO;
-	Vec2 m_multipleCameraRenderOffset	= Vec2::ZERO;
-	Vec2 m_voronoiAnchorPointPos		= Vec2::ZERO;
+	Vec2 m_playerPos						= Vec2::ZERO;
+	Vec2 m_goalCameraPos					= Vec2::ZERO;
+	Vec2 m_smoothedGoalCameraPos			= Vec2::ZERO;
+	Vec2 m_cameraPos						= Vec2::ZERO;
+	Vec2 m_cameraWindowCenterPos			= Vec2::ZERO;
+	Vec2 m_multipleCameraRenderOffset		= Vec2::ZERO;
+	Vec2 m_voronoiAnchorPointPos			= Vec2::ZERO;
+	Vec2 m_originalVoronoiAnchorPointPos	= Vec2::ZERO;
+	Vec2 m_targetVoronoiAnchorPointPos		= Vec2::ZERO;
 
 	// Camera winodw
 	AABB2 m_cameraWindow;
@@ -173,12 +188,19 @@ private:
 	float m_factorStableSeconds		= 0.f; 
 
 	// multiple camera setting
-	RenderBuffer* m_offsetBuffer		= nullptr;
-	RenderBuffer* m_voronoiOffsetBuffer	= nullptr;
-	float			m_voronoiPolyArea = 0.f;
-	Vec2			m_voronoiOffset = Vec2::ZERO;
+	RenderBuffer* m_offsetBuffer				= nullptr;
+	RenderBuffer* m_voronoiOffsetBuffer			= nullptr;
+	float			m_voronoiInCircleRadius		= 0.f;
+
+	float			m_voronoiPolyArea			= 0.f;
+	float			m_originalVoronoiPolyArea	= 0.f;
+	Vec2			m_voronoiOffset				= Vec2::ZERO;
 	Polygon2		m_voronoiPolygon;
+	Polygon2		m_originalVoronoiPolygon;
 	ConvexHull2		m_voronoiHull;
 
 	std::chrono::microseconds m_testDuration;
+
+	// Debug
+	Polygon2 m_debugVoronoiPoly;
 };

@@ -236,20 +236,24 @@ void Game::HandleInput()
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
 		g_theCameraSystem->AddCameraShake( 0, 0.5f );
 	}
-	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_0 ) ) {
-		m_isPaused = !m_isPaused;
-	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
-		g_theCameraSystem->AddTestingVoronoiOffsetX( );
+		VoronoiAreaCheckState currentVoronoiAreaCheckState = g_theCameraSystem->GetVoronoiAreaCheckState();
+		if( currentVoronoiAreaCheckState < NUM_OF_AREA_CHECK_STATE - 1 ) {
+			currentVoronoiAreaCheckState = static_cast<VoronoiAreaCheckState>(currentVoronoiAreaCheckState + 1);
+		}
+		else {
+			currentVoronoiAreaCheckState = static_cast<VoronoiAreaCheckState>((uint)0);
+		}
+		g_theCameraSystem->SetVoronoiAreaCheckState( currentVoronoiAreaCheckState );
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_3 ) ) {
-		g_theCameraSystem->AddTestingVoronoiOffsetY( );
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_4 ) ) {
-		g_theCameraSystem->DecreaseTestingVoronoiOffsetX();
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_5 ) ) {
-		g_theCameraSystem->DecreaseTestingVoronoiOffsetY();
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_0 ) ) {
+		m_isPaused = !m_isPaused;
 	}
 }
 
