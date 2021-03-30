@@ -11,6 +11,7 @@
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Polygon2.hpp"
 #include "Engine/Math/FloatRange.hpp"
+#include "Engine/Math/Plane2.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
@@ -834,6 +835,11 @@ bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon/*=0.01f */ )
 		}
 	}
 	return true;
+}
+
+bool IsPlaneMostlyEqual( Plane2 a, Plane2 b, float epsilon/*=0.001f */ )
+{
+	return IsVec2MostlyEqual( a.GetNormal(), b.GetNormal(), epsilon ) && IsFloatMostlyEqual( a.GetDistance(), b.GetDistance() );
 }
 
 float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c )

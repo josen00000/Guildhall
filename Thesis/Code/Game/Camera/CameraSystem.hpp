@@ -6,7 +6,7 @@
 #include "Engine/Math/ConvexHull2.hpp"
 
 typedef	std::pair<Vec2, std::vector<CameraController*>> VoronoiVertexAndControllersPair;
-
+typedef std::pair<CameraController*, float> ControllerVoronoiSplitBlendCoeff;
 
 class Player;
 class Camera;
@@ -59,6 +59,7 @@ enum NoSplitScreenStrat : unsigned int {
 
 enum DebugMode: unsigned int {
 	CONTROLLER_INFO = 0,
+	VORONOI_INFO,
 	HELP_MODE,
 	NUM_OF_DEBUG_MODE
 };
@@ -66,7 +67,8 @@ enum DebugMode: unsigned int {
 enum PostVoronoiSetting : unsigned int{
 	NO_POST_EFFECT = 0,
 	PUSH_PLANE_AND_REARRANGE_VORONOI_VERTEX,
-	MOVR_VORONOI_POINT_AND_RECONSTRUCT_VORNOI_DIAGRAM,
+	BALANCED_VORONOI_DIAGRAM,
+	HEALTH_BASED_VORONOI_DIAGRAM,
 	NUM_OF_POST_VORONOI_SETTING
 };
 
@@ -95,6 +97,7 @@ public:
 	void UpdateVoronoiSplitScreenEffect( float delteSeconds );		// Construct the convexhull for each camera
 	void UpdatePostVoronoiSplitScreenEffects( float deltaSeconds );	// Get voronoi poly base on convexhull and do area average.
 	void UpdateControllerCameras();
+	void UpdateDebugInfo();
 	void DebugRender();
 	void DebugRenderControllers();
 
@@ -150,8 +153,6 @@ public:
 
 	void AddCameraShake( int index, float shakeTrauma );
 
-	void UpdateDebugInfo();
-
 	// Controller
 	void CreateAndPushController( Player* player );
 	void PrepareRemoveAndDestroyController( Player const* player );
@@ -160,7 +161,6 @@ public:
 
 	// split screen strat
 		// no split screen strat
-	bool IsControllersInsideCamera();
 	void GetNotInsideControllers( std::vector<CameraController*>& vec, float insidePaddingLength );
 	bool CheckIfZoomStable( float stablePaddingLength );
 	void KillAndTeleportPlayers( std::vector<CameraController*>& vec );
@@ -173,10 +173,8 @@ public:
 	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type );
 	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type );
 	void UpdateVoronoiPolyAndOffset();
-	void GetVoronoiEdgesWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
-	void GetVoronoiEdgesWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
-	std::vector<Vec2> GetVoronoiPointsForCellWithTwoHelpPointsAndPBIntersectPoints( Vec2 point, Vec2 helpPointA, Vec2 helpPointB, AABB2 worldCameraBox, std::pair<Vec2, Vec2> PBAPoints, std::pair<Vec2, Vec2> PBBPoints );
-	void GetNextVoronoiPolygonControllerWithIntersectPoint( std::pair<Vec2, Vec2> intersectPoints, CameraController* currentController, std::stack<CameraController*>& nextControllers );
+	void ConstructVoronoiHullsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
+	void ConstructVoronoiHullsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	
 	// post voronoi
 	bool DoesNeedBalanceVoronoiScreen();
@@ -185,9 +183,25 @@ public:
 	bool RearrangeVoronoiVertexForMinVoronoiPoly( CameraController* controller, std::vector<Vec2> voronoiVertexPos );
 	void ComputeAndSetVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox );
 	void ComputeAndSetBalancedVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox );
-	void ReConstructVoronoiDiagram();
-	float GetArerageVoronoiIncircleRadius();
+	void ReConstructBalancedVoronoiDiagram();
+	float GetAverageVoronoiInCircleRadius();
+	float GetAverageOriginalVoronoiInCircleRadius();
 	float GetMinVoronoiInCircleRadius();
+	float GetMinOriginalVoronoiInCircleRadius();
+
+	// split and merge
+	bool IsControllerTotalSplitWithIndex( int controllerIndex );
+	std::vector<CameraController*> GetMergedControllersWithController( CameraController* controller );
+	std::vector<CameraController*> GetMergedControllersWithControllerIndex( int controllerIndex );
+	Vec2 GetMergedCameraPositionWithControllers( std::vector<CameraController*>& mergedControllers );
+	Vec2 GetAnotherCameraPosOfMergedControllers( std::vector<CameraController*>& mergedControllers, CameraController* excludeController );
+	void GetMergedVoronoiPolygonAndMergedPointWithControllers( std::vector<CameraController*>& mergedControllers, Polygon2& mergedPoly, Vec2& mergedPoint );
+	void GetMergedVoronoiPolygonAndPointWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly, Vec2& mergedPoint );
+	void GetMergedVoronoiPolygonAndPointWithThreeControllers( CameraController* a, CameraController* b, CameraController* c,  Polygon2& mergedPoly, Vec2& mergedPoint );
+	bool MergeControllersPairsWithIndex( int pairIndexA, int pairIndexB );
+	ConvexHull2 GetMergedVoronoiHullWithControllers( std::vector<CameraController*>& mergedControllers );
+	ConvexHull2 GetMergedVoronoiHullWithHulls( std::vector<ConvexHull2>& hullNeedMerged );
+	ConvexHull2 MergeTwoAdjacantVoronoiHull( ConvexHull2 hullA, ConvexHull2 hullB );
 
 	// helper function
 	bool GetSharedPointOfVoronoiPolygonABC( Polygon2 polygonA, Polygon2 polygonB, Polygon2 polygonC, Vec2& sharedPoint );
@@ -196,7 +210,7 @@ public:
 	CameraController* FindControllerWithMinArea();
 	CameraController* FindControllerWithMinRadius();
 	CameraController* FindNextAdjacentControllerWithPlane( Plane2 plane, std::vector<bool>& controllerCheckStates );
-	bool GetSharedEdgeOfTwoPolygon( LineSegment2& sharedLine, Polygon2 polyA, Polygon2 polyB );
+
 private:
 	bool m_isdebug = false;
 	std::vector<CameraController*> m_controllers;
@@ -213,62 +227,41 @@ private:
 	VoronoiAreaCheckState	m_voronoiAreaCheckState	= POLYGON_AREA;
 	RandomNumberGenerator* m_rng	= nullptr;
 
-	float m_shakeBlendAmount	= 0.f;
 
 	// no split settings
-	bool m_isCameraZoomStable				= false;
-	int m_recoverWaitFrame					= 10;
 	float m_notInsidePaddingLength			= 3.f;
 	float m_zoomStablePaddingLength			= 4.f;
 	float m_idealCameraHeight				= GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y;
 	float m_maxCameraDeltaHeightPerFrame	= 0.01f;
-	Vec2 m_noSplitCameraSize				= Vec2( ( GAME_CAMERA_MAX_X - GAME_CAMERA_MIN_X ), ( GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y) );
-
 
 	Vec2  m_goalCameraPos		= Vec2::ZERO;
-	AABB2 m_goalCameraWindow	= AABB2();
 
 	Camera* m_noSplitCamera			= nullptr;
 	Shader* m_multipleCameraShader	= nullptr;
 	Map*	m_map					= nullptr;
-	//Timer*
 
 	// voronoi split
-	std::stack<CameraController*> m_nextControllers;
 	std::vector<ConvexHull2> m_controllerVoronoiEdges;
 	std::vector<VoronoiVertexAndControllersPair> m_voronoiVertices;
+	std::vector<std::vector<CameraController*>> m_mergedControllers;
+	ControllerVoronoiSplitBlendCoeff m_controllersSplitBlendCoeffs[5][5];
 	
 	// post voronoi setting
 	bool m_isVoronoiAnchorPointInitialized					= false;
 	int m_postVoronoiIteration								= 0;
 	int m_targetPostVoronoiIteration						= 3;
+	float m_expandVoronoiLeastStep							= 2.f;
+
+	// voronoi fairness
 	float m_maxVoronoiAnchorPointMoveDistWithPolyArea		= 5.f;	
 	float m_maxVoronoiAnchorPointMoveDistWithIncircleRadius	= 3.f;	
 	float m_expandVoronoiAreaThreshold						= 50.f;
-	float m_expandVoronoiLeastStep							= 2.f;
 	float m_voronoiInCircleRadiusThreshold					= 5.f;
+
+	// voronoi split & merge
+	float m_totalSplitDist									= 10.f;
+	float m_totalMergedDist									= 5.f;
 	
 	// debug
-	std::vector<Vec2> m_playerDebugPositions;
-	Vec2 m_playerDebugPosA;
-	Vec2 m_playerDebugPosB;
-	Vec2 m_playerDebugPosC;
-	Vec2 m_playerDebugPosX;
-	Polygon2 m_DebugPolyA;
-	Polygon2 m_DebugPolyB;
-	Polygon2 m_DebugPolyC;
-	Polygon2 m_DebugPolyD;
-	ConvexHull2 m_debugHullA;
-	ConvexHull2 m_debugHullB;
-	ConvexHull2 m_debugHullC;
-	std::vector<Vec2> m_debugIntersectPointsA;
-	std::vector<Vec2> m_debugIntersectPointsB;
-	std::vector<Vec2> m_debugIntersectPointsC;
-	std::vector<Vec2> m_debugIntersectPointsX;
-	std::vector<std::vector<Vec2>> m_debugAfterDeletePoints;
-	std::vector<Vec2> m_debugLineIntersectWithBoxPointsAB;
-	std::vector<Vec2> m_debugLineIntersectWithBoxPointsAC;
-	std::vector<Vec2> m_debugLineIntersectWithBoxPointsBC;
-	std::vector<LineSegment2> m_debugPBLines;	
-
+	Vec2 m_debugMergedPoint									= Vec2::ZERO;
 };

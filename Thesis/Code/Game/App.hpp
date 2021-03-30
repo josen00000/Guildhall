@@ -25,6 +25,8 @@ public:
 	void PauseGame();
 	void UnPauseGame();
 
+	void SonyTest();
+
 private:
 	void Update( float deltaSeconds );
 	const void Render() const;

@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include "App.hpp"
 #include <iostream>
+#include <fstream>
 #include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
@@ -17,6 +18,7 @@
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Physics/Physics2D.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
+#include "Engine/Math/RandomNumberGenerator.hpp"
 
 // Game
 App*			g_theApp			= nullptr;
@@ -152,6 +154,48 @@ void App::PauseGame()
 void App::UnPauseGame()
 {
 	m_isPauseTime = false;
+}
+
+void App::SonyTest()
+{
+	// generate data
+	RandomNumberGenerator* rng = new RandomNumberGenerator();
+	std::string inputfileDataPath = "./Data/DevConsole/SonyTest.txt";
+	std::string outputfileDataPath = "./Data/DevConsole/SonyTestOutput.txt";
+	std::ofstream myInputFile;
+	std::ofstream myOutputFile;
+	myInputFile.open( inputfileDataPath );
+	myOutputFile.open( outputfileDataPath );
+	myInputFile << "total 10 set of data.\n ";
+	for( int i = 0; i < 10; i++ ) {
+		// 10 set of data test
+		myInputFile << "Index :" << i  << std::endl;
+		int totalPointsNum = rng->RollRandomIntInRange( 5, 50 );
+
+		myInputFile << "total Points :" << totalPointsNum << std::endl;
+		Vec2 minPoint = Vec2::ZERO;
+		Vec2 maxPoint = Vec2( 50.f );
+		std::vector<Vec2> tempPoints;
+		// generate input
+		for( int j = 0; j < totalPointsNum; j++ ) {
+			Vec2 tempPoint = rng->RollRandomVec2InRange( minPoint, maxPoint );
+			tempPoints.push_back( tempPoint ); 
+			myInputFile << tempPoint.x << " " << tempPoint.y << std::endl;
+		}
+		myInputFile << std::endl;
+		// generate ouput
+		Polygon2 generatedPoly = Polygon2::MakeConvexFromPointCloud( tempPoints );
+		std::vector<Vec2> worldPoints;
+		generatedPoly.GetAllVerticesInWorld( worldPoints );
+		myOutputFile << "Index :" << i  << std::endl;
+		myOutputFile << "Ouput points : " << worldPoints.size() << std::endl;
+		for( int j = 0; j < worldPoints.size(); j++ ) {
+			myOutputFile << worldPoints[j].x << " " << worldPoints[j].y << std::endl;
+		}
+	}
+
+	m_isQuitting = true;
+
 }
 
 void App::BeginFrame()

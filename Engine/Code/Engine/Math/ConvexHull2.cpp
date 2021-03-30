@@ -109,12 +109,28 @@ void ConvexHull2::AddPlane( Plane2 plane )
 	m_planes.push_back( plane );
 }
 
+void ConvexHull2::AddPlanes( const std::vector<Plane2>& planes )
+{
+	m_planes.insert( m_planes.end(), planes.begin(), planes.end() );
+}
+
 void ConvexHull2::AddAABB2Planes( AABB2 box )
 {
 	m_planes.push_back( Plane2( Vec2::DOWN_NORMAL_DIRECTION, box.mins ) );
 	m_planes.push_back( Plane2( Vec2::UP_NORMAL_DIRECTION, box.maxs ) );
 	m_planes.push_back( Plane2( Vec2::LEFT_NORMAL_DIRECTION, box.mins ) );
 	m_planes.push_back( Plane2( Vec2::RIGHT_NORMAL_DIRECTION, box.maxs ) );
+}
+
+bool ConvexHull2::RemovePlane( Plane2 plane )
+{
+	for( auto iter = m_planes.begin(); iter != m_planes.end(); ++iter ) {
+		if( IsPlaneMostlyEqual( *iter, plane ) ){
+			m_planes.erase( iter );
+			return true;
+		}
+	}
+	return false;
 }
 
 bool ConvexHull2::IsPointInside( Vec2 point ) const

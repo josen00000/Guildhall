@@ -101,6 +101,12 @@ Polygon2 Polygon2::MakeConvexFromAABB2( AABB2 box )
 	return Polygon2( points );
 }
 
+Polygon2 Polygon2::MakeConvexPolyFromConvexHull( ConvexHull2 hull )
+{
+	std::vector<Vec2> points = hull.GetConvexPolyPoints();
+	return Polygon2::MakeConvexFromPointCloud( points );
+}
+
 bool Polygon2::IsValid() const
 {
 	if( m_edges.size() >= 3 ) {

@@ -18,7 +18,6 @@ enum PolyType {
 	CURRENT_POLY
 };
 
-
 class CameraController {
 	friend class Player;
 	friend class CameraSystem;
@@ -33,21 +32,24 @@ public:
 	void DebugRender();
 	void DebugCameraInfoAt( Vec4 pos );
 
-
 	// Accessor
 	int GetIndex() const							{ return m_index; }
+	bool GetNeedRenderWhenMerged() const			{ return m_needRenderWhenMerged; }
 	bool GetIsDebug() const							{ return m_isDebug; }
 	float GetCurrentMultipleFactor() const			{ return m_currentMultipleFactor; }
 	float GetVoronoiArea() const					{ return m_voronoiPolyArea; }
 	float GetOriginalVoronoiArea() const			{ return m_originalVoronoiPolyArea; }
 	float GetVoronoiInCircleRadius() const			{ return m_voronoiInCircleRadius; }
+	float GetOriginalVoronoiInCircleRadius() const	{ return m_originalvoronoiInCircleRadius; }
+	float GetVoronoiSplitBlendCoeff() const			{ return m_voronoiSplitBlendCoeff; }
 	Vec2 GetCuePos() const ;
 	Vec2 GetSmoothedGoalPos() const					{ return m_smoothedGoalCameraPos; }
 	Vec2 GetCameraPos() const						{ return m_cameraPos; }
-	Vec2 GetVoronoiOffset() const					{ return m_voronoiOffset; }
+	Vec2 GetVoronoiOffset() const					{ return m_voronoiStencilOffset; }
 	Vec2 GetVoronoiAnchorPointPos() const			{ return m_voronoiAnchorPointPos; }
 	Vec2 GetOriginalVoronoiAnchorPointPos() const	{ return m_originalVoronoiAnchorPointPos; }
 	Vec2 GetTargetVoronoiAnchorPointPos() const		{ return m_targetVoronoiAnchorPointPos; }
+
 	Polygon2 GetVoronoiPoly();
 	ConvexHull2 GetVoronoiHull() const				{ return m_voronoiHull; }
 
@@ -61,20 +63,28 @@ public:
 	void SetIndex( int index );
 	void SetIsDebug( bool isDebug );
 	void SetIsSmooth( bool isSmooth );
+
 	void SetAsymptoticValue( float value );
 	void SetTrauma( float trauma );
 	void AddTrauma( float addTrauma );
 	void SetFwdFrameDist( float dist );
+	void SetVoronoiSplitBlendCoeff( float coeff );
 	void SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor );
+
+	void SetVoronoiAnchorPointPos( Vec2 voronoiAnchorPoint );
+	void SetMultipleCameraRenderOffset( Vec2 offset );
+	void SetVoronoiColorTargetOffset( Vec2 offset );
+	void SetTargetVoronoiAnchorPointPos( Vec2 targetVoronoiAnchorPoint );
+	void SetOriginalVoronoiAnchorPointPos( Vec2 smoothedVoronoiAnchorPoint );
+	bool ReplaceVoronoiPointWithPoint( Vec2 replacedPoint,  Vec2 newPoint );
+	void SetCameraPos( Vec2 pos );
+	void SetVoronoiStencilOffset( Vec2 offset );
+
 	void SetVoronoiPolygon( Polygon2 poly );
 	void SetOriginalVoronoiPolygon( Polygon2 poly );
 	void SetVoronoiHullAndUpdateVoronoiPoly( ConvexHull2 hull, PolyType type  );
 	void AddPlaneToVoronoiHull( Plane2 plane, PolyType type );
-	void SetVoronoiOffset( Vec2 offset );
-	void SetVoronoiAnchorPointPos( Vec2 voronoiAnchorPoint );
-	void SetTargetVoronoiAnchorPointPos( Vec2 targetVoronoiAnchorPoint );
-	void SetOriginalVoronoiAnchorPointPos( Vec2 smoothedVoronoiAnchorPoint );
-	bool ReplaceVoronoiPointWithPoint( Vec2 replacedPoint,  Vec2 newPoint );
+	void SetNeedRenderWhenMerged( bool doesNeedRenderWhenMerged );
 
 	// Camera Window
 	void UpdateCameraWindow( float deltaSeconds );
@@ -87,6 +97,8 @@ public:
 
 	// Camera Framing
 	void UpdateCameraFrame( float deltaSeconds );
+
+	// Camera smooth
 	void SmoothMotion();
 	float ComputeAsymptoticValueByDeltaDist( float deltaDist );
 
@@ -95,11 +107,9 @@ public:
 	void UpdateMultipleCameraFactor( float deltaSeconds );
 
 	// split screen
-	int GetTextureIndexWithScreenCoords( int x, int y, IntVec2 textureSize );	   // with world space coords
-	IntVec2 GetTextureCoordsWithScreenCoords( int x, int y, IntVec2 textureSize ); // with world space coords
-
-	void UpdateStencilTexture();
-	void UpdateMultipleCameraOffset();
+	void RenderToStencilTexture();
+	void RenderToTargetTexture();
+	void UpdateMultipleCameraOffsetAndBuffer();
 	void ReleaseRenderTarget();
 	
 	bool IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, Polygon2 renderArea, AABB2 quickOutBox );
@@ -109,8 +119,11 @@ public:
 	Vec2 GetMultipleCameraOffset();
 
 	void UpdateCameraPos();
-private:
 
+
+	// helper function
+	float GetMinimumInCircleRadiusForVoronoiHullWithPoint( Vec2 point );
+private:
 	// camera snapping
 	float ComputeCameraSnapSpeed();
 	Vec2 ComputeCameraWindowSnappedPosition( float deltaSeconds );
@@ -123,7 +136,6 @@ public:
 private:
 	int m_index						= 0;
 	bool m_isDebug					= false;
-	bool m_disableUpdateCamera		= false;
 	Player* m_player				= nullptr; // const
 	Camera* m_camera				= nullptr;
 	Camera* m_splitCamera			= nullptr;
@@ -190,16 +202,21 @@ private:
 	// multiple camera setting
 	RenderBuffer* m_offsetBuffer				= nullptr;
 	RenderBuffer* m_voronoiOffsetBuffer			= nullptr;
-	float			m_voronoiInCircleRadius		= 0.f;
 
-	float			m_voronoiPolyArea			= 0.f;
-	float			m_originalVoronoiPolyArea	= 0.f;
-	Vec2			m_voronoiOffset				= Vec2::ZERO;
+	// voronoi setting
+	bool			m_needRenderWhenMerged			= true;
+	float			m_voronoiInCircleRadius			= 0.f;
+	float			m_originalvoronoiInCircleRadius	= 0.f;
+	float			m_voronoiPolyArea				= 0.f;
+	float			m_originalVoronoiPolyArea		= 0.f;
+	float			m_voronoiSplitBlendCoeff		= 0.f;
+	Vec2			m_voronoiStencilOffset			= Vec2::ZERO;
+	Vec2			m_voronoiColorTargetOffset		= Vec2::ZERO;
 	Polygon2		m_voronoiPolygon;
 	Polygon2		m_originalVoronoiPolygon;
 	ConvexHull2		m_voronoiHull;
 
-	std::chrono::microseconds m_testDuration;
+	//std::chrono::microseconds m_testDuration;
 
 	// Debug
 	Polygon2 m_debugVoronoiPoly;

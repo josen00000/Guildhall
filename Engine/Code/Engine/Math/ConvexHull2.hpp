@@ -27,5 +27,7 @@ public:
 	std::vector<Vec2> GetConvexPolyPoints() const;
 
 	void AddPlane( Plane2 plane );
+	void AddPlanes( const std::vector<Plane2>& planes );
 	void AddAABB2Planes( AABB2 box ); 
+	bool RemovePlane( Plane2 plane );
 };

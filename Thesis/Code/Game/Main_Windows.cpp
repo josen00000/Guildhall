@@ -114,6 +114,8 @@ int WINAPI WinMain( _In_ HINSTANCE applicationInstanceHandle, _In_opt_ HINSTANCE
 
 	g_theApp = new App();
 	g_theWindow = new Window();
+	//g_theApp->SonyTest();
+	//if( g_theApp->IsQuitting() ){ return 0; }
 	g_theWindow->Open( APP_NAME, CLIENT_ASPECT, 0.9f );
 	g_theApp->Startup();
 	while( !g_theApp->IsQuitting() ) {
@@ -134,6 +136,7 @@ int WINAPI WinMain( _In_ HINSTANCE applicationInstanceHandle, _In_opt_ HINSTANCE
 	g_theWindow->Close();
 	delete g_theWindow;
 	g_theWindow = nullptr;
+	return 0;
 }
 
 

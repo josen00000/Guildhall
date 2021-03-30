@@ -3,7 +3,7 @@
 #include "Engine/Math/Vec2.hpp" 
 #include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Math/AABB2.hpp"
-
+#include "Engine/Math/ConvexHull2.hpp"
 
 struct Polygon2
 {
@@ -16,6 +16,7 @@ public:
 	Polygon2( std::vector<Vec2> points );
 	static Polygon2 MakeConvexFromPointCloud( std::vector<Vec2> points );
 	static Polygon2 MakeConvexFromAABB2( AABB2 box );
+	static Polygon2 MakeConvexPolyFromConvexHull( ConvexHull2 hull );
 public:
 	// bool
 	bool IsValid() const;

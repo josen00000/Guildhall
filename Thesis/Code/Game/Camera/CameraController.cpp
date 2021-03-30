@@ -71,12 +71,6 @@ void CameraController::Update( float deltaSeconds )
 	UpdateMultipleCameraSettings( deltaSeconds );
 	SmoothMotion();
 	BoundCameraPosInsideWindow();
-	
-
-	// Debug
-// 	if( m_isDebug ) {
-// 		DebugCameraInfo();
-// 	}
 }
 
 void CameraController::Render()
@@ -85,21 +79,10 @@ void CameraController::Render()
 	m_colorTarget = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 
 	// draw render area to stencil texture
-	UpdateMultipleCameraOffset();
-	std::vector<Vec2> data;
-	data.push_back( m_multipleCameraRenderOffset );
-	data.push_back( Vec2::ZERO );
-	m_offsetBuffer->Update( data.data(), sizeof(Vec2) * 2, sizeof(Vec2) * 2 );
+	UpdateMultipleCameraOffsetAndBuffer();
 
-	UpdateStencilTexture();
-	m_camera->SetColorTarget( m_colorTarget );
-	g_theRenderer->BeginCamera( m_camera );
-	if( m_owner->GetSplitScreenState() == VORONOI_SPLIT ) {
-		g_theRenderer->BindShader( m_voronoiDiffuseShader );
-		g_theRenderer->SetOffsetBuffer( m_voronoiOffsetBuffer, 0 );
-	}
-	g_theGame->RenderGame();
-	g_theRenderer->EndCamera();
+	RenderToStencilTexture();
+	RenderToTargetTexture();
 }
 
 void CameraController::EndFrame()
@@ -119,7 +102,7 @@ void CameraController::DebugRender()
 		g_theRenderer->DrawCircle( m_goalCameraPos, 0.1f, 0.1f, Rgba8::BLACK );
 		g_theRenderer->DrawCircle( m_smoothedGoalCameraPos, 0.1f, 0.1f, Rgba8::RED );
 	}
-	DebugAddScreenPoint( Vec2( 80.f, 45.f ), 10.f, Rgba8::RED, Rgba8::RED, 0.5f );
+	//DebugAddScreenPoint( Vec2( 80.f, 45.f ), 10.f, Rgba8::RED, Rgba8::RED, 0.5f );
 }
 
 void CameraController::DebugCameraInfoAt( Vec4 pos )
@@ -130,35 +113,48 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	Strings debugStrings;
 	float currentFactorSeconds = m_factorStableSeconds - (float)m_timer->GetSecondsRemaining();
 
+	switch( m_owner->GetDebugMode() )
+	{
+		case CONTROLLER_INFO: {
+			std::string playerPosText					= std::string( "Player pos =  " + playerPos.ToString() );
+			std::string cameraPosText					= std::string( "Camera pos = " + cameraPos.ToString() );
+			std::string cameraGoalPosText				= std::string( "Goal Camera pos = " + cameraGoalPos.ToString() );
+			std::string asymptoticValueText				= std::string( "Asymptotic Value = " + std::to_string( m_asymptoticValue ) );
+			std::string traumaText						= std::string( "Trauma = " + std::to_string( m_trauma ) );
+			std::string currentMultipleStableFactorText	= std::string( "multiple factor = " + std::to_string( m_currentMultipleFactor ));
+			std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_goalMultipleFactor ));
+			std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
+			std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
 
-	std::string playerPosText					= std::string( "Player pos =  " + playerPos.ToString() );
-	std::string cameraPosText					= std::string( "Camera pos = " + cameraPos.ToString() );
-	std::string cameraGoalPosText				= std::string( "Goal Camera pos = " + cameraGoalPos.ToString() );
-	std::string asymptoticValueText				= std::string( "Asymptotic Value = " + std::to_string( m_asymptoticValue ) );
-	std::string traumaText						= std::string( "Trauma = " + std::to_string( m_trauma ) );
-	std::string currentMultipleStableFactorText	= std::string( "multiple factor = " + std::to_string( m_currentMultipleFactor ));
-	std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_goalMultipleFactor ));
-	std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
-	std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
-	//std::string offsetText						= std::string( " offset is : ") + m_multipleCameraRenderOffset.ToString();
-	//std::string testing							= std::to_string( m_testDuration.count() );
-	std::string voronoiAreaText					= Stringf( "voronoi area is: %.2f" , m_voronoiPolyArea );
-	std::string voronoiInCircleRadiusText		= Stringf( "voronoi radius is: %.2f" , m_voronoiInCircleRadius );
+			debugStrings.push_back( playerPosText );
+			debugStrings.push_back( cameraPosText );
+			debugStrings.push_back( cameraGoalPosText );
+			debugStrings.push_back( asymptoticValueText );
+			debugStrings.push_back( traumaText );
+			debugStrings.push_back( currentMultipleStableFactorText );
+			debugStrings.push_back( goalMultipleStableFactorText );
+			debugStrings.push_back( currentFactorSecondsText );
+			debugStrings.push_back( totalFactorSecondsText );
+		}
+		break;
+		case VORONOI_INFO: {
+			std::string voronoiAreaText						= Stringf( "voronoi area is: %.2f" , m_voronoiPolyArea );
+			std::string originalVoronoiAreaText				= Stringf( "original voronoi area is: %.2f" , m_originalVoronoiPolyArea );
+			std::string voronoiInCircleRadiusText			= Stringf( "voronoi radius is: %.2f" , m_voronoiInCircleRadius );
+			std::string originalVoronoiInCircleRadiusText	= Stringf( "original voronoi radius is: %.2f" , m_originalvoronoiInCircleRadius );
+			std::string voronoiSplitBlendCoeffText			= Stringf( "Voronoi Split blend coeff is: %.2f" , m_voronoiSplitBlendCoeff );
 
-	debugStrings.push_back( playerPosText );
-	debugStrings.push_back( cameraPosText );
-	debugStrings.push_back( cameraGoalPosText );
-	debugStrings.push_back( asymptoticValueText );
-	debugStrings.push_back( traumaText );
-	debugStrings.push_back( currentMultipleStableFactorText );
-	debugStrings.push_back( goalMultipleStableFactorText );
-	debugStrings.push_back( currentFactorSecondsText );
-	debugStrings.push_back( totalFactorSecondsText );
-	debugStrings.push_back( voronoiInCircleRadiusText );
-	//debugStrings.push_back( testing );
-	//debugStrings.push_back( offsetText );
-	debugStrings.push_back( voronoiAreaText );
-	//DebugAddScreenLeftAlignStrings( 0.15f, 0, Rgba8::WHITE, debugStrings );
+
+			debugStrings.push_back( originalVoronoiInCircleRadiusText );
+			debugStrings.push_back( voronoiInCircleRadiusText );
+			debugStrings.push_back( voronoiAreaText );
+			debugStrings.push_back( originalVoronoiAreaText );
+			debugStrings.push_back( voronoiSplitBlendCoeffText );
+		}
+		break;
+
+	}
+
 	DebugAddScreenStrings( pos, Vec2::ZERO, 1.5f, Rgba8( 255, 255, 255, 125), debugStrings );
 }
 
@@ -208,6 +204,11 @@ void CameraController::SetFwdFrameDist( float dist )
 	m_fwdFrameVelDist = dist;
 }
 
+void CameraController::SetVoronoiSplitBlendCoeff( float coeff )
+{
+	m_voronoiSplitBlendCoeff = coeff;
+}
+
 void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor )
 {
 	m_ismultipleFactorStable = false;
@@ -221,9 +222,7 @@ void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalS
 void CameraController::SetVoronoiPolygon( Polygon2 poly )
 {
 	m_voronoiPolygon = poly;
-	//UpdateVoronoiPoly();
 	m_voronoiPolyArea = m_voronoiPolygon.GetArea();
-	
 }
 
 void CameraController::SetOriginalVoronoiPolygon( Polygon2 poly )
@@ -235,24 +234,7 @@ void CameraController::SetOriginalVoronoiPolygon( Polygon2 poly )
 void CameraController::SetVoronoiHullAndUpdateVoronoiPoly( ConvexHull2 hull, PolyType type )
 {
 	m_voronoiHull = hull;
-	switch( type )
-	{
-	case ORIGINAL_POLY:
-		break;
-	case CURRENT_POLY:
-		break;
-	default:
-		break;
-	}
 	UpdateVoronoiPoly( type );
-	float minRadius = hull.m_planes[0].GetDistanceFromPlane( m_voronoiAnchorPointPos );
-	for( Plane2 plane : hull.m_planes ) {
-		float radius = plane.GetDistanceFromPlane( m_voronoiAnchorPointPos );
-		if( radius < minRadius ) {
-			minRadius = radius;
-		}
-	}
-	m_voronoiInCircleRadius = minRadius;
 }
 
 void CameraController::AddPlaneToVoronoiHull( Plane2 plane, PolyType type )
@@ -261,9 +243,19 @@ void CameraController::AddPlaneToVoronoiHull( Plane2 plane, PolyType type )
 	UpdateVoronoiPoly( type );
 }
 
-void CameraController::SetVoronoiOffset( Vec2 offset )
+void CameraController::SetVoronoiStencilOffset( Vec2 offset )
 {
-	m_voronoiOffset = offset;
+	m_voronoiStencilOffset = offset;
+}
+
+void CameraController::SetVoronoiColorTargetOffset( Vec2 offset )
+{
+	m_voronoiColorTargetOffset = offset;
+}
+
+void CameraController::SetMultipleCameraRenderOffset( Vec2 offset )
+{
+	m_multipleCameraRenderOffset = offset;
 }
 
 void CameraController::SetVoronoiAnchorPointPos( Vec2 voronoiAnchorPoint )
@@ -281,11 +273,21 @@ void CameraController::SetOriginalVoronoiAnchorPointPos( Vec2 originalVoronoiAnc
 	m_originalVoronoiAnchorPointPos = originalVoronoiAnchorPoint;
 }
 
+void CameraController::SetNeedRenderWhenMerged( bool doesNeedRenderWhenMerged )
+{
+	m_needRenderWhenMerged = doesNeedRenderWhenMerged;
+}
+
 bool CameraController::ReplaceVoronoiPointWithPoint( Vec2 replacedPoint, Vec2 newPoint )
 {
 	bool result = m_voronoiPolygon.ReplacePointWithPoint( replacedPoint, newPoint );
 	UpdateVoronoiHull();
 	return result;
+}
+
+void CameraController::SetCameraPos( Vec2 pos )
+{
+	m_camera->SetPosition2D( pos );
 }
 
 // Camera Window
@@ -465,27 +467,13 @@ void CameraController::UpdateMultipleCameraFactor( float deltaSeconds )
 		m_ismultipleFactorStable = true;
 		float time = (float)m_timer->m_clock->GetTotalSeconds();
 		g_theConsole->DebugLogf( "elapsed, player: %d, elapsed: %.2f, start: %.2f, duration: %.2f", m_player->GetPlayerIndex(), time, m_timer->m_startSeconds, m_timer->m_durationSeconds );
-// 		g_theConsole->DebugLogf( "start: %.2f", m_timer->m_startSeconds );
-// 		g_theConsole->DebugLogf( "duration: %.2f", m_timer->m_durationSeconds );
 		if( m_player->GetAliveState() == WAIT_FOR_DELETE ) {
 			m_player->SetAliveState( AliveState::READY_TO_DELETE_CONTROLLER );
 		}
 	}
 }
 
-int CameraController::GetTextureIndexWithScreenCoords( int x, int y, IntVec2 textureSize )
-{
-	y = textureSize.y - 1 - y;
-	return x + ( textureSize.x * y );
-}
-
-IntVec2 CameraController::GetTextureCoordsWithScreenCoords( int x, int y, IntVec2 textureSize )
-{
-	y = textureSize.y - 1 - y;
-	return IntVec2( x, y );
-}
-
-void CameraController::UpdateStencilTexture()
+void CameraController::RenderToStencilTexture()
 {
 	if( m_owner->GetSplitScreenState() == NO_SPLIT_SCREEN ) { return; }
 	Texture* backBuffer = g_theRenderer->GetSwapChainBackBuffer();
@@ -508,20 +496,38 @@ void CameraController::UpdateStencilTexture()
 			m_camera->SetColorTarget( m_stencilTexture );
 			g_theRenderer->BeginCamera( m_camera );
 			g_theRenderer->BindShader( m_voronoiStencilShader );
+			std::vector<Vec2> data;
+			data.push_back( m_voronoiStencilOffset );
+			data.push_back( Vec2::ZERO );
+			m_voronoiOffsetBuffer->Update( data.data(), sizeof( Vec2 ) * 2, sizeof( Vec2 ) * 2 );
 			g_theRenderer->SetOffsetBuffer( m_voronoiOffsetBuffer, 0 );
 			g_theRenderer->DrawPolygon2DWithBound( m_voronoiPolygon, Rgba8::RED, 0.5f, Rgba8::GREEN );
 			g_theRenderer->DrawCircle( m_voronoiPolygon.GetCenter(), 0.1f, 0.2f, Rgba8::GREEN);
-			//g_theRenderer->DrawLine( m_voronoiPolygon.GetCenter(), Vec2::ZERO, 1.f, Rgba8::GREEN );
 			g_theRenderer->EndCamera();
 		}
 	}
 }
 
-void CameraController::UpdateMultipleCameraOffset()
+void CameraController::RenderToTargetTexture()
+{
+	m_camera->SetColorTarget( m_colorTarget );
+	g_theRenderer->BeginCamera( m_camera );
+	if( m_owner->GetSplitScreenState() == VORONOI_SPLIT ) {
+		g_theRenderer->BindShader( m_voronoiDiffuseShader );
+		std::vector<Vec2> data;
+		data.push_back( m_voronoiColorTargetOffset );
+		data.push_back( Vec2::ZERO );
+		m_voronoiOffsetBuffer->Update( data.data(), sizeof( Vec2 ) * 2, sizeof( Vec2 ) * 2 );
+		g_theRenderer->SetOffsetBuffer( m_voronoiOffsetBuffer, 0 );
+	}
+	g_theGame->RenderGame();
+	g_theRenderer->EndCamera();
+}
+
+void CameraController::UpdateMultipleCameraOffsetAndBuffer()
 {
 	if( m_owner->GetSplitScreenState() == NO_SPLIT_SCREEN ) {
 		m_multipleCameraRenderOffset = Vec2::ZERO;
-		return;
 	}
 
 	switch( m_owner->GetSplitScreenState() )
@@ -562,15 +568,15 @@ void CameraController::UpdateMultipleCameraOffset()
 		break;
 		case VORONOI_SPLIT:{
 			m_multipleCameraRenderOffset = Vec2::ZERO;
-			std::vector<Vec2> data;
-			data.push_back( m_voronoiOffset );
-			data.push_back( Vec2::ZERO );
-			m_voronoiOffsetBuffer->Update( data.data(), sizeof( Vec2 ) * 2, sizeof( Vec2 ) * 2 );
 		}
 		break;
 		default:
 		break;
 	}
+	std::vector<Vec2> data;
+	data.push_back( m_multipleCameraRenderOffset );
+	data.push_back( Vec2::ZERO );
+	m_offsetBuffer->Update( data.data(), sizeof( Vec2 ) * 2, sizeof( Vec2 ) * 2 );
 }
 
 void CameraController::ReleaseRenderTarget()
@@ -582,7 +588,6 @@ void CameraController::ReleaseRenderTarget()
 bool CameraController::IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, Polygon2 renderArea, AABB2 quickOutBox )
 {
  	Vec2 coords_Vec2 = (Vec2)coords;
-// 	if( !quickOutBox.IsPointInside( coords_Vec2 ) ){ return false; }
 
 	return renderArea.IsPointInside( coords_Vec2 );
 }
@@ -636,6 +641,19 @@ void CameraController::UpdateCameraPos()
 	m_camera->SetPosition2D( m_smoothedGoalCameraPos );
 }
 
+float CameraController::GetMinimumInCircleRadiusForVoronoiHullWithPoint( Vec2 point )
+{
+	float minRadius = m_voronoiHull.m_planes[0].GetDistanceFromPlane( point );
+
+	for( Plane2 plane : m_voronoiHull.m_planes ) {
+		float radius = plane.GetDistanceFromPlane( point );
+		if( radius < minRadius ) {
+			minRadius = radius;
+		}
+	}
+	return minRadius;
+}
+
 float CameraController::ComputeCameraSnapSpeed()
 {
 	float maxDist = m_cameraWindow.GetDiagonalLength() / 2;
@@ -677,22 +695,28 @@ Vec2 CameraController::ComputeCameraWindowSnappedPosition( float deltaSeconds )
 void CameraController::UpdateVoronoiPoly( PolyType type )
 {
 	std::vector<Vec2> polyPoints = m_voronoiHull.GetConvexPolyPoints();
+	float minRadius;
+
 	switch( type )
 	{
 	case ORIGINAL_POLY:
-		m_originalVoronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
-		m_originalVoronoiPolyArea = m_originalVoronoiPolygon.GetArea();
-		m_voronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
-		m_voronoiPolyArea = m_voronoiPolygon.GetArea();
+		minRadius						= GetMinimumInCircleRadiusForVoronoiHullWithPoint( m_originalVoronoiAnchorPointPos );
+		m_originalVoronoiPolygon		= Polygon2::MakeConvexFromPointCloud( polyPoints );
+		m_originalVoronoiPolyArea		= m_originalVoronoiPolygon.GetArea();
+		m_originalvoronoiInCircleRadius = minRadius;
+		m_voronoiPolygon				= m_originalVoronoiPolygon;
+		m_voronoiPolyArea				= m_originalVoronoiPolyArea;
+		m_voronoiInCircleRadius			= m_originalvoronoiInCircleRadius;
 		break;
 	case CURRENT_POLY:
-		m_voronoiPolygon = Polygon2::MakeConvexFromPointCloud( polyPoints );
-		m_voronoiPolyArea = m_voronoiPolygon.GetArea();
+		minRadius					= GetMinimumInCircleRadiusForVoronoiHullWithPoint( m_voronoiAnchorPointPos );
+		m_voronoiPolygon			= Polygon2::MakeConvexFromPointCloud( polyPoints );
+		m_voronoiPolyArea			= m_voronoiPolygon.GetArea();
+		m_voronoiInCircleRadius		= minRadius;
 		break;
 	default:
 		break;
 	}
-	//m_voronoiPolygon.SetCenter( m_playerPos );
 }
 
 void CameraController::UpdateVoronoiHull()
