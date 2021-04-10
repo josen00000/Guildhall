@@ -32,7 +32,7 @@ public:
 	static Actor* SpawnActorWithPos( Vec2 pos );
 
 public:
-	virtual void UpdateActor( float deltaSeconds );
+	virtual void UpdateActor( float deltaSeconds, Rgba8 color = Rgba8::WHITE );
 	virtual void RenderActor();
 	virtual void Shoot( float deltaSeconds );
 	void TakeDamage( float damage );

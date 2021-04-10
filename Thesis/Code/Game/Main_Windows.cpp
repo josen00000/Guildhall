@@ -3,7 +3,7 @@
 #include <math.h>
 #include <cassert>
 #include <crtdbg.h>
-#include<Game/App.hpp>
+#include "Game/App.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Platform/Window.hpp"
 
@@ -36,7 +36,7 @@ bool g_isQuitting = false;							// ...becomes App::m_isQuitting
 													// HWND g_hWnd = nullptr;								// ...becomes WindowContext::m_windowHandle
 													// HDC g_displayDeviceContext = nullptr;				// ...becomes WindowContext::m_displayContext
 													// HGLRC g_openGLRenderingContext = nullptr;			// ...becomes RenderContext::m_apiRenderingContext
-const char* APP_NAME = "Multle Player-camera System";	// ...becomes ??? (Change this per project!)
+const char* APP_NAME = "Multiple Player-camera System";	// ...becomes ??? (Change this per project!)
 
 
 													//-----------------------------------------------------------------------------------------------
@@ -45,43 +45,45 @@ const char* APP_NAME = "Multle Player-camera System";	// ...becomes ??? (Change 
 													//
 													// #SD1ToDo: We will move this function to a more appropriate place later on...
 													//
-LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam )
-{
-	switch( wmMessageCode )
-	{
-
-		// App close requested via "X" button, or right-click "Close Window" on task bar, or "Close" from system menu, or Alt-F4
-	case WM_CLOSE:
-	{
-
-		g_theApp->HandleQuitRequested();
-		return 0; // "Consumes" this message (tells Windows "okay, we handled it")
-	}
-
-	// Raw physical keyboard "key-was-just-depressed" event (case-insensitive, not translated)
-	case WM_KEYDOWN:
-	{
-		unsigned char asKey = (unsigned char)wParam;
-		if( asKey==VK_ESCAPE ) {
-			//g_theApp->HandleQuitRequested();
-		}
-		g_theInputSystem->UpdateKeyBoardButton( asKey, true );
-		break;
-	}
-
-	// Raw physical keyboard "key-was-just-released" event (case-insensitive, not translated)
-	case WM_KEYUP:
-	{
-		unsigned char asKey = (unsigned char)wParam;
-		g_theInputSystem->UpdateKeyBoardButton( asKey, false );
-		//			#SD1ToDo: Tell the App and InputSystem about this key-released event...
-		break;
-	}
-	}
-
-	// Send back to Windows any unhandled/unconsumed messages we want other apps to see (e.g. play/pause in music apps, etc.)
-	return DefWindowProc( windowHandle, wmMessageCode, wParam, lParam );
-}
+// LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam )
+// {
+// 	if( g_theApp->DoesUseIMGUI() ) {
+// 		g_theApp->handleIMGUIInput( windowHandle, wmMessageCode, wParam, lParam );
+// 	}
+// 	switch( wmMessageCode )
+// 	{
+// 
+// 		// App close requested via "X" button, or right-click "Close Window" on task bar, or "Close" from system menu, or Alt-F4
+// 	case WM_CLOSE:
+// 	{
+// 		g_theApp->HandleQuitRequested();
+// 		return 0; // "Consumes" this message (tells Windows "okay, we handled it")
+// 	}
+// 
+// 	// Raw physical keyboard "key-was-just-depressed" event (case-insensitive, not translated)
+// 	case WM_KEYDOWN:
+// 	{
+// 		unsigned char asKey = (unsigned char)wParam;
+// 		if( asKey==VK_ESCAPE ) {
+// 			//g_theApp->HandleQuitRequested();
+// 		}
+// 		g_theInputSystem->UpdateKeyBoardButton( asKey, true );
+// 		break;
+// 	}
+// 
+// 	// Raw physical keyboard "key-was-just-released" event (case-insensitive, not translated)
+// 	case WM_KEYUP:
+// 	{
+// 		unsigned char asKey = (unsigned char)wParam;
+// 		g_theInputSystem->UpdateKeyBoardButton( asKey, false );
+// 		//			#SD1ToDo: Tell the App and InputSystem about this key-released event...
+// 		break;
+// 	}
+// 	}
+// 
+// 	// Send back to Windows any unhandled/unconsumed messages we want other apps to see (e.g. play/pause in music apps, etc.)
+// 	return DefWindowProc( windowHandle, wmMessageCode, wParam, lParam );
+// }
 
 
 void RunMessagePump()
@@ -116,7 +118,7 @@ int WINAPI WinMain( _In_ HINSTANCE applicationInstanceHandle, _In_opt_ HINSTANCE
 	g_theWindow = new Window();
 	//g_theApp->SonyTest();
 	//if( g_theApp->IsQuitting() ){ return 0; }
-	g_theWindow->Open( APP_NAME, CLIENT_ASPECT, 0.9f );
+	g_theWindow->Open( APP_NAME, CLIENT_ASPECT, 0.95f );
 	g_theApp->Startup();
 	while( !g_theApp->IsQuitting() ) {
 		//Sleep(16); testing

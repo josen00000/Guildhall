@@ -87,8 +87,10 @@ float GetAngleDegreesBetweenVectors2D( const Vec2& vectorA, const Vec2& vectorB 
 // 
 float		Interpolate(float a,float b,float fractionOfB);
 float		RangeMapFloat(const float inStart,const float inEnd,const float outStart,const float outEnd, const float inValue);
+float		ClampRangeMapFloat(const float inStart,const float inEnd,const float outStart,const float outEnd, float inValue);
 Vec3		RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 inValue );
 Vec2		RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue );
+Vec2		ClampRangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue );
 Vec2		RangeMapPointFromBoxToBox( AABB2 inBox, AABB2 outBox, Vec2 inPoint );
 Polygon2	RangeMapPolygonFromBoxToBox( AABB2 inBox, AABB2 outBox, Polygon2 inPolygon );
 

@@ -15,9 +15,25 @@ extern EventSystem*		g_theEventSystem;
 Player::Player()
 {
 	m_type = ACTOR_PLAYER;
-	m_color = Rgba8::RED;
 	m_isPushedByActor = true;
 	m_doesPushActor = true;
+	static int index = 0;
+	m_index = index;
+	index++;
+	char alpha = 255;
+	char intensity = 200;
+	if( m_index == 0 ) {
+		m_color = Rgba8( intensity, intensity, 0, alpha );
+	}
+	else if( m_index == 1 ) {
+		m_color = Rgba8( 0, intensity, intensity, alpha );
+	}
+	else if( m_index == 2 ) {
+		m_color = Rgba8( intensity, 0, intensity, alpha );
+	}
+	else if( m_index == 3 ) {
+		m_color = Rgba8::WHITE;
+	}
 }
 
 Player* Player::SpawnPlayerWithPos( Vec2 pos )
@@ -44,7 +60,7 @@ void Player::UpdatePlayer( float deltaSeconds, int playerIndex )
 	}
 
 	UpdatePlayerSpeed( deltaSeconds );
-	__super::UpdateActor( deltaSeconds );
+	__super::UpdateActor( deltaSeconds, m_color );
 }
 
 void Player::UpdatePlayerSpeed( float deltaSeconds )
@@ -95,6 +111,7 @@ void Player::HandleInput( float deltaSeconds, int playerIndex )
 		}
 		break;
 	case AI_INPUT:
+		break; // temp disable ai moving for debug TODO: delete this line
 		CheckAIState();
 		switch( m_aiState )
 		{
@@ -147,7 +164,7 @@ void Player::RenderPlayer()
 	__super::RenderActor();
 	Vec2 forwardDirt = Vec2::ONE;
 	forwardDirt.SetAngleDegrees( m_orientationDegrees );
-	g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 1.f, 0.1f, m_color );
+	//g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 1.f, 0.1f, m_color );
 }
 
 void Player::Die()

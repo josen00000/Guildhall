@@ -501,6 +501,7 @@ void CameraController::RenderToStencilTexture()
 			data.push_back( Vec2::ZERO );
 			m_voronoiOffsetBuffer->Update( data.data(), sizeof( Vec2 ) * 2, sizeof( Vec2 ) * 2 );
 			g_theRenderer->SetOffsetBuffer( m_voronoiOffsetBuffer, 0 );
+			g_theRenderer->DrawPolygon2D( m_voronoiPolygon, Rgba8::RED );
 			g_theRenderer->DrawPolygon2DWithBound( m_voronoiPolygon, Rgba8::RED, 0.5f, Rgba8::GREEN );
 			g_theRenderer->DrawCircle( m_voronoiPolygon.GetCenter(), 0.1f, 0.2f, Rgba8::GREEN);
 			g_theRenderer->EndCamera();

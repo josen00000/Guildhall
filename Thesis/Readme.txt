@@ -47,7 +47,7 @@ Operations:
 			     Camera always trys to zoom in to original size.
 		kill and teleport: camera does't zoom. When player out of camera, it will be teleported back 
 				   back inside the camera range.	 	    
-	F8 change balanced voronoi strat
+	F8 change balanced voronoi stratergy
 	
 	2 change area check state 
 Console command:
@@ -59,6 +59,5 @@ Settings:
 		Patrol: No player/Enemy close enough, randomly find movable goal pos and move.
 		Shoot:	player/enemy is close enough, stable and shoot towards target with cooldown.
 What's new this milestone:
-	finish on balanced area voronoi split screen
-	finish on smooth voronoi split screen
+	voronoi split screen able to merge.
  

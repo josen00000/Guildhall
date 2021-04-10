@@ -4,10 +4,12 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/AABB2.hpp"
+#include "Game/App.hpp"
 
 static wchar_t const* WND_CLASS_NAME = TEXT("Simple Window Class");
-extern DevConsole* g_theConsole;
-extern Window* g_theWindow;
+extern DevConsole*	g_theConsole;
+extern Window*		g_theWindow;
+extern App*			g_theApp;
 
 //-----------------------------------------------------------------------------------------------
 // Handles Windows (Win32) messages/events; i.e. the OS is trying to tell us something happened.
@@ -22,6 +24,11 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 	//if( window == nullptr ){ return 0; }
 	if( window != nullptr ){
 		input = window->GetInputSystem();
+	}
+	if( g_theApp ) {
+		if( g_theApp->DoesUseIMGUI() ) {
+ 			g_theApp->handleIMGUIInput( windowHandle, wmMessageCode, wParam, lParam );
+		}
 	}
 
 	switch( wmMessageCode )
@@ -205,6 +212,7 @@ bool Window::Open( std::string const& title, float clientAspect, float maxClient
 	clientRect.right = clientRect.left + (int)clientWidth;
 	clientRect.top = (int)clientMarginY;
 	clientRect.bottom = clientRect.top + (int)clientHeight;
+
 
 	// Calculate the outer dimensions of the physical window, including frame et. al.
 	RECT windowRect = clientRect;

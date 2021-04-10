@@ -66,6 +66,7 @@ public:
 	InputControlState	m_inputState	= CONTROLLER_INPUT;
 	PlayerAIState		m_aiState		= PLAYER_PATROL;
 
+	int	m_index					= 0;
 
 	float m_maxSpeed			= 3.f;
 	float m_accelerate			= 1.5f;

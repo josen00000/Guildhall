@@ -91,6 +91,17 @@ float RangeMapFloat(const float inStart, const float inEnd, const float outStart
 	return outValue;
 }
 
+float ClampRangeMapFloat( const float inStart, const float inEnd, const float outStart, const float outEnd, float inValue )
+{
+	if( inValue < inStart ) {
+		inValue = inStart;
+	}
+	else if( inValue > inEnd ) {
+		inValue = inEnd;
+	}
+	return RangeMapFloat( inStart, inEnd, outStart, outEnd, inValue );
+}
+
 Vec3 RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 inValue )
 {
 	Vec3 result;
@@ -105,6 +116,14 @@ Vec2 RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 ou
 	Vec2 result;
 	result.x = RangeMapFloat( inStart, inEnd, outStart.x, outEnd.x, inValue );
 	result.y = RangeMapFloat( inStart, inEnd, outStart.y, outEnd.y, inValue );
+	return result;
+}
+
+Vec2 ClampRangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue )
+{
+	Vec2 result;
+	result.x = ClampRangeMapFloat( inStart, inEnd, outStart.x, outEnd.x, inValue );
+	result.y = ClampRangeMapFloat( inStart, inEnd, outStart.y, outEnd.y, inValue );
 	return result;
 }
 

@@ -230,6 +230,10 @@ public:
 	void ClearState();
 	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 	
+	// Accessor
+	ID3D11DeviceContext* GetContext(){ return m_context; }
+	ID3D11Device* GetDevice(){ return m_device; }
+
 	// new for render target
 	Texture* CreateRenderTarget( IntVec2 texSize );
 	Texture* CreateRenderTargetWithSizeAndData( IntVec2 texSize, void* data );

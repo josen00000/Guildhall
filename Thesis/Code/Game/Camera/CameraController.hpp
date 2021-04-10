@@ -192,12 +192,13 @@ private:
 	float m_projectFrameRatio	= 0.f;
 	float m_cueFrameRatio		= 0.f;
 
-	// multiple camera
+	// multiple player single camera
 	bool m_ismultipleFactorStable	= true;
 	float m_goalMultipleFactor		= 1.f;
 	float m_startMultipleFactor		= 0.f;
 	float m_currentMultipleFactor	= 0.f;
 	float m_factorStableSeconds		= 0.f; 
+
 
 	// multiple camera setting
 	RenderBuffer* m_offsetBuffer				= nullptr;
@@ -210,6 +211,7 @@ private:
 	float			m_voronoiPolyArea				= 0.f;
 	float			m_originalVoronoiPolyArea		= 0.f;
 	float			m_voronoiSplitBlendCoeff		= 0.f;
+	float			m_screenEdgeWidth				= 0.5f;
 	Vec2			m_voronoiStencilOffset			= Vec2::ZERO;
 	Vec2			m_voronoiColorTargetOffset		= Vec2::ZERO;
 	Polygon2		m_voronoiPolygon;

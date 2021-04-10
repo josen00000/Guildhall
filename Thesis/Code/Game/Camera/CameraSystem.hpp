@@ -6,7 +6,7 @@
 #include "Engine/Math/ConvexHull2.hpp"
 
 typedef	std::pair<Vec2, std::vector<CameraController*>> VoronoiVertexAndControllersPair;
-typedef std::pair<CameraController*, float> ControllerVoronoiSplitBlendCoeff;
+//typedef std::pair<CameraController*, float> ControllerVoronoiSplitBlendCoeff;
 
 class Player;
 class Camera;
@@ -117,6 +117,8 @@ public:
 	std::string GetPostVoronoiSettingText() const;
 	std::string GetVoronoiAreaCheckStateText() const;
 
+	//const char** GetAllCameraWindowText() const;
+
 	CameraWindowState		GetCameraWindowState() const { return m_cameraWindowState; }
 	CameraSnappingState		GetCameraSnappingState() const { return m_cameraSnappingState; }
 	CameraShakeState		GetCameraShakeState() const { return m_cameraShakeState; }
@@ -190,14 +192,22 @@ public:
 	float GetMinOriginalVoronoiInCircleRadius();
 
 	// split and merge
-	bool IsControllerTotalSplitWithIndex( int controllerIndex );
+	bool IsControllerTotalSplit( int controllerIndex );
+	bool IsControllerMerged( int controllerIndex );
+	bool IsControllerNeedRenderWhenMerged( int controllerIndex );
+
 	std::vector<CameraController*> GetMergedControllersWithController( CameraController* controller );
 	std::vector<CameraController*> GetMergedControllersWithControllerIndex( int controllerIndex );
 	Vec2 GetMergedCameraPositionWithControllers( std::vector<CameraController*>& mergedControllers );
 	Vec2 GetAnotherCameraPosOfMergedControllers( std::vector<CameraController*>& mergedControllers, CameraController* excludeController );
-	void GetMergedVoronoiPolygonAndMergedPointWithControllers( std::vector<CameraController*>& mergedControllers, Polygon2& mergedPoly, Vec2& mergedPoint );
-	void GetMergedVoronoiPolygonAndPointWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly, Vec2& mergedPoint );
-	void GetMergedVoronoiPolygonAndPointWithThreeControllers( CameraController* a, CameraController* b, CameraController* c,  Polygon2& mergedPoly, Vec2& mergedPoint );
+	Vec2 GetTotalSplitColorTargetOffset( int controllerIndex );
+	Vec2 GetSplitToMergeBlendingColorTargetOffset( int controllerIndex );
+	Vec2 GetBlendingColorTargetOffsetOfTwoControllers( int controllerIndexA, int controllerIndexB );
+	Vec2 GetMergedColorTargetOffset( std::vector<int> controllerIndexes );
+	void GetTotalMergedColorTargetOffsetAndMergedPoly( int controllerIndexA, Vec2& mergedColorTargetOffset, Polygon2& mergedPoly );
+	void GetMergedVoronoiPolygonAndMergedPointWithControllers( std::vector<CameraController*>& mergedControllers, Polygon2& mergedPoly );
+	void GetMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly );
+	void GetMergedVoronoiPolygonWithThreeControllers( CameraController* a, CameraController* b, CameraController* c,  Polygon2& mergedPoly );
 	bool MergeControllersPairsWithIndex( int pairIndexA, int pairIndexB );
 	ConvexHull2 GetMergedVoronoiHullWithControllers( std::vector<CameraController*>& mergedControllers );
 	ConvexHull2 GetMergedVoronoiHullWithHulls( std::vector<ConvexHull2>& hullNeedMerged );
@@ -210,6 +220,7 @@ public:
 	CameraController* FindControllerWithMinArea();
 	CameraController* FindControllerWithMinRadius();
 	CameraController* FindNextAdjacentControllerWithPlane( Plane2 plane, std::vector<bool>& controllerCheckStates );
+	void GetMergedPolygonWithTwoPolygonShareOneEdge( const Polygon2& polyA, const Polygon2& polyB, Polygon2& mergedPoly );
 
 private:
 	bool m_isdebug = false;
@@ -220,7 +231,7 @@ private:
 	CameraSnappingState		m_cameraSnappingState	= NO_CAMERA_SNAPPING;
 	CameraShakeState		m_cameraShakeState		= POSITION_SHAKE;
 	CameraFrameState		m_cameraFrameState		= NO_FRAMEING;
-	SplitScreenState		m_splitScreenState		= NO_SPLIT_SCREEN;
+	SplitScreenState		m_splitScreenState		= VORONOI_SPLIT; // Temp for demo TODO: change back
 	NoSplitScreenStrat		m_noSplitScreenStrat	= NO_STRAT;
 	DebugMode				m_debugMode				= CONTROLLER_INFO;
 	PostVoronoiSetting		m_postVoronoiSetting	= NO_POST_EFFECT;
@@ -244,7 +255,7 @@ private:
 	std::vector<ConvexHull2> m_controllerVoronoiEdges;
 	std::vector<VoronoiVertexAndControllersPair> m_voronoiVertices;
 	std::vector<std::vector<CameraController*>> m_mergedControllers;
-	ControllerVoronoiSplitBlendCoeff m_controllersSplitBlendCoeffs[5][5];
+	float m_controllersSplitToMergeBlendCoeffs[5][5];
 	
 	// post voronoi setting
 	bool m_isVoronoiAnchorPointInitialized					= false;
@@ -259,8 +270,8 @@ private:
 	float m_voronoiInCircleRadiusThreshold					= 5.f;
 
 	// voronoi split & merge
-	float m_totalSplitDist									= 10.f;
-	float m_totalMergedDist									= 5.f;
+	float m_totalSplitDist									= 20.f;
+	float m_totalMergedDist									= 15.f;
 	
 	// debug
 	Vec2 m_debugMergedPoint									= Vec2::ZERO;

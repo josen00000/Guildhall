@@ -2,7 +2,6 @@
 #include "App.hpp"
 #include <iostream>
 #include <fstream>
-#include <windows.h>
 #include "Game/Game.hpp"
 #include "Game/GameCommon.hpp"
 #include "Game/Camera/CameraSystem.hpp"
@@ -19,6 +18,9 @@
 #include "Engine/Physics/Physics2D.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "ThirdParty/imgui/imgui.h"
+#include "ThirdParty/imgui/imgui_impl_dx11.h"
+#include "ThirdParty/imgui/imgui_impl_win32.h"
 
 // Game
 App*			g_theApp			= nullptr;
@@ -39,6 +41,7 @@ Physics2D*		g_thePhysics		= nullptr;
 RenderContext*	g_theRenderer		= nullptr;
 
 extern Convention g_convention;
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void App::Startup()
 {
@@ -51,14 +54,6 @@ void App::StartupStage1()
 {
 	// memory system and log system
 	Clock::SystemStartUp();
-	// test
-	std::vector<Vec2> testPoints;
-	testPoints.emplace_back( 2.f,5.f );
-	testPoints.emplace_back( -4.f, 3.f );
-	testPoints.emplace_back( 5.f, 1.f );
-
-	//Polygon2 testPoly = Polygon2::MakeConvexFromPointCloud( testPoints );
-	//float area = testPoly.GetArea();
 }
 
 void App::StartupStage2()
@@ -92,6 +87,15 @@ void App::StartupStage3()
 
 	g_theGame->Startup();
 	g_theConsole->Startup();
+
+	// imgui setup
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	HWND topWindow = (HWND)g_theWindow->GetTopWindowHandle();
+	ImGui_ImplWin32_Init( topWindow );
+	ImGui_ImplDX11_Init( g_theRenderer->GetDevice(), g_theRenderer->GetContext() );
+	ImGui::StyleColorsDark();
 }
 
 void App::Shutdown()
@@ -156,46 +160,9 @@ void App::UnPauseGame()
 	m_isPauseTime = false;
 }
 
-void App::SonyTest()
+void App::handleIMGUIInput( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam )
 {
-	// generate data
-	RandomNumberGenerator* rng = new RandomNumberGenerator();
-	std::string inputfileDataPath = "./Data/DevConsole/SonyTest.txt";
-	std::string outputfileDataPath = "./Data/DevConsole/SonyTestOutput.txt";
-	std::ofstream myInputFile;
-	std::ofstream myOutputFile;
-	myInputFile.open( inputfileDataPath );
-	myOutputFile.open( outputfileDataPath );
-	myInputFile << "total 10 set of data.\n ";
-	for( int i = 0; i < 10; i++ ) {
-		// 10 set of data test
-		myInputFile << "Index :" << i  << std::endl;
-		int totalPointsNum = rng->RollRandomIntInRange( 5, 50 );
-
-		myInputFile << "total Points :" << totalPointsNum << std::endl;
-		Vec2 minPoint = Vec2::ZERO;
-		Vec2 maxPoint = Vec2( 50.f );
-		std::vector<Vec2> tempPoints;
-		// generate input
-		for( int j = 0; j < totalPointsNum; j++ ) {
-			Vec2 tempPoint = rng->RollRandomVec2InRange( minPoint, maxPoint );
-			tempPoints.push_back( tempPoint ); 
-			myInputFile << tempPoint.x << " " << tempPoint.y << std::endl;
-		}
-		myInputFile << std::endl;
-		// generate ouput
-		Polygon2 generatedPoly = Polygon2::MakeConvexFromPointCloud( tempPoints );
-		std::vector<Vec2> worldPoints;
-		generatedPoly.GetAllVerticesInWorld( worldPoints );
-		myOutputFile << "Index :" << i  << std::endl;
-		myOutputFile << "Ouput points : " << worldPoints.size() << std::endl;
-		for( int j = 0; j < worldPoints.size(); j++ ) {
-			myOutputFile << worldPoints[j].x << " " << worldPoints[j].y << std::endl;
-		}
-	}
-
-	m_isQuitting = true;
-
+	ImGui_ImplWin32_WndProcHandler( (HWND)windowHandle, wmMessageCode, wParam, lParam );
 }
 
 void App::BeginFrame()
@@ -211,6 +178,7 @@ void App::BeginFrame()
 void App::Update( float deltaSeconds )
 {
 	g_theEventSystem->Update();
+	UpdateIMGUI();
 	g_theGame->RunFrame( deltaSeconds );
 	g_theConsole->Update( deltaSeconds );
 	CheckGameQuit();
@@ -222,12 +190,74 @@ const void App::Render() const
 
 	g_theRenderer->BeginCamera( g_UICamera );
 	g_theGame->RenderUI();
+	RenderIMGUI();
 	g_theRenderer->EndCamera();
 
 	g_theConsole->Render( *g_theRenderer );
 	// debug render
 	DebugRenderScreenTo( g_gameCamera->GetColorTarget() );
 	DebugRenderWorldToCamera( g_gameCamera );
+}
+
+void App::UpdateIMGUI()
+{
+	static const char* cameraWindowStateItems[]			{ "No Camera Window", "Camera Window" };
+	static const char* cameraSnappingStateItems[]		{ "No Camera Snapping", "Position Snapping", "Horizontal Lock", "Vertical Lock", "Position lock" };
+	static const char* cameraShakeStateItems[]			{ "Position shake", "Rotation shake", "Blend Shake"};
+	static const char* cameraFrameStateItems[]			{ "No Framing", "Forward Framing", "Projectile Framing", "Cue Framing", "Blend Framing"};
+	static const char* splitScreenStateItems[]			{ "No Split Screen", "Axis Aligned Split Screen", "Voronoi Split Screen" };
+	static const char* noSplitScreenStrategyItems[]		{ "No Strategy", "Zoom To Fit", "Kill And Teleport" };
+	static const char* postVoronoiSettingItems[]		{ "No Post Effect", "Push Plane And Rearrange Voronoi Vertex", "Rearrange Voronoi point", "Health based" };
+	static const char* VoronoiAreaCheckingItems[]		{ "Polygon Area", "Incircle Radius"};
+
+	static uint cameraWindowStateIndex		= 0;
+	static uint cameraSnappingStateIndex	= 0;
+	static uint cameraShakeStateIndex		= 0;
+	static uint cameraFrameStateIndex		= 0;
+	static uint splitScreenStateIndex		= 0;
+	static uint noSplitScreenStrategyIndex	= 0;
+	static uint postVoronoiSettingIndex		= 0;
+	static uint voronoiAreaCheckingIndex	= 0;
+	
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin( "2D Multiplayer Camera System" );
+	ImGui::Combo( "Camera Window State", (int*)&cameraWindowStateIndex, cameraWindowStateItems, IM_ARRAYSIZE(cameraWindowStateItems) );
+	ImGui::Combo( "Camera Snapping State", (int*)&cameraSnappingStateIndex, cameraSnappingStateItems, IM_ARRAYSIZE(cameraSnappingStateItems) );
+	ImGui::Combo( "Camera Shake State", (int*)&cameraShakeStateIndex, cameraShakeStateItems, IM_ARRAYSIZE(cameraShakeStateItems) );
+	ImGui::Combo( "Camera Frame State", (int*)&cameraFrameStateIndex, cameraFrameStateItems, IM_ARRAYSIZE(cameraFrameStateItems) );
+	ImGui::Combo( "Split Screen State", (int*)&splitScreenStateIndex, splitScreenStateItems, IM_ARRAYSIZE(splitScreenStateItems) );
+	if( splitScreenStateIndex == (uint)SplitScreenState::NO_SPLIT_SCREEN ) {
+		ImGui::Combo( "No Split Screen Strategy", (int*)&noSplitScreenStrategyIndex, noSplitScreenStrategyItems, IM_ARRAYSIZE(noSplitScreenStrategyItems) );
+	}
+	else {
+		noSplitScreenStrategyIndex = 0;
+	}
+	if( splitScreenStateIndex == (uint)SplitScreenState::VORONOI_SPLIT ) {
+		ImGui::Combo( "Post Voronoi Setting", (int*)&postVoronoiSettingIndex, postVoronoiSettingItems, IM_ARRAYSIZE(postVoronoiSettingItems) );
+		if( postVoronoiSettingIndex != (uint)PostVoronoiSetting::NO_POST_EFFECT ) {
+			ImGui::Combo( "Voronoi Area Check State", (int*)&voronoiAreaCheckingIndex, VoronoiAreaCheckingItems, IM_ARRAYSIZE(VoronoiAreaCheckingItems) );
+
+		}
+	}
+
+	ImGui::End();
+
+	g_theCameraSystem->SetCameraWindowState( (CameraWindowState)cameraWindowStateIndex );
+	g_theCameraSystem->SetCameraSnappingState( (CameraSnappingState)cameraSnappingStateIndex );
+	g_theCameraSystem->SetCameraShakeState( (CameraShakeState)cameraShakeStateIndex );
+	g_theCameraSystem->SetCameraFrameState( (CameraFrameState)cameraFrameStateIndex );
+	g_theCameraSystem->SetSplitScreenState( (SplitScreenState)splitScreenStateIndex );
+	g_theCameraSystem->SetNoSplitScreenStrat( (NoSplitScreenStrat)noSplitScreenStrategyIndex );
+	g_theCameraSystem->SetPostVoronoiSetting( (PostVoronoiSetting)postVoronoiSettingIndex );
+	g_theCameraSystem->SetVoronoiAreaCheckState( (VoronoiAreaCheckState)voronoiAreaCheckingIndex );
+}
+
+void App::RenderIMGUI() const
+{
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData( ImGui::GetDrawData() );
 }
 
 void App::EndFrame()
@@ -239,6 +269,10 @@ void App::EndFrame()
 	g_theAudioSystem->EndFrame();
 	g_theConsole->EndFrame();
 	DebugRenderEndFrame();
+	float deltaSeconds =  Clock::GetMasterDeltaSeconds();
+	if( deltaSeconds < 0.016f ) {
+		Sleep( (0.016f - deltaSeconds) * 1000.f );
+	}
 }
 
 

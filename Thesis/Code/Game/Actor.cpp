@@ -29,7 +29,7 @@ Actor* Actor::SpawnActorWithPos( Vec2 pos )
 	return newActor;
 }
 
-void Actor::UpdateActor( float deltaSeconds )
+void Actor::UpdateActor( float deltaSeconds, Rgba8 color /*= Rgba8::WHITE */ )
 {
 	m_shootTimer += deltaSeconds;
 
@@ -38,15 +38,14 @@ void Actor::UpdateActor( float deltaSeconds )
 	if( m_movingDir != Vec2::ZERO ) {
 		m_lastFrameMovingDegrees = m_movingDir.GetAngleDegrees();
 	}
-	
+
 	OBB2 baseOBB = OBB2( m_baseOBBSize, m_position, m_lastFrameMovingDegrees );
 	OBB2 barrelOBB = OBB2( m_barrelOBBSize, m_position, m_orientationDegrees );
 	m_baseVertices.clear();
 	m_barrelVertices.clear();
-	AppendVertsForOBB2D( m_baseVertices, baseOBB, Rgba8::WHITE );
-	AppendVertsForOBB2D( m_barrelVertices, barrelOBB, Rgba8::WHITE );
+	AppendVertsForOBB2D( m_baseVertices, baseOBB, color );
+	AppendVertsForOBB2D( m_barrelVertices, barrelOBB, color );
 }
-
 
 void Actor::RenderActor() 
 {
@@ -59,12 +58,12 @@ void Actor::RenderActor()
 	case ACTOR_PLAYER:
 		baseTexture = g_theGame->m_playerTexture;
 		barrelTexture = g_theGame->m_playerBarrelTexture;
-		g_theRenderer->DrawCircle( Vec3( m_position, 0 ), m_physicsRadius, 0.05f, Rgba8::RED );
+		//g_theRenderer->DrawCircle( Vec3( m_position, 0 ), m_physicsRadius, 0.05f, Rgba8::RED );
 		break;
 	case ACTOR_ENEMY:
 		baseTexture = g_theGame->m_enemyTexture;
 		barrelTexture = g_theGame->m_enemyBarrelTexture;
-		g_theRenderer->DrawCircle( Vec3( m_position, 0 ), m_physicsRadius, 0.05f, Rgba8::BLUE );
+		//g_theRenderer->DrawCircle( Vec3( m_position, 0 ), m_physicsRadius, 0.05f, Rgba8::BLUE );
 		break;
 	default:
 		break;
