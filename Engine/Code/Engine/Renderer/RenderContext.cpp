@@ -948,19 +948,19 @@ void RenderContext::DrawConvexHull( ConvexHull2 const& hull, Rgba8 tint )
 	}
 }
 
-void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
+void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint, const Vec2& uvMin /*= Vec2::ZERO*/, const Vec2& uvMax /*= Vec2::ONE */ )
 {
-	//BindVertexBuffer( m_immediateVBO );
+	
 	float temZ = 0.f; // set to zero or use default
 	Vertex_PCU temAABB2[6] ={
 		// triangle2
-		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
-		Vertex_PCU( Vec3( bounds.maxs.x, bounds.mins.y, temZ ), tint, Vec2( 1, 0 ) ),
-		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
+		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, uvMin ),
+		Vertex_PCU( Vec3( bounds.maxs.x, bounds.mins.y, temZ ), tint, Vec2( uvMax.x, uvMin.y ) ),
+		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, uvMax ),
 		// triangle2
-		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
-		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
-		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( 0, 1 ) ),
+		Vertex_PCU( Vec3( bounds.mins, temZ ), tint,uvMin ),
+		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, uvMax ),
+		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( uvMin.x, uvMax.y ) ),
 	};
 	DrawVertexArray( 6, temAABB2 );
 }

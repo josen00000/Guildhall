@@ -1,9 +1,10 @@
 #pragma once
 #include <vector>
-#include "Game/Camera/CameraController.hpp"
+#include "../../Thesis/Code/Game/Camera/CameraController.hpp"
 #include "Game/GameCommon.hpp"
 #include "Game/Map/Map.hpp"
 #include "Engine/Math/ConvexHull2.hpp"
+#include "Engine/Core/EngineCommon.hpp"
 
 typedef	std::pair<Vec2, std::vector<CameraController*>> VoronoiVertexAndControllersPair;
 //typedef std::pair<CameraController*, float> ControllerVoronoiSplitBlendCoeff;
@@ -11,6 +12,13 @@ typedef	std::pair<Vec2, std::vector<CameraController*>> VoronoiVertexAndControll
 class Player;
 class Camera;
 class RandomNumberGenerator;
+
+enum eDebugBitFlag : uint {
+	DEBUG_NONE						= 0,
+	DEBUG_CAMERA_WINDOW_BIT			= BIT_FLAG(0),
+	DEBUG_VORONOI_INCIRCLE_BIT		=  BIT_FLAG(1),	
+	DEBUG_VORONOI_ANCHOR_POINT_BIT	=  BIT_FLAG(2),
+};
 
 enum CameraWindowState: unsigned int {
 	NO_CAMERA_WINDOW = 0,
@@ -103,9 +111,19 @@ public:
 
 	// Accessor
 	bool GetIsDebug() const { return m_isdebug; }
-	bool DoesNeedSplitScreen( AABB2 cameraBox ) const;
 	int GetControllersNum() const { return (int)m_controllers.size(); }
+	int GetPostVoronoiIterationNum() const { return m_postVoronoiIteration; }
 	float GetTotalFactor() const ; 
+	float GetForwardCameraFrameDist() const;
+	float GetProjectileCameraFrameDist() const;
+	float GetCueCameraFrameDist() const;
+	float GetPositionalShakeMaxDist() const;
+	float GetRotationalShakeMaxDeg() const;
+	Vec2 GetCameraWindowSize() const;
+
+	// Debug flags
+	bool GetDoesDebugCameraWindow() const;
+	bool GetDoesDebugAnchorPoints() const;
 
 	std::string GetCameraWindowStateText() const;
 	std::string GetCameraSnappingStateText() const;
@@ -131,12 +149,13 @@ public:
 
 	Vec2 GetAverageCameraPosition();
 	AABB2 GetWorldCameraBox();
-	AABB2 GetSplitCheckBox();
+	AABB2 GetVoronoiBox();
 
 	Camera*				GetNoSplitCamera() { return m_noSplitCamera; }
 	CameraController*	GetCameraControllerWithPlayer( Player* player );
 
 	std::vector<CameraController*>& GetCameraControllers();
+	CameraController*	GetCameraControllerWithIndex( int index );
 	RandomNumberGenerator* GetRNG(){ return m_rng; }
 
 	// Mutator
@@ -152,8 +171,20 @@ public:
 	void SetPostVoronoiSetting( PostVoronoiSetting postSetting );
 	void SetVoronoiAreaCheckState( VoronoiAreaCheckState voronoiAreaCheckState );
 	void SetMap( Map* map );
+	void SetCameraWindowSize( Vec2 dimension );
 
 	void AddCameraShake( int index, float shakeTrauma );
+	
+	void SetForwardFrameDistance( float dist );
+	void SetProjectileFrameDistance( float dist );
+	void SetCueFrameDistance( float dist );
+	void SetPositionalShakeMaxDist( float maxDist );
+	void SetRotationalShakeMaxDeg( float maxDeg );
+	void SetPostVoronoiIterationNum( int num );
+
+	// Debugflags
+	void SetDoesDebugCameraWindow( bool doesDebugCameraWindow );
+	void SetdoesDebugAnchorPoints( bool doesDebugAnchorPoints );
 
 	// Controller
 	void CreateAndPushController( Player* player );
@@ -169,11 +200,13 @@ public:
 	void ZoomCameraToFitPlayers();
 	float ComputeCameraHeight( std::vector<CameraController*> const& vec );
 
+		// Axis Aligned split screen
+	void SetDynamicAxisAlignedSplitScreenMultipleFactors( float smoothTime, float factor1, float factor2 );
 		// voronoi split
-	void ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type );
-	void ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBox, AABB2 splitCheckBox );
-	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type );
-	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 splitCheckBox, PolyType type );
+	void ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, AABB2 voronoiBox, PolyType type );
+	void ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBox, AABB2 voronoiBox );
+	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 voronoiBox, PolyType type );
+	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 voronoiBox, PolyType type );
 	void UpdateVoronoiPolyAndOffset();
 	void ConstructVoronoiHullsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	void ConstructVoronoiHullsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
@@ -183,8 +216,8 @@ public:
 	void ExpandMinVoronoiPoly();
 	bool ConstructAllAndIsAnyVoronoiVertex();
 	bool RearrangeVoronoiVertexForMinVoronoiPoly( CameraController* controller, std::vector<Vec2> voronoiVertexPos );
-	void ComputeAndSetVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox );
-	void ComputeAndSetBalancedVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 splitCheckBox );
+	void ComputeAndSetVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 voronoiBox );
+	void ComputeAndSetBalancedVoronoiTargetAnchorPoints( AABB2 worldCameraBox, AABB2 voronoiBox );
 	void ReConstructBalancedVoronoiDiagram();
 	float GetAverageVoronoiInCircleRadius();
 	float GetAverageOriginalVoronoiInCircleRadius();
@@ -196,22 +229,15 @@ public:
 	bool IsControllerMerged( int controllerIndex );
 	bool IsControllerNeedRenderWhenMerged( int controllerIndex );
 
-	std::vector<CameraController*> GetMergedControllersWithController( CameraController* controller );
-	std::vector<CameraController*> GetMergedControllersWithControllerIndex( int controllerIndex );
-	Vec2 GetMergedCameraPositionWithControllers( std::vector<CameraController*>& mergedControllers );
-	Vec2 GetAnotherCameraPosOfMergedControllers( std::vector<CameraController*>& mergedControllers, CameraController* excludeController );
 	Vec2 GetTotalSplitColorTargetOffset( int controllerIndex );
-	Vec2 GetSplitToMergeBlendingColorTargetOffset( int controllerIndex );
-	Vec2 GetBlendingColorTargetOffsetOfTwoControllers( int controllerIndexA, int controllerIndexB );
+	Vec2 GetSplitToMergeBlendingColorTargetOffsetAndBlendingEdges( int controllerIndex, std::vector<edgeIndexAndThickness>& blendingEdgeIndexes );
+	Vec2 GetBlendingColorTargetOffsetAndBlendingEdgeIndexesOfTwoControllers( int controllerIndexA, int controllerIndexB,  std::vector<edgeIndexAndThickness>& edgeIndexes  );
 	Vec2 GetMergedColorTargetOffset( std::vector<int> controllerIndexes );
 	void GetTotalMergedColorTargetOffsetAndMergedPoly( int controllerIndexA, Vec2& mergedColorTargetOffset, Polygon2& mergedPoly );
-	void GetMergedVoronoiPolygonAndMergedPointWithControllers( std::vector<CameraController*>& mergedControllers, Polygon2& mergedPoly );
 	void GetMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly );
+	int GetBlendingEdgeIndexesAndMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly );
 	void GetMergedVoronoiPolygonWithThreeControllers( CameraController* a, CameraController* b, CameraController* c,  Polygon2& mergedPoly );
-	bool MergeControllersPairsWithIndex( int pairIndexA, int pairIndexB );
-	ConvexHull2 GetMergedVoronoiHullWithControllers( std::vector<CameraController*>& mergedControllers );
-	ConvexHull2 GetMergedVoronoiHullWithHulls( std::vector<ConvexHull2>& hullNeedMerged );
-	ConvexHull2 MergeTwoAdjacantVoronoiHull( ConvexHull2 hullA, ConvexHull2 hullB );
+
 
 	// helper function
 	bool GetSharedPointOfVoronoiPolygonABC( Polygon2 polygonA, Polygon2 polygonB, Polygon2 polygonC, Vec2& sharedPoint );
@@ -224,6 +250,7 @@ public:
 
 private:
 	bool m_isdebug = false;
+	uint m_debugFlags = 0;
 	std::vector<CameraController*> m_controllers;
 	
 	// states
@@ -258,20 +285,20 @@ private:
 	float m_controllersSplitToMergeBlendCoeffs[5][5];
 	
 	// post voronoi setting
-	bool m_isVoronoiAnchorPointInitialized					= false;
+	bool m_isVoronoiInitialized					= false;
 	int m_postVoronoiIteration								= 0;
 	int m_targetPostVoronoiIteration						= 3;
 	float m_expandVoronoiLeastStep							= 2.f;
 
 	// voronoi fairness
-	float m_maxVoronoiAnchorPointMoveDistWithPolyArea		= 5.f;	
+	float m_maxVoronoiAnchorPointMoveDistWithPolyArea		= 3.f;	
 	float m_maxVoronoiAnchorPointMoveDistWithIncircleRadius	= 3.f;	
 	float m_expandVoronoiAreaThreshold						= 50.f;
 	float m_voronoiInCircleRadiusThreshold					= 5.f;
 
 	// voronoi split & merge
-	float m_totalSplitDist									= 20.f;
-	float m_totalMergedDist									= 15.f;
+	float m_totalSplitDist									= 15.f;   // 20
+	float m_totalMergedDist									= 10.f;   // 15
 	
 	// debug
 	Vec2 m_debugMergedPoint									= Vec2::ZERO;

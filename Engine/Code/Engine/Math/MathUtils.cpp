@@ -861,6 +861,19 @@ bool IsPlaneMostlyEqual( Plane2 a, Plane2 b, float epsilon/*=0.001f */ )
 	return IsVec2MostlyEqual( a.GetNormal(), b.GetNormal(), epsilon ) && IsFloatMostlyEqual( a.GetDistance(), b.GetDistance() );
 }
 
+bool IsLineSeg2MostlyEqual( LineSegment2 a, LineSegment2 b, float epsilon/*=0.01f */ )
+{
+	if( IsVec2MostlyEqual( a.GetStartPos(), b.GetStartPos() ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetEndPos() ) ) {
+		return true;
+	}
+	else if ( IsVec2MostlyEqual( a.GetStartPos(), b.GetEndPos() ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetStartPos() ) ) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c )
 {
 	Vec2 ab = b - a;

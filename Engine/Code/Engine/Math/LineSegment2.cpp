@@ -207,6 +207,15 @@ Vec2 LineSegment2::GetNearestPoint( const Vec2& refPos ) const
 	return result;
 }
 
+OBB2 LineSegment2::GetLineOBB2WithThickness( float thickness ) const
+{
+	Vec2 dimension = Vec2( GetLength(), thickness );
+	Vec2 center = ( m_end - m_start ) / 2.f;
+	Vec2 direction = GetNormalizedDirection();
+	OBB2 result = OBB2( dimension, center, direction );
+	return result;
+}
+
 void LineSegment2::SetStartPos( const Vec2& start )
 {
 	m_start = start;

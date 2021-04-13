@@ -13,9 +13,12 @@ struct Vec4;
 class RenderBuffer;
 class Shader;
 
+typedef std::pair<int, float> edgeIndexAndThickness;
+
 enum PolyType {
 	ORIGINAL_POLY,
-	CURRENT_POLY
+	CURRENT_POLY,
+	INITIALIZE_POLY,
 };
 
 class CameraController {
@@ -26,6 +29,7 @@ public:
 	CameraController(){}
 	~CameraController();
 	explicit CameraController( CameraSystem* owner, Player* player, Camera* camera );
+	void BeginFrame();
 	void Update( float deltaSeconds );
 	void Render();
 	void EndFrame();
@@ -36,12 +40,18 @@ public:
 	int GetIndex() const							{ return m_index; }
 	bool GetNeedRenderWhenMerged() const			{ return m_needRenderWhenMerged; }
 	bool GetIsDebug() const							{ return m_isDebug; }
+	bool GetAllowMerge() const						{ return m_allowMerge; }
 	float GetCurrentMultipleFactor() const			{ return m_currentMultipleFactor; }
 	float GetVoronoiArea() const					{ return m_voronoiPolyArea; }
 	float GetOriginalVoronoiArea() const			{ return m_originalVoronoiPolyArea; }
 	float GetVoronoiInCircleRadius() const			{ return m_voronoiInCircleRadius; }
 	float GetOriginalVoronoiInCircleRadius() const	{ return m_originalvoronoiInCircleRadius; }
 	float GetVoronoiSplitBlendCoeff() const			{ return m_voronoiSplitBlendCoeff; }
+	float GetForwardCameraFrameDist() const			{ return m_fwdFrameDist; }
+	float GetProjectileCameraFrameDist() const		{ return m_projectFrameDist; }
+	float GetCueCameraFrameDist() const				{ return m_cueFrameDist; }
+
+	Vec2 GetCameraWindowSize() const				{ return m_cameraWindow.GetDimensions(); }
 	Vec2 GetCuePos() const ;
 	Vec2 GetSmoothedGoalPos() const					{ return m_smoothedGoalCameraPos; }
 	Vec2 GetCameraPos() const						{ return m_cameraPos; }
@@ -63,11 +73,17 @@ public:
 	void SetIndex( int index );
 	void SetIsDebug( bool isDebug );
 	void SetIsSmooth( bool isSmooth );
+	void SetAllowMerge( bool allowMerge );
 
 	void SetAsymptoticValue( float value );
 	void SetTrauma( float trauma );
 	void AddTrauma( float addTrauma );
-	void SetFwdFrameDist( float dist );
+	void SetForwardFrameDist( float dist );
+	void SetProjectileFrameDist( float dist );
+	void SetCueFrameDist( float dist ); 
+	void SetPositionalShakeMaxDist( float maxDist );
+	void SetRotationalShakeMaxDeg( float maxDeg );
+
 	void SetVoronoiSplitBlendCoeff( float coeff );
 	void SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor );
 
@@ -85,6 +101,7 @@ public:
 	void SetVoronoiHullAndUpdateVoronoiPoly( ConvexHull2 hull, PolyType type  );
 	void AddPlaneToVoronoiHull( Plane2 plane, PolyType type );
 	void SetNeedRenderWhenMerged( bool doesNeedRenderWhenMerged );
+	void addBlendingEdgeIndexAndThickness( int edgeIndex, float thicknessRatio );
 
 	// Camera Window
 	void UpdateCameraWindow( float deltaSeconds );
@@ -179,14 +196,11 @@ private:
 	float m_shakeIntensity		= 0.f;
 	float m_maxShakePosDist		= 1.f;
 	float m_maxShakeRotDeg		= 10.f;
-	float m_shakePosRatio		= 0.f;
-	float m_shakeRotRatio		= 0.f;
 
 	// Camera framing
-	float m_fwdFrameVelDist		= 1.5f;
+	float m_fwdFrameDist		= 1.5f;
 	float m_projectFrameDist	= 1.5f;
 	float m_cueFrameDist		= 1.5f;
-	float m_fwdFrameMaxDist		= 3.f;
 	float m_smoothRatio4		= 0.90f;
 	float m_fwdFrameRatio		= 0.f;
 	float m_projectFrameRatio	= 0.f;
@@ -206,17 +220,21 @@ private:
 
 	// voronoi setting
 	bool			m_needRenderWhenMerged			= true;
+	bool			m_allowMerge					= false;
 	float			m_voronoiInCircleRadius			= 0.f;
 	float			m_originalvoronoiInCircleRadius	= 0.f;
 	float			m_voronoiPolyArea				= 0.f;
 	float			m_originalVoronoiPolyArea		= 0.f;
 	float			m_voronoiSplitBlendCoeff		= 0.f;
 	float			m_screenEdgeWidth				= 0.5f;
+	float			m_maxedgeThickness				= 0.5f;
 	Vec2			m_voronoiStencilOffset			= Vec2::ZERO;
 	Vec2			m_voronoiColorTargetOffset		= Vec2::ZERO;
 	Polygon2		m_voronoiPolygon;
 	Polygon2		m_originalVoronoiPolygon;
 	ConvexHull2		m_voronoiHull;
+	std::vector<edgeIndexAndThickness> m_blendingEdgeIndexesAndThickness;
+	std::vector<Vertex_PCU> m_stencilVertices;
 
 	//std::chrono::microseconds m_testDuration;
 

@@ -118,7 +118,7 @@ int WINAPI WinMain( _In_ HINSTANCE applicationInstanceHandle, _In_opt_ HINSTANCE
 	g_theWindow = new Window();
 	//g_theApp->SonyTest();
 	//if( g_theApp->IsQuitting() ){ return 0; }
-	g_theWindow->Open( APP_NAME, CLIENT_ASPECT, 0.95f );
+	g_theWindow->Open( APP_NAME, CLIENT_ASPECT, 0.8f );
 	g_theApp->Startup();
 	while( !g_theApp->IsQuitting() ) {
 		//Sleep(16); testing

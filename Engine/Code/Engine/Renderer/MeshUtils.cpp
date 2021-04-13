@@ -3,6 +3,8 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/Mat44.hpp"
 #include "Engine/Math/OBB3.hpp"
+#include "Engine/Math/Polygon2.hpp"
+#include "Engine/Math/LineSegment2.hpp"
 
 
 // Append PCU Verts
@@ -38,6 +40,24 @@ void AppendVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, const Convex
 	vertices.push_back( Vertex_PCU( Vec3( poly.m_points.back(), posZ ), tintColor, Vec2::ZERO ) );
 	vertices.push_back( Vertex_PCU( Vec3( poly.m_points.front(), posZ ), tintColor, Vec2::ZERO ) );
 	vertices.push_back( Vertex_PCU( Vec3( center, posZ ), tintColor, Vec2::ZERO ) );
+}
+
+void AppendVertsForPolygon2D( std::vector<Vertex_PCU>& vertices, const Polygon2& poly, const Rgba8& tintColor )
+{
+	if( poly.m_edges.size() == 0 ){ return; }
+	vertices.reserve( poly.m_edges.size() * 3 );
+	float posZ = 0.f;
+	Vec2 center = poly.GetCenter();
+	std::vector<Vec2> polyWorldPoints;
+	poly.GetAllVerticesInWorld( polyWorldPoints );
+	for( int i = 0; i < polyWorldPoints.size() - 1; i++ ) {
+		vertices.push_back( Vertex_PCU( Vec3( center, posZ ), tintColor, Vec2::ZERO ) );
+		vertices.push_back( Vertex_PCU( Vec3( polyWorldPoints[i], posZ ), tintColor, Vec2::ZERO ) );
+		vertices.push_back( Vertex_PCU( Vec3( polyWorldPoints[i + 1], posZ ), tintColor, Vec2::ZERO ) );
+	}
+	vertices.push_back( Vertex_PCU( Vec3( center, posZ ), tintColor, Vec2::ZERO ) );
+	vertices.push_back( Vertex_PCU( Vec3( polyWorldPoints.back(), posZ ), tintColor, Vec2::ZERO ) );
+	vertices.push_back( Vertex_PCU( Vec3( polyWorldPoints.front(), posZ ), tintColor, Vec2::ZERO ) );
 }
 
 void AppendVertsForAABB2DWithHeight( std::vector<Vertex_PCU>& vertices, const AABB2& bound, float height, const Rgba8& tintColor, const Vec2& uvAtMins, const Vec2& uvAtMaxs )
@@ -237,6 +257,26 @@ void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2&
 	orientationDegrees += 180;
 	orientationDegrees = ClampDegressTo360( orientationDegrees );
 	AppendVertsForHalfCircle2D( vertices, bound.m_end, orientationDegrees, bound.m_radius, tintColor );
+}
+
+void AppendVertsForLineSegment2D( std::vector<Vertex_PCU>& vertices, const LineSegment2& line, float thickness, const Rgba8& tintColor )
+{
+	float halfThick = thickness / 2;
+	Vec2 direction = line.GetDisplacement();
+	direction.SetLength( halfThick );
+	Vec2 tem_position = line.GetEndPos() + direction;
+	Vec2 rightTop = tem_position + (Vec2( -direction.y, direction.x ));
+	Vec2 rightdown = tem_position + (Vec2( direction.y, -direction.x ));
+	Vec2 tem_position1 = line.GetStartPos() - direction;
+	Vec2 leftTop = tem_position1 + (Vec2( -direction.y, direction.x ));
+	Vec2 leftdown = tem_position1 + (Vec2( direction.y, -direction.x ));
+	Vec2 tem_uv = Vec2( 0.f, 0.f );
+	vertices.push_back(	Vertex_PCU( Vec3( rightTop.x,rightTop.y,0 ),	Rgba8( tintColor.r,tintColor.g,tintColor.b ),	Vec2( 0, 0 ) ) );
+	vertices.push_back(	Vertex_PCU( Vec3( rightdown.x,rightdown.y,0 ),	Rgba8( tintColor.r,tintColor.g,tintColor.b ),	Vec2( 0, 0 ) ) );
+	vertices.push_back(	Vertex_PCU( Vec3( leftTop.x,leftTop.y,0 ),		Rgba8( tintColor.r,tintColor.g,tintColor.b ),	Vec2( 0, 0 ) ) );
+	vertices.push_back(	Vertex_PCU( Vec3( leftTop.x,leftTop.y, 0 ),		Rgba8( tintColor.r,tintColor.g,tintColor.b ),	Vec2( 0, 0 ) ) );
+	vertices.push_back(	Vertex_PCU( Vec3( leftdown.x,leftdown.y, 0 ),	Rgba8( tintColor.r,tintColor.g,tintColor.b ),	Vec2( 0, 0 ) ) );
+	vertices.push_back(	Vertex_PCU( Vec3( rightdown.x,rightdown.y, 0 ), Rgba8( tintColor.r,tintColor.g,tintColor.b ),	Vec2( 0, 0 ) ) );
 }
 
 void AppendVertsForCapsule2DWithHeight( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor )

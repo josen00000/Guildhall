@@ -9,6 +9,8 @@ void EventSystem::Update()
 
 		EventArgs tempEventArg = EventArgs();
 		tempTimeDele.delegate->invoke( tempEventArg );
+		delete tempTimeDele.delegate;
+		delete tempTimeDele.timer;
 		m_timerRegisteredEvents.erase( m_timerRegisteredEvents.begin() + i );
 		i--;
 	}

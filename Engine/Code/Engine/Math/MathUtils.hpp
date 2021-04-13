@@ -141,6 +141,7 @@ bool IsVec2MostlyEqual( Vec2 a, Vec2 b, float epsilon=0.001f );
 bool IsVec3MostlyEqual( Vec3 a, Vec3 b, float epsilon=0.001f );
 bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon=0.001f );
 bool IsPlaneMostlyEqual( Plane2 a, Plane2 b, float epsilon=0.001f );
+bool IsLineSeg2MostlyEqual( LineSegment2 a, LineSegment2 b, float epsilon=0.01f );
 
 // Area
 float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c );

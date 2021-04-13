@@ -1,0 +1,11 @@
+<MapDefinitions>
+
+  <MapDefinition name="level1" width="60" height="25" fillTile="Grass" edgeTile="Wall" startTile="Entry">
+    <MapGenerateSteps>
+
+
+    </MapGenerateSteps>
+  </MapDefinition>
+
+
+</MapDefinitions>

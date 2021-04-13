@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Math/vec2.hpp"
+#include "Engine/Math/OBB2.hpp"
 
 struct LineSegment2
 {
@@ -29,6 +30,7 @@ public:
 	Vec2	GetNormalizedDirection() const;
 	Vec2	GetDisplacement() const;
 	Vec2	GetNearestPoint( const Vec2& refPos ) const;
+	OBB2	GetLineOBB2WithThickness( float thickness ) const;
 
 	//Mutator
 	void	SetStartPos( const Vec2& start );

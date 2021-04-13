@@ -210,48 +210,127 @@ void App::UpdateIMGUI()
 	static const char* postVoronoiSettingItems[]		{ "No Post Effect", "Push Plane And Rearrange Voronoi Vertex", "Rearrange Voronoi point", "Health based" };
 	static const char* VoronoiAreaCheckingItems[]		{ "Polygon Area", "Incircle Radius"};
 
-	static uint cameraWindowStateIndex		= 0;
-	static uint cameraSnappingStateIndex	= 0;
-	static uint cameraShakeStateIndex		= 0;
-	static uint cameraFrameStateIndex		= 0;
-	static uint splitScreenStateIndex		= 0;
-	static uint noSplitScreenStrategyIndex	= 0;
-	static uint postVoronoiSettingIndex		= 0;
-	static uint voronoiAreaCheckingIndex	= 0;
+	static uint cameraWindowStateIndex				= 0;
+	static uint cameraSnappingStateIndex			= 0;
+	static uint cameraShakeStateIndex				= 0;
+	static uint cameraFrameStateIndex				= 0;
+	static uint splitScreenStateIndex				= 0;
+	static uint lastFrameSplitScreenStateIndex		= 0;
+	static uint noSplitScreenStrategyIndex			= 0;
+	static uint postVoronoiSettingIndex				= 0;
+
+	static uint voronoiAreaCheckingIndex			= 0;
+
+	static float dynamicAxisAlignedSplitScreenRatio = 0.5f;
+
+	// camera window
+	static Vec2 cameraWindowSize					= g_theCameraSystem->GetCameraWindowSize();
 	
+	// camera frame
+	static float forwardCameraFrameDistance			= g_theCameraSystem->GetForwardCameraFrameDist();
+	static float projectileCameraFrameDistance		= g_theCameraSystem->GetProjectileCameraFrameDist();
+	static float cueCameraFrameDistance				= g_theCameraSystem->GetCueCameraFrameDist();
+
+	// camera shake
+	static float positionalShakeMaxDist				= g_theCameraSystem->GetPositionalShakeMaxDist();
+	static float rotationalShakeMaxDeg				= g_theCameraSystem->GetRotationalShakeMaxDeg();
+
+	// voronoi
+	static int postVoronoiIterationNum				= g_theCameraSystem->GetPostVoronoiIterationNum();
+
+	// split screen
+	lastFrameSplitScreenStateIndex					= (uint)g_theCameraSystem->GetSplitScreenState();
+
+	// debug flag 
+	static bool doesShowCameraWindow				= false;
+	static bool doesShowAnchorpoints				= false;
+
+
+
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 	ImGui::Begin( "2D Multiplayer Camera System" );
 	ImGui::Combo( "Camera Window State", (int*)&cameraWindowStateIndex, cameraWindowStateItems, IM_ARRAYSIZE(cameraWindowStateItems) );
+	ImGui::InputFloat( "x", &cameraWindowSize.x );
+	ImGui::InputFloat( "y", &cameraWindowSize.y );
+	if( ImGui::Button( "confirm", ImVec2( 80.f, 20.f ) ) ) {
+		g_theCameraSystem->SetCameraWindowSize( cameraWindowSize );
+	}
+
+	// debug flags
+	ImGui::Checkbox( "Show Camera Window", &doesShowCameraWindow );
+	ImGui::Checkbox( "Show Voronoi Anchor points", &doesShowAnchorpoints );
+
+	ImGui::InputFloat( "Forward frame distance", &forwardCameraFrameDistance );
+	ImGui::InputFloat( "Projectile frame distance", &projectileCameraFrameDistance );
+	ImGui::InputFloat( "cue frame distance", &cueCameraFrameDistance );
+
 	ImGui::Combo( "Camera Snapping State", (int*)&cameraSnappingStateIndex, cameraSnappingStateItems, IM_ARRAYSIZE(cameraSnappingStateItems) );
 	ImGui::Combo( "Camera Shake State", (int*)&cameraShakeStateIndex, cameraShakeStateItems, IM_ARRAYSIZE(cameraShakeStateItems) );
+	ImGui::SliderFloat( "position shake max distance", &positionalShakeMaxDist, 0.f, 20.f );
+	ImGui::SliderFloat( "rotation shake max degree", &rotationalShakeMaxDeg, 0.f, 20.f );
+
 	ImGui::Combo( "Camera Frame State", (int*)&cameraFrameStateIndex, cameraFrameStateItems, IM_ARRAYSIZE(cameraFrameStateItems) );
 	ImGui::Combo( "Split Screen State", (int*)&splitScreenStateIndex, splitScreenStateItems, IM_ARRAYSIZE(splitScreenStateItems) );
 	if( splitScreenStateIndex == (uint)SplitScreenState::NO_SPLIT_SCREEN ) {
 		ImGui::Combo( "No Split Screen Strategy", (int*)&noSplitScreenStrategyIndex, noSplitScreenStrategyItems, IM_ARRAYSIZE(noSplitScreenStrategyItems) );
 	}
-	else {
-		noSplitScreenStrategyIndex = 0;
-	}
-	if( splitScreenStateIndex == (uint)SplitScreenState::VORONOI_SPLIT ) {
+	else if( splitScreenStateIndex == (uint)SplitScreenState::VORONOI_SPLIT ) {
 		ImGui::Combo( "Post Voronoi Setting", (int*)&postVoronoiSettingIndex, postVoronoiSettingItems, IM_ARRAYSIZE(postVoronoiSettingItems) );
 		if( postVoronoiSettingIndex != (uint)PostVoronoiSetting::NO_POST_EFFECT ) {
 			ImGui::Combo( "Voronoi Area Check State", (int*)&voronoiAreaCheckingIndex, VoronoiAreaCheckingItems, IM_ARRAYSIZE(VoronoiAreaCheckingItems) );
-
+			ImGui::SliderInt( "Post voronoi iteration num", &postVoronoiIterationNum, 1, 10 );
+		}
+	}
+	else if( splitScreenStateIndex == (uint)SplitScreenState::AXIS_ALIGNED_SPLIT ) {
+		if( g_theCameraSystem->GetControllersNum() == 2 ) {
+			ImGui::SliderFloat( "Screen Ratio", &dynamicAxisAlignedSplitScreenRatio, 0.f, 1.f );
+			if( ImGui::Button( "Start", ImVec2( 40.f, 20.f ) ) ) {
+				float totalTime = 5.f;
+				float currentMultipleFactor = g_theCameraSystem->GetCameraControllerWithIndex( 0 )->GetCurrentMultipleFactor();
+				float smoothTime = 0.f;
+				if( dynamicAxisAlignedSplitScreenRatio == currentMultipleFactor ) {
+					smoothTime = 1.f;
+				}
+				else {
+					float deltaRatio = abs( dynamicAxisAlignedSplitScreenRatio - currentMultipleFactor );
+					smoothTime = RangeMapFloat( 0.f, 1.f, 1.f, totalTime, deltaRatio );
+				}
+				g_theCameraSystem->SetDynamicAxisAlignedSplitScreenMultipleFactors( smoothTime, dynamicAxisAlignedSplitScreenRatio, 1.f - dynamicAxisAlignedSplitScreenRatio );
+			}
 		}
 	}
 
 	ImGui::End();
 
+	// frame settings
+	g_theCameraSystem->SetCameraFrameState( (CameraFrameState)cameraFrameStateIndex );
+	g_theCameraSystem->SetForwardFrameDistance( forwardCameraFrameDistance );
+	g_theCameraSystem->SetProjectileFrameDistance( projectileCameraFrameDistance );
+	g_theCameraSystem->SetCueFrameDistance( cueCameraFrameDistance );
+
+	// camera window and snap
 	g_theCameraSystem->SetCameraWindowState( (CameraWindowState)cameraWindowStateIndex );
 	g_theCameraSystem->SetCameraSnappingState( (CameraSnappingState)cameraSnappingStateIndex );
+
+	// camera shake
 	g_theCameraSystem->SetCameraShakeState( (CameraShakeState)cameraShakeStateIndex );
-	g_theCameraSystem->SetCameraFrameState( (CameraFrameState)cameraFrameStateIndex );
-	g_theCameraSystem->SetSplitScreenState( (SplitScreenState)splitScreenStateIndex );
+	g_theCameraSystem->SetPositionalShakeMaxDist( positionalShakeMaxDist );
+	g_theCameraSystem->SetRotationalShakeMaxDeg( rotationalShakeMaxDeg );
+
+	// split screen
+	if( lastFrameSplitScreenStateIndex != splitScreenStateIndex ) {
+		g_theCameraSystem->SetSplitScreenState( (SplitScreenState)splitScreenStateIndex );
+	}
 	g_theCameraSystem->SetNoSplitScreenStrat( (NoSplitScreenStrat)noSplitScreenStrategyIndex );
 	g_theCameraSystem->SetPostVoronoiSetting( (PostVoronoiSetting)postVoronoiSettingIndex );
 	g_theCameraSystem->SetVoronoiAreaCheckState( (VoronoiAreaCheckState)voronoiAreaCheckingIndex );
+	g_theCameraSystem->SetPostVoronoiIterationNum( postVoronoiIterationNum );
+
+	// debug flags
+	g_theCameraSystem->SetDoesDebugCameraWindow( doesShowCameraWindow );
+	g_theCameraSystem->SetdoesDebugAnchorPoints( doesShowAnchorpoints );
 }
 
 void App::RenderIMGUI() const

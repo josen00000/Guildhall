@@ -299,7 +299,7 @@ public:
 	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
 	void DrawPlane2D( Plane2 const& plane, float DrawLength, Rgba8 tint );
 	void DrawConvexHull( ConvexHull2 const& hull, Rgba8 tint );
-	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
+	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint, const Vec2& uvMin = Vec2::ZERO, const Vec2& mvMax = Vec2::ONE );
 	void DrawAABB2DWithBound( const AABB2& bounds, const Rgba8& tint, float boundThick, const Rgba8& boundColor );
 	void DrawPolygon2D( Polygon2 polygon, Rgba8 tint );
 	void DrawPolygon2DWithBound( Polygon2 polygon, Rgba8 tint, float boundThick, Rgba8& boundColor );
