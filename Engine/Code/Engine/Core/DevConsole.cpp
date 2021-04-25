@@ -16,6 +16,8 @@ extern RenderContext*	g_theRenderer;
 
 std::map<std::string, std::string> DevConsole::s_commands;
 
+//#define DEBUG_MODE
+
 
 DevConsole::DevConsole( BitmapFont* font, Camera* camera )
 	:m_font(font)
@@ -460,7 +462,10 @@ void DevConsole::DebugLogf( const char* text, ... )
 void DevConsole::DebugError( std::string errorMsg )
 {
 	PrintString( Rgba8::RED, errorMsg );
+#ifdef DEBUG_MODE
 	g_theConsole->StartDevConcole();
+#endif // DEBUG_MODE
+
 }
 
 
@@ -471,6 +476,7 @@ void DevConsole::DebugErrorf( const char* text, ... )
 	std::string result = Stringv( text, args );
 	va_end( args );
 	DebugError( result );
+
 }
 
 //////////////////////////////////////////////////////////////////////////

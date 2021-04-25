@@ -712,6 +712,12 @@ bool IsPointInForwardSector2D( const Vec2& point, const Vec2& observerPos, float
 	}
 }
 
+bool IsPointForwardOfPoint2D( const Vec2& point, const Vec2& observerPoint, Vec2 const& forwardDirt )
+{
+	Vec2 disp = point - observerPoint;
+	return DotProduct2D( forwardDirt, disp ) > 0;
+}
+
 float GetAngleDegreesBetweenVectors2D( const Vec2& vectorA, const Vec2& vectorB )
 {
 	float product = DotProduct2D(vectorA, vectorB);
@@ -863,10 +869,10 @@ bool IsPlaneMostlyEqual( Plane2 a, Plane2 b, float epsilon/*=0.001f */ )
 
 bool IsLineSeg2MostlyEqual( LineSegment2 a, LineSegment2 b, float epsilon/*=0.01f */ )
 {
-	if( IsVec2MostlyEqual( a.GetStartPos(), b.GetStartPos() ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetEndPos() ) ) {
+	if( IsVec2MostlyEqual( a.GetStartPos(), b.GetStartPos(), epsilon ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetEndPos(), epsilon ) ) {
 		return true;
 	}
-	else if ( IsVec2MostlyEqual( a.GetStartPos(), b.GetEndPos() ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetStartPos() ) ) {
+	else if ( IsVec2MostlyEqual( a.GetStartPos(), b.GetEndPos(), epsilon ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetStartPos() ), epsilon ) {
 		return true;
 	}
 	else {

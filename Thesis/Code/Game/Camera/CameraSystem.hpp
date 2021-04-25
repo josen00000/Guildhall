@@ -5,6 +5,7 @@
 #include "Game/Map/Map.hpp"
 #include "Engine/Math/ConvexHull2.hpp"
 #include "Engine/Core/EngineCommon.hpp"
+#include "Engine/Renderer/Camera.hpp"
 
 typedef	std::pair<Vec2, std::vector<CameraController*>> VoronoiVertexAndControllersPair;
 //typedef std::pair<CameraController*, float> ControllerVoronoiSplitBlendCoeff;
@@ -15,9 +16,10 @@ class RandomNumberGenerator;
 
 enum eDebugBitFlag : uint {
 	DEBUG_NONE						= 0,
-	DEBUG_CAMERA_WINDOW_BIT			= BIT_FLAG(0),
-	DEBUG_VORONOI_INCIRCLE_BIT		=  BIT_FLAG(1),	
-	DEBUG_VORONOI_ANCHOR_POINT_BIT	=  BIT_FLAG(2),
+	DEBUG_CAMERA_WINDOW_BIT			=	BIT_FLAG(0),
+	DEBUG_CAMERA_POSITION_BIT		=	BIT_FLAG(1),
+	DEBUG_VORONOI_INCIRCLE_BIT		=	BIT_FLAG(2),	
+	DEBUG_VORONOI_ANCHOR_POINT_BIT	=	BIT_FLAG(3),
 };
 
 enum CameraWindowState: unsigned int {
@@ -29,9 +31,8 @@ enum CameraWindowState: unsigned int {
 enum CameraSnappingState : unsigned int {
 	NO_CAMERA_SNAPPING = 0,
 	POSITION_SNAPPING,
-	POSITION_HORIZONTAL_LOCK,
-	POSITION_VERTICAL_LOCK,
-	POSITION_LOCK,
+	POSITION_HORIZONTAL_SNAPPING,
+	POSITION_VERTICAL_SNAPPING,
 	NUM_OF_CAMERA_SNAPPING_STATE
 };
 
@@ -44,8 +45,8 @@ enum CameraShakeState : unsigned int {
 
 enum CameraFrameState : unsigned int {
 	NO_FRAMEING = 0,
-	FORWARD_FRAMING,
-	PROJECTILE_FRAMING,
+	FORWARD_VELOCITY_FRAMING,
+	AIM_FRAMING,
 	CUE_FRAMING,
 	BLEND_FRAMING,
 	NUM_OF_FRAME_STATE
@@ -62,6 +63,7 @@ enum NoSplitScreenStrat : unsigned int {
 	NO_STRAT = 0,
 	ZOOM_TO_FIT,
 	KILL_AND_TELEPORT,
+	COMBINATION_ZOOM_AND_KILL,
 	NUM_OF_NO_SPLIT_SCREEN_STRAT
 };
 
@@ -101,9 +103,9 @@ public:
 	void UpdateControllers( float deltaSeconds );
 	void UpdateSplitScreenEffects( float deltaSeconds );
 	void UpdateNoSplitScreenEffect( float deltaSeconds );
-	void UpdatePreVoronoiSplitScreenEffect( float delteSeconds );	// different split dicision, confirm the voronoi cells for cameraController
-	void UpdateVoronoiSplitScreenEffect( float delteSeconds );		// Construct the convexhull for each camera
-	void UpdatePostVoronoiSplitScreenEffects( float deltaSeconds );	// Get voronoi poly base on convexhull and do area average.
+	void UpdatePreVoronoiSplitScreenEffect();	// different split dicision, confirm the voronoi cells for cameraController
+	void UpdateVoronoiSplitScreenEffect();		// Construct the convexhull for each camera
+	void UpdatePostVoronoiSplitScreenEffects();	// Get voronoi poly base on convexhull and do area average.
 	void UpdateControllerCameras();
 	void UpdateDebugInfo();
 	void DebugRender();
@@ -111,19 +113,24 @@ public:
 
 	// Accessor
 	bool GetIsDebug() const { return m_isdebug; }
+	bool GetAllowMergeVoronoi()	const{ return m_doesAllowVoronoiMerge; }
 	int GetControllersNum() const { return (int)m_controllers.size(); }
 	int GetPostVoronoiIterationNum() const { return m_postVoronoiIteration; }
 	float GetTotalFactor() const ; 
-	float GetForwardCameraFrameDist() const;
-	float GetProjectileCameraFrameDist() const;
-	float GetCueCameraFrameDist() const;
+	float GetForwardVelocityCameraFrameDist() const;
+	float GetAimCameraFrameDist() const;
+	float GetControllerForwardVelocityCameraFrameRatio( int controllerIndex ) const;
+	float GetControllerAimCameraFrameRatio( int controllerIndex ) const;
+	float GetControllerCueCameraFrameRatio( int controllerIndex ) const;
 	float GetPositionalShakeMaxDist() const;
 	float GetRotationalShakeMaxDeg() const;
 	Vec2 GetCameraWindowSize() const;
+	Vec2 GetSystemCameraPosition() const { return m_noSplitCamera->GetPosition2D(); }
 
 	// Debug flags
 	bool GetDoesDebugCameraWindow() const;
 	bool GetDoesDebugAnchorPoints() const;
+	bool GetDoesDebugCameraPos() const;
 
 	std::string GetCameraWindowStateText() const;
 	std::string GetCameraSnappingStateText() const;
@@ -161,6 +168,7 @@ public:
 	// Mutator
 	void SetIsDebug( bool isDebug );
 	void SetControllerSmooth( bool isSmooth );
+	void SetAllowMerge( bool allowMerge );
 	void SetCameraWindowState( CameraWindowState newState );
 	void SetCameraSnappingState( CameraSnappingState newState );
 	void SetCameraShakeState( CameraShakeState newState );
@@ -175,21 +183,27 @@ public:
 
 	void AddCameraShake( int index, float shakeTrauma );
 	
-	void SetForwardFrameDistance( float dist );
-	void SetProjectileFrameDistance( float dist );
-	void SetCueFrameDistance( float dist );
+	void SetForwardVelocityFrameDistance( float dist );
+	void SetAimFocusDistance( float dist );
+	void SetControllerAimFocusDistance( int controllerindex, float dist );
+	void SetControllerForwardVelocityFrameRatio( int controllerIndex, float ratio );
+	void SetControllerAimFocusRatio( int controllerIndex, float ratio );
+	void SetControllerCueFocusRatio( int controllerIndex, float ratio );
 	void SetPositionalShakeMaxDist( float maxDist );
 	void SetRotationalShakeMaxDeg( float maxDeg );
 	void SetPostVoronoiIterationNum( int num );
 
 	// Debugflags
 	void SetDoesDebugCameraWindow( bool doesDebugCameraWindow );
-	void SetdoesDebugAnchorPoints( bool doesDebugAnchorPoints );
+	void SetDoesDebugCameraPosition( bool doesDebugCameraPosition );
+	void SetDoesDebugAnchorPoints( bool doesDebugAnchorPoints );
 
 	// Controller
 	void CreateAndPushController( Player* player );
+	void DestroyAllControllers();
 	void PrepareRemoveAndDestroyController( Player const* player );
 	void UpdateControllerMultipleFactor( float smoothTime );
+	void CheckIsControllerVaild( int controllerIndex ) const;
 	int GetValidPlayerNum();
 
 	// split screen strat
@@ -216,9 +230,10 @@ public:
 	void ExpandMinVoronoiPoly();
 	bool ConstructAllAndIsAnyVoronoiVertex();
 	bool RearrangeVoronoiVertexForMinVoronoiPoly( CameraController* controller, std::vector<Vec2> voronoiVertexPos );
-	void ComputeAndSetVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 voronoiBox );
+	void ComputeAndUpdateOriginalVoronoiAnchorPoints( AABB2 worldCameraBox, AABB2 voronoiBox, bool isInitialized  );
 	void ComputeAndSetBalancedVoronoiTargetAnchorPoints( AABB2 worldCameraBox, AABB2 voronoiBox );
-	void ReConstructBalancedVoronoiDiagram();
+	void InitializeVoronoiTargetPointWithVoronoiOriginalPoint();
+	void ReconstructVoronoiDiagramWithTargetAnchorPoints();
 	float GetAverageVoronoiInCircleRadius();
 	float GetAverageOriginalVoronoiInCircleRadius();
 	float GetMinVoronoiInCircleRadius();
@@ -230,12 +245,12 @@ public:
 	bool IsControllerNeedRenderWhenMerged( int controllerIndex );
 
 	Vec2 GetTotalSplitColorTargetOffset( int controllerIndex );
-	Vec2 GetSplitToMergeBlendingColorTargetOffsetAndBlendingEdges( int controllerIndex, std::vector<edgeIndexAndThickness>& blendingEdgeIndexes );
-	Vec2 GetBlendingColorTargetOffsetAndBlendingEdgeIndexesOfTwoControllers( int controllerIndexA, int controllerIndexB,  std::vector<edgeIndexAndThickness>& edgeIndexes  );
+	Vec2 GetSplitToMergeBlendingColorTargetOffsetAndBlendingEdges( int controllerIndex, std::vector<edgeAndThickness>& blendingEdgeIndexes );
+	Vec2 GetBlendingColorTargetOffsetAndBlendingEdgeIndexesOfTwoControllers( int controllerIndexA, int controllerIndexB,  std::vector<edgeAndThickness>& edgeIndexes  );
 	Vec2 GetMergedColorTargetOffset( std::vector<int> controllerIndexes );
 	void GetTotalMergedColorTargetOffsetAndMergedPoly( int controllerIndexA, Vec2& mergedColorTargetOffset, Polygon2& mergedPoly );
 	void GetMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly );
-	int GetBlendingEdgeIndexesAndMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly );
+	LineSegment2 GetBlendingEdgeAndMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly );
 	void GetMergedVoronoiPolygonWithThreeControllers( CameraController* a, CameraController* b, CameraController* c,  Polygon2& mergedPoly );
 
 
@@ -249,8 +264,8 @@ public:
 	void GetMergedPolygonWithTwoPolygonShareOneEdge( const Polygon2& polyA, const Polygon2& polyB, Polygon2& mergedPoly );
 
 private:
-	bool m_isdebug = false;
-	uint m_debugFlags = 0;
+	bool m_isdebug					= false;
+	uint m_debugFlags				= 0;
 	std::vector<CameraController*> m_controllers;
 	
 	// states
@@ -258,7 +273,7 @@ private:
 	CameraSnappingState		m_cameraSnappingState	= NO_CAMERA_SNAPPING;
 	CameraShakeState		m_cameraShakeState		= POSITION_SHAKE;
 	CameraFrameState		m_cameraFrameState		= NO_FRAMEING;
-	SplitScreenState		m_splitScreenState		= VORONOI_SPLIT; // Temp for demo TODO: change back
+	SplitScreenState		m_splitScreenState		= NO_SPLIT_SCREEN; // Temp for demo TODO: change back
 	NoSplitScreenStrat		m_noSplitScreenStrat	= NO_STRAT;
 	DebugMode				m_debugMode				= CONTROLLER_INFO;
 	PostVoronoiSetting		m_postVoronoiSetting	= NO_POST_EFFECT;
@@ -270,6 +285,7 @@ private:
 	float m_notInsidePaddingLength			= 3.f;
 	float m_zoomStablePaddingLength			= 4.f;
 	float m_idealCameraHeight				= GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y;
+	float m_maxCameraHeight					= ( GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y ) * 1.5f;
 	float m_maxCameraDeltaHeightPerFrame	= 0.01f;
 
 	Vec2  m_goalCameraPos		= Vec2::ZERO;
@@ -281,17 +297,17 @@ private:
 	// voronoi split
 	std::vector<ConvexHull2> m_controllerVoronoiEdges;
 	std::vector<VoronoiVertexAndControllersPair> m_voronoiVertices;
-	std::vector<std::vector<CameraController*>> m_mergedControllers;
-	float m_controllersSplitToMergeBlendCoeffs[5][5];
+	float m_controllersSplitToMergeBlendCoeffs[MAX_CAMERA_CONTROLLER_NUM][MAX_CAMERA_CONTROLLER_NUM];
 	
 	// post voronoi setting
 	bool m_isVoronoiInitialized					= false;
+	bool m_doesAllowVoronoiMerge				= false;
 	int m_postVoronoiIteration								= 0;
 	int m_targetPostVoronoiIteration						= 3;
 	float m_expandVoronoiLeastStep							= 2.f;
 
 	// voronoi fairness
-	float m_maxVoronoiAnchorPointMoveDistWithPolyArea		= 3.f;	
+	float m_maxVoronoiAnchorPointMoveDistWithPolyArea		= 1.f;	
 	float m_maxVoronoiAnchorPointMoveDistWithIncircleRadius	= 3.f;	
 	float m_expandVoronoiAreaThreshold						= 50.f;
 	float m_voronoiInCircleRadiusThreshold					= 5.f;

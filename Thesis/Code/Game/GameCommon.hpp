@@ -41,3 +41,24 @@ constexpr float DEV_CAMERA_MAX_Y	= 20;
 constexpr char MAP_DEF_FILE_PATH[]	= "Data/Definitions/Maps.xml";
 constexpr char TILE_DEF_FILE_PATH[]	= "Data/Definitions/Tiles.xml";
 constexpr char ACTOR_DEF_FILE_PATH[] = "Data/Definitions/Actors.xml";
+
+// Camera System
+constexpr int MAX_CAMERA_CONTROLLER_NUM = 5;
+
+	// Camera Window
+constexpr float MIN_CAMERA_WINDOW_WIDTH			= 0.1f;
+constexpr float MAX_CAMERA_WINDOW_WIDTH			= 40.f;
+constexpr float MIN_CAMERA_WINDOW_HEIGHT		= 0.1f;
+constexpr float MAX_CAMERA_WINDOW_HEIGHT		= 22.5f;
+constexpr float DEFAULT_CAMERA_WINDOW_WIDTH		= 12.f;
+constexpr float DEFAULT_CAMERA_WINDOW_HEIGHT	= 8.f;
+
+	// Camera frame
+constexpr float DEFAULT_FORWARD_VELOCITY_FRAME_DIST = 1.5f;
+constexpr float DEFAULT_AIM_FRAME_DIST				= 1.5f;
+constexpr float MAX_FORWARD_VELOCITY_FRAME_DIST		= 10.f;
+constexpr float MAX_AIM_FRAME_DIST					= 10.f;
+
+	// Camera Shake
+constexpr float DEFAULT_MAX_POSITION_SHAKE_DISTANCE			= 10.f;
+constexpr float DEFAULT_MAX_ROTATION_SHAKE_DEGREE			= 10.f;

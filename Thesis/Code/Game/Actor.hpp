@@ -70,6 +70,7 @@ public:
 protected:
 	bool m_isPushedByActor		= false;
 	bool m_doesPushActor		= false;
+	Rgba8 m_color				= Rgba8::WHITE;
 
 	ActorType m_type		= ActorType::ACTOR_NONE;
 	AliveState m_aliveState = AliveState::ALIVE;

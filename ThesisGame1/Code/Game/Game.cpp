@@ -55,7 +55,6 @@ void Game::Startup()
 
 	g_theCameraSystem->SetSplitScreenState( AXIS_ALIGNED_SPLIT );
 	g_theCameraSystem->SetCameraShakeState( BLEND_SHAKE );
-	
 
 	g_theConsole->AddCommandToCommandList( std::string( "set_asymptotic"), std::string( "Asymptotic value for camera controller" ), SetCameraAsymptoticValue );
 	g_theConsole->AddCommandToCommandList( std::string( "spawn_item"), std::string( "spawn new item" ), SpawnItem );

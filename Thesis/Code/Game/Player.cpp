@@ -12,16 +12,15 @@ extern DevConsole*		g_theConsole;
 extern CameraSystem*	g_theCameraSystem;
 extern EventSystem*		g_theEventSystem;
 
-Player::Player()
+Player::Player( int index )
 {
 	m_type = ACTOR_PLAYER;
 	m_isPushedByActor = true;
 	m_doesPushActor = true;
-	static int index = 0;
 	m_index = index;
 	index++;
-	char alpha = 255;
-	char intensity = 200;
+	unsigned char alpha = 255;
+	unsigned char intensity = 200;
 	if( m_index == 0 ) {
 		m_color = Rgba8( intensity, intensity, 0, alpha );
 	}
@@ -36,9 +35,9 @@ Player::Player()
 	}
 }
 
-Player* Player::SpawnPlayerWithPos( Vec2 pos )
+Player* Player::SpawnPlayerWithPos( Vec2 pos, int index )
 {
-	Player* tempPlayer = new Player();
+	Player* tempPlayer = new Player( index );
 	tempPlayer->SetSpeed( 0.f );
 	tempPlayer->SetPosition( pos );
 	return tempPlayer;

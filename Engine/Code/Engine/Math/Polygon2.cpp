@@ -16,6 +16,10 @@ Polygon2::Polygon2( std::vector<Vec2> points )
 
 Polygon2 Polygon2::MakeConvexFromPointCloud( std::vector<Vec2> points )
 {
+	if( points.size() == 0 ) {
+		ERROR_RECOVERABLE( "Can not construct convex polygon with no points!" );
+		return Polygon2();
+	}
 	Vec2 start = points[0];
 	for( int pointIndex = 1; pointIndex < points.size(); pointIndex++ ) {
 		if( points[pointIndex].x < start.x ) {

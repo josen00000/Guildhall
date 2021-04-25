@@ -179,6 +179,19 @@ IntVec2 Map::GetRandomInsideCameraNotSolidTileCoords( Camera* camera ) const
 }
 
 
+AABB2 Map::GetCurrentAimingCameraAsBox()
+{
+	switch( m_turn )
+	{
+	case PLAYER_1_TURN:
+
+		break;
+	case PLAYER_2_TURN:
+		break;
+	}
+	return AABB2();
+}
+
 Player* Map::GetPlayerWithIndex( int index )
 {
 	if( m_players.size() < index ) {
@@ -286,7 +299,8 @@ void Map::UpdateMap( float deltaSeconds )
 		case 3 :
 			GeneratePlayers();
 			GenerateTitleVertices();
-
+			g_theCameraSystem->SetPositionalShakeMaxDist( 10.f );
+			g_theCameraSystem->SetRotationalShakeMaxDeg( 5.f );
 		default:
 			break;
 		}
@@ -418,6 +432,7 @@ void Map::ExplodeAtAim()
 				
 				g_theCameraSystem->SetDynamicAxisAlignedSplitScreenMultipleFactors( 0.5f, ratio, 1 - ratio );
 			}
+			g_theCameraSystem->AddCameraShake( i, 0.8f );
 		}
 	}
 }
@@ -711,6 +726,7 @@ void Map::updateAimPos( float deltaSeconds )
 {
 	float speed = 3.f;
 	m_aimPos += m_aimMoveDirt * deltaSeconds * speed; 
+	AABB2 cameraBox = GetCurrentAimingCameraAsBox();
 }
 
 void Map::UpdateExplosions( float deltaSeconds )

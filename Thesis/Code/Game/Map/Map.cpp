@@ -63,6 +63,7 @@ Map::Map( std::string name, MapDefinition* definition )
 Map* Map::CreateMap( std::string name, MapDefinition* definition )
 {
 	Map* newMap = new Map( name, definition );
+	newMap->GenerateMap();
 	return newMap;
 }
 
@@ -288,34 +289,7 @@ void Map::UpdateMap( float deltaSeconds )
 {
 	// generate map
 	// update map
-	if( m_isGeneratingMap ) {
-		m_tilesVertices.clear();
-		// initialize
-		// Generate rooms
-		// Eliminate dead end
-		static int stepIndex = 0;
-		switch( stepIndex )
-		{
-		case 0:
-			InitializeTiles();
-			PopulateTiles();
-			stepIndex++;
-			break;
-		case 1:
-			GenerateRooms();
-			GenerateEdges();
-			PopulateTiles();
-			stepIndex++;
-			break;	
-		case 2:
-			m_startCoords = GetRandomInsideNotSolidTileCoords();
-			PopulateTiles();
-			m_isGeneratingMap = false;
-		default:
-			break;
-		}
-		
-	}
+	
 
 	UpdateMouse();
 	UpdateActors( deltaSeconds );
@@ -406,11 +380,23 @@ void Map::EndFrame()
 	ManageGarbage();	
 }
 
+void Map::GenerateMap()
+{
+	m_tilesVertices.clear();
+	InitializeTiles();
+	PopulateTiles();
+	GenerateRooms();
+	GenerateEdges();
+	PopulateTiles();
+	m_startCoords = GetRandomInsideNotSolidTileCoords();
+	PopulateTiles();
+}
+
 void Map::CreatePlayer( )
 {
 	if( m_players.size() >= 4 ){ return; }
 	Vec2 pos = (Vec2)m_startCoords;
-	Player* newPlayer = Player::SpawnPlayerWithPos( pos );
+	Player* newPlayer = Player::SpawnPlayerWithPos( pos, m_players.size() );
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );
 
@@ -430,6 +416,14 @@ void Map::DestroyPlayerWithIndex( int index )
 	m_players[index]->SetAliveState( WAIT_FOR_DELETE );
 	g_theCameraSystem->PrepareRemoveAndDestroyController( m_players[index] );
 	
+}
+
+void Map::DestroyAllPlayers()
+{
+	for( int i = 0; i < m_players.size(); i++ ) {
+		delete m_players[i];
+	}
+	g_theCameraSystem->DestroyAllControllers();
 }
 
 void Map::ShiftPlayer()
@@ -454,9 +448,10 @@ void Map::SpawnNewEnemy( Vec2 startPos )
 	m_enemies.push_back( tempEnemy );
 }
 
-void Map::SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt )
+void Map::SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt, Rgba8 color )
 {
 	Projectile* tempProjectile = Projectile::SpawnProjectileWithDirtAndType( movingDirt, startPos, type );
+	tempProjectile->SetColor( color );
 	m_projectiles.push_back( tempProjectile );
 }
 

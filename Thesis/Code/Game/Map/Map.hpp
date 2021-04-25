@@ -119,15 +119,17 @@ public:
 	void RenderProjectiles();
 	void RenderItems();
 	void EndFrame();
+	void GenerateMap();
 
 	// Actor
 	void CreatePlayer();
 	void DestroyPlayerWithIndex( int index );
+	void DestroyAllPlayers();
 	void ShiftPlayer();
 	void SpawnNewEnemy( Vec2 startPos );
 
 	// Projectile
-	void SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt );
+	void SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt, Rgba8 color );
 
 	// Item
 	void SpawnNewItem( Vec2 startPos );
@@ -172,8 +174,6 @@ private:
 	int								m_width = 0;
 	int								m_height = 0;
 	int								m_roomNum = 0;
-
-	bool							m_isGeneratingMap = true;
 
 	IntVec2							m_startCoords = IntVec2::ZERO;
 	IntVec2							m_endCoords = IntVec2::ZERO;

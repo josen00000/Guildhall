@@ -91,6 +91,7 @@ public:
 	Vec2	GetAimPos() const { return m_aimPos; }
 	Vec2	GetPlayerPosWithIndex( int index ); 
 	Vec2	GetCuePos(){ return Vec2::ZERO; }
+	AABB2	GetCurrentAimingCameraAsBox();
 
 	Player*	GetPlayerWithIndex( int index );
 	

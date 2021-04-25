@@ -47,7 +47,7 @@ void Projectile::UpdateProjectile( float deltaSeconds )
 	m_vertices.clear();
 	m_movingDirection.Normalize();
 	OBB2 projectileOBB = OBB2( Vec2( 1, 1 ), m_pos, m_movingDirection );
-	AppendVertsForOBB2D( m_vertices, projectileOBB, Rgba8::WHITE );
+	AppendVertsForOBB2D( m_vertices, projectileOBB, m_color );
 }
 
 void Projectile::RenderProjectile()
@@ -74,4 +74,9 @@ void Projectile::RenderProjectile()
 void Projectile::Die()
 {
 	m_isDead = true;
+}
+
+void Projectile::SetColor( Rgba8 color )
+{
+	m_color = color;
 }

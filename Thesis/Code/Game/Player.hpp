@@ -24,11 +24,11 @@ enum PlayerAIState {
 
 class Player : public Actor {
 public:
-	Player();
+	Player() = delete;
 	~Player(){}
-	
+	explicit Player( int index );
 public:
-	static Player* SpawnPlayerWithPos( Vec2 pos );
+	static Player* SpawnPlayerWithPos( Vec2 pos, int index );
 
 public:
 	void UpdatePlayer( float deltaSeconds, int playerIndex );
@@ -74,8 +74,6 @@ public:
 	float m_activeDistThreshold = 10.f;
 	float m_disableInputSeconds = 0.f;
 	Vec2 m_patrolGoalPos	= Vec2::ZERO;
-	Rgba8 m_color;
-
 	Enemy* m_target	= nullptr;
 };
 

@@ -52,7 +52,7 @@ CameraController::CameraController( CameraSystem* owner, Player* player, Camera*
 
 void CameraController::BeginFrame()
 {
-	m_blendingEdgeIndexesAndThickness.clear();
+	m_blendingEdgeAndThickness.clear();
 	m_stencilVertices.clear();
 }
 
@@ -60,10 +60,11 @@ CameraController::~CameraController()
 {
 	// leave map delete player
 	// leave camera to future
-	delete m_timer;
+	//delete m_timer;
 	SELF_SAFE_RELEASE(m_splitCamera);
 	SELF_SAFE_RELEASE(m_offsetBuffer);
 	SELF_SAFE_RELEASE(m_voronoiOffsetBuffer);
+	SELF_SAFE_RELEASE(m_timer);
 }
 
 void CameraController::Update( float deltaSeconds )
@@ -73,7 +74,7 @@ void CameraController::Update( float deltaSeconds )
 	m_cameraWindowCenterPos	= m_cameraWindow.GetCenter();
 
 	UpdateCameraWindow( deltaSeconds );
-	UpdateCameraFrame( deltaSeconds );
+	UpdateCameraFrame( );
 	UpdateCameraShake( deltaSeconds );
 	UpdateMultipleCameraSettings( deltaSeconds );
 	SmoothMotion();
@@ -107,6 +108,9 @@ void CameraController::DebugRender()
 				g_theRenderer->DrawLine( windowPoints[i], windowPoints[i + 1], 0.1f, Rgba8::BLUE );
 			}
 			g_theRenderer->DrawLine( windowPoints[0], windowPoints[3], 0.1f, Rgba8::BLUE );
+		}
+		if( m_owner->GetDoesDebugCameraPos() ) {
+			g_theRenderer->SetDiffuseTexture( nullptr );
 			g_theRenderer->DrawCircle( m_goalCameraPos, 0.1f, 0.1f, Rgba8::BLACK );
 			g_theRenderer->DrawCircle( m_smoothedGoalCameraPos, 0.1f, 0.1f, Rgba8::RED );
 		}
@@ -119,7 +123,7 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 	Vec2 cameraPos		= m_camera->GetPosition();
 	Vec2 cameraGoalPos	= m_goalCameraPos;
 	Strings debugStrings;
-	float currentFactorSeconds = m_factorStableSeconds - (float)m_timer->GetSecondsRemaining();
+	float currentFactorSeconds = m_contributionRatioStableSeconds - (float)m_timer->GetSecondsRemaining();
 
 	switch( m_owner->GetDebugMode() )
 	{
@@ -129,10 +133,10 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 			std::string cameraGoalPosText				= std::string( "Goal Camera pos = " + cameraGoalPos.ToString() );
 			std::string asymptoticValueText				= std::string( "Asymptotic Value = " + std::to_string( m_asymptoticValue ) );
 			std::string traumaText						= std::string( "Trauma = " + std::to_string( m_trauma ) );
-			std::string currentMultipleStableFactorText	= std::string( "multiple factor = " + std::to_string( m_currentMultipleFactor ));
+			std::string currentMultipleStableFactorText	= std::string( "multiple factor = " + std::to_string( m_currentMultipleCameraContributionsRatio ));
 			std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_goalMultipleFactor ));
 			std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
-			std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_factorStableSeconds );
+			std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_contributionRatioStableSeconds );
 
 			debugStrings.push_back( playerPosText );
 			debugStrings.push_back( cameraPosText );
@@ -150,7 +154,6 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 			std::string originalVoronoiAreaText				= Stringf( "original voronoi area is: %.2f" , m_originalVoronoiPolyArea );
 			std::string voronoiInCircleRadiusText			= Stringf( "voronoi radius is: %.2f" , m_voronoiInCircleRadius );
 			std::string originalVoronoiInCircleRadiusText	= Stringf( "original voronoi radius is: %.2f" , m_originalvoronoiInCircleRadius );
-			std::string voronoiSplitBlendCoeffText			= Stringf( "Voronoi Split blend coeff is: %.2f" , m_voronoiSplitBlendCoeff );
 			std::string originalAnchorPointText				= std::string( "original Anchor is: ") + m_originalVoronoiAnchorPointPos.ToString() ;
 			std::string currentAnchorPointText				= Stringf( "current Anchor is: ") + m_voronoiAnchorPointPos.ToString() ;
 			std::string targetAnchorPointText				= Stringf( "target Anchor is: ") + m_targetVoronoiAnchorPointPos.ToString() ;
@@ -160,7 +163,6 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 			debugStrings.push_back( voronoiInCircleRadiusText );
 			debugStrings.push_back( voronoiAreaText );
 			debugStrings.push_back( originalVoronoiAreaText );
-			debugStrings.push_back( voronoiSplitBlendCoeffText );
 			debugStrings.push_back( originalAnchorPointText );
 			debugStrings.push_back( currentAnchorPointText );
 			debugStrings.push_back( targetAnchorPointText );
@@ -178,9 +180,14 @@ Vec2 CameraController::GetCuePos() const
 	return currentMap->GetCuePos();
 }
 
-Polygon2 CameraController::GetVoronoiPoly() 
+Polygon2 const& CameraController::GetVoronoiPolygon() const 
 {
 	return m_voronoiPolygon;
+}
+
+Polygon2 const& CameraController::GetOriginalVoronoiPolygon() const
+{
+	return m_originalVoronoiPolygon;
 }
 
 void CameraController::SetIndex( int index )
@@ -203,6 +210,11 @@ void CameraController::SetAllowMerge( bool allowMerge )
 	m_allowMerge = allowMerge;
 }
 
+void CameraController::SetAllowBlend( bool allowBlend )
+{
+	m_allowBlend = allowBlend;
+}
+
 void CameraController::SetAsymptoticValue( float value )
 {
 	m_asymptoticValue = value;
@@ -218,19 +230,29 @@ void CameraController::AddTrauma( float addTrauma )
 	m_trauma += addTrauma;
 }
 
-void CameraController::SetForwardFrameDist( float dist )
+void CameraController::SetForwardVelocityFocusDist( float dist )
 {
-	m_fwdFrameDist = dist;
+	m_fwdVelFocusDist = dist;
 }
 
-void CameraController::SetProjectileFrameDist( float dist )
+void CameraController::SetAimFocusDist( float dist )
 {
-	m_projectFrameDist = dist;
+	m_aimFocusDist = dist;
 }
 
-void CameraController::SetCueFrameDist( float dist )
+void CameraController::SetForwardVelocityFocusRatio( float ratio )
 {
-	m_cueFrameDist = dist;
+	m_fwdVelFocusRatio = ratio;
+}
+
+void CameraController::SetAimFocusRatio( float ratio )
+{
+	m_aimFocusRatio = ratio;
+}
+
+void CameraController::SetCueFocusRatio( float ratio )
+{
+	m_cueFocusRatio = ratio;
 }
 
 void CameraController::SetPositionalShakeMaxDist( float maxDist )
@@ -243,40 +265,35 @@ void CameraController::SetRotationalShakeMaxDeg( float maxDeg )
 	m_maxShakeRotDeg = maxDeg;
 }
 
-void CameraController::SetVoronoiSplitBlendCoeff( float coeff )
-{
-	m_voronoiSplitBlendCoeff = coeff;
-}
-
 void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor )
 {
 	m_ismultipleFactorStable = false;
 	m_timer->SetSeconds( (double)totalSeconds );
 	g_theConsole->DebugLogf( "set, player: %d, start: %.2f, duration: %.2f", m_player->GetPlayerIndex(), m_timer->m_startSeconds, m_timer->m_durationSeconds );
-	m_startMultipleFactor = m_currentMultipleFactor;
+	m_startMultipleFactor = m_currentMultipleCameraContributionsRatio;
 	m_goalMultipleFactor = goalFactor;
-	m_factorStableSeconds = totalSeconds;
+	m_contributionRatioStableSeconds = totalSeconds;
 }
 
-void CameraController::SetVoronoiPolygon( Polygon2 poly )
+void CameraController::SetVoronoiPolygon( Polygon2 const& poly )
 {
 	m_voronoiPolygon = poly;
 	m_voronoiPolyArea = m_voronoiPolygon.GetArea();
 }
 
-void CameraController::SetOriginalVoronoiPolygon( Polygon2 poly )
+void CameraController::SetOriginalVoronoiPolygon( Polygon2 const& poly )
 {
 	m_originalVoronoiPolygon = poly;
 	m_originalVoronoiPolyArea = m_originalVoronoiPolygon.GetArea();
 }
 
-void CameraController::SetVoronoiHullAndUpdateVoronoiPoly( ConvexHull2 hull, PolyType type )
+void CameraController::SetVoronoiHullAndUpdateVoronoiPoly( ConvexHull2 const& hull, PolyType type )
 {
 	m_voronoiHull = hull;
 	UpdateVoronoiPoly( type );
 }
 
-void CameraController::AddPlaneToVoronoiHull( Plane2 plane, PolyType type )
+void CameraController::AddPlaneToVoronoiHull( Plane2 const& plane, PolyType type )
 {
 	m_voronoiHull.AddPlane( plane );
 	UpdateVoronoiPoly( type );
@@ -317,10 +334,10 @@ void CameraController::SetNeedRenderWhenMerged( bool doesNeedRenderWhenMerged )
 	m_needRenderWhenMerged = doesNeedRenderWhenMerged;
 }
 
-void CameraController::addBlendingEdgeIndexAndThickness( int edgeIndex, float thicknessRatio )
+void CameraController::addBlendingEdgeIndexAndThickness( LineSegment2 const& line, float thicknessRatio )
 {
 
-	m_blendingEdgeIndexesAndThickness.push_back( edgeIndexAndThickness( edgeIndex, thicknessRatio ) );
+	m_blendingEdgeAndThickness.push_back( edgeAndThickness( line, thicknessRatio ) );
 }
 
 bool CameraController::ReplaceVoronoiPointWithPoint( Vec2 replacedPoint, Vec2 newPoint )
@@ -392,79 +409,51 @@ void CameraController::UpdateCameraShake( float deltaSeconds )
 	 shakeRollDeg = rng->RollRandomFloatInRange( -1, 1 );
 	 shakeRollDeg *= m_shakeIntensity * m_maxShakeRotDeg;
 
-	switch( m_owner->GetCameraShakeState() )
-	{
-	case POSITION_SHAKE:
-		m_goalCameraPos += shakeDisp;
-		break;
-	case ROTATION_SHAKE: 
-		m_camera->SetPitchRollYawRotation( 0.f, shakeRollDeg, 0.f );
-		break;
-	case BLEND_SHAKE:
-		m_goalCameraPos += shakeDisp;
-		m_camera->SetPitchRollYawRotation( 0.f, shakeRollDeg, 0.f );
-		break;
-	}
+	
+	m_goalCameraPos += shakeDisp;
+	m_camera->SetPitchRollYawRotation( 0.f, shakeRollDeg, 0.f );
 }
 
-void CameraController::UpdateCameraFrame( float deltaSeconds )
+void CameraController::UpdateCameraFrame( )
 {
-	UNUSED(deltaSeconds);
+	if( m_owner->GetCameraFrameState() == NO_FRAMEING ) {
+		return;
+	}
 
-	Vec2 fwdGoalPos = m_playerPos;
+	Vec2 fwdGoalPos		= m_playerPos;
 	Vec2 projectGoalPos = m_playerPos;
-	Vec2 cueGoalPos = m_playerPos;
+	Vec2 cueGoalPos		= m_playerPos;
 
 	// Update fwd framing
 	if( m_player->IsContinousWalk() ) {
 		Vec2 playerVelocity = m_player->GetVelocity();
-		fwdGoalPos = m_playerPos + playerVelocity * m_fwdFrameDist;
+		playerVelocity.Normalize();
+		fwdGoalPos = m_playerPos + playerVelocity * m_fwdVelFocusDist;
 	}
 
 	// Update projectile framing
 	Vec2 headDir = m_player->GetHeadDir();
-	projectGoalPos = m_playerPos + m_projectFrameDist * headDir;
+	projectGoalPos = m_playerPos + m_aimFocusDist * headDir;
 
 	// Update cue framing
 	Vec2 cuePos = GetCuePos();
 	if( cuePos != Vec2::ZERO ) {
 		Vec2 cueDisp = cuePos - m_playerPos;
 		Vec3 cueDir = cueDisp.GetNormalized();
-		if( GetDistanceSquared2D( cuePos, m_playerPos ) < (m_cueFrameDist * m_cueFrameDist) ) {
-			cueGoalPos = ( m_playerPos + cuePos ) / 2;
-		}
-		else{
-			cueGoalPos = m_playerPos + cueDir * m_cueFrameDist;
-		}
+		cueGoalPos = ( m_playerPos + cuePos ) / 2;
 	}
 
-
-	switch( m_owner->GetCameraFrameState() )
-	{
-	case NO_FRAMEING:
+	// normalize
+	float ratioSum = m_fwdVelFocusRatio + m_aimFocusRatio + m_cueFocusRatio;
+	if( ratioSum == 0.f ) {
+		//ERROR_RECOVERABLE( "ratio sum should not be zero" );
 		return;
-	case FORWARD_FRAMING:
-		m_fwdFrameRatio = 1.f;
-		m_projectFrameRatio = 0.f;
-		m_cueFrameRatio = 0.f;
-		break;
-	case PROJECTILE_FRAMING:
-		m_fwdFrameRatio = 0.f;
-		m_projectFrameRatio = 1.f;
-		m_cueFrameRatio = 0.f;
-		break;
-	case CUE_FRAMING:
-		m_fwdFrameRatio = 0.f;
-		m_projectFrameRatio = 0.f;
-		m_cueFrameRatio = 1.f;
-		break;
-	case BLEND_FRAMING:
-		m_fwdFrameRatio = 0.3f;
-		m_projectFrameRatio = 0.3f;
-		m_cueFrameRatio = 0.3f;
-		break;
 	}
-	m_goalCameraPos = ( m_fwdFrameRatio * fwdGoalPos ) + ( m_projectFrameRatio * projectGoalPos ) + ( m_cueFrameRatio * cueGoalPos );
+	m_fwdVelFocusRatio	= m_fwdVelFocusRatio / ratioSum;
+	m_aimFocusRatio		= m_aimFocusRatio / ratioSum;
+	m_cueFocusRatio		= m_cueFocusRatio / ratioSum;
+
+	m_goalCameraPos = ( m_fwdVelFocusRatio * fwdGoalPos ) + ( m_aimFocusRatio * projectGoalPos ) + ( m_cueFocusRatio * cueGoalPos );
 }
 
 void CameraController::SmoothMotion()
@@ -472,38 +461,12 @@ void CameraController::SmoothMotion()
 	m_smoothedGoalCameraPos = m_goalCameraPos;
 	if( !m_isSmooth ){ 	return; }
 
-	m_asymptoticValue = ComputeAsymptoticValueByDeltaDist( GetDistance2D( m_smoothedGoalCameraPos, m_cameraPos ));
-	m_smoothedGoalCameraPos = ( m_cameraPos * m_asymptoticValue ) + ( m_smoothedGoalCameraPos * ( 1 - m_asymptoticValue ));
-	if( m_owner->GetCameraWindowState() == USE_CAMERA_WINDOW ) {
-		switch( m_owner->GetCameraSnappingState() )
-		{
-			case NO_CAMERA_SNAPPING: {
-				return;
-			}
-			case POSITION_SNAPPING: {
-				return;
-			}
-			case POSITION_HORIZONTAL_LOCK: {
-				m_smoothedGoalCameraPos.x = m_goalCameraPos.x;
-				return;
-			}
-			case POSITION_VERTICAL_LOCK: {
-				m_smoothedGoalCameraPos.y = m_goalCameraPos.y;
-				return;
-			}
-			case POSITION_LOCK: {
-				m_smoothedGoalCameraPos = m_goalCameraPos;
-			}
-		}
-	}
+	m_asymptoticValue = ComputeAsymptoticValueByDeltaDist( GetDistance2D( m_goalCameraPos, m_cameraPos ));
+	m_smoothedGoalCameraPos = ( m_cameraPos * m_asymptoticValue ) + ( m_goalCameraPos * ( 1 - m_asymptoticValue ));
 }
 
 float CameraController::ComputeAsymptoticValueByDeltaDist( float deltaDist )
 {
-	if( deltaDist == 0.f ) {
-		return m_smoothRatio4;
-	}
-
 	float result =	RangeMapFloat( 0.f, m_maxDeltaDist, m_minAsymptotic, m_maxAsymptotic, deltaDist );
 	result = ClampFloat( m_minAsymptotic, m_maxAsymptotic, result );
 	return result;
@@ -512,22 +475,22 @@ float CameraController::ComputeAsymptoticValueByDeltaDist( float deltaDist )
 void CameraController::UpdateMultipleCameraSettings( float deltaSeconds )
 {
 	if( !m_ismultipleFactorStable ) {
-		UpdateMultipleCameraFactor( deltaSeconds );
+		UpdateMultipleCameraContributionRatio( deltaSeconds );
 	}
 }
 
-void CameraController::UpdateMultipleCameraFactor( float deltaSeconds )
+void CameraController::UpdateMultipleCameraContributionRatio( float deltaSeconds )
 {
 	UNUSED(deltaSeconds);
-	float currentFactorSeconds = m_factorStableSeconds - (float)m_timer->GetSecondsRemaining();
+	float currentContributionSeconds = m_contributionRatioStableSeconds - (float)m_timer->GetSecondsRemaining();
 	float smoothValue = 0.f;
-	smoothValue = currentFactorSeconds / m_factorStableSeconds;
+	smoothValue = currentContributionSeconds / m_contributionRatioStableSeconds;
 	smoothValue = ClampFloat( 0.f, 1.f, smoothValue );
 	smoothValue = SmoothStep3( smoothValue );
 	smoothValue = ClampFloat( 0.f, 1.f, smoothValue );
 
-	m_currentMultipleFactor = RangeMapFloat( 0.f, 1.f, m_startMultipleFactor, m_goalMultipleFactor, smoothValue ); // TODO testing
-	m_currentMultipleFactor = ClampFloat( 0.f, 1.f, m_currentMultipleFactor );
+	m_currentMultipleCameraContributionsRatio = RangeMapFloat( 0.f, 1.f, m_startMultipleFactor, m_goalMultipleFactor, smoothValue ); // TODO testing
+	m_currentMultipleCameraContributionsRatio = ClampFloat( 0.f, 1.f, m_currentMultipleCameraContributionsRatio );
 
 	if( m_timer->HasElapsed() ) {
 		m_ismultipleFactorStable = true;
@@ -546,7 +509,8 @@ void CameraController::RenderToStencilTexture()
  	IntVec2 bufferSize = backBuffer->GetSize();
 	m_stencilTexture = g_theRenderer->AcquireRenderTargetMatching( backBuffer );
 	g_theRenderer->CopyTexture( m_stencilTexture, s_stencilTexture );
-
+	float rollDegrees = m_camera->m_transform.GetRollDegrees();
+	m_camera->m_transform.SetRollDegrees( 0 );
 	switch( m_owner->GetSplitScreenState() )
 	{
 		case AXIS_ALIGNED_SPLIT: {
@@ -570,19 +534,22 @@ void CameraController::RenderToStencilTexture()
 			AppendVertsForPolygon2D( m_stencilVertices, m_voronoiPolygon, Rgba8::RED );
  			for( int i = 0; i <m_voronoiPolygon.m_edges.size(); i++ ) {
  				float thickness = m_maxedgeThickness;
-  				for( int j = 0; j < m_blendingEdgeIndexesAndThickness.size(); j++ ) {
-  					if( m_blendingEdgeIndexesAndThickness[j].first == i ) {
-  						thickness = RangeMapFloat( 0.f, 1.f, m_maxedgeThickness, 0.f, m_blendingEdgeIndexesAndThickness[j].second );
+				LineSegment2 line = m_voronoiPolygon.GetEdgeInWorld( i );
+  				for( int j = 0; j < m_blendingEdgeAndThickness.size(); j++ ) {
+  					if( IsLineSeg2MostlyEqual( m_blendingEdgeAndThickness[j].first, line ) ) {
+  						thickness = RangeMapFloat( 0.f, 1.f, m_maxedgeThickness, 0.f, m_blendingEdgeAndThickness[j].second );
+// 						LineSegment2 lineInworld = m_voronoiPolygon.GetEdgeInWorld( i );
+// 						AppendVertsForLineSegment2D( m_stencilVertices, lineInworld, thickness, Rgba8::GREEN );
   					}
   				}
  				LineSegment2 lineInworld = m_voronoiPolygon.GetEdgeInWorld( i );
- 				
  				AppendVertsForLineSegment2D( m_stencilVertices, lineInworld, thickness, Rgba8::GREEN );
  			}
   			g_theRenderer->DrawVertexVector( m_stencilVertices );
 			g_theRenderer->EndCamera();
 		}
 	}
+	m_camera->m_transform.SetRollDegrees( rollDegrees );
 }
 
 void CameraController::RenderToTargetTexture()
@@ -597,7 +564,7 @@ void CameraController::RenderToTargetTexture()
 		m_voronoiOffsetBuffer->Update( data.data(), sizeof( Vec2 ) * 2, sizeof( Vec2 ) * 2 );
 		g_theRenderer->SetOffsetBuffer( m_voronoiOffsetBuffer, 0 );
 	}
-	g_theGame->RenderGame();
+	g_theGame->RenderGame( m_index );
 	g_theRenderer->EndCamera();
 }
 
@@ -617,7 +584,7 @@ void CameraController::UpdateMultipleCameraOffsetAndBuffer()
 				return;
 			}
 			else if( controllerNum == 2 ) {
-				float offsetX = ( 0.5f - m_currentMultipleFactor / 2.f ) * 2.f;
+				float offsetX = ( 0.5f - m_currentMultipleCameraContributionsRatio / 2.f ) * 2.f;
 				if( m_index == 0 ) {
 					m_multipleCameraRenderOffset = Vec2( -offsetX, 0.f );
 				}
@@ -696,7 +663,7 @@ Vec2 CameraController::GetSplitScreenBoxDimension()
 		return Vec2( totalWidth, totalHeight );
 	}
 	else if( ControllerNum == 2 ) {
-		float width = totalWidth * ( m_currentMultipleFactor / totalFactor );
+		float width = totalWidth * ( m_currentMultipleCameraContributionsRatio / totalFactor );
 		return Vec2( width, totalHeight );
 	}
 	else {
@@ -738,9 +705,25 @@ float CameraController::ComputeCameraSnapSpeed()
 
 Vec2 CameraController::ComputeCameraWindowSnappedPosition( float deltaSeconds )
 {
+	if( m_owner->GetCameraSnappingState() == NO_CAMERA_SNAPPING ) {
+		return m_cameraWindowCenterPos;
+	}
+
 	m_snappingSpeed = ComputeCameraSnapSpeed();
 	Vec2 snapDirt = m_playerPos - m_cameraWindowCenterPos;
-	Vec2 snappedPos =Vec2::ZERO;
+	switch( m_owner->GetCameraSnappingState() )
+	{
+	case POSITION_SNAPPING:
+		break;
+	case POSITION_VERTICAL_SNAPPING:
+		snapDirt.x = 0.f;
+		break;
+	case POSITION_HORIZONTAL_SNAPPING:
+		snapDirt.y = 0.f;
+		break;
+	}
+
+	Vec2 snappedPos = Vec2::ZERO;
 	if( snapDirt.GetLength() < 0.1f ) {
 		snappedPos = m_cameraWindowCenterPos;
 	}
@@ -749,21 +732,6 @@ Vec2 CameraController::ComputeCameraWindowSnappedPosition( float deltaSeconds )
 		snappedPos = m_cameraWindowCenterPos + ( deltaSeconds * m_snappingSpeed * snapDirt );
 	}
 
-	switch( m_owner->GetCameraSnappingState() )
-	{
-	case POSITION_HORIZONTAL_LOCK:
-		snappedPos.x = m_playerPos.x; 
-		break;
-	case POSITION_VERTICAL_LOCK:
-		snappedPos.y = m_playerPos.y;
-		break;
-	case POSITION_LOCK:
-		snappedPos = m_playerPos;
-		break;
-	case NO_CAMERA_SNAPPING:
-		snappedPos = m_cameraWindowCenterPos;
-		break;
-	}
 	return snappedPos;
 }
 
@@ -774,28 +742,33 @@ void CameraController::UpdateVoronoiPoly( PolyType type )
 
 	switch( type )
 	{
-	case ORIGINAL_POLY:
-		minRadius						= GetMinimumInCircleRadiusForVoronoiHullWithPoint( m_originalVoronoiAnchorPointPos );
-		m_originalVoronoiPolygon		= Polygon2::MakeConvexFromPointCloud( polyPoints );
-		m_originalVoronoiPolyArea		= m_originalVoronoiPolygon.GetArea();
-		m_originalvoronoiInCircleRadius = minRadius;
+		case ORIGINAL_POLY: {
+			m_originalVoronoiPolygon		= Polygon2::MakeConvexFromPointCloud( polyPoints );
+			m_originalVoronoiPolyArea		= m_originalVoronoiPolygon.GetArea();
+			Vec2 polyCenter					= m_originalVoronoiPolygon.GetCenter();
+			minRadius						= GetMinimumInCircleRadiusForVoronoiHullWithPoint( polyCenter );
+			m_originalvoronoiInCircleRadius = minRadius;
+
+		}
+			break;
+		case CURRENT_POLY: {
+			m_voronoiPolygon			= Polygon2::MakeConvexFromPointCloud( polyPoints );
+			m_voronoiPolyArea			= m_voronoiPolygon.GetArea();
+			Vec2 polyCenter				= m_voronoiPolygon.GetCenter();
+			minRadius					= GetMinimumInCircleRadiusForVoronoiHullWithPoint( polyCenter );
+			m_voronoiInCircleRadius		= minRadius;
+		}
 		break;
-	case CURRENT_POLY:
-		minRadius					= GetMinimumInCircleRadiusForVoronoiHullWithPoint( m_voronoiAnchorPointPos );
-		m_voronoiPolygon			= Polygon2::MakeConvexFromPointCloud( polyPoints );
-		m_voronoiPolyArea			= m_voronoiPolygon.GetArea();
-		m_voronoiInCircleRadius		= minRadius;
-		break;
-	case INITIALIZE_POLY:
-		minRadius						= GetMinimumInCircleRadiusForVoronoiHullWithPoint( m_originalVoronoiAnchorPointPos );
-		m_originalVoronoiPolygon		= Polygon2::MakeConvexFromPointCloud( polyPoints );
-		m_originalVoronoiPolyArea		= m_originalVoronoiPolygon.GetArea();
-		m_originalvoronoiInCircleRadius = minRadius;
-		m_voronoiPolygon				= m_originalVoronoiPolygon;
-		m_voronoiPolyArea				= m_originalVoronoiPolyArea;
-		m_voronoiInCircleRadius			= m_originalvoronoiInCircleRadius;
-		break;
-	default:
+		case INITIALIZE_POLY: {
+			m_originalVoronoiPolygon		= Polygon2::MakeConvexFromPointCloud( polyPoints );
+			m_originalVoronoiPolyArea		= m_originalVoronoiPolygon.GetArea();
+			Vec2 polyCenter					= m_originalVoronoiPolygon.GetCenter();
+			minRadius						= GetMinimumInCircleRadiusForVoronoiHullWithPoint( polyCenter );
+			m_originalvoronoiInCircleRadius = minRadius;
+			m_voronoiPolygon				= m_originalVoronoiPolygon;
+			m_voronoiPolyArea				= m_originalVoronoiPolyArea;
+			m_voronoiInCircleRadius			= m_originalvoronoiInCircleRadius;
+		}
 		break;
 	}
 }

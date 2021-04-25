@@ -79,6 +79,7 @@ void PushDiscOutOfAABB2D(Vec2& center, float radiu,const AABB2& square );
 float GetProjectedLength2D( const Vec2& sourceVector, const Vec2& ontoVector );
 const Vec2 GetProjectedOnto2D( const Vec2& sourceVector, const Vec2& ontoVector );
 bool IsPointInForwardSector2D( const Vec2& point, const Vec2& observerPos, float forwardDegrees, float apertureDegrees, float maxDist );
+bool IsPointForwardOfPoint2D( const Vec2& point, const Vec2& observerPoint, Vec2 const& forwardDirt );
 float GetAngleDegreesBetweenVectors2D( const Vec2& vectorA, const Vec2& vectorB );
 
 

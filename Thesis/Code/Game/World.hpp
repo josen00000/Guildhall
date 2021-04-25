@@ -18,11 +18,14 @@ public:
 	void EndFrame();
 
 	// Accessor
-	int GetTotalMapIndex() const { return m_totalMapIndex; }
+	const int& GetTotalMapIndex() const { return m_totalMapIndex; }
+	const int& GetCurrentMapIndex() const { return m_currentMapIndex; }
+
 	Map* GetCurrentMap();
 
 	// Mutator
 	void SetTotalMapIndex( int totalMapIndex );
+	void SetCurrentMapIndex( int currentMapIndex );
 
 private:
 	int m_currentMapIndex = 0;

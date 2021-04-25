@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include "Game/GameCommon.hpp"
-#include "Game/GameObject.hpp"
 
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
@@ -28,7 +27,7 @@ public:
 	void Startup();
 	void Shutdown();
 	void RunFrame( float deltaSeclnds );
-	void RenderGame() const;
+	void RenderGame( int controllerIndex = 0 ) const;
 	void RenderUI() const;
 	void EndFrame();
 
@@ -39,16 +38,23 @@ public:
 	// mutator
 	void SetIsDebug( bool isDebug );
 	void SetIsPaused( bool isPaused );
+	void InitializeCameraSystemSetting( int mapIndex );
 
 private:
 	void HandleInput();
 	void UpdateGame( float deltaSeconds );
-	void UpdateUI( float deltaSeconds );
+	void UpdateUI( );
+	void UpdateSystemUI();
+	void UpdateCameraWindowUI();
+	void UpdateCameraFrameUI();
+	void UpdateCameraShakeUI();
+	void UpdateMultiplayerStrategyUI();
+	void UpdateSystemDebugModeUI();
 	void RenderGameUI() const;
+	void PrepareDemo1();
 
 	//Game State Check
 	void CheckIfExit();
-	void CheckIfDebug();
 
 	//Load
 	void LoadAssets();
@@ -58,12 +64,9 @@ public:
 	bool m_isAppQuit		= false;
 	bool m_isPaused			= false;
 	bool m_isDebug			= false;
-	bool m_isFighting		= false;
 	bool m_isOnSettingPage	= false;
-	bool m_showPauseMenu	= false;
-
-	int m_currentButtonIndex = 0;
-	int m_currentSettingButtonIndex = 0;
+	bool m_useSystemUI		= false;
+	bool m_useUI			= true;
 	
 	World* m_world			= nullptr;
 	Texture* m_enemyTexture				= nullptr;
@@ -78,10 +81,10 @@ public:
 	Camera* m_gameCamera		= nullptr;
 	Camera* m_UICamera			= nullptr;
 
-	std::vector<Coroutine*> m_gameObjects;
 };
 
 bool SetCameraAsymptoticValue( EventArgs& args );
 bool SpawnItem( EventArgs& args );
 bool DeletePlayer( EventArgs& args );
 bool SetIsSmooth( EventArgs& args );
+bool LoadMap( EventArgs& args );

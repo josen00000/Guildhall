@@ -217,6 +217,9 @@ void InputSystem::UpdateRelativeMode( )
 
 const XboxController* InputSystem::GetXboxController( int controllerID )
 {
+	if( controllerID == -1 ) {
+		return nullptr;
+	}
 	return m_controllers[controllerID];
 }
 

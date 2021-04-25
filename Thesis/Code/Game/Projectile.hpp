@@ -23,13 +23,14 @@ public:
 
 
 	// Mutator
+	void SetColor( Rgba8 color );
 private:
 	bool m_isDead = false;
 
-public:
+public: 
 	Rgba8 m_color;
 	float m_physicsRadiu	= 0.3f;
-	float m_speed			= 5.f;
+	float m_speed			= 8.f;
 	float m_damage			= 10.f;
 	ActorType	m_type		= ACTOR_NONE;
 

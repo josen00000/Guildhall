@@ -19,14 +19,21 @@ void World::CreateMaps()
 {
 	m_maps.clear();
 	m_maps.reserve( m_totalMapIndex );
+	std::string mapName[]{ "level1", "level2" };
 	for( int i = 0; i < m_totalMapIndex; i++ ) {
 		Map* temMap = Map::CreateMap( "level1", MapDefinition::s_definitions["level1"] );
-		m_maps.push_back( temMap );
+		if( m_currentMapIndex == i ) {
+			temMap->CreatePlayer();
+		}
+		m_maps.push_back( temMap  );
 	}
 }
 
 void World::UpdateWorld( float deltaSeconds )
 {
+	if( m_currentMapIndex == 0 ) {
+		
+	}
 	m_maps[m_currentMapIndex]->UpdateMap( deltaSeconds );
 }
 
@@ -48,4 +55,9 @@ Map* World::GetCurrentMap()
 void World::SetTotalMapIndex( int totalMapIndex )
 {
 	m_totalMapIndex = totalMapIndex;
+}
+
+void World::SetCurrentMapIndex( int currentMapIndex )
+{
+	m_currentMapIndex = currentMapIndex;
 }

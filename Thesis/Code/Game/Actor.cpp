@@ -82,7 +82,7 @@ void Actor::Shoot( float deltaSeconds )
 	m_shootTimer = 0.f;
 	Vec2 projectileDirt = Vec2::ONE;
 	projectileDirt.SetAngleDegrees( m_orientationDegrees );
-	m_map->SpawnNewProjectile( m_type, m_position, projectileDirt );
+	m_map->SpawnNewProjectile( m_type, m_position, projectileDirt, m_color);
 }
 
 void Actor::TakeDamage( float damage )

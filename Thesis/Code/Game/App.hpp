@@ -34,8 +34,6 @@ public:
 private:
 	void Update( float deltaSeconds );
 	const void Render() const;
-	void UpdateIMGUI();
-	void RenderIMGUI() const;
 
 private:
 	bool m_doesUseIMGUI		= true;

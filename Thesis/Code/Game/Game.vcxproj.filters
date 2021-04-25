@@ -40,9 +40,6 @@
     <ClCompile Include="Main_Windows.cpp">
       <Filter>General</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Game</Filter>
-    </ClCompile>
     <ClCompile Include="World.cpp">
       <Filter>Game</Filter>
     </ClCompile>
@@ -107,9 +104,6 @@
     </ClInclude>
     <ClInclude Include="EngineBuildPreferences.hpp">
       <Filter>General</Filter>
-    </ClInclude>
-    <ClInclude Include="GameObject.hpp">
-      <Filter>Game</Filter>
     </ClInclude>
     <ClInclude Include="World.hpp">
       <Filter>Game</Filter>
