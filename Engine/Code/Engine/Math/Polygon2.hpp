@@ -27,7 +27,7 @@ public:
 	// Accessor
 	float	GetDistanceToCenter( Vec2 point ) const;
 	float	GetLongestDistance() const;
-	float	GetDistanceToEdge( Vec2 point ) const;
+	float	GetShortestDistanceToEdge( Vec2 point ) const;
 	float	GetArea() const;
 	int		GetVertexCount() const;
 	int		GetEdgeCount() const;

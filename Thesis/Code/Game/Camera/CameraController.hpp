@@ -94,6 +94,8 @@ public:
 	void SetCueFocusRatio							( float ratio );
 	void SetPositionalShakeMaxDist					( float maxDist );
 	void SetRotationalShakeMaxDeg					( float maxDeg );
+	void SetMaxEdgeThickness						( float maxThickness );
+	void SetSplitScreenEdgeColor					( Rgba8 color ); 
 
 	void SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor );
 
@@ -133,6 +135,7 @@ public:
 
 	// split screen
 	void RenderToStencilTexture();
+	void AppendVertsForStencilTexture();
 	void RenderToTargetTexture();
 	void UpdateMultipleCameraOffsetAndBuffer();
 	void ReleaseRenderTarget();
@@ -234,6 +237,7 @@ private:
 	float			m_originalVoronoiPolyArea		= 0.f;
 	float			m_screenEdgeWidth				= 0.5f;
 	float			m_maxedgeThickness				= 0.5f;
+	Rgba8			m_splitScreenEdgeColor			= Rgba8::BLACK;
 	Vec2			m_voronoiStencilOffset			= Vec2::ZERO;
 	Vec2			m_voronoiColorTargetOffset		= Vec2::ZERO;
 	Polygon2		m_voronoiPolygon;

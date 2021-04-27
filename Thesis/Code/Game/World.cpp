@@ -21,7 +21,9 @@ void World::CreateMaps()
 	m_maps.reserve( m_totalMapIndex );
 	std::string mapName[]{ "level1", "level2" };
 	for( int i = 0; i < m_totalMapIndex; i++ ) {
-		Map* temMap = Map::CreateMap( "level1", MapDefinition::s_definitions["level1"] );
+		std::string levelName = "level";
+		levelName += std::to_string( i + 1 );
+		Map* temMap = Map::CreateMap( levelName, MapDefinition::s_definitions[levelName] );
 		if( m_currentMapIndex == i ) {
 			temMap->CreatePlayer();
 		}

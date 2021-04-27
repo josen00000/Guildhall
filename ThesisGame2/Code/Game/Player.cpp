@@ -1,5 +1,6 @@
 #include "Player.hpp"
 #include "Game/Map/Map.hpp"
+#include "Game/Projectile.hpp"
 #include "../../Thesis/Code/Game/Camera/CameraSystem.hpp"
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
@@ -19,18 +20,20 @@ Player::Player( int index )
 	m_index = index;
 	index++;
 	unsigned char alpha = 255;
-	unsigned char intensity = 200;
+	unsigned char intensity1 = 50;
+	unsigned char intensity2 = 100;
+	unsigned char intensity3 = 150;
 	if( m_index == 0 ) {
-		m_color = Rgba8( intensity, intensity, 0, alpha );
+		m_color = Rgba8::CYAN;
 	}
 	else if( m_index == 1 ) {
-		m_color = Rgba8( 0, intensity, intensity, alpha );
+		m_color = Rgba8::YELLOW;
 	}
 	else if( m_index == 2 ) {
-		m_color = Rgba8( intensity, 0, intensity, alpha );
+		m_color = Rgba8::BROWN;
 	}
 	else if( m_index == 3 ) {
-		m_color = Rgba8::WHITE;
+		m_color = Rgba8::MAGENTA;
 	}
 }
 
@@ -58,7 +61,7 @@ void Player::UpdatePlayer( float deltaSeconds, int playerIndex )
 
 	UpdatePlayerSpeed( deltaSeconds );
 	if( g_theCameraSystem->GetSplitScreenState() == VORONOI_SPLIT ) {
-		UpdateMarkers();
+		UpdateMarkersAndEdgeColor();
 		CameraController* controller = g_theCameraSystem->GetCameraControllerWithIndex( m_index );
 		float incircleRadius = controller->GetVoronoiInCircleRadius();
 		if( incircleRadius > 4.5f ) {
@@ -138,13 +141,13 @@ void Player::RenderPlayer( int controllerIndex )
 		RenderMarkers( controllerIndex );
 	}
 	__super::RenderActor();
-	Vec2 forwardDirt = Vec2::ONE;
+	Vec2 forwardDirt = Vec2::ONE_ZERO;
 	forwardDirt.SetAngleDegrees( m_orientationDegrees );
 	g_theRenderer->SetDiffuseTexture( nullptr );
-	g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 50.f, 0.1f, Rgba8::RED );
+	g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 40.f, 0.1f, Rgba8( 100, 0, 0 ,25 ) );
 }
 
-void Player::UpdateMarkers()
+void Player::UpdateMarkersAndEdgeColor()
 {
  	m_markerPos.clear();
 	m_markerVertices.clear();
@@ -178,6 +181,29 @@ void Player::UpdateMarkers()
 		m_markerVertices.push_back( Vertex_PCU( markerPos - dirt + perpendicularDirt, players[i]->GetColor(), Vec2::ZERO ) );
 		m_markerVertices.push_back( Vertex_PCU( markerPos - dirt - perpendicularDirt, players[i]->GetColor(), Vec2::ZERO ) );
  	}
+	std::vector<Projectile*>& mapProjectiles = m_map->GetProjectiles();
+	bool doesNeedChangeColor = false;
+	for( int i = 0; i < mapProjectiles.size(); i++ ) {
+		Projectile* tempProjectile = mapProjectiles[i];
+		if( !tempProjectile ){ continue; }
+		if( tempProjectile->m_playerIndex == m_index ) { continue; }
+		if( !tempProjectile->IsMovingTorwards( m_position ) ){ continue; }
+
+		Vec2 projectilePos = tempProjectile->GetPosition();
+		float dist = voronoiPoly.GetShortestDistanceToEdge( projectilePos );
+		if( dist < 2 ) {
+			doesNeedChangeColor = true;
+			break;
+		}
+	}
+	if( doesNeedChangeColor ) {
+		controllers[m_index]->SetSplitScreenEdgeColor( Rgba8::RED );
+		controllers[m_index]->SetMaxEdgeThickness( 0.25f );
+	}
+	else {
+		controllers[m_index]->SetSplitScreenEdgeColor( m_color );
+		controllers[m_index]->SetMaxEdgeThickness( 0.15f );
+	}
 }
 
 void Player::RenderMarkers( int controllerIndex )
@@ -197,7 +223,7 @@ void Player::TakeDamage( float damage )
 void Player::Die()
 {
 	SetAliveState( WAIT_FOR_DELETE );
-	g_theCameraSystem->PrepareRemoveAndDestroyController( this );
+	g_theCameraSystem->PrepareRemoveAndDestroyController( this, 0.5f );
 }
 
 int Player::GetPlayerIndex()

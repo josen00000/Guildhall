@@ -141,7 +141,20 @@ void Game::HandleInput()
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F3 ) ) {
 		SetZoomSetting();
 	}
-	
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_PLUS ) ) {
+		Map* currentMap = g_theGame->GetCurrentMap();
+		int playerNum = currentMap->GetPlayerNum();
+		if( playerNum <= 3 ) {
+			currentMap->CreatePlayer();
+		}
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_MINUS ) ) {
+		Map* currentMap = g_theGame->GetCurrentMap();
+		int playerNum = currentMap->GetPlayerNum();
+		if( playerNum > 1 ) {
+			currentMap->DestroyPlayerWithIndex( playerNum - 1 );
+		}
+	}
 }
 
 void Game::UpdateGame( float deltaSeconds )

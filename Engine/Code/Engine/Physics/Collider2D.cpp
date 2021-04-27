@@ -310,7 +310,7 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
  	if( contacts.size() == 1 ) {
 		result.contact.m_start = tangentMin;
  		result.contact.m_end = tangentMin;
-		if( polyColA->m_worldPolygon.GetDistanceToEdge( tangentMin ) >= 0.2f ) {
+		if( polyColA->m_worldPolygon.GetShortestDistanceToEdge( tangentMin ) >= 0.2f ) {
 			//int test = 1;
 		}
  		return result;
@@ -391,7 +391,7 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 	result.contact.m_start = contactMin;
 	result.contact.m_end = contactMax;
 
-	if( polyColA->m_worldPolygon.GetDistanceToEdge( contactMin ) >= 0.2f || polyColA->m_worldPolygon.GetDistanceToEdge( contactMax ) >= 0.2f ){
+	if( polyColA->m_worldPolygon.GetShortestDistanceToEdge( contactMin ) >= 0.2f || polyColA->m_worldPolygon.GetShortestDistanceToEdge( contactMax ) >= 0.2f ){
 		//int test = 1;
 	}
 

@@ -54,6 +54,13 @@ void Projectile::Die()
 	m_isDead = true;
 }
 
+bool Projectile::IsMovingTorwards( Vec2 point ) const
+{
+	Vec2 disp = point - m_pos;
+	float dotProduct = DotProduct2D( disp, m_movingDirection );
+	return dotProduct > 0.f;
+}
+
 void Projectile::SetColor( Rgba8 color )
 {
 	m_color = color;

@@ -909,6 +909,7 @@ void CameraSystem::CreateAndPushController( Player* player )
 		smoothTime = 0.1f;
 	}
 	UpdateControllerMultipleFactor( smoothTime );
+	m_isVoronoiInitialized = false;
 }
 
 void CameraSystem::DestroyAllControllers()
@@ -919,13 +920,12 @@ void CameraSystem::DestroyAllControllers()
 	m_controllers.clear();
 }
 
-void CameraSystem::PrepareRemoveAndDestroyController( Player const* player )
+void CameraSystem::PrepareRemoveAndDestroyController( Player const* player, float smoothTime )
 {
-	float smoothTime = 2.f;
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 		if( m_controllers[i]->m_player == player ) {
 			m_controllers[i]->SetMultipleCameraStableFactorNotStableUntil( smoothTime, 0.f );
-		}	
+		}
 	}
 	UpdateControllerMultipleFactor( smoothTime );
 }

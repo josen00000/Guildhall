@@ -83,6 +83,7 @@ public:
 	
 	std::vector<Enemy*>& GetEnemies();
 	std::vector<Player*>& GetPlayers();
+	std::vector<Projectile*>& GetProjectiles();
 
 	IntVec2 GetTileCoordsWithTileIndex( int index ) const;
 	IntVec2 GetRandomInsideTileCoords() const;

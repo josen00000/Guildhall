@@ -221,6 +221,11 @@ std::vector<Player*>& Map::GetPlayers()
 	return m_players;
 }
 
+std::vector<Projectile*>& Map::GetProjectiles()
+{
+	return m_projectiles;
+}
+
 int Map::GetTileIndexWithTileCoords( IntVec2 tileCoords ) const
 {
 	return m_width * tileCoords.y + tileCoords.x;
@@ -297,11 +302,11 @@ void Map::UpdateMap( float deltaSeconds )
 
 void Map::UpdateActors( float deltaSeconds )
 {
-	if( m_players.size() == 1 ) {
-		Vec2 playerPos = m_players[0]->GetPosition();
-		Vec2 targetDirt = m_mousePosInWorld - playerPos;
-		m_players[0]->SetOrientationDegrees( targetDirt.GetAngleDegrees() );
-	}
+// 	if( m_players.size() == 1 ) {
+// 		Vec2 playerPos = m_players[0]->GetPosition();
+// 		Vec2 targetDirt = m_mousePosInWorld - playerPos;
+// 		m_players[0]->SetOrientationDegrees( targetDirt.GetAngleDegrees() );
+// 	}
 	for( int i = 0; i < m_players.size(); i++ ) {
 		if( m_players[i] == nullptr ){ continue;}
 		m_players[i]->UpdatePlayer( deltaSeconds, i );
@@ -386,6 +391,9 @@ void Map::CreatePlayer( )
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );
 	g_theCameraSystem->CreateAndPushController( newPlayer );
+	CameraController* newController = g_theCameraSystem->GetCameraControllerWithIndex( newPlayer->m_index );
+	newController->SetSplitScreenEdgeColor( newPlayer->GetColor() );
+	newController->SetMaxEdgeThickness( 0.15f );
 }
 
 void Map::DestroyPlayerWithIndex( int index )
@@ -395,7 +403,7 @@ void Map::DestroyPlayerWithIndex( int index )
 		return; 
 	}
 	m_players[index]->SetAliveState( WAIT_FOR_DELETE );
-	g_theCameraSystem->PrepareRemoveAndDestroyController( m_players[index] );
+	g_theCameraSystem->PrepareRemoveAndDestroyController( m_players[index], 0.5f );
 	
 }
 

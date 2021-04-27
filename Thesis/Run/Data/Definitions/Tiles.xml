@@ -1,17 +1,65 @@
 <TileDefinitions spriteSheet="Data/Images/Terrain_8x8.png" spriteLayout="8,8">
 
 	<TileDefinition
-		name="Grass"
+		name="Grass1"
+		spriteCoords="2,0"
+		allowsWalk="true"
+	/>
+    <TileDefinition
+		name="Grass2"
+		spriteCoords="3,0"
+		allowsWalk="true"
+	/>
+    <TileDefinition
+		name="Grass3"
 		spriteCoords="0,0"
 		allowsWalk="true"
 	/>
-
+    <TileDefinition
+		name="Grass4"
+		spriteCoords="6,0"
+		allowsWalk="true"
+	/>
+    <TileDefinition
+        name="Sand1"
+        spriteCoords="7,1"
+        allowsWalk="true"
+    />
+    <TileDefinition
+        name="Sand2"
+        spriteCoords="5,1"
+        allowsWalk="true"
+    />
+    <TileDefinition
+        name="Sand3"
+        spriteCoords="3,2"
+        allowsWalk="true"
+    />
+    <TileDefinition
+        name="Sand4"
+        spriteCoords="7,2"
+        allowsWalk="true"
+    />
+    <TileDefinition
+        name="Water1"
+        spriteCoords="6,6"
+        allowsWalk="false"
+    />
   <TileDefinition
-		name="Water"
+		name="Water2"
 		spriteCoords="5,7"
 		allowsWalk="false"
 	/>
-
+    <TileDefinition
+  		name="Water3"
+  		spriteCoords="4,7"
+  		allowsWalk="false"
+  	/>
+    <TileDefinition
+        name="Water4"
+        spriteCoords="3,7"
+        allowsWalk="false"
+    />
   <TileDefinition
       name="Floor"
       spriteCoords="1,6"

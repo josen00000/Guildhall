@@ -201,7 +201,7 @@ public:
 	// Controller
 	void CreateAndPushController( Player* player );
 	void DestroyAllControllers();
-	void PrepareRemoveAndDestroyController( Player const* player );
+	void PrepareRemoveAndDestroyController( Player const* player, float smoothTime = 2.f );
 	void UpdateControllerMultipleFactor( float smoothTime );
 	void CheckIsControllerVaild( int controllerIndex ) const;
 	int GetValidPlayerNum();

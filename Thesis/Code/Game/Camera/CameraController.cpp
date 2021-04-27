@@ -265,6 +265,16 @@ void CameraController::SetRotationalShakeMaxDeg( float maxDeg )
 	m_maxShakeRotDeg = maxDeg;
 }
 
+void CameraController::SetMaxEdgeThickness( float maxThickness )
+{
+	m_maxedgeThickness = maxThickness;
+}
+
+void CameraController::SetSplitScreenEdgeColor( Rgba8 color )
+{
+	m_splitScreenEdgeColor = color;
+}
+
 void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalSeconds, float goalFactor )
 {
 	m_ismultipleFactorStable = false;
@@ -518,7 +528,7 @@ void CameraController::RenderToStencilTexture()
  			m_camera->SetColorTarget( m_stencilTexture );
 			g_theRenderer->BeginCamera( m_camera );
 			g_theRenderer->BindShader( m_boxStencilShader );
-			g_theRenderer->DrawAABB2DWithBound( worldRenderBox, Rgba8::RED, 0.5f, Rgba8::GREEN );
+			g_theRenderer->DrawAABB2DWithBound( worldRenderBox, Rgba8::WHITE, 0.5f, m_splitScreenEdgeColor );
 			g_theRenderer->EndCamera();
 		}
 		break;
@@ -531,25 +541,32 @@ void CameraController::RenderToStencilTexture()
 			data.push_back( Vec2::ZERO );
 			m_voronoiOffsetBuffer->Update( data.data(), sizeof( Vec2 ) * 2, sizeof( Vec2 ) * 2 );
 			g_theRenderer->SetOffsetBuffer( m_voronoiOffsetBuffer, 0 );
-			AppendVertsForPolygon2D( m_stencilVertices, m_voronoiPolygon, Rgba8::RED );
- 			for( int i = 0; i <m_voronoiPolygon.m_edges.size(); i++ ) {
- 				float thickness = m_maxedgeThickness;
-				LineSegment2 line = m_voronoiPolygon.GetEdgeInWorld( i );
-  				for( int j = 0; j < m_blendingEdgeAndThickness.size(); j++ ) {
-  					if( IsLineSeg2MostlyEqual( m_blendingEdgeAndThickness[j].first, line ) ) {
-  						thickness = RangeMapFloat( 0.f, 1.f, m_maxedgeThickness, 0.f, m_blendingEdgeAndThickness[j].second );
-// 						LineSegment2 lineInworld = m_voronoiPolygon.GetEdgeInWorld( i );
-// 						AppendVertsForLineSegment2D( m_stencilVertices, lineInworld, thickness, Rgba8::GREEN );
-  					}
-  				}
- 				LineSegment2 lineInworld = m_voronoiPolygon.GetEdgeInWorld( i );
- 				AppendVertsForLineSegment2D( m_stencilVertices, lineInworld, thickness, Rgba8::GREEN );
- 			}
+			AppendVertsForStencilTexture();
   			g_theRenderer->DrawVertexVector( m_stencilVertices );
 			g_theRenderer->EndCamera();
 		}
 	}
 	m_camera->m_transform.SetRollDegrees( rollDegrees );
+}
+
+void CameraController::AppendVertsForStencilTexture()
+{
+	AppendVertsForPolygon2D( m_stencilVertices, m_voronoiPolygon, Rgba8::WHITE );
+	for( int i = 0; i <m_voronoiPolygon.m_edges.size(); i++ ) {
+		float thickness = m_maxedgeThickness;
+		LineSegment2 line = m_voronoiPolygon.GetEdgeInWorld( i );
+		for( int j = 0; j < m_blendingEdgeAndThickness.size(); j++ ) {
+			if( IsLineSeg2MostlyEqual( m_blendingEdgeAndThickness[j].first, line ) ) {
+				thickness = RangeMapFloat( 0.f, 1.f, m_maxedgeThickness, 0.f, m_blendingEdgeAndThickness[j].second );
+			}
+		}
+		LineSegment2 lineInworld = m_voronoiPolygon.GetEdgeInWorld( i );
+		Vec2 lineDirt = lineInworld.GetNormalizedDirection();
+		Vec2 moveDirt = Vec2( -lineDirt.y, lineDirt.x );
+		lineInworld.SetStartPos( lineInworld.GetStartPos() + moveDirt * thickness * 0.45f );
+		lineInworld.SetEndPos( lineInworld.GetEndPos() + moveDirt * thickness * 0.45f );
+		AppendVertsForLineSegment2D( m_stencilVertices, lineInworld, thickness, m_splitScreenEdgeColor );
+	}
 }
 
 void CameraController::RenderToTargetTexture()

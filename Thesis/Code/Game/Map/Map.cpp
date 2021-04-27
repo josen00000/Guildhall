@@ -384,10 +384,8 @@ void Map::GenerateMap()
 {
 	m_tilesVertices.clear();
 	InitializeTiles();
-	PopulateTiles();
 	GenerateRooms();
 	GenerateEdges();
-	PopulateTiles();
 	m_startCoords = GetRandomInsideNotSolidTileCoords();
 	PopulateTiles();
 }
@@ -396,7 +394,7 @@ void Map::CreatePlayer( )
 {
 	if( m_players.size() >= 4 ){ return; }
 	Vec2 pos = (Vec2)m_startCoords;
-	Player* newPlayer = Player::SpawnPlayerWithPos( pos, m_players.size() );
+	Player* newPlayer = Player::SpawnPlayerWithPos( pos, (int)m_players.size() );
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );
 
@@ -690,10 +688,19 @@ void Map::PopulateTiles()
 
 void Map::InitializeTiles()
 {
-	for( int i = 0; i < m_height * m_width; i++ ) {
-		IntVec2 tileCoords = GetTileCoordsWithTileIndex( i );
-		m_tiles.emplace_back( tileCoords, m_definition->GetFillType() );
-		m_tileAttributes.push_back( (uint)0 );
+	if( m_name == "level2" ) {
+		for( int i = 0; i < m_height * m_width; i++ ) {
+			IntVec2 tileCoords = GetTileCoordsWithTileIndex( i );
+			m_tiles.emplace_back( tileCoords, m_definition->GetEdgeType() );
+			m_tileAttributes.push_back( (uint)0 );
+		}
+	}
+	else {
+		for( int i = 0; i < m_height * m_width; i++ ) {
+			IntVec2 tileCoords = GetTileCoordsWithTileIndex( i );
+			m_tiles.emplace_back( tileCoords, m_definition->GetFillType() );
+			m_tileAttributes.push_back( (uint)0 );
+		}
 	}
 }
 

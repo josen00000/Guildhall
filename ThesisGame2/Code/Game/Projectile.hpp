@@ -18,6 +18,7 @@ public:
 	// Accessor
 	int GetPlayerIndex() const { return m_playerIndex; }
 	bool GetIsDead() const { return m_isDead; }
+	bool IsMovingTorwards( Vec2 point ) const;
 	float GetDamage() const { return m_damage; }
 	Vec2 GetPosition() const { return m_pos; }
 

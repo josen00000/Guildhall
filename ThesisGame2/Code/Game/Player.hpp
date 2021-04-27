@@ -20,7 +20,7 @@ public:
 	void UpdatePlayerSpeed( float deltaSeconds );
 	void HandleInput( float deltaSeconds, int playerIndex );
 	void RenderPlayer( int controllerIndex = 0 );
-	void UpdateMarkers( );
+	void UpdateMarkersAndEdgeColor( );
 	void RenderMarkers( int controllerIndex );
 	virtual void TakeDamage( float damage ) override; 
 	virtual void Die() override;

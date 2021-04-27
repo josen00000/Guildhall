@@ -175,7 +175,7 @@ float Polygon2::GetLongestDistance() const
 
 
 
-float Polygon2::GetDistanceToEdge( Vec2 point ) const
+float Polygon2::GetShortestDistanceToEdge( Vec2 point ) const
 {
 	Vec2 pointOnEdge = GetClosestPointOnEdges( point );
 	return ( pointOnEdge - point).GetLength(); 

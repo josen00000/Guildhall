@@ -78,7 +78,7 @@ protected:
 	float m_orientationDegrees		= 0.f;
 	float m_speed					= 3.f;
 	float m_physicsRadius			= 1.f;
-	float m_hp						= 50.f;
+	float m_hp						= 1000.f;
 	float m_attackStrength			= 10.f;
 	float m_shootCoolDown			= 0.3f;
 	float m_shootTimer				= m_shootCoolDown;
