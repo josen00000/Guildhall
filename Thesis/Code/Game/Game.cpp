@@ -91,8 +91,10 @@ void Game::RenderGame( int controllerIndex ) const
 
 void Game::RenderUI() const
 {
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData( ImGui::GetDrawData() );
+	if( m_useUI ) {
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData( ImGui::GetDrawData() );
+	}
 }
 
 void Game::EndFrame()
@@ -139,86 +141,6 @@ void Game::HandleInput()
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F2 ) ) {
 		m_useSystemUI = !m_useSystemUI;
 	}
-// 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F2 ) ) {
-// 		CameraWindowState currentState = g_theCameraSystem->GetCameraWindowState();
-// 		if( currentState < CameraWindowState::NUM_OF_CAMERA_WINDOW_STATE ) {
-// 			currentState = static_cast<CameraWindowState>( currentState + 1 );
-// 		}
-// 		if( currentState == CameraWindowState::NUM_OF_CAMERA_WINDOW_STATE ) {
-// 			currentState = static_cast<CameraWindowState>( (uint) 0 );
-// 		}
-// 		g_theCameraSystem->SetCameraWindowState( currentState );
-// 	}
-// 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F3 ) ) {
-// 		CameraSnappingState currentState = g_theCameraSystem->GetCameraSnappingState();
-// 		if( currentState < CameraSnappingState::NUM_OF_CAMERA_SNAPPING_STATE ) {
-// 			currentState = static_cast<CameraSnappingState>( currentState + 1 );
-// 		}
-// 		if( currentState == CameraSnappingState::NUM_OF_CAMERA_SNAPPING_STATE ) {
-// 			currentState = static_cast<CameraSnappingState>((uint)0);
-// 		}
-// 		g_theCameraSystem->SetCameraSnappingState( currentState );
-// 	}
-// 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F4 ) ) {
-// 		CameraShakeState currentState = g_theCameraSystem->GetCameraShakeState();
-// 		if( currentState < CameraShakeState::NUM_OF_SHAKE_STATE - 1 ) {
-// 			currentState = static_cast<CameraShakeState>( currentState + 1 );
-// 		}
-// 		else {
-// 			currentState = static_cast<CameraShakeState>( (uint)0 );
-// 		}
-// 		g_theCameraSystem->SetCameraShakeState( currentState );
-// 	}
-// 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F5 ) ) {
-// 		CameraFrameState currentState = g_theCameraSystem->GetCameraFrameState();
-// 		if( currentState < CameraFrameState::NUM_OF_FRAME_STATE - 1 ) {
-// 			currentState = static_cast<CameraFrameState>(currentState + 1);
-// 		}
-// 		else {
-// 			currentState = static_cast<CameraFrameState>((uint)0);
-// 		}
-// 		g_theCameraSystem->SetCameraFrameState( currentState );
-// 	}
-// 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F6 ) ) {
-// 		SplitScreenState currentState = g_theCameraSystem->GetSplitScreenState();
-// 		if( currentState < SplitScreenState::NUM_OF_SPLIT_SCREEN_STATE - 1 ) {
-// 			currentState = static_cast<SplitScreenState>(currentState + 1);
-// 		}
-// 		else {
-// 			currentState = static_cast<SplitScreenState>((uint)0);
-// 		}
-// 		g_theCameraSystem->SetSplitScreenState( currentState );
-// 	}
-// 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F7 ) ) {
-// 		NoSplitScreenStrat currentStrat = g_theCameraSystem->GetNoSplitScreenStrat();
-// 		if( currentStrat < NoSplitScreenStrat::NUM_OF_NO_SPLIT_SCREEN_STRAT - 1 ) {
-// 			currentStrat = static_cast<NoSplitScreenStrat>(currentStrat + 1);
-// 		}
-// 		else {
-// 			currentStrat = static_cast<NoSplitScreenStrat>((uint)0);
-// 		}
-// 		g_theCameraSystem->SetNoSplitScreenStrat( currentStrat );
-// 	}
-// 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F8 ) ) {
-// 		PostVoronoiSetting currentPostVoronoiSetting = g_theCameraSystem->GetPostVoronoiSetting();
-// 		if( currentPostVoronoiSetting < NUM_OF_POST_VORONOI_SETTING - 1 ) {
-// 			currentPostVoronoiSetting = static_cast<PostVoronoiSetting>(currentPostVoronoiSetting + 1);
-// 		}
-// 		else {
-// 			currentPostVoronoiSetting = static_cast<PostVoronoiSetting>((uint)0);
-// 		}
-// 		g_theCameraSystem->SetPostVoronoiSetting( currentPostVoronoiSetting );
-// 	}
-// 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_F9 ) ){
-// 		DebugMode currentMode = g_theCameraSystem->GetDebugMode();
-// 		if( currentMode < DebugMode::NUM_OF_DEBUG_MODE - 1 ) {
-// 			currentMode = static_cast<DebugMode>( currentMode + 1 );
-// 		}
-// 		else {
-// 			currentMode = static_cast<DebugMode>(0);
-// 		}
-// 		g_theCameraSystem->SetDebugMode( currentMode );
-// 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_SHIFT ) ) {
 		Map* currentMap = m_world->GetCurrentMap();
 		if( currentMap != nullptr ) {
@@ -226,10 +148,10 @@ void Game::HandleInput()
 		}
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P ) ) {
-		Map* currentMap = m_world->GetCurrentMap();
-		if( currentMap != nullptr ) {
-			currentMap->CreatePlayer();
-		 }
+// 		Map* currentMap = m_world->GetCurrentMap();
+// 		if( currentMap != nullptr ) {
+// 			currentMap->CreatePlayer();
+// 		 }
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_I ) ) {
 		Map* currentMap = m_world->GetCurrentMap();
@@ -246,20 +168,32 @@ void Game::HandleInput()
 	}
 	
 	if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
-		g_theCameraSystem->AddCameraShake( 0, 0.5f );
-		PrepareDemo1();
+		g_theCameraSystem->SetCameraFrameState( CUE_FRAMING );
+		g_theCameraSystem->SetControllerCueFocusRatio( 0, 0.5f );
+		g_theCameraSystem->SetControllerCueFocusRatio( 1, 0.5f );
+		g_theCameraSystem->SetControllerAimFocusRatio( 0, 0.f );
+		g_theCameraSystem->SetControllerAimFocusRatio( 1, 0.f );
+		g_theCameraSystem->SetForwardVelocityFrameDistance( 0.5f );
+		g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 0, 0.5f );
+		g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 1, 0.5f );
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
-		VoronoiAreaCheckState currentVoronoiAreaCheckState = g_theCameraSystem->GetVoronoiAreaCheckState();
-		if( currentVoronoiAreaCheckState < NUM_OF_AREA_CHECK_STATE - 1 ) {
-			currentVoronoiAreaCheckState = static_cast<VoronoiAreaCheckState>(currentVoronoiAreaCheckState + 1);
-		}
-		else {
-			currentVoronoiAreaCheckState = static_cast<VoronoiAreaCheckState>((uint)0);
-		}
-		g_theCameraSystem->SetVoronoiAreaCheckState( currentVoronoiAreaCheckState );
+		g_theCameraSystem->SetForwardVelocityFrameDistance( 4.f );
+		g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 0, 1.f );
+		g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 1, 1.f );
+		g_theCameraSystem->SetControllerCueFocusRatio( 0, 0.f );
+		g_theCameraSystem->SetControllerCueFocusRatio( 1, 0.f );
+		g_theCameraSystem->SetControllerAimFocusRatio( 0, 0.f );
+		g_theCameraSystem->SetControllerAimFocusRatio( 1, 0.f );
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_3 ) ) {
+		g_theCameraSystem->SetAimFocusDistance( 4.f );
+		g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 0, 0.2f );
+		g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 1, 0.2f );
+		g_theCameraSystem->SetControllerAimFocusRatio( 0, 0.8f );
+		g_theCameraSystem->SetControllerAimFocusRatio( 1, 0.8f );
+		g_theCameraSystem->SetControllerCueFocusRatio( 0, 0.f );
+		g_theCameraSystem->SetControllerCueFocusRatio( 1, 0.f );
 	}
 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_4 ) ) {
 	}
@@ -434,7 +368,7 @@ void Game::UpdateCameraWindowUI()
 {
 	CameraWindowState windowState		= g_theCameraSystem->GetCameraWindowState();
 	CameraSnappingState snappingState	= g_theCameraSystem->GetCameraSnappingState();
-	static const char* cameraSnappingStateItems[]{ "No Camera Snapping", "Position Snapping", "Horizontal Position Snapping", "Vertical Position Snapping" };
+	static const char* cameraSnappingStateItems[]{ "No Camera Centralize", "Position Centralize", "Horizontal Position Centralize", "Vertical Position Centralize" };
 	static uint cameraSnappingStateIndex = 0;
 	static bool doesUseCameraWindow;
 	static bool doesUseCameraSnapping;
@@ -464,7 +398,7 @@ void Game::UpdateCameraWindowUI()
 			windowSize.x = DEFAULT_CAMERA_WINDOW_WIDTH;
 			windowSize.y = DEFAULT_CAMERA_WINDOW_HEIGHT;
 		}
-		ImGui::Combo( "Camera snapping states", (int*)&cameraSnappingStateIndex, cameraSnappingStateItems, IM_ARRAYSIZE( cameraSnappingStateItems ) );
+		ImGui::Combo( "Camera centralize states", (int*)&cameraSnappingStateIndex, cameraSnappingStateItems, IM_ARRAYSIZE( cameraSnappingStateItems ) );
 	}
 	ImGui::End();
 
@@ -624,8 +558,37 @@ void Game::InitializeCameraSystemSetting( int mapIndex )
 {
 	if( mapIndex == 1 ) {
 		m_useUI = false;
-		g_theCameraSystem->SetSplitScreenState( NO_SPLIT_SCREEN );
-		g_theCameraSystem->SetNoSplitScreenStrat( COMBINATION_ZOOM_AND_KILL );
+		g_theCameraSystem->SetSplitScreenState( VORONOI_SPLIT );
+		g_theCameraSystem->SetControllerEdgeThickness( 0, 0.3f );
+		g_theCameraSystem->SetControllerEdgeThickness( 1, 0.3f );
+		g_theCameraSystem->SetCameraFrameState( FORWARD_VELOCITY_FRAMING );
+		g_theCameraSystem->SetForwardVelocityFrameDistance( 4.f );
+		g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 0, 1.f );
+		g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 1, 1.f );
+		g_theCameraSystem->SetControllerAimFocusRatio( 0, 0.f );
+		g_theCameraSystem->SetControllerAimFocusRatio( 1, 0.f );
+		g_theCameraSystem->SetControllerCueFocusRatio( 0, 0.f );
+		g_theCameraSystem->SetControllerCueFocusRatio( 1, 0.f );
+		g_theCameraSystem->SetControllerMaxAsymptoticValue( 0, 0.999f );
+		g_theCameraSystem->SetControllerMaxAsymptoticValue( 1, 0.999f );
+		g_theCameraSystem->SetControllerMinAsymptoticValue( 0, 0.975f );
+		g_theCameraSystem->SetControllerMinAsymptoticValue( 1, 0.975f );
+		g_theCameraSystem->SetControllerMaxDeltaDist( 0, 4.f );
+		g_theCameraSystem->SetControllerMaxDeltaDist( 1, 4.f );
+		g_theCameraSystem->SetAllowMerge( true );
+	}
+}
+
+void Game::InitializeMapSetting( int mapIndex )
+{
+	if( m_world->GetCurrentMapIndex() != mapIndex ){ 
+		ERROR_RECOVERABLE( "should not initialize not the current map"); 
+		return; 
+	}
+	if( mapIndex == 1 ) {
+		Map* currentMap = m_world->GetCurrentMap();
+		currentMap->CreatePlayer();
+		currentMap->CreatePlayer();
 	}
 }
 
@@ -704,8 +667,9 @@ bool LoadMap( EventArgs& args )
 	if( g_theGame->m_world->GetCurrentMapIndex() != iMapIndex ){
 		Map* currentMap = g_theGame->m_world->GetCurrentMap();
 		currentMap->DestroyAllPlayers();
-		g_theGame->InitializeCameraSystemSetting( iMapIndex );
 		g_theGame->m_world->SetCurrentMapIndex( atoi( mapIndex.c_str() ));
+		g_theGame->InitializeMapSetting( iMapIndex );
+		g_theGame->InitializeCameraSystemSetting( iMapIndex );
 	}
 	return true;
 }

@@ -63,7 +63,7 @@ void RenderContext::StartUp( Window* window )
 	m_sceneDataUBO		= new RenderBuffer( "test3", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	m_dissolveUBO		= new RenderBuffer( "test4", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 
-	m_defaultSampler = new Sampler( this, SAMPLER_POINT );
+	m_defaultSampler = new Sampler( this, SAMPLER_BILINEAR );
 
 	m_texDefaultColor = CreateTextureFromColor( Rgba8::WHITE );
 	m_texDefaultNormal = CreateTextureFromVec4( Vec4( 0.5f, 0.5f, 1.f, 1.f ) );

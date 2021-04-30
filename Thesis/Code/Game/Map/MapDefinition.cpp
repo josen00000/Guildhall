@@ -2,6 +2,7 @@
 #include "Game/Map/CellularAutomata.hpp"
 #include "Game/Map/MapGenStep.hpp"
 #include "Game/Map/Mutator.hpp"
+#include "Game/Map/PerlinScroll.hpp"
 #include "Game/Map/GenRooms.hpp"
 #include "Engine/Core/XmlUtils.hpp"
 
@@ -15,7 +16,9 @@ MapDefinition::MapDefinition( XmlElement& mapDefElement )
 	m_fillTileType  				= ParseXmlAttribute( mapDefElement, "fillTile", "Floor" );
 	m_edgeTileType  				= ParseXmlAttribute( mapDefElement, "edgeTile", "Wall" );
 	m_startTileType  				= ParseXmlAttribute( mapDefElement, "startTile", "Entry" );
-
+	m_lockedTileType				= ParseXmlAttribute( mapDefElement, "lockedTile", "" );
+	m_openDoorType					= ParseXmlAttribute( mapDefElement, "openTile", "" );
+	m_triggerTileType				= ParseXmlAttribute( mapDefElement, "triggerTile", "" );
 
 	const XmlElement* mapGenStepsElement = mapDefElement.FirstChildElement();
 	ParseMapGenSteps( *mapGenStepsElement );
@@ -66,7 +69,8 @@ void MapDefinition::ParseMapGenSteps( const XmlElement& mapGenStepsElement )
 void MapDefinition::CreateMapGenStep( const XmlElement& mapGenStepElement )
 {
 	std::string stepName = mapGenStepElement.Name();
-	if( stepName == "Mutate" )			{ m_mapGenSteps.push_back( new Mutator( mapGenStepElement ) ); }
-	if( stepName == "CellularAutomata" ){ m_mapGenSteps.push_back( new CellularAutomata( mapGenStepElement ) ); }
-	if( stepName == "Room" )			{ m_mapGenSteps.push_back( new GenRooms( mapGenStepElement ) ); }
+	if( stepName == "Mutate" )					{ m_mapGenSteps.push_back( new Mutator( mapGenStepElement ) ); }
+	else if( stepName == "CellularAutomata" )	{ m_mapGenSteps.push_back( new CellularAutomata( mapGenStepElement ) ); }
+	else if( stepName == "Room" )				{ m_mapGenSteps.push_back( new GenRooms( mapGenStepElement ) ); }
+	else if( stepName == "PerlinScroll" )		{ m_mapGenSteps.push_back( new PerlinScroll( mapGenStepElement ) );}
 }

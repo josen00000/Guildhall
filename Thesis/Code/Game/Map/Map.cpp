@@ -80,12 +80,12 @@ bool Map::IsTileOfTypeWithIndex( TileType type, int index ) const
 	return true;
 }
 
-bool Map::IsTileCoordsInside( IntVec2 tileCoords ) const
+bool Map::IsTileCoordsInside( IntVec2 const&  tileCoords ) const
 {
 	return ( 0 < tileCoords.x && tileCoords.x < m_width ) && ( 0 < tileCoords.y && tileCoords.y < m_height );
 }
 
-bool Map::IsTileOfAttribute( IntVec2 tileCoords, TileAttribute attr ) const
+bool Map::IsTileOfAttribute( IntVec2 const& tileCoords, TileAttribute attr ) const
 {
 	if( !IsTileCoordsValid( tileCoords ) ){ return false; }
 	int tileIndex = GetTileIndexWithTileCoords( tileCoords );
@@ -101,27 +101,27 @@ bool Map::IsTileOfAttribute( int tileIndex, TileAttribute attr ) const
 	return (( tileAttributeFlags & attrBitFlag ) == attrBitFlag );
 }
 
-bool Map::IsTileSolid( IntVec2 tileCoords ) const
+bool Map::IsTileSolid( IntVec2 const& tileCoords ) const
 {
 	return IsTileOfAttribute( tileCoords, TILE_IS_SOLID );
 }
 
-bool Map::IsTileRoom( IntVec2 tileCoords ) const
+bool Map::IsTileRoom( IntVec2 const& tileCoords ) const
 {
 	return IsTileOfAttribute( tileCoords, TILE_IS_ROOM );
 }
 
-bool Map::IsTileEdge( IntVec2 tileCoords ) const
+bool Map::IsTileEdge( IntVec2 const& tileCoords ) const
 {
 	return ( tileCoords.x == 0 && tileCoords.x == ( m_width - 1 )) && ( tileCoords.y == 0 && tileCoords.y == ( m_height - 1));
 }
 
-bool Map::IsTileVisited( IntVec2 tileCoords ) const
+bool Map::IsTileWalkable( IntVec2 const& tileCoords ) const
 {
-	return IsTileOfAttribute( tileCoords, TILE_IS_VISITED );
+	return IsTileOfAttribute( tileCoords, TILE_IS_WALKABLE );
 }
 
-bool Map::IsTilesSameRoom( IntVec2 tileCoords1, IntVec2 tileCoords2 )
+bool Map::IsTilesSameRoom( IntVec2 const& tileCoords1, IntVec2 const& tileCoords2 )
 {
 	for( int i = 0; i < m_rooms.size(); i++ ) {
 		Room* tempRoom = m_rooms[i];
@@ -133,7 +133,7 @@ bool Map::IsTilesSameRoom( IntVec2 tileCoords1, IntVec2 tileCoords2 )
 	return false;
 }
 
-bool Map::IsTilesSameRoomFloor( IntVec2 tileCoords1, IntVec2 tileCoords2 )
+bool Map::IsTilesSameRoomFloor( IntVec2 const& tileCoords1, IntVec2 const& tileCoords2 )
 {
 	for( int i = 0; i < m_rooms.size(); i++ ) {
 		Room* tempRoom = m_rooms[i];
@@ -145,7 +145,7 @@ bool Map::IsTilesSameRoomFloor( IntVec2 tileCoords1, IntVec2 tileCoords2 )
 	return false;
 }
 
-bool Map::IsTileCoordsValid( IntVec2 tileCoords ) const
+bool Map::IsTileCoordsValid( IntVec2 const& tileCoords ) const
 {
 	return ( tileCoords.x >= 0 && tileCoords.x < m_width ) && ( tileCoords.y >= 0 && tileCoords.y < m_height );
 }
@@ -200,12 +200,27 @@ IntVec2 Map::GetRandomInsideCameraNotSolidTileCoords( Camera* camera ) const
 	}
 }
 
-Vec2 Map::GetCuePos() const
+Vec2 Map::GetCuePos( int index ) const
 {
-	if( m_activeItem == nullptr ) {
-		return Vec2::ZERO;
+	if( index  < 0 ) {
+		if( m_activeItem == nullptr ) {
+			return Vec2::ZERO;
+		}
+		return m_activeItem->GetPosition();
 	}
-	return m_activeItem->GetPosition();
+	else
+	{
+		Vec2 playerPos = m_players[index]->GetPosition();
+		if( playerPos.x >=0 && playerPos.x <= 40 ) {
+			return (Vec2)m_triggerTiles[0];
+		}
+		else if( playerPos.x >= 40 && playerPos.x <= 80 ) {
+			return (Vec2)m_triggerTiles[1];
+		}
+		else {
+			return Vec2::ZERO;
+		}
+	}
 }
 
 Player* Map::GetPlayerWithIndex( int index )
@@ -242,7 +257,7 @@ const Tile& Map::GetTileWithTileCoords( IntVec2 coords )
 
 // Mutator
 //////////////////////////////////////////////////////////////////////////
-void Map::SetTileTypeWithCoords( IntVec2 coords, TileType type )
+void Map::SetTileTypeWithCoords( IntVec2 const& coords, TileType type )
 {
 	int tileIndex = GetTileIndexWithTileCoords( coords );
 	SetTileTypeWithIndex( tileIndex, type );
@@ -253,7 +268,7 @@ void Map::SetTileTypeWithIndex( int index, TileType type )
 	m_tiles[index].SetTileType( type );
 }
 
-void Map::SetTileOfAttribute( IntVec2 coords, TileAttribute attr, bool isTrue )
+void Map::SetTileOfAttribute( IntVec2 const& coords, TileAttribute attr, bool isTrue )
 {
 	int tileIndex = GetTileIndexWithTileCoords( coords );
 	TileAttributeBitFlag attrBitFlag = GetTileAttrBitFlagWithTileAttr( attr );
@@ -265,14 +280,24 @@ void Map::SetTileOfAttribute( IntVec2 coords, TileAttribute attr, bool isTrue )
 	}
 }
 
-void Map::SetTileSolid( IntVec2 coords, bool isSolid )
+void Map::SetTileSolid( IntVec2 const& coords, bool isSolid )
 {
 	SetTileOfAttribute( coords, TILE_IS_SOLID, isSolid );
 }
 
-void Map::SetTileRoom( IntVec2 coords, bool isRoom )
+void Map::SetTileWalkable( IntVec2 const& coords, bool isWalkable )
+{
+	SetTileOfAttribute( coords, TILE_IS_WALKABLE, isWalkable );
+}
+
+void Map::SetTileRoom( IntVec2 const& coords, bool isRoom )
 {
 	SetTileOfAttribute( coords, TILE_IS_ROOM, isRoom );
+}
+
+void Map::SetStartcoords( IntVec2 const& coords )
+{
+	m_startCoords = coords;
 }
 
 void Map::AddRoom( Room* room )
@@ -292,6 +317,7 @@ void Map::UpdateMap( float deltaSeconds )
 	
 
 	UpdateMouse();
+	UpdateFirstLockedDoorsTiles();
 	UpdateActors( deltaSeconds );
 	UpdateProjectiles( deltaSeconds );
 	CheckCollision();
@@ -330,6 +356,48 @@ void Map::UpdateProjectiles( float deltaSeconds )
 void Map::UpdateItems( float deltaSeconds )
 {
 	UNUSED( deltaSeconds );
+}
+
+void Map::UpdateFirstLockedDoorsTiles()
+{
+	if( m_name != "level2" ){ return; }
+	bool shouldFirstDoorLocked = true;
+	// first door
+	TileType openDoorType	= m_definition->GetOpenType();
+	TileType lockedDoorType = m_definition->GetLockedType();
+	for( int i = 0; i < m_players.size(); i++ ) {
+		IntVec2 playerPos = (IntVec2)m_players[i]->GetPosition();
+		for( int j = 0; j < m_triggerTiles.size(); j++ ) {
+			float distance = GetIntDistance2D( playerPos, m_triggerTiles[j] );
+			if( distance < 2 ) {
+				shouldFirstDoorLocked = false;
+				break;
+			}
+		}
+		if( !shouldFirstDoorLocked ) {
+			break;
+		}
+	}
+
+	if( shouldFirstDoorLocked == m_isFirstDoorLocked ) {
+		return;
+	}
+	else if ( shouldFirstDoorLocked ) {
+		SetTileTypeWithCoords( m_doorTiles[0], lockedDoorType );
+		SetTileTypeWithCoords( m_doorTiles[1], lockedDoorType );
+		SetTileSolid( m_doorTiles[0], true );
+		SetTileSolid( m_doorTiles[1], true );
+		PopulateTiles();
+	}
+	else if( !shouldFirstDoorLocked ) {
+		SetTileTypeWithCoords( m_doorTiles[0], openDoorType );
+		SetTileTypeWithCoords( m_doorTiles[1], openDoorType );
+		SetTileSolid( m_doorTiles[0], false );
+		SetTileSolid( m_doorTiles[1], false );
+		PopulateTiles();
+	}
+	else {}
+	m_isFirstDoorLocked = shouldFirstDoorLocked;
 }
 
 void Map::RenderMap()
@@ -384,9 +452,9 @@ void Map::GenerateMap()
 {
 	m_tilesVertices.clear();
 	InitializeTiles();
-	GenerateRooms();
+	RunMapGenSteps();
 	GenerateEdges();
-	m_startCoords = GetRandomInsideNotSolidTileCoords();
+	InitializeMapDifferentTiles();
 	PopulateTiles();
 }
 
@@ -642,7 +710,7 @@ void Map::CheckCollisionBetweenActorAndTile( Actor* actor, IntVec2 tileCoords )
 		return;
 	}
 
-	if( !IsTileSolid( tileCoords ) ) { return; }
+	if( !IsTileSolid( tileCoords ) && !IsTileWalkable( tileCoords ) ) { return; }
 
 	int tileIndex = GetTileIndexWithTileCoords( tileCoords );
 	Tile tempTile = m_tiles[tileIndex];
@@ -681,7 +749,6 @@ void Map::PopulateTiles()
 		AABB2 tileBounds = tempTile.GetTileBounds();
 		Vec2 tileUVAtMin = tempTileDef->GetSpriteUVAtMins();
 		Vec2 tileUVAtMax = tempTileDef->GetSpriteUVAtMaxs();
-
 		AppendVertsForAABB2D( m_tilesVertices, tileBounds, Rgba8::WHITE, tileUVAtMin, tileUVAtMax );
 	}
 }
@@ -722,7 +789,7 @@ void Map::GenerateEdges()
 	}
 }
 
-void Map::GenerateRooms()
+void Map::RunMapGenSteps()
 {
 	const std::vector<MapGenStep*>& mapSteps = m_definition->GetMapGenSteps();
 	for( int i = 0; i < mapSteps.size(); i++ ) {
@@ -781,6 +848,52 @@ void Map::CreatePathBetweenCoords( IntVec2 coord1, IntVec2 coord2 )
 		}
 	}
 }
+
+void Map::InitializeMapDifferentTiles()
+{
+
+	if( m_name == "level1" )  {
+		m_startCoords = GetRandomInsideNotSolidTileCoords();
+	}
+	else if( m_name == "level2" ) {
+		// initialize edge & locked door
+		TileType edgeType = m_definition->GetEdgeType();
+		TileType lockedType = m_definition->GetLockedType();
+		TileType triggerType = m_definition->GetTriggerType();
+
+		int halfHeight = m_height / 2;
+		m_doorTiles.push_back( IntVec2( 40, halfHeight ));
+		m_doorTiles.push_back( IntVec2( 40, halfHeight - 1 ));
+		m_doorTiles.push_back( IntVec2( 80, halfHeight ));
+		m_doorTiles.push_back( IntVec2( 80, halfHeight - 1 ));
+		for( int i = 0; i < m_height; i++ ) {
+			if( i == halfHeight ||  i == halfHeight - 1 ) {
+				SetTileTypeWithCoords( IntVec2( 40, i), lockedType );
+				SetTileTypeWithCoords( IntVec2( 80, i), lockedType );
+				SetTileSolid( IntVec2( 40, i ), true );
+				SetTileSolid( IntVec2( 80, i ), true );
+			}
+			else {
+				SetTileTypeWithCoords( IntVec2( 40, i ), edgeType );
+				SetTileTypeWithCoords( IntVec2( 80, i ), edgeType );
+				SetTileSolid( IntVec2( 40, i ), true );
+				SetTileSolid( IntVec2( 80, i ), true );
+			}
+		}
+
+		// initialize trigger tiles
+		m_triggerTiles.push_back( IntVec2( 2, m_height - 3 ) );
+		m_triggerTiles.push_back( IntVec2( 42, m_height - 3 ));
+		for( int i = 0; i < m_triggerTiles.size(); i++ ) {
+			SetTileTypeWithCoords( m_triggerTiles[i], triggerType );
+			SetTileSolid( m_triggerTiles[i], false );
+		}
+		m_startCoords = IntVec2( 10, (int)m_height / 2 );
+	}
+
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -844,7 +957,7 @@ TileAttributeBitFlag Map::GetTileAttrBitFlagWithTileAttr( TileAttribute attr ) c
 	case TILE_IS_EXIT:		return TILE_IS_EXIT_BIT;
 	case TILE_IS_ROOM:		return TILE_IS_ROOM_BIT;
 	case TILE_IS_SOLID:		return TILE_IS_SOLID_BIT;
-	case TILE_IS_VISITED:	return TILE_IS_VISITED_BIT;
+	case TILE_IS_WALKABLE:	return TILE_IS_WALKABLE_BIT;
 	case TILE_IS_DOOR:		return TILE_IS_DOOR_BIT;
 	default:
 		ERROR_RECOVERABLE( "no attribute!" );

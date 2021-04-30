@@ -177,7 +177,7 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 Vec2 CameraController::GetCuePos() const
 {
 	Map* currentMap = g_theGame->GetCurrentMap();
-	return currentMap->GetCuePos();
+	return currentMap->GetCuePos( m_index );
 }
 
 Polygon2 const& CameraController::GetVoronoiPolygon() const 
@@ -218,6 +218,21 @@ void CameraController::SetAllowBlend( bool allowBlend )
 void CameraController::SetAsymptoticValue( float value )
 {
 	m_asymptoticValue = value;
+}
+
+void CameraController::SetMaxAsymptoticValue( float maxValue )
+{
+	m_maxAsymptotic = maxValue;
+}
+
+void CameraController::SetMinAsymptoticValue( float minValue )
+{
+	m_minAsymptotic = minValue;
+}
+
+void CameraController::SetMaxDeltaDistance( float maxDeltaDist )
+{
+	m_maxDeltaDist = maxDeltaDist;
 }
 
 void CameraController::SetTrauma( float trauma )
@@ -446,11 +461,11 @@ void CameraController::UpdateCameraFrame( )
 	projectGoalPos = m_playerPos + m_aimFocusDist * headDir;
 
 	// Update cue framing
-	Vec2 cuePos = GetCuePos();
+	Vec2 cuePos = GetCuePos( );
 	if( cuePos != Vec2::ZERO ) {
 		Vec2 cueDisp = cuePos - m_playerPos;
 		Vec3 cueDir = cueDisp.GetNormalized();
-		cueGoalPos = ( m_playerPos + cuePos ) / 2;
+		cueGoalPos =  m_playerPos * 0.7f + cuePos * 0.3f;
 	}
 
 	// normalize

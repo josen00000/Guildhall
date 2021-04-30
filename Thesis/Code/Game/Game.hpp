@@ -39,6 +39,7 @@ public:
 	void SetIsDebug( bool isDebug );
 	void SetIsPaused( bool isPaused );
 	void InitializeCameraSystemSetting( int mapIndex );
+	void InitializeMapSetting( int mapIndex );
 
 private:
 	void HandleInput();

@@ -27,23 +27,23 @@
     />
     <TileDefinition
         name="Sand2"
-        spriteCoords="5,1"
-        allowsWalk="true"
-    />
-    <TileDefinition
-        name="Sand3"
         spriteCoords="3,2"
         allowsWalk="true"
     />
     <TileDefinition
-        name="Sand4"
+        name="Sand3"
         spriteCoords="7,2"
         allowsWalk="true"
     />
     <TileDefinition
+        name="Sand4"
+        spriteCoords="5,2"
+        allowsWalk="true"
+    />
+    <TileDefinition
         name="Water1"
-        spriteCoords="6,6"
-        allowsWalk="false"
+        spriteCoords="2,2"
+        allowsWalk="true"
     />
   <TileDefinition
 		name="Water2"
@@ -97,6 +97,11 @@
       name="LockedDoor"
       spriteCoords="0,5"
       allowsWalk="false"
+	/>
+  <TileDefinition
+    name="TriggerTile"
+    spriteCoords="1,7"
+    allowsWalk="true"
 	/>
 
 </TileDefinitions>

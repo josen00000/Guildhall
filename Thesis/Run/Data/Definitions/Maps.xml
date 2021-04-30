@@ -6,11 +6,9 @@
 
     </MapGenerateSteps>
   </MapDefinition>
-  <MapDefinition name="level2" width="120" height="40" fillTile="Grass1" edgeTile="Wall" startTile="Entry">
+  <MapDefinition name="level2" width="120" height="30" fillTile="Grass1" edgeTile="Wall" startTile="Entry" lockedTile="LockedDoor" openTile="OpenDoor" triggerTile="TriggerTile">
     <MapGenerateSteps>
-      <Room chanceToRun="1" iterations="1" roomsNum="1~1" width="5~5" height="6~6" floorType="Floor" wallType="Wall" doorType="OpenDoor"/>
-      <Room chanceToRun="1" iterations="1" roomsNum="1~1" width="7~7" height="9~9" floorType="Floor" wallType="Wall" doorType="OpenDoor"/>
-      <Room chanceToRun="1" iterations="1" roomsNum="1~1" width="10~10" height="12~12" floorType="Floor" wallType="Wall" doorType="OpenDoor"/>
+      <PerlinScroll changeToRun="1" perlinPairs="Grass1|Grass2,Grass3|Grass4,Sand1|Sand2,Sand3|Sand4,Water1|Water2,Water3|Water4"/>
     </MapGenerateSteps>
   </MapDefinition>
 

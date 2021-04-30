@@ -215,6 +215,7 @@
     <ClCompile Include="Map\MapGenStep.cpp" />
     <ClCompile Include="Map\Mutator.cpp" />
     <ClCompile Include="Map\GenRooms.cpp" />
+    <ClCompile Include="Map\PerlinScroll.cpp" />
     <ClCompile Include="Map\Room.cpp" />
     <ClCompile Include="Map\Tile.cpp" />
     <ClCompile Include="Map\TileDefinition.cpp" />
@@ -238,6 +239,7 @@
     <ClInclude Include="Map\MapGenStep.hpp" />
     <ClInclude Include="Map\Mutator.hpp" />
     <ClInclude Include="Map\GenRooms.hpp" />
+    <ClInclude Include="Map\PerlinScroll.hpp" />
     <ClInclude Include="Map\Room.hpp" />
     <ClInclude Include="Map\Tile.hpp" />
     <ClInclude Include="Map\TileDefinition.hpp" />

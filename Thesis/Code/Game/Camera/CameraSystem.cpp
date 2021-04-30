@@ -772,6 +772,26 @@ void CameraSystem::SetControllerCueFocusRatio( int controllerIndex, float ratio 
 	m_controllers[controllerIndex]->SetCueFocusRatio( ratio );
 }
 
+void CameraSystem::SetControllerEdgeThickness( int controllerIndex, float thickness )
+{
+	m_controllers[controllerIndex]->SetMaxEdgeThickness( thickness );
+}
+
+void CameraSystem::SetControllerMaxAsymptoticValue( int controllerIndex, float maxValue )
+{
+	m_controllers[controllerIndex]->SetMaxAsymptoticValue( maxValue );
+}
+
+void CameraSystem::SetControllerMinAsymptoticValue( int controllerIndex, float minValue )
+{
+	m_controllers[controllerIndex]->SetMinAsymptoticValue( minValue );
+}
+
+void CameraSystem::SetControllerMaxDeltaDist( int controllerIndex, float maxDist )
+{
+	m_controllers[controllerIndex]->SetMaxDeltaDistance( maxDist );
+}
+
 void CameraSystem::SetPositionalShakeMaxDist( float maxDist )
 {
 	for( CameraController* controller: m_controllers ) {
@@ -1450,7 +1470,7 @@ void CameraSystem::ComputeAndUpdateOriginalVoronoiAnchorPoints( AABB2 worldCamer
 			controller->SetVoronoiAnchorPointPos( point );
 		}
 	}
-	for( int i = 0; i < m_controllers.size() - 1; i++ ) {
+	for( int i = 0; i < (int)m_controllers.size() - 1; i++ ) {
 		for( int j = i + 1; j < m_controllers.size(); j++ ) {
 			Vec2 controllerPosA = m_controllers[i]->GetOriginalVoronoiAnchorPointPos();
 			Vec2 controllerPosB = m_controllers[j]->GetOriginalVoronoiAnchorPointPos();

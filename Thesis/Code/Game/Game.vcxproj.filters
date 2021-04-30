@@ -91,6 +91,9 @@
     <ClCompile Include="Item.cpp">
       <Filter>Game\Items</Filter>
     </ClCompile>
+    <ClCompile Include="Map\PerlinScroll.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.hpp">
@@ -155,6 +158,9 @@
     </ClInclude>
     <ClInclude Include="Item.hpp">
       <Filter>Game\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\PerlinScroll.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -27,6 +27,7 @@ Vec2	GetNormalDirectionWithDegrees( const float degrees );
 //
 //basic 2D & 3D utilities
 //
+float	GetIntDistance2D( IntVec2 const& a, IntVec2 const& b );
 float	GetDistance2D(const Vec2& positionA, const Vec2& positionB);
 float	GetDistanceSquared2D(const Vec2& positionA, const Vec2& positionB);
 float	GetSignedDistanceSquared2D( const Vec2& positionA, const Vec2& positionB, const Vec2& reference );

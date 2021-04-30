@@ -70,13 +70,15 @@ public:
 protected:
 	bool m_isPushedByActor		= false;
 	bool m_doesPushActor		= false;
+	bool m_isAbleWalk			= true;
+	bool m_isAbleSwim			= false;
 	Rgba8 m_color				= Rgba8::WHITE;
 
 	ActorType m_type		= ActorType::ACTOR_NONE;
 	AliveState m_aliveState = AliveState::ALIVE;
 
 	float m_orientationDegrees		= 0.f;
-	float m_speed					= 3.f;
+	float m_speed					= 5.f;
 	float m_physicsRadius			= 1.f;
 	float m_hp						= 50.f;
 	float m_attackStrength			= 10.f;

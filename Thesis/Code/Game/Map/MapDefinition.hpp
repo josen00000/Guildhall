@@ -26,6 +26,9 @@ public:
 	TileType GetFillType() const { return m_fillTileType; }
 	TileType GetEdgeType() const { return m_edgeTileType; }
 	TileType GetStartType() const { return m_startTileType; }
+	TileType GetLockedType() const { return m_lockedTileType; }
+	TileType GetOpenType() const { return m_openDoorType; }
+	TileType GetTriggerType() const { return m_triggerTileType; }
 	const std::vector<MapGenStep*>& GetMapGenSteps() const { return m_mapGenSteps; }
 
 private:
@@ -36,6 +39,9 @@ private:
 	TileType										m_fillTileType = "";
 	TileType										m_edgeTileType = "";
 	TileType										m_startTileType = "";
+	TileType										m_lockedTileType = "";
+	TileType										m_openDoorType = "";
+	TileType										m_triggerTileType = "";
 	std::vector<MapGenStep*>						m_mapGenSteps;
 
 public:

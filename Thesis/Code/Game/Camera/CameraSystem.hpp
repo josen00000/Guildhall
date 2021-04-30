@@ -189,6 +189,10 @@ public:
 	void SetControllerForwardVelocityFrameRatio( int controllerIndex, float ratio );
 	void SetControllerAimFocusRatio( int controllerIndex, float ratio );
 	void SetControllerCueFocusRatio( int controllerIndex, float ratio );
+	void SetControllerEdgeThickness( int controllerIndex, float thickness );
+	void SetControllerMaxAsymptoticValue( int controllerIndex, float maxValue );
+	void SetControllerMinAsymptoticValue( int controllerIndex, float minValue );
+	void SetControllerMaxDeltaDist( int controllerIndex, float maxDist );
 	void SetPositionalShakeMaxDist( float maxDist );
 	void SetRotationalShakeMaxDeg( float maxDeg );
 	void SetPostVoronoiIterationNum( int num );

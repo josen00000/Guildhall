@@ -27,8 +27,9 @@ enum TileAttributeBitFlag: uint {
 	TILE_IS_EXIT_BIT		= BIT_FLAG( 1 ),
 	TILE_IS_ROOM_BIT		= BIT_FLAG( 2 ),
 	TILE_IS_SOLID_BIT		= BIT_FLAG( 3 ),
-	TILE_IS_VISITED_BIT		= BIT_FLAG( 4 ),
-	TILE_IS_DOOR_BIT		= BIT_FLAG( 5 ),
+	TILE_IS_WALKABLE_BIT	= BIT_FLAG( 4 ),
+	TILE_IS_SWIMMABLE_BIT	= BIT_FLAG( 5 ),
+	TILE_IS_DOOR_BIT		= BIT_FLAG( 6 ),
 };
 
 enum TileAttribute {
@@ -36,7 +37,8 @@ enum TileAttribute {
 	TILE_IS_EXIT,
 	TILE_IS_ROOM,
 	TILE_IS_SOLID,
-	TILE_IS_VISITED,
+	TILE_IS_WALKABLE,
+	TILE_IS_SWIMMABLE,
 	TILE_IS_DOOR,
 	NUM_TILE_ATTRS
 };
@@ -59,26 +61,28 @@ public:
 	// Accessor
 		// Tile
 	bool	IsTileOfTypeInsideWithCoords( TileType type, IntVec2 tileCoords ) const;
-	bool	IsTileOfTypeWithIndex( TileType type, int index ) const;
-	bool	IsTileCoordsInside( IntVec2 tileCoords ) const;
-	bool	IsTileOfAttribute( IntVec2 tileCoords, TileAttribute attr ) const; 
+	bool	IsTileOfTypeWithIndex( TileType  type, int index ) const;
+	bool	IsTileCoordsInside( IntVec2 const& tileCoords ) const;
+	bool	IsTileOfAttribute( IntVec2 const& tileCoords, TileAttribute attr ) const; 
 	bool	IsTileOfAttribute( int tileIndex, TileAttribute attr ) const;
-	bool	IsTileSolid( IntVec2 tileCoords ) const;
-	bool	IsTileRoom( IntVec2 tileCoords ) const;
-	bool	IsTileEdge( IntVec2 tileCoords ) const;
-	bool	IsTileVisited( IntVec2 tileCoords ) const;
-	bool	IsTilesSameRoom( IntVec2 tileCoords1, IntVec2 tileCoords2 );
-	bool	IsTilesSameRoomFloor( IntVec2 tileCoords1, IntVec2 tileCoords2 );
-	bool	IsTileCoordsValid( IntVec2 tileCoords ) const;
+	bool	IsTileSolid( IntVec2 const& tileCoords ) const;
+	bool	IsTileRoom( IntVec2 const& tileCoords ) const;
+	bool	IsTileEdge( IntVec2 const& tileCoords ) const;
+	bool	IsTileWalkable( IntVec2 const& tileCoords ) const;
+	bool	IsTilesSameRoom( IntVec2 const& tileCoords1, IntVec2 const& tileCoords2 );
+	bool	IsTilesSameRoomFloor( IntVec2 const& tileCoords1, IntVec2 const& tileCoords2 );
+	bool	IsTileCoordsValid( IntVec2 const& tileCoords ) const;
 
 	bool	IsPosNotSolid( Vec2 pos );
 
 	int		GetTileIndexWithTileCoords( IntVec2 tileCoords ) const;
 	int		GetPlayerNum() const { return (int)m_players.size(); }
 	int		GetEnemyNum() const { return (int)m_enemies.size(); }
+	int		GetWidth() const { return m_width; }
+	int		GetHeight() const { return m_height; }
 
 	Vec2	GetPlayerPosWithIndex( int index ); 
-	Vec2	GetCuePos() const;
+	Vec2	GetCuePos( int index = -1 ) const;
 
 	Player*	GetPlayerWithIndex( int index );
 	
@@ -100,12 +104,14 @@ public:
 	int GetKeyboardPlayerIndex() const { return m_keyboardPlayerIndex; }
 
 	// Mutator
-	void SetTileTypeWithCoords( IntVec2 coords, TileType type );
+	void SetTileTypeWithCoords( IntVec2 const& coords, TileType type );
 	void SetTileTypeWithIndex( int index, TileType type );
 
-	void SetTileOfAttribute( IntVec2 coords, TileAttribute attr, bool isTrue );
-	void SetTileSolid( IntVec2 coords, bool isSolid );
-	void SetTileRoom( IntVec2 coords, bool isRoom );
+	void SetTileOfAttribute( IntVec2 const& coords, TileAttribute attr, bool isTrue );
+	void SetTileSolid( IntVec2 const& coords, bool isSolid );
+	void SetTileWalkable( IntVec2 const& coords, bool isWalkable );
+	void SetTileRoom( IntVec2 const& coords, bool isRoom );
+	void SetStartcoords( IntVec2 const& coords );
 
 	void AddRoom( Room* room );
 
@@ -114,6 +120,7 @@ public:
 	void UpdateActors( float deltaSeconds );
 	void UpdateProjectiles( float deltaSeconds );
 	void UpdateItems( float deltaSeconds );
+	void UpdateFirstLockedDoorsTiles();
 	void RenderMap();
 	void RenderActors(); 
 	void RenderProjectiles();
@@ -154,9 +161,10 @@ private:
 	void PopulateTiles();
 	void InitializeTiles();
 	void GenerateEdges();
-	void GenerateRooms();
+	void RunMapGenSteps();
 	void GeneratePaths();
 	void CreatePathBetweenCoords( IntVec2 coord1, IntVec2 coord2 );
+	void InitializeMapDifferentTiles();
 	
 
 	// private update
@@ -174,7 +182,8 @@ private:
 	int								m_width = 0;
 	int								m_height = 0;
 	int								m_roomNum = 0;
-
+	bool							m_isFirstDoorLocked = true;
+	bool							m_isSecondDoorLocked = true;
 	IntVec2							m_startCoords = IntVec2::ZERO;
 	IntVec2							m_endCoords = IntVec2::ZERO;
 
@@ -201,4 +210,6 @@ private:
 	// Item
 	std::vector<Item*>				m_items;
 	Item*							m_activeItem = nullptr;
+	std::vector<IntVec2>			m_triggerTiles;
+	std::vector<IntVec2>			m_doorTiles;
 };

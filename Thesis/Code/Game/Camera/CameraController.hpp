@@ -85,6 +85,9 @@ public:
 	void SetNeedRenderWhenMerged					( bool doesNeedRenderWhenMerged );
 
 	void SetAsymptoticValue							( float value );
+	void SetMaxAsymptoticValue						( float maxValue );
+	void SetMinAsymptoticValue						( float minValue );
+	void SetMaxDeltaDistance						( float maxDeltaDist );
 	void SetTrauma									( float trauma );
 	void AddTrauma									( float addTrauma );
 	void SetForwardVelocityFocusDist				( float dist );

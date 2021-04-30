@@ -77,6 +77,12 @@ Vec2 GetNormalDirectionWithDegrees( const float degrees )
 	return Vec2( normalDirectionX, normalDirectionY );
 }
 
+float GetIntDistance2D( IntVec2 const& a, IntVec2 const& b )
+{
+	IntVec2 disp = a - b;
+	return disp.GetLength();
+}
+
 float RangeMapFloat(const float inStart, const float inEnd, const float outStart, const  float outEnd, const float inValue )
 {
 	float inDisplacement = inValue-inStart;
@@ -872,7 +878,7 @@ bool IsLineSeg2MostlyEqual( LineSegment2 a, LineSegment2 b, float epsilon/*=0.01
 	if( IsVec2MostlyEqual( a.GetStartPos(), b.GetStartPos(), epsilon ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetEndPos(), epsilon ) ) {
 		return true;
 	}
-	else if ( IsVec2MostlyEqual( a.GetStartPos(), b.GetEndPos(), epsilon ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetStartPos() ), epsilon ) {
+	else if ( IsVec2MostlyEqual( a.GetStartPos(), b.GetEndPos(), epsilon ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetStartPos(), epsilon ) ) {
 		return true;
 	}
 	else {
