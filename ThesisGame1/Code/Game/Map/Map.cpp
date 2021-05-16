@@ -237,6 +237,11 @@ void Map::SetTileTypeWithIndex( int index, TileType type )
 	m_tiles[index].SetTileType( type );
 }
 
+void Map::SetDynamicSplitState( eDynamicSplitState newState )
+{
+	m_dynamicSplitState = newState;
+}
+
 void Map::SetTileOfAttribute( IntVec2 coords, TileAttribute attr, bool isTrue )
 {
 	int tileIndex = GetTileIndexWithTileCoords( coords );
@@ -675,11 +680,11 @@ void Map::GeneratePlayers()
 
 void Map::GenerateTitleVertices()
 {
-	g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,20.f ), 1.f, "?", Rgba8::RED  );
-	g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,19.f ), 1.f, "let's see", Rgba8::RED  );
-	g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,18.f ), 1.f, "who is", Rgba8::RED  );
-	g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,17.f ), 1.f, "real evil", Rgba8::RED  );
-	g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,16.f ), 1.f, "genius!!", Rgba8::RED  );
+	//g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,20.f ), 1.f, "?", Rgba8::RED  );
+	//g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,19.f ), 1.f, "let's see", Rgba8::RED  );
+	//g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,18.f ), 1.f, "who is", Rgba8::RED  );
+	//g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,17.f ), 1.f, "real evil", Rgba8::RED  );
+	//g_squirrelFont->AddVertsForText2D( m_titleVertices, Vec2( 25.f,16.f ), 1.f, "genius!!", Rgba8::RED  );
 }
 
 //////////////////////////////////////////////////////////////////////////

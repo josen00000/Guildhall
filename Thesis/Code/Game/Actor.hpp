@@ -12,7 +12,8 @@ class Texture;
 enum ActorType {
 	ACTOR_NONE,
 	ACTOR_PLAYER,
-	ACTOR_ENEMY
+	ACTOR_ENEMY,
+	ACTOR_BOSS,
 };
 
 enum AliveState :uint {
@@ -34,7 +35,8 @@ public:
 public:
 	virtual void UpdateActor( float deltaSeconds, Rgba8 color = Rgba8::WHITE );
 	virtual void RenderActor();
-	virtual void Shoot( float deltaSeconds );
+	virtual void Shoot( float damage );
+	virtual void Shoot();
 	void TakeDamage( float damage );
 	virtual void Die();
 
@@ -82,7 +84,7 @@ protected:
 	float m_physicsRadius			= 1.f;
 	float m_hp						= 50.f;
 	float m_attackStrength			= 10.f;
-	float m_shootCoolDown			= 1.f;
+	float m_shootCoolDown			= 0.5f;
 	float m_shootTimer				= m_shootCoolDown;
 	float m_lastFrameMovingDegrees	= 0.f;
 

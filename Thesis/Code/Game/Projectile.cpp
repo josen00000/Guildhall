@@ -34,6 +34,9 @@ Projectile* Projectile::SpawnProjectileWithDirtAndType( Vec2 movingDirt, Vec2 st
 	case ACTOR_ENEMY:
 		newProjectile->m_texture = g_theGame->m_enemyProjectileTexture;
 		break;
+	case ACTOR_BOSS:
+		newProjectile->m_texture = g_theGame->m_enemyProjectileTexture;
+		break;
 	}
 	return newProjectile;
 }
@@ -79,4 +82,9 @@ void Projectile::Die()
 void Projectile::SetColor( Rgba8 color )
 {
 	m_color = color;
+}
+
+void Projectile::SetDamage( float damage )
+{
+	m_damage = damage;
 }

@@ -20,6 +20,7 @@ public:
 	void UpdatePlayerSpeed( float deltaSeconds );
 	void HandleInput( float deltaSeconds, int playerIndex );
 	void RenderPlayer( int controllerIndex = 0 );
+	void RenderAimingLazer();
 	void UpdateMarkersAndEdgeColor( );
 	void RenderMarkers( int controllerIndex );
 	virtual void TakeDamage( float damage ) override; 
@@ -48,7 +49,7 @@ public:
 
 	int	m_index					= 0;
 
-	float m_maxSpeed			= 5.f;
+	float m_maxSpeed			= 4.f;
 	float m_accelerate			= 1.5f;
 	float m_activeDistThreshold = 10.f;
 	float m_disableInputSeconds = 0.f;

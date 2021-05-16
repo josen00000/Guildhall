@@ -19,6 +19,7 @@ class SpriteAnimDefinition;
 class SpriteSheet;
 class Texture;
 class Projectile;
+class Boss;
 
 
 enum TileAttributeBitFlag: uint {
@@ -83,6 +84,8 @@ public:
 
 	Vec2	GetPlayerPosWithIndex( int index ); 
 	Vec2	GetCuePos( int index = -1 ) const;
+	Vec2	GetRandomEnemyPos() const;
+	std::string const& GetName() const { return m_name; }
 
 	Player*	GetPlayerWithIndex( int index );
 	
@@ -121,6 +124,7 @@ public:
 	void UpdateProjectiles( float deltaSeconds );
 	void UpdateItems( float deltaSeconds );
 	void UpdateFirstLockedDoorsTiles();
+	void UpdateSecondLockedDoorsTiles();
 	void RenderMap();
 	void RenderActors(); 
 	void RenderProjectiles();
@@ -137,6 +141,7 @@ public:
 
 	// Projectile
 	void SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt, Rgba8 color );
+	void SpawnNewProjectileWithDamage( ActorType type, Vec2 startPos, Vec2 movingDirt, Rgba8 color, float damage );
 
 	// Item
 	void SpawnNewItem( Vec2 startPos );
@@ -165,7 +170,11 @@ private:
 	void GeneratePaths();
 	void CreatePathBetweenCoords( IntVec2 coord1, IntVec2 coord2 );
 	void InitializeMapDifferentTiles();
-	
+	void CheckNeedGenerateEnemies();
+	void CheckNeedGenerateBoss();
+	void CheckPlayerStates();
+	bool GenerateEnemies( EventArgs& args );
+	void GenerateBoss();
 
 	// private update
 	void UpdateDebugInfo();
@@ -184,6 +193,8 @@ private:
 	int								m_roomNum = 0;
 	bool							m_isFirstDoorLocked = true;
 	bool							m_isSecondDoorLocked = true;
+	bool							m_isEnemiesGenerated = false;
+	bool							m_isBossGenerated = false;
 	IntVec2							m_startCoords = IntVec2::ZERO;
 	IntVec2							m_endCoords = IntVec2::ZERO;
 
@@ -207,6 +218,7 @@ private:
 	std::vector<Enemy*>				m_enemies;
 	std::vector<Projectile*>		m_projectiles;
 
+	Player*							m_boss = nullptr;
 	// Item
 	std::vector<Item*>				m_items;
 	Item*							m_activeItem = nullptr;

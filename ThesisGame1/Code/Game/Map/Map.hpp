@@ -90,7 +90,7 @@ public:
 	
 	Vec2	GetAimPos() const { return m_aimPos; }
 	Vec2	GetPlayerPosWithIndex( int index ); 
-	Vec2	GetCuePos(){ return Vec2::ZERO; }
+	Vec2	GetCuePos( int index ){ return Vec2::ZERO; }
 	AABB2	GetCurrentAimingCameraAsBox();
 
 	Player*	GetPlayerWithIndex( int index );
@@ -112,7 +112,7 @@ public:
 	void SetAimPos( Vec2 pos );
 	void SetTileTypeWithCoords( IntVec2 coords, TileType type );
 	void SetTileTypeWithIndex( int index, TileType type );
-
+	void SetDynamicSplitState( eDynamicSplitState newState );
 	void SetTileOfAttribute( IntVec2 coords, TileAttribute attr, bool isTrue );
 	void SetTileSolid( IntVec2 coords, bool isSolid );
 	void SetTileRoom( IntVec2 coords, bool isRoom );
@@ -175,6 +175,8 @@ private:
 	// private Accessor
 	TileAttributeBitFlag GetTileAttrBitFlagWithTileAttr( TileAttribute attr ) const;
 
+public:
+	ePlayerTurnState				m_turn				= PLAYER_1_TURN;
 private:
 	int								m_width					= 0;
 	int								m_height				= 0;
@@ -186,7 +188,6 @@ private:
 	float							m_explosionDuration		= 2.f;
 
 	eDynamicSplitState				m_dynamicSplitState = AIMS_FIRST;
-	ePlayerTurnState				m_turn				= PLAYER_1_TURN;
 	bool							m_isGeneratingMap	= true;
 
 	IntVec2							m_startCoords		= IntVec2::ZERO;

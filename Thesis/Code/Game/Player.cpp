@@ -12,26 +12,42 @@ extern DevConsole*		g_theConsole;
 extern CameraSystem*	g_theCameraSystem;
 extern EventSystem*		g_theEventSystem;
 
-Player::Player( int index )
+Player::Player( int index, bool isBoss )
 {
-	m_type = ACTOR_PLAYER;
-	m_isPushedByActor = true;
-	m_doesPushActor = true;
-	m_index = index;
-	index++;
-	unsigned char alpha = 255;
-	unsigned char intensity = 200;
-	if( m_index == 0 ) {
-		m_color = Rgba8( intensity, intensity, 0, alpha );
+	if( !isBoss ) {
+		m_type = ACTOR_PLAYER;
+		m_isPushedByActor = true;
+		m_doesPushActor = true;
+		m_index = index;
+		unsigned char alpha = 255;
+		unsigned char intensity = 200;
+		if( m_index == 0 ) {
+			m_color = Rgba8( 255,255,255, alpha );
+		}
+		else if( m_index == 1 ) {
+			m_color = Rgba8( 0, intensity, intensity, alpha );
+		}
+		else if( m_index == 2 ) {
+			m_color = Rgba8( intensity, 0, intensity, alpha );
+		}
+		else if( m_index == 3 ) {
+			m_color = Rgba8( 255,125,125, alpha );
+		}
+		m_togetherColor = Rgba8( 50, 50, 50, alpha );
+		m_hp = 1000.f;
 	}
-	else if( m_index == 1 ) {
-		m_color = Rgba8( 0, intensity, intensity, alpha );
-	}
-	else if( m_index == 2 ) {
-		m_color = Rgba8( intensity, 0, intensity, alpha );
-	}
-	else if( m_index == 3 ) {
+	else {
+		m_type = ACTOR_BOSS;
+		m_isPushedByActor = true;
+		m_doesPushActor = true;
+		m_index = index;
 		m_color = Rgba8::WHITE;
+		{
+
+		}
+		m_hp = 200.f;
+		m_baseOBBSize = Vec2( 6.f );
+		m_barrelOBBSize = Vec2( 4.f );
 	}
 }
 
@@ -41,6 +57,15 @@ Player* Player::SpawnPlayerWithPos( Vec2 pos, int index )
 	tempPlayer->SetSpeed( 0.f );
 	tempPlayer->SetPosition( pos );
 	return tempPlayer;
+}
+
+Player* Player::SpawnBossWithPos( Vec2 pos, int index )
+{
+	Player* tempBoss = new Player( index, true );
+	tempBoss->SetSpeed( 0.f );
+	tempBoss->SetPosition( pos );
+	tempBoss->m_isBoss = true;
+	return tempBoss;
 }
 
 void Player::UpdatePlayer( float deltaSeconds, int playerIndex )
@@ -59,6 +84,29 @@ void Player::UpdatePlayer( float deltaSeconds, int playerIndex )
 	}
 
 	UpdatePlayerSpeed( deltaSeconds );
+	__super::UpdateActor( deltaSeconds, m_color );
+}
+
+void Player::UpdateBoss( float deltaSeconds )
+{
+	// Find Target
+	// Attack
+	static float attack1TotalSeconds = 0.f;
+	static float attack2TotalSeconds = 0.f;
+	static float attack3TotalSeconds = 0.f;
+	float attack1Cooldown		= 3.f;
+	float attack2Cooldown		= 4.f;
+	attack1TotalSeconds += deltaSeconds;
+	attack2TotalSeconds += deltaSeconds;
+	attack3TotalSeconds += deltaSeconds;
+	if( attack1TotalSeconds > attack1Cooldown ) {
+		BossAttack1();
+		attack1TotalSeconds = 0.f;
+	}
+	else if( attack2TotalSeconds > attack2Cooldown ) {
+		BossAttack2();
+		attack2TotalSeconds = 0.f;
+	}
 	__super::UpdateActor( deltaSeconds, m_color );
 }
 
@@ -106,7 +154,7 @@ void Player::HandleInput( float deltaSeconds, int playerIndex )
 			m_movingDir.Normalize();
 		}
 		if( g_theInputSystem->WasMouseButtonJustPressed( MOUSE_BUTTON_LEFT ) ) {
-			__super::Shoot( deltaSeconds );
+			//Shoot( m_damage );
 		}
 		break;
 	case AI_INPUT:
@@ -120,14 +168,21 @@ void Player::HandleInput( float deltaSeconds, int playerIndex )
 			m_movingDir.Normalize();
 			break;
 		case PLAYER_ATTACK:
-			AIShoot( deltaSeconds );
+			AIShoot( m_damage );
 			break;
 		default:
 			break;
 		}
 		break;
 	case CONTROLLER_INPUT:
-		const XboxController* xboxController = g_theInputSystem->GetXboxController( playerIndex - 1 );
+		const XboxController* xboxController;
+		if( m_map->GetName() == "level2" ) {
+			xboxController = g_theInputSystem->GetXboxController( playerIndex );
+		}
+		else {
+			xboxController = g_theInputSystem->GetXboxController( playerIndex - 1 );
+		}
+		if( !xboxController ){ return; }
 		if( !xboxController->isConnected() ) { return; }
 
 
@@ -151,7 +206,7 @@ void Player::HandleInput( float deltaSeconds, int playerIndex )
 		}
 
 		if( xboxController->GetRightTrigger() > 0 ) {
-			__super::Shoot( deltaSeconds );
+			Shoot( m_damage );
 		}
 		break;
 	}
@@ -163,7 +218,58 @@ void Player::RenderPlayer()
 	__super::RenderActor();
 	Vec2 forwardDirt = Vec2::ONE;
 	forwardDirt.SetAngleDegrees( m_orientationDegrees );
-	//g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 1.f, 0.1f, m_color );
+	if( m_map->GetName() == "level2" ) {
+		RenderAimingLazer();
+	}
+}
+
+void Player::RenderAimingLazer()
+{
+	g_theRenderer->SetDiffuseTexture( nullptr );
+	float thick = 0.15f;
+	float halfThick = thick / 2;
+	Vec2 direction = Vec2::ONE_ZERO;
+	direction.SetAngleDegrees( m_orientationDegrees );
+	Vec2 perpendicularDirt = Vec2( -direction.y, direction.x );
+	Vec2 leftTop = m_position + ( perpendicularDirt * halfThick );
+	Vec2 leftdown = m_position - ( perpendicularDirt * halfThick );
+	Vec2 rightTop = m_position + direction * 40.f + ( perpendicularDirt * halfThick );
+	Vec2 rightdown = m_position + direction * 40.f - ( perpendicularDirt * halfThick );
+	Vec2 tem_uv = Vec2( 0.f, 0.f );
+	Vertex_PCU line[6]={
+		Vertex_PCU( Vec3( rightTop.x,rightTop.y,0 ),	Rgba8( 255, 0, 0, 0 ),	tem_uv ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y,0 ),	Rgba8( 255, 0, 0, 0 ),	tem_uv ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y,0 ),		Rgba8( 255, 0, 0, 100 ),	tem_uv ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y, 0 ),		Rgba8( 255, 0, 0, 100 ),	tem_uv ),
+		Vertex_PCU( Vec3( leftdown.x,leftdown.y, 0 ),	Rgba8( 255, 0, 0, 100 ),	tem_uv ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y, 0 ), Rgba8( 255, 0, 0, 0 ),	tem_uv )
+	};
+	g_theRenderer->DrawVertexArray( 6, line );
+}
+
+void Player::RenderBoss()
+{
+	__super::RenderActor();
+}
+
+void Player::BossAttack1()
+{
+	for( int i = 0; i < 18; i++ ) {
+		float degrees = i * 10.f + 90.f;
+		Vec2 dirt = Vec2::ONE_ZERO;
+		dirt.SetAngleDegrees( degrees );
+		m_map->SpawnNewProjectile( m_type, m_position, dirt , m_color );
+	}
+}
+
+void Player::BossAttack2()
+{
+
+}
+
+void Player::BossAttack3()
+{
+
 }
 
 void Player::Die()
@@ -197,6 +303,21 @@ void Player::SetMap( Map* map )
 void Player::SetInputControlState( InputControlState state )
 {
 	m_inputState = state;
+}
+
+void Player::SetDamage( float damage )
+{
+	m_damage = damage;
+}
+
+void Player::SetMaxSpeed( float maxSpeed )
+{
+	m_maxSpeed = maxSpeed;
+}
+
+void Player::SetIsStronger( bool isStronger )
+{
+	m_isStronger = isStronger;
 }
 
 void Player::DisableInputForSeconds( float seconds )
@@ -236,18 +357,38 @@ bool Player::EnableInput( EventArgs& args )
 
 
 
-void Player::CheckInputMethod( int playerIndex )
+void Player::Shoot( float damage )
 {
-	if( playerIndex == 0 ) {
-		m_inputState = KEYBOARD_INPUT;
+	if( m_shootTimer < m_shootCoolDown ) { return; }
+
+	m_shootTimer = 0.f;
+	Vec2 projectileDirt = Vec2::ONE;
+	projectileDirt.SetAngleDegrees( m_orientationDegrees );
+	if( m_isStronger ) {
+		m_map->SpawnNewProjectileWithDamage( m_type, m_position, projectileDirt, m_togetherColor, damage );
 	}
 	else {
-		XboxController const* controller = g_theInputSystem->GetXboxController( playerIndex - 1 );
-		if( !controller->isConnected() ) {
-			m_inputState = AI_INPUT;
+		m_map->SpawnNewProjectile( m_type, m_position, projectileDirt, m_color );
+	}
+}
+
+void Player::CheckInputMethod( int playerIndex )
+{
+	if( m_map->GetName() == "level2" ) {
+		m_inputState = CONTROLLER_INPUT;
+	}
+	else {
+		if( playerIndex == 0 ) {
+			m_inputState = KEYBOARD_INPUT;
 		}
 		else {
-			m_inputState = CONTROLLER_INPUT;
+			XboxController const* controller = g_theInputSystem->GetXboxController( playerIndex - 1 );
+			if( !controller->isConnected() ) {
+				m_inputState = AI_INPUT;
+			}
+			else {
+				m_inputState = CONTROLLER_INPUT;
+			}
 		}
 	}
 }
@@ -282,7 +423,7 @@ void Player::FindGoalPatrolPoint( float deltaSeconds )
 	}
 }
 
-void Player::AIShoot( float deltaSeconds )
+void Player::AIShoot( float damage )
 {
 	if( m_target == nullptr ) {
 		ERROR_AND_DIE( "No enemy in player shoot!" );
@@ -292,6 +433,6 @@ void Player::AIShoot( float deltaSeconds )
 	fwdDir.Normalize();
 	m_orientationDegrees = fwdDir.GetAngleDegrees();
 
-	__super::Shoot( deltaSeconds );
+	__super::Shoot( damage );
 }
 

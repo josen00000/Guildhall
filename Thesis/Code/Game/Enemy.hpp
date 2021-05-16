@@ -35,7 +35,7 @@ public:
 
 private:
 	void FindGoalPatrolPoint( float deltaSeconds );
-	virtual void Shoot( float deltaSeconds ) override;
+	virtual void Shoot() override;
 
 public:
 	float m_maxSpeed		= 3.f;

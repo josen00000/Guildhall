@@ -55,6 +55,7 @@ void Game::Startup()
 
 	g_theCameraSystem->SetSplitScreenState( AXIS_ALIGNED_SPLIT );
 	g_theCameraSystem->SetCameraShakeState( BLEND_SHAKE );
+	g_theCameraSystem->SetCameraWindowState( USE_CAMERA_WINDOW );
 
 	g_theConsole->AddCommandToCommandList( std::string( "set_asymptotic"), std::string( "Asymptotic value for camera controller" ), SetCameraAsymptoticValue );
 	g_theConsole->AddCommandToCommandList( std::string( "spawn_item"), std::string( "spawn new item" ), SpawnItem );
@@ -88,7 +89,7 @@ void Game::RunFrame( float deltaSeconds )
 
 }
 
-void Game::RenderGame() const
+void Game::RenderGame( int index ) const
 {
 	m_world->RenderWorld();
 }
@@ -97,9 +98,9 @@ void Game::RenderUI() const
 {
 	if( m_world->GetCurrentMap()->GetPlayerNum() == 2 ) {
 		Strings hpStrs;
+		hpStrs.push_back( m_turnString );
 		hpStrs.push_back( std::string( "player 1 hp:" + std::to_string( m_world->GetCurrentMap()->GetPlayerWithIndex( 0 )->GetHealth())) );
 		hpStrs.push_back( std::string( "player 2 hp:" + std::to_string( m_world->GetCurrentMap()->GetPlayerWithIndex( 1 )->GetHealth())) );
-
 		DebugAddScreenLeftAlignStrings( 0.9f, -5.f, Rgba8::WHITE, hpStrs );
 	}
 }
@@ -145,6 +146,18 @@ void Game::HandleInput()
 		bool isdebug = GetIsDebug();
 		SetIsDebug( !isdebug );
 	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
+		Map* currentMap = m_world->GetCurrentMap();
+		if( currentMap != nullptr ) {
+			currentMap->SetDynamicSplitState( AIMS_FIRST );
+		}
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
+		Map* currentMap = m_world->GetCurrentMap();
+		if( currentMap != nullptr ) {
+			currentMap->SetDynamicSplitState( HEALTH_BASE );
+		}
+	}
 // 	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_P ) ) {
 // 		Map* currentMap = m_world->GetCurrentMap();
 // 		if( currentMap != nullptr ) {
@@ -163,6 +176,13 @@ void Game::UpdateGame( float deltaSeconds )
 
 
 	m_world->UpdateWorld( deltaSeconds );
+	Map* currentMap = GetCurrentMap();
+	if( currentMap->m_turn == PLAYER_1_TURN ) {
+		m_turnString = "Player 1 turn";
+	}
+	else {
+		m_turnString = "Player 2 turn";
+	}
 	g_theCameraSystem->Update( deltaSeconds );
 }
 

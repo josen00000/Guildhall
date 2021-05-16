@@ -40,10 +40,12 @@ public:
 	void SetIsPaused( bool isPaused );
 	void InitializeCameraSystemSetting( int mapIndex );
 	void InitializeMapSetting( int mapIndex );
+	bool DisableCentralize( EventArgs& args );
 
 private:
 	void HandleInput();
 	void UpdateGame( float deltaSeconds );
+	void UpdateFrameRate( float deltaSeconds );
 	void UpdateUI( );
 	void UpdateSystemUI();
 	void UpdateCameraWindowUI();
@@ -68,6 +70,8 @@ public:
 	bool m_isOnSettingPage	= false;
 	bool m_useSystemUI		= false;
 	bool m_useUI			= true;
+	float m_maxForwardDist  = 5.f;
+	float m_maxAimDist		= 2.5f;
 	
 	World* m_world			= nullptr;
 	Texture* m_enemyTexture				= nullptr;
@@ -76,6 +80,8 @@ public:
 	Texture* m_playerBarrelTexture		= nullptr;
 	Texture* m_playerProjectileTexture	= nullptr;
 	Texture* m_enemyProjectileTexture	= nullptr;
+	Texture* m_bossTexture				= nullptr;
+	Texture* m_bossBarrelTexture		= nullptr;
 
 
 	CameraSystem* m_cameraSystem = nullptr;

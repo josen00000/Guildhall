@@ -77,7 +77,7 @@ public:
 	int		GetPlayerNum() const { return (int)m_players.size(); }
 
 	Vec2	GetPlayerPosWithIndex( int index ); 
-	Vec2	GetCuePos() const;
+	Vec2	GetCuePos( int index = 0) const;
 
 	Player*	GetPlayerWithIndex( int index );
 	

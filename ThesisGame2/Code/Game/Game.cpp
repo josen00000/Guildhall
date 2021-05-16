@@ -20,6 +20,8 @@ extern App*				g_theApp;
 extern CameraSystem*	g_theCameraSystem;
 extern Game*			g_theGame;
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+//#define DEBUG_MODE
 // Engine
 //////////////////////////////////////////////////////////////////////////
 extern InputSystem*		g_theInputSystem;
@@ -155,6 +157,16 @@ void Game::HandleInput()
 			currentMap->DestroyPlayerWithIndex( playerNum - 1 );
 		}
 	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_1 ) ) {
+		if( g_theCameraSystem->GetSplitScreenState() == VORONOI_SPLIT ) {
+			g_theCameraSystem->SetAllowMerge( false );
+		}
+	}
+	else if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_2 ) ) {
+		if( g_theCameraSystem->GetSplitScreenState() == VORONOI_SPLIT ) {
+			g_theCameraSystem->SetAllowMerge( true );
+		}
+	}
 }
 
 void Game::UpdateGame( float deltaSeconds )
@@ -286,7 +298,6 @@ void Game::UpdateSystemUI()
 	ImGui::End();
 
 	// frame settings
-	g_theCameraSystem->SetCameraFrameState( (CameraFrameState)cameraFrameStateIndex );
 	g_theCameraSystem->SetForwardVelocityFrameDistance( forwardCameraFrameDistance );
 	g_theCameraSystem->SetAimFocusDistance( projectileCameraFrameDistance );
 
@@ -383,12 +394,6 @@ void Game::UpdateCameraFrameUI()
 	ImGui::SliderFloat( "Cue frame ratio", &cueCameraFrameRatio, 0.f, 1.f, "%.2f", 1.f );
 	ImGui::End();
 	
-	if( enableCameraFrame ) {
-		g_theCameraSystem->SetCameraFrameState( BLEND_FRAMING );
-	}
-	else {
-		g_theCameraSystem->SetCameraFrameState( NO_FRAMEING );
-	}
 	g_theCameraSystem->SetForwardVelocityFrameDistance( fwdVelCameraFrameDist );
 	g_theCameraSystem->SetAimFocusDistance( aimCameraFrameDist );
 	g_theCameraSystem->SetControllerForwardVelocityFrameRatio( 0, fwdVelCameraFrameRatio );
@@ -548,13 +553,15 @@ void Game::SetVoronoiSetting()
 	g_theCameraSystem->SetSplitScreenState( VORONOI_SPLIT );
 	g_theCameraSystem->SetPostVoronoiSetting( BALANCED_VORONOI_DIAGRAM );
 	g_theCameraSystem->SetVoronoiAreaCheckState( INCIRCLE_RADIUS );
+	g_theCameraSystem->SetDoesUseCameraFrame( true );
 	for( int i = 0; i < g_theCameraSystem->GetControllersNum(); i++ ) {
+		g_theCameraSystem->SetControllerUseCameraFrame( i, true );
 		g_theCameraSystem->SetControllerAimFocusRatio( i, 1.f );
 		g_theCameraSystem->SetAimFocusDistance( 2.5f );
 	}
-	g_theCameraSystem->SetCameraFrameState( AIM_FRAMING );
-	g_theCameraSystem->SetPostVoronoiIterationNum( 10 );
+	g_theCameraSystem->SetPostVoronoiIterationNum( 5 );
 	g_theCameraSystem->SetAllowMerge( false );
+	g_theCameraSystem->SetAllowBlend( false );
 }
 
 void Game::SetZoomSetting()

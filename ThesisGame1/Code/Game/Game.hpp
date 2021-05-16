@@ -31,7 +31,7 @@ public:
 	void Startup();
 	void Shutdown();
 	void RunFrame( float deltaSeclnds );
-	void RenderGame() const;
+	void RenderGame( int index = 0 ) const;
 	void RenderUI() const;
 	void EndFrame();
 
@@ -83,6 +83,7 @@ public:
 	Camera* m_gameCamera		= nullptr;
 	Camera* m_UICamera			= nullptr;
 
+	std::string m_turnString	= "";
 	std::vector<Coroutine*> m_gameObjects;
 };
 

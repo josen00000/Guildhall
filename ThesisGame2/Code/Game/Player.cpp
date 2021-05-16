@@ -144,7 +144,32 @@ void Player::RenderPlayer( int controllerIndex )
 	Vec2 forwardDirt = Vec2::ONE_ZERO;
 	forwardDirt.SetAngleDegrees( m_orientationDegrees );
 	g_theRenderer->SetDiffuseTexture( nullptr );
-	g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 40.f, 0.1f, Rgba8( 100, 0, 0 ,25 ) );
+	RenderAimingLazer();
+	//g_theRenderer->DrawLine( m_position, m_position + forwardDirt * 40.f, 0.1f, Rgba8( 100, 0, 0 ,25 ) );
+}
+
+void Player::RenderAimingLazer()
+{
+	g_theRenderer->SetDiffuseTexture( nullptr );
+	float thick = 0.15f;
+	float halfThick = thick / 2;
+	Vec2 direction = Vec2::ONE_ZERO;
+	direction.SetAngleDegrees( m_orientationDegrees );
+	Vec2 perpendicularDirt = Vec2( -direction.y, direction.x );
+	Vec2 leftTop = m_position + (perpendicularDirt * halfThick);
+	Vec2 leftdown = m_position - (perpendicularDirt * halfThick);
+	Vec2 rightTop = m_position + direction * 40.f + (perpendicularDirt * halfThick);
+	Vec2 rightdown = m_position + direction * 40.f - (perpendicularDirt * halfThick);
+	Vec2 tem_uv = Vec2( 0.f, 0.f );
+	Vertex_PCU line[6]={
+		Vertex_PCU( Vec3( rightTop.x,rightTop.y,0 ),	Rgba8( 255, 0, 0, 0 ),	tem_uv ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y,0 ),	Rgba8( 255, 0, 0, 0 ),	tem_uv ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y,0 ),		Rgba8( 255, 0, 0, 100 ),	tem_uv ),
+		Vertex_PCU( Vec3( leftTop.x,leftTop.y, 0 ),		Rgba8( 255, 0, 0, 100 ),	tem_uv ),
+		Vertex_PCU( Vec3( leftdown.x,leftdown.y, 0 ),	Rgba8( 255, 0, 0, 100 ),	tem_uv ),
+		Vertex_PCU( Vec3( rightdown.x,rightdown.y, 0 ), Rgba8( 255, 0, 0, 0 ),	tem_uv )
+	};
+	g_theRenderer->DrawVertexArray( 6, line );
 }
 
 void Player::UpdateMarkersAndEdgeColor()
@@ -171,15 +196,15 @@ void Player::UpdateMarkersAndEdgeColor()
  		std::pair<Vec2, Vec2> intersectPoints = voronoiPoly.GetIntersectPointWithStraightLine( line );	
 		Vec2 markerPos = Vec2::ZERO;
 		if( IsPointForwardOfPoint2D( intersectPoints.first, m_position, dirt ) ) {
-			markerPos = intersectPoints.first - dirt * 1.f;
+			markerPos = intersectPoints.first - dirt * 0.5f;
 		}
 		else {
-			markerPos = intersectPoints.second - dirt * 1.f;
+			markerPos = intersectPoints.second - dirt * 0.5f;
 		}
 		Vec2 perpendicularDirt = Vec2( -dirt.y, dirt.x );
 		m_markerVertices.push_back( Vertex_PCU( markerPos, players[i]->GetColor(), Vec2::ZERO ) );
-		m_markerVertices.push_back( Vertex_PCU( markerPos - dirt + perpendicularDirt, players[i]->GetColor(), Vec2::ZERO ) );
-		m_markerVertices.push_back( Vertex_PCU( markerPos - dirt - perpendicularDirt, players[i]->GetColor(), Vec2::ZERO ) );
+		m_markerVertices.push_back( Vertex_PCU( markerPos - dirt + perpendicularDirt * 0.4f, players[i]->GetColor(), Vec2::ZERO ) );
+		m_markerVertices.push_back( Vertex_PCU( markerPos - dirt - perpendicularDirt * 0.4f, players[i]->GetColor(), Vec2::ZERO ) );
  	}
 	std::vector<Projectile*>& mapProjectiles = m_map->GetProjectiles();
 	bool doesNeedChangeColor = false;

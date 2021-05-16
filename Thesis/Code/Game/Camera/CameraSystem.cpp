@@ -11,7 +11,7 @@
 #include "Engine/Math/RandomNumberGenerator.hpp"
 
 
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 extern Game*			g_theGame;
 extern Camera*			g_gameCamera;
@@ -29,6 +29,7 @@ void CameraSystem::Startup()
 void CameraSystem::Shutdown()
 {
 	delete m_rng;
+	DestroyAllControllers();
 	m_rng = nullptr;
 	
 }
@@ -208,7 +209,6 @@ void CameraSystem::UpdatePreVoronoiSplitScreenEffect()
 		Vec2 controllerAPos = m_controllers[i]->GetCameraPos();
 
 		for( int j = i + 1; j < m_controllers.size(); j++ ) {
-			if( !m_controllers[j]->GetAllowMerge() ){ continue; }
 			Vec2 controllerBPos = m_controllers[j]->GetCameraPos();
 			float dist = GetDistance2D( controllerAPos, controllerBPos );
 			if( dist < m_totalMergedDist ) {
@@ -216,6 +216,7 @@ void CameraSystem::UpdatePreVoronoiSplitScreenEffect()
 				m_controllersSplitToMergeBlendCoeffs[j][i] = 1.f;
 			}
 			else if( dist < m_totalSplitDist ) {
+ 				if( !m_controllers[j]->GetAllowBlend() ){ continue; }
 				float splitToMergeBlendCoeff = RangeMapFloat( m_totalSplitDist, m_totalMergedDist, 0.f, 1.f,  dist );
 				m_controllersSplitToMergeBlendCoeffs[i][j] = splitToMergeBlendCoeff;
 				m_controllersSplitToMergeBlendCoeffs[j][i] = splitToMergeBlendCoeff;
@@ -493,27 +494,6 @@ std::string CameraSystem::GetCameraShakeStateText() const
 	return "Error state";
 }
 
-std::string CameraSystem::GetCameraFrameStateText() const
-{
-	std::string result = "Camera shake state : ";
-	switch( m_cameraFrameState )
-	{
-	case NO_FRAMEING:
-		return result + std::string( "No frame." );
-	case FORWARD_VELOCITY_FRAMING:
-		return result + std::string( "Forward frame." );
-	case AIM_FRAMING:
-		return result + std::string( "Projectile frame." );
-	case CUE_FRAMING:
-		return result + std::string( "Cue frame." );
-	case BLEND_FRAMING:
-		return result + std::string( "Blend frame." );
-	case NUM_OF_FRAME_STATE:
-		return result + std::string( "Num of camera frame." );
-	}
-	return result + "Error state.";
-}
-
 std::string CameraSystem::GetSplitScreenStateText() const
 {
 	std::string result = "split screen state : ";
@@ -661,6 +641,22 @@ void CameraSystem::SetAllowMerge( bool allowMerge )
 	}
 }
 
+void CameraSystem::SetAllowBlend( bool allowBlend )
+{
+	m_doesAllowVoronoiBlend = allowBlend;
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		m_controllers[i]->SetAllowBlend( m_doesAllowVoronoiBlend );
+	}
+}
+
+void CameraSystem::SetDoesUseCameraFrame( bool doesUseFrame )
+{
+	m_doesUseCameraFrame = doesUseFrame;
+// 	for( int i = 0; i < m_controllers.size(); i++ ) {
+// 		m_controllers[i]->SetUseCameraFrame( doesUseFrame );
+// 	}
+}
+
 void CameraSystem::SetCameraWindowState( CameraWindowState newState )
 {
 	m_cameraWindowState = newState;
@@ -674,11 +670,6 @@ void CameraSystem::SetCameraSnappingState( CameraSnappingState newState )
 void CameraSystem::SetCameraShakeState( CameraShakeState newState )
 {
 	m_cameraShakeState = newState;
-}
-
-void CameraSystem::SetCameraFrameState( CameraFrameState newState )
-{
-	m_cameraFrameState = newState;
 }
 
 void CameraSystem::SetSplitScreenState( SplitScreenState newState )
@@ -738,6 +729,11 @@ void CameraSystem::SetAimFocusDistance( float dist )
 	for( CameraController* controller : m_controllers ) {
 		controller->SetAimFocusDist( dist );
 	}
+}
+
+void CameraSystem::SetControllerUseCameraFrame( int controllerIndex, bool useCameraFrame )
+{
+	m_controllers[controllerIndex]->SetUseCameraFrame( useCameraFrame );
 }
 
 void CameraSystem::SetControllerAimFocusDistance( int controllerindex, float dist )
@@ -847,7 +843,7 @@ void CameraSystem::UpdateDebugInfo()
 	std::string windowStateText			= "Press F2 to change: " + GetCameraWindowStateText();
 	std::string snappingStateText		= "Press F3 to change: " + GetCameraSnappingStateText(); 
 	std::string shakeStateText			= "Press F4 to change: " + GetCameraShakeStateText();
-	std::string frameStateText			= "Press F5 to change: " + GetCameraFrameStateText();
+	std::string frameStateText			= ""; //"Press F5 to change: " + GetCameraFrameStateText();
 	std::string splitStateText			= "Press F6 to change: " + GetSplitScreenStateText();
 	std::string splitStratText			= "Press F7 to change: ";
 	std::string postVoronoiSettingText	= "Press F8 to change: " + GetPostVoronoiSettingText();
@@ -869,16 +865,16 @@ void CameraSystem::UpdateDebugInfo()
 
 
 	Strings debugInfos;
-// 	debugInfos.push_back( debugText );
-// 	debugInfos.push_back( windowStateText );
-// 	debugInfos.push_back( snappingStateText );
-// 	debugInfos.push_back( shakeStateText );
-// 	debugInfos.push_back( frameStateText );
-// 	debugInfos.push_back( splitStateText );
-// 	debugInfos.push_back( splitStratText );
-// 	debugInfos.push_back( postVoronoiSettingText );
-// 	debugInfos.push_back( debugModeText ); 
-// 	debugInfos.push_back( voronoiAreaCheckText );
+	//debugInfos.push_back( debugText );
+	//debugInfos.push_back( windowStateText );
+	//debugInfos.push_back( snappingStateText );
+	//debugInfos.push_back( shakeStateText );
+	//debugInfos.push_back( frameStateText );
+	//debugInfos.push_back( splitStateText );
+	//debugInfos.push_back( splitStratText );
+	//debugInfos.push_back( postVoronoiSettingText );
+	//debugInfos.push_back( debugModeText ); 
+	//debugInfos.push_back( voronoiAreaCheckText );
 
 	if( m_noSplitCamera ) {
 		float height = m_noSplitCamera->GetCameraHeight();
@@ -1613,8 +1609,8 @@ void CameraSystem::ReconstructVoronoiDiagramWithTargetAnchorPoints()
 		Vec2 targetAnchorPoint		= controller->GetTargetVoronoiAnchorPointPos();
 		Vec2 anchorPoint = controller->GetVoronoiAnchorPointPos();
 		float distance = GetDistance2D( anchorPoint, targetAnchorPoint );
-		float ratio = RangeMapFloat( 1.f, 10.f, 0.995f, 0.999f, distance );
-		ratio = ClampFloat( 0.995f, 0.999f, ratio );
+		float ratio = RangeMapFloat( 1.f, 10.f, 0.90f, 0.99f, distance );
+		ratio = ClampFloat( 0.90f, 0.99f, ratio );
 		anchorPoint = anchorPoint * ratio + targetAnchorPoint * ( 1 - ratio );
 		controller->SetVoronoiAnchorPointPos( anchorPoint );
 	}

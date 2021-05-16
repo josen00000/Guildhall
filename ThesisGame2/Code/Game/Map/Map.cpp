@@ -199,7 +199,7 @@ IntVec2 Map::GetRandomInsideCameraNotSolidTileCoords( Camera* camera ) const
 	}
 }
 
-Vec2 Map::GetCuePos() const
+Vec2 Map::GetCuePos( int index ) const
 {
 	if( m_activeItem == nullptr ) {
 		return Vec2::ZERO;
@@ -387,6 +387,14 @@ void Map::CreatePlayer( )
 {
 	if( m_players.size() >= 4 ){ return; }
 	Vec2 pos = (Vec2)m_startCoords;
+	while( true ) {
+		pos = (Vec2)m_startCoords + m_rng->RollRandomVec2InRange( Vec2( -20.f, -10.f), Vec2( 20.f, 10.f ) );
+		int tileIndex = GetTileIndexWithTileCoords( (IntVec2)pos );
+		if( !IsTileRoom( (IntVec2)pos ) ) {
+			break;
+		}
+	}
+
 	Player* newPlayer = Player::SpawnPlayerWithPos( pos, (int)m_players.size() );
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );

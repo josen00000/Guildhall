@@ -17,7 +17,9 @@ Rgba8 Rgba8::GRAY		= Rgba8( 125, 125, 125, 125 );
 Rgba8 Rgba8::DARK_GRAY	= Rgba8( 50, 50, 50 );
 Rgba8 Rgba8::CYAN		= Rgba8( 0, 255, 255 );
 Rgba8 Rgba8::MAGENTA	= Rgba8( 255, 0, 255 );
-Rgba8 Rgba8::BROWN		= Rgba8( 244,164,96 );
+Rgba8 Rgba8::BROWN		= Rgba8( 244, 164, 96 );
+Rgba8 Rgba8::ORANGE		= Rgba8( 255, 69, 0 );
+
 
 
 Rgba8::Rgba8(unsigned char ini_r, unsigned char ini_g, unsigned char ini_b, unsigned char ini_a)

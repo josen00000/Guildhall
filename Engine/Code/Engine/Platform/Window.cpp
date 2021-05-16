@@ -25,16 +25,17 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 	if( window != nullptr ){
 		input = window->GetInputSystem();
 	}
+	bool useGameUI = true;
 	if( g_theApp ) {
 		if( g_theApp->DoesUseIMGUI() ) {
  			g_theApp->handleIMGUIInput( windowHandle, wmMessageCode, wParam, lParam );
+			useGameUI = false;
 		}
 	}
+		switch( wmMessageCode )
+		{
 
-	switch( wmMessageCode )
-	{
-
-		// App close requested via "X" button, or right-click "Close Window" on task bar, or "Close" from system menu, or Alt-F4
+			// App close requested via "X" button, or right-click "Close Window" on task bar, or "Close" from system menu, or Alt-F4
 		case WM_CLOSE:
 		{
 			// TODO SD2 quit the windows
@@ -45,30 +46,30 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			return 0; // "Consumes" this message (tells Windows "okay, we handled it")
 		}
 
-		case WM_ACTIVATE:{
+		case WM_ACTIVATE: {
 			switch( wParam )
 			{
-				case WA_ACTIVE: {
-					if( input != nullptr ){
-						input->ClipSystemCursor();
-						input->ShowSystemCursor();
-						input->SetCursorMode( CURSOR_RELATIVE );
-					}
-					break;
-				}
-				case WA_INACTIVE: {
-					input->UnClipSystemCursor();
+			case WA_ACTIVE: {
+				if( input != nullptr ) {
+					input->ClipSystemCursor();
 					input->ShowSystemCursor();
-					input->SetCursorMode( CURSOR_ABSOLUTE );
-					break;
+					input->SetCursorMode( CURSOR_RELATIVE );
 				}
-				default:
-					break;
+				break;
+			}
+			case WA_INACTIVE: {
+				input->UnClipSystemCursor();
+				input->ShowSystemCursor();
+				input->SetCursorMode( CURSOR_ABSOLUTE );
+				break;
+			}
+			default:
+				break;
 			}
 			break;
 		}
 
-		// Raw physical keyboard "key-was-just-depressed" event (case-insensitive, not translated)
+						// Raw physical keyboard "key-was-just-depressed" event (case-insensitive, not translated)
 		case WM_KEYDOWN:
 		{
 			unsigned char asKey = (unsigned char)wParam;
@@ -88,7 +89,7 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			if( 32 <= character && character <= 126 ) {
 				input->PushCharacter( (char)character );
 			}
-			if( character == 0x03 ){
+			if( character == 0x03 ) {
 				g_theConsole->SendSelectedStringToClipBoard();
 			}
 			if( character == 0x16 ) {
@@ -97,7 +98,7 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			break;
 
 		}
-					  // Mouse Input
+					// Mouse Input
 		case WM_LBUTTONDOWN:
 		{
 			input->UpdateMouseButtonState( MOUSE_BUTTON_LEFT, true );
@@ -140,7 +141,6 @@ static LRESULT CALLBACK WindowsMessageHandlingProcedure( HWND windowHandle, UINT
 			break;
 		}
 	}
-
 	// Send back to Windows any unhandled/unconsumed messages we want other apps to see (e.g. play/pause in music apps, etc.)
 	return DefWindowProc( windowHandle, wmMessageCode, wParam, lParam );
 }

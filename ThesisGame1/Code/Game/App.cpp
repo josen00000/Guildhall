@@ -263,7 +263,6 @@ void App::UpdateIMGUI()
 	g_theCameraSystem->SetCameraWindowState( (CameraWindowState)cameraWindowStateIndex );
 	g_theCameraSystem->SetCameraSnappingState( (CameraSnappingState)cameraSnappingStateIndex );
 	g_theCameraSystem->SetCameraShakeState( (CameraShakeState)cameraShakeStateIndex );
-	g_theCameraSystem->SetCameraFrameState( (CameraFrameState)cameraFrameStateIndex );
 	g_theCameraSystem->SetSplitScreenState( (SplitScreenState)splitScreenStateIndex );
 	g_theCameraSystem->SetNoSplitScreenStrat( (NoSplitScreenStrat)noSplitScreenStrategyIndex );
 	g_theCameraSystem->SetPostVoronoiSetting( (PostVoronoiSetting)postVoronoiSettingIndex );

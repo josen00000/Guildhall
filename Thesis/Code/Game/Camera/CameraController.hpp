@@ -90,8 +90,11 @@ public:
 	void SetMaxDeltaDistance						( float maxDeltaDist );
 	void SetTrauma									( float trauma );
 	void AddTrauma									( float addTrauma );
+
+	// camera frame
+	void SetUseCameraFrame							( bool useCameraFrame );
 	void SetForwardVelocityFocusDist				( float dist );
-	void SetAimFocusDist						( float dist );
+	void SetAimFocusDist							( float dist );
 	void SetForwardVelocityFocusRatio				( float ratio );
 	void SetAimFocusRatio							( float ratio );
 	void SetCueFocusRatio							( float ratio );
@@ -129,7 +132,7 @@ public:
 	void UpdateCameraFrame							();
 
 	// Camera smooth
-	void SmoothMotion								();
+	void SmoothMotion								( float deltaSeconds );
 	float ComputeAsymptoticValueByDeltaDist			( float deltaDist );
 
 	// Multiple camera
@@ -169,7 +172,6 @@ private:
 	bool m_isDebug					= false;
 	Player* m_player				= nullptr; // const
 	Camera* m_camera				= nullptr;
-	Camera* m_splitCamera			= nullptr;
 	Texture* m_stencilTexture		= nullptr;
 	Texture* m_colorTarget			= nullptr;
 	Shader* m_boxStencilShader		= nullptr;
@@ -201,8 +203,8 @@ private:
 	bool m_isSmooth				= true;
 	float m_asymptoticValue		= 0.9f;
 	float m_maxDeltaDist		= 6.f;
-	float m_minAsymptotic		= 0.90f;
-	float m_maxAsymptotic		= 0.99f;
+	float m_minAsymptotic		= 0.95f;
+	float m_maxAsymptotic		= 0.995f;
 
 	// Camera Shake
 	float m_trauma				= 0.f;
@@ -212,6 +214,7 @@ private:
 	float m_maxShakeRotDeg		= DEFAULT_MAX_ROTATION_SHAKE_DEGREE;
 
 	// Camera framing
+	bool m_useCameraFrame		= false;
 	float m_fwdVelFocusDist		= DEFAULT_FORWARD_VELOCITY_FRAME_DIST;
 	float m_aimFocusDist		= DEFAULT_AIM_FRAME_DIST;
 	float m_fwdVelFocusRatio	= 0.f;
@@ -239,7 +242,7 @@ private:
 	float			m_voronoiPolyArea				= 0.f;
 	float			m_originalVoronoiPolyArea		= 0.f;
 	float			m_screenEdgeWidth				= 0.5f;
-	float			m_maxedgeThickness				= 0.5f;
+	float			m_maxedgeThickness				= 0.25f;
 	Rgba8			m_splitScreenEdgeColor			= Rgba8::BLACK;
 	Vec2			m_voronoiStencilOffset			= Vec2::ZERO;
 	Vec2			m_voronoiColorTargetOffset		= Vec2::ZERO;

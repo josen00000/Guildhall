@@ -65,24 +65,36 @@ void Actor::RenderActor()
 		barrelTexture = g_theGame->m_enemyBarrelTexture;
 		//g_theRenderer->DrawCircle( Vec3( m_position, 0 ), m_physicsRadius, 0.05f, Rgba8::BLUE );
 		break;
+	case ACTOR_BOSS:
+		baseTexture = g_theGame->m_bossTexture;
+		barrelTexture = g_theGame->m_bossBarrelTexture;
 	default:
 		break;
 	}
-	g_theRenderer->SetDiffuseTexture( baseTexture );
-	g_theRenderer->DrawVertexVector( m_baseVertices );
+ 	g_theRenderer->SetDiffuseTexture( baseTexture );
+ 	g_theRenderer->DrawVertexVector( m_baseVertices );
 	g_theRenderer->SetDiffuseTexture( barrelTexture );
 	g_theRenderer->DrawVertexVector( m_barrelVertices );
 }
 
-void Actor::Shoot( float deltaSeconds )
+void Actor::Shoot( float damage )
 {
-	UNUSED(deltaSeconds);
 	if( m_shootTimer < m_shootCoolDown ){ return; }
 
 	m_shootTimer = 0.f;
 	Vec2 projectileDirt = Vec2::ONE;
 	projectileDirt.SetAngleDegrees( m_orientationDegrees );
-	m_map->SpawnNewProjectile( m_type, m_position, projectileDirt, m_color);
+	m_map->SpawnNewProjectileWithDamage( m_type, m_position, projectileDirt, m_color, damage );
+}
+
+void Actor::Shoot()
+{
+	if( m_shootTimer < m_shootCoolDown ) { return; }
+
+	m_shootTimer = 0.f;
+	Vec2 projectileDirt = Vec2::ONE;
+	projectileDirt.SetAngleDegrees( m_orientationDegrees );
+	m_map->SpawnNewProjectile( m_type, m_position, projectileDirt, m_color );
 }
 
 void Actor::TakeDamage( float damage )

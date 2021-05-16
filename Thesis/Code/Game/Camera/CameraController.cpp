@@ -31,8 +31,6 @@ CameraController::CameraController( CameraSystem* owner, Player* player, Camera*
 	,m_camera( camera )
 {
 	m_timer = new Timer();
-	m_splitCamera = Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
-	m_splitCamera->EnableClearColor( Rgba8::BLACK );
 	m_camera->EnableClearColor( Rgba8::GRAY );
 	m_offsetBuffer			= new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	m_voronoiOffsetBuffer	= new RenderBuffer( "test", g_theRenderer, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
@@ -61,7 +59,6 @@ CameraController::~CameraController()
 	// leave map delete player
 	// leave camera to future
 	//delete m_timer;
-	SELF_SAFE_RELEASE(m_splitCamera);
 	SELF_SAFE_RELEASE(m_offsetBuffer);
 	SELF_SAFE_RELEASE(m_voronoiOffsetBuffer);
 	SELF_SAFE_RELEASE(m_timer);
@@ -77,7 +74,7 @@ void CameraController::Update( float deltaSeconds )
 	UpdateCameraFrame( );
 	UpdateCameraShake( deltaSeconds );
 	UpdateMultipleCameraSettings( deltaSeconds );
-	SmoothMotion();
+	SmoothMotion(deltaSeconds);
 	BoundCameraPosInsideWindow();
 }
 
@@ -137,6 +134,14 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 			std::string goalMultipleStableFactorText	= std::string( "goal multiple factor = " + std::to_string( m_goalMultipleFactor ));
 			std::string currentFactorSecondsText		= Stringf( "current factor seconds: %.2f", currentFactorSeconds );
 			std::string totalFactorSecondsText			= Stringf( "total factor seconds: %.2f", m_contributionRatioStableSeconds );
+			std::string colortargetOffset				= std::string( "color target offset = " +  m_voronoiColorTargetOffset.ToString() );
+			std::string needRenderText;
+			if( GetNeedRenderWhenMerged() ) {
+				needRenderText = "true";
+			}
+			else {
+				needRenderText = "false";
+			}
 
 			debugStrings.push_back( playerPosText );
 			debugStrings.push_back( cameraPosText );
@@ -147,6 +152,8 @@ void CameraController::DebugCameraInfoAt( Vec4 pos )
 			debugStrings.push_back( goalMultipleStableFactorText );
 			debugStrings.push_back( currentFactorSecondsText );
 			debugStrings.push_back( totalFactorSecondsText );
+			debugStrings.push_back( colortargetOffset );
+			debugStrings.push_back( needRenderText );
 		}
 		break;
 		case VORONOI_INFO: {
@@ -243,6 +250,11 @@ void CameraController::SetTrauma( float trauma )
 void CameraController::AddTrauma( float addTrauma )
 {
 	m_trauma += addTrauma;
+}
+
+void CameraController::SetUseCameraFrame( bool useCameraFrame )
+{
+	m_useCameraFrame = useCameraFrame;
 }
 
 void CameraController::SetForwardVelocityFocusDist( float dist )
@@ -441,9 +453,8 @@ void CameraController::UpdateCameraShake( float deltaSeconds )
 
 void CameraController::UpdateCameraFrame( )
 {
-	if( m_owner->GetCameraFrameState() == NO_FRAMEING ) {
-		return;
-	}
+	if( !m_owner->GetDoesUseCameraFrame() ){ return; }
+	if( !m_useCameraFrame ){ return; }
 
 	Vec2 fwdGoalPos		= m_playerPos;
 	Vec2 projectGoalPos = m_playerPos;
@@ -481,7 +492,7 @@ void CameraController::UpdateCameraFrame( )
 	m_goalCameraPos = ( m_fwdVelFocusRatio * fwdGoalPos ) + ( m_aimFocusRatio * projectGoalPos ) + ( m_cueFocusRatio * cueGoalPos );
 }
 
-void CameraController::SmoothMotion()
+void CameraController::SmoothMotion( float deltaSeconds )
 {
 	m_smoothedGoalCameraPos = m_goalCameraPos;
 	if( !m_isSmooth ){ 	return; }
@@ -578,8 +589,8 @@ void CameraController::AppendVertsForStencilTexture()
 		LineSegment2 lineInworld = m_voronoiPolygon.GetEdgeInWorld( i );
 		Vec2 lineDirt = lineInworld.GetNormalizedDirection();
 		Vec2 moveDirt = Vec2( -lineDirt.y, lineDirt.x );
-		lineInworld.SetStartPos( lineInworld.GetStartPos() + moveDirt * thickness * 0.45f );
-		lineInworld.SetEndPos( lineInworld.GetEndPos() + moveDirt * thickness * 0.45f );
+		lineInworld.SetStartPos( lineInworld.GetStartPos() + moveDirt * thickness * 0.4f );
+		lineInworld.SetEndPos( lineInworld.GetEndPos() + moveDirt * thickness * 0.4f );
 		AppendVertsForLineSegment2D( m_stencilVertices, lineInworld, thickness, m_splitScreenEdgeColor );
 	}
 }

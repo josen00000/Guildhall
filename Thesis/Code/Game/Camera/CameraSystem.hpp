@@ -135,7 +135,6 @@ public:
 	std::string GetCameraWindowStateText() const;
 	std::string GetCameraSnappingStateText() const;
 	std::string GetCameraShakeStateText() const;
-	std::string GetCameraFrameStateText() const;
 	std::string GetSplitScreenStateText() const;
 	std::string GetNoSplitScreenStratText() const;
 	std::string GetDebugModeText() const;
@@ -143,11 +142,10 @@ public:
 	std::string GetVoronoiAreaCheckStateText() const;
 
 	//const char** GetAllCameraWindowText() const;
-
+	bool					GetDoesUseCameraFrame()	 const { return m_doesUseCameraFrame; }
 	CameraWindowState		GetCameraWindowState() const { return m_cameraWindowState; }
 	CameraSnappingState		GetCameraSnappingState() const { return m_cameraSnappingState; }
 	CameraShakeState		GetCameraShakeState() const { return m_cameraShakeState; }
-	CameraFrameState		GetCameraFrameState() const { return m_cameraFrameState; }
 	SplitScreenState		GetSplitScreenState() const { return m_splitScreenState; }
 	NoSplitScreenStrat		GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
 	PostVoronoiSetting		GetPostVoronoiSetting() const { return m_postVoronoiSetting; }
@@ -169,10 +167,11 @@ public:
 	void SetIsDebug( bool isDebug );
 	void SetControllerSmooth( bool isSmooth );
 	void SetAllowMerge( bool allowMerge );
+	void SetAllowBlend( bool allowBlend );
+	void SetDoesUseCameraFrame( bool doesUseFrame );
 	void SetCameraWindowState( CameraWindowState newState );
 	void SetCameraSnappingState( CameraSnappingState newState );
 	void SetCameraShakeState( CameraShakeState newState );
-	void SetCameraFrameState( CameraFrameState newState );
 	void SetSplitScreenState( SplitScreenState newState );
 	void SetNoSplitScreenStrat( NoSplitScreenStrat newStrat ); 
 	void SetDebugMode( DebugMode newMode );
@@ -185,6 +184,7 @@ public:
 	
 	void SetForwardVelocityFrameDistance( float dist );
 	void SetAimFocusDistance( float dist );
+	void SetControllerUseCameraFrame( int controllerIndex, bool useCameraFrame );
 	void SetControllerAimFocusDistance( int controllerindex, float dist );
 	void SetControllerForwardVelocityFrameRatio( int controllerIndex, float ratio );
 	void SetControllerAimFocusRatio( int controllerIndex, float ratio );
@@ -273,10 +273,10 @@ private:
 	std::vector<CameraController*> m_controllers;
 	
 	// states
+	bool					m_doesUseCameraFrame	= false;
 	CameraWindowState		m_cameraWindowState		= NO_CAMERA_WINDOW;
 	CameraSnappingState		m_cameraSnappingState	= NO_CAMERA_SNAPPING;
 	CameraShakeState		m_cameraShakeState		= POSITION_SHAKE;
-	CameraFrameState		m_cameraFrameState		= NO_FRAMEING;
 	SplitScreenState		m_splitScreenState		= NO_SPLIT_SCREEN; // Temp for demo TODO: change back
 	NoSplitScreenStrat		m_noSplitScreenStrat	= NO_STRAT;
 	DebugMode				m_debugMode				= CONTROLLER_INFO;
@@ -306,13 +306,14 @@ private:
 	// post voronoi setting
 	bool m_isVoronoiInitialized					= false;
 	bool m_doesAllowVoronoiMerge				= false;
+	bool m_doesAllowVoronoiBlend				= false;
 	int m_postVoronoiIteration								= 0;
 	int m_targetPostVoronoiIteration						= 3;
 	float m_expandVoronoiLeastStep							= 2.f;
 
 	// voronoi fairness
-	float m_maxVoronoiAnchorPointMoveDistWithPolyArea		= 1.f;	
-	float m_maxVoronoiAnchorPointMoveDistWithIncircleRadius	= 3.f;	
+	float m_maxVoronoiAnchorPointMoveDistWithPolyArea		= 0.8f;	
+	float m_maxVoronoiAnchorPointMoveDistWithIncircleRadius	= 0.8f;	
 	float m_expandVoronoiAreaThreshold						= 50.f;
 	float m_voronoiInCircleRadiusThreshold					= 5.f;
 

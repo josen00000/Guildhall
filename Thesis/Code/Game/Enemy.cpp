@@ -38,7 +38,7 @@ void Enemy::UpdateEnemy( float deltaSeconds )
 		m_movingDir.Normalize();
 		break;
 	case ENEMY_ATTACK:
-		Shoot( deltaSeconds );
+		Shoot( );
 		break;
 	default:
 		break;
@@ -101,7 +101,7 @@ void Enemy::FindGoalPatrolPoint( float deltaSeconds )
 	}
 }
 
-void Enemy::Shoot( float deltaSeconds )
+void Enemy::Shoot()
 {
 	if( m_target == nullptr ) {
 		ERROR_AND_DIE( "No player in enemy shoot!" ); 
@@ -111,7 +111,7 @@ void Enemy::Shoot( float deltaSeconds )
 	fwdDir.Normalize();
 	m_orientationDegrees = fwdDir.GetAngleDegrees(); 
 	
-	__super::Shoot( deltaSeconds );
+	__super::Shoot();
 		
 	
 }

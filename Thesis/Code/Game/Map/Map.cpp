@@ -202,23 +202,45 @@ IntVec2 Map::GetRandomInsideCameraNotSolidTileCoords( Camera* camera ) const
 
 Vec2 Map::GetCuePos( int index ) const
 {
-	if( index  < 0 ) {
+	if( m_name == "level2" ) {
+		Vec2 playerPos = m_players[index]->GetPosition();
+		if( m_isFirstDoorLocked ) {
+			if( playerPos.x >=0 && playerPos.x <= 40 ) {
+				return (Vec2)m_triggerTiles[0];
+			}
+			else if( playerPos.x >= 40 && playerPos.x <= 80 ) {
+				return (Vec2)m_triggerTiles[1];
+			}
+			else {
+				return Vec2::ZERO;
+			}
+		}
+		else {
+			if( GetDistance2D( playerPos, Vec2( m_triggerTiles[0] ) ) < 2.f || GetDistance2D( playerPos, Vec2( m_triggerTiles[1] ) ) < 2.f ) {
+				return playerPos;
+			}
+			else {
+				return Vec2( m_doorTiles[0] );
+			}
+		}
+	}
+	else{
 		if( m_activeItem == nullptr ) {
 			return Vec2::ZERO;
 		}
 		return m_activeItem->GetPosition();
 	}
-	else
+}
+
+Vec2 Map::GetRandomEnemyPos() const
+{
+	IntVec2 tileCoords;
+	while ( true )
 	{
-		Vec2 playerPos = m_players[index]->GetPosition();
-		if( playerPos.x >=0 && playerPos.x <= 40 ) {
-			return (Vec2)m_triggerTiles[0];
-		}
-		else if( playerPos.x >= 40 && playerPos.x <= 80 ) {
-			return (Vec2)m_triggerTiles[1];
-		}
-		else {
-			return Vec2::ZERO;
+		tileCoords.x = m_rng->RollRandomIntInRange( 40, 80 );
+		tileCoords.y = m_rng->RollRandomIntInRange( 1, m_height - 1 );
+		if( !IsTileSolid( tileCoords ) ) {
+			return (Vec2)tileCoords;
 		}
 	}
 }
@@ -314,14 +336,18 @@ void Map::UpdateMap( float deltaSeconds )
 {
 	// generate map
 	// update map
-	
-
 	UpdateMouse();
 	UpdateFirstLockedDoorsTiles();
+	UpdateSecondLockedDoorsTiles();
+	CheckNeedGenerateEnemies();
+	CheckNeedGenerateBoss();
+	CheckPlayerStates();
 	UpdateActors( deltaSeconds );
 	UpdateProjectiles( deltaSeconds );
 	CheckCollision();
-
+	if( m_boss ) {
+		m_boss->UpdateBoss( deltaSeconds );
+	}
 	if( g_theGame->GetIsDebug() ) {
 		UpdateDebugInfo();
 	}
@@ -400,6 +426,40 @@ void Map::UpdateFirstLockedDoorsTiles()
 	m_isFirstDoorLocked = shouldFirstDoorLocked;
 }
 
+void Map::UpdateSecondLockedDoorsTiles()
+{
+	if( m_name != "level2" ){ return; }
+	bool shouldSecondDoorLocked = true;
+	TileType openDoorType	= m_definition->GetOpenType();
+	TileType lockedDoorType = m_definition->GetLockedType();
+	bool doesAliveEnemyExist = false;
+	for( Enemy* enemy : m_enemies ) {
+		if( enemy ) {
+			doesAliveEnemyExist = true;
+			break;
+		}
+	}
+	if( !doesAliveEnemyExist && m_isEnemiesGenerated ) {
+		shouldSecondDoorLocked = false;
+	}
+	if( m_isSecondDoorLocked == shouldSecondDoorLocked ){ return; }
+	else if( shouldSecondDoorLocked ) {
+		SetTileTypeWithCoords( m_doorTiles[2], lockedDoorType );
+		SetTileTypeWithCoords( m_doorTiles[3], lockedDoorType );
+		SetTileSolid( m_doorTiles[2], true );
+		SetTileSolid( m_doorTiles[3], true );
+		PopulateTiles();
+	}
+	else {
+		SetTileTypeWithCoords( m_doorTiles[2], openDoorType );
+		SetTileTypeWithCoords( m_doorTiles[3], openDoorType );
+		SetTileSolid( m_doorTiles[2], false );
+		SetTileSolid( m_doorTiles[3], false );
+		PopulateTiles();
+	}
+	m_isSecondDoorLocked = shouldSecondDoorLocked;
+}
+
 void Map::RenderMap()
 {
 	g_theRenderer->SetDiffuseTexture( TileDefinition::s_spriteTexture );
@@ -408,6 +468,9 @@ void Map::RenderMap()
 	RenderActors();
 	RenderProjectiles();
 	RenderItems();
+	if( m_boss ) {
+		m_boss->RenderBoss();
+	}
 
 	if( g_theGame->GetIsDebug() ) {
 		//RenderDebugInfo();
@@ -422,6 +485,7 @@ void Map::RenderActors()
 		m_players[i]->RenderPlayer();
 	}
 	for( int i = 0; i < m_enemies.size(); i++ ) {
+		if( !m_enemies[i] ){ continue; }
 		if( m_enemies[i]->GetAliveState()  != ALIVE ){ continue; }
 		m_enemies[i]->RenderEnemy();
 	}
@@ -461,15 +525,13 @@ void Map::GenerateMap()
 void Map::CreatePlayer( )
 {
 	if( m_players.size() >= 4 ){ return; }
-	Vec2 pos = (Vec2)m_startCoords;
+		Vec2 pos = (Vec2)m_startCoords;
+	if( m_name == "level1" ) {
+		 pos = (Vec2)GetRandomInsideCameraNotSolidTileCoords( g_theGame->m_gameCamera );
+	}
 	Player* newPlayer = Player::SpawnPlayerWithPos( pos, (int)m_players.size() );
 	newPlayer->SetMap( this );
 	m_players.push_back( newPlayer );
-
-	//newPlayer->SetPlayerIndex( m_players.size() - 1 );
- 	if( m_players.size() == m_keyboardPlayerIndex ) {
- 		newPlayer->SetInputControlState( KEYBOARD_INPUT );
- 	}
 	g_theCameraSystem->CreateAndPushController( newPlayer );
 }
 
@@ -517,6 +579,14 @@ void Map::SpawnNewEnemy( Vec2 startPos )
 void Map::SpawnNewProjectile( ActorType type, Vec2 startPos, Vec2 movingDirt, Rgba8 color )
 {
 	Projectile* tempProjectile = Projectile::SpawnProjectileWithDirtAndType( movingDirt, startPos, type );
+	tempProjectile->SetColor( color );
+	m_projectiles.push_back( tempProjectile );
+}
+
+void Map::SpawnNewProjectileWithDamage( ActorType type, Vec2 startPos, Vec2 movingDirt, Rgba8 color, float damage )
+{
+	Projectile* tempProjectile = Projectile::SpawnProjectileWithDirtAndType( movingDirt, startPos, type );
+	tempProjectile->SetDamage( damage );
 	tempProjectile->SetColor( color );
 	m_projectiles.push_back( tempProjectile );
 }
@@ -599,11 +669,13 @@ void Map::CheckCollisionBetweenProjectileAndActors( Projectile* projectile )
 			if( tempPlayer->GetAliveState() != ALIVE ){ continue; }
 			if( IsPointInsideDisc( projectile->GetPosition(), tempPlayer->GetPosition(), tempPlayer->GetPhysicsRadius() ) ) {
 				tempPlayer->TakeDamage( projectile->GetDamage() );
+				CameraController* playerController = g_theCameraSystem->GetCameraControllerWithPlayer( tempPlayer );
+				playerController->AddTrauma( 0.25f );
 				projectile->Die();
 				break;
 			}
 		}
-		break;
+	break;
 	case ACTOR_PLAYER:
 		for( int i = 0; i < m_enemies.size(); i++ ) {
 			Enemy* tempEnemy = m_enemies[i];
@@ -614,7 +686,29 @@ void Map::CheckCollisionBetweenProjectileAndActors( Projectile* projectile )
 				break;
 			}
 		}
-		break;
+		if( m_boss ) {
+			if( IsPointInsideDisc( projectile->GetPosition(), m_boss->GetPosition(), m_boss->GetPhysicsRadius() ) ) {
+				m_boss->TakeDamage( projectile->GetDamage() );
+				projectile->Die();
+				CameraController* playerController = g_theCameraSystem->GetCameraControllerWithPlayer( m_boss );
+				playerController->AddTrauma( 0.25f );
+				break;
+			}
+		}
+	break;
+	case ACTOR_BOSS:
+		for( int i = 0; i < m_players.size(); i++ ) {
+			Player* tempPlayer = m_players[i];
+			if( tempPlayer->GetAliveState() != ALIVE ){ continue; }
+			if( IsPointInsideDisc( projectile->GetPosition(), tempPlayer->GetPosition(), tempPlayer->GetPhysicsRadius() ) ) {
+				tempPlayer->TakeDamage( projectile->GetDamage() );
+				CameraController* playerController = g_theCameraSystem->GetCameraControllerWithPlayer( tempPlayer );
+				playerController->AddTrauma( 0.25f );
+				projectile->Die();
+				break;
+			}
+		}
+	break;
 	}
 }
 
@@ -634,6 +728,12 @@ void Map::ManageGarbage()
 		if( tempPlayer != nullptr && tempPlayer->GetAliveState() == AliveState::READY_TO_DELETE_PLAYER ) {
 			delete tempPlayer;
 			m_players.erase( m_players.begin() + i );
+		}
+	}
+	if( m_boss ) {
+		if( m_boss->GetAliveState() == AliveState::READY_TO_DELETE_PLAYER ) {
+			delete m_boss;
+			m_boss = nullptr;
 		}
 	}
 
@@ -883,7 +983,7 @@ void Map::InitializeMapDifferentTiles()
 
 		// initialize trigger tiles
 		m_triggerTiles.push_back( IntVec2( 2, m_height - 3 ) );
-		m_triggerTiles.push_back( IntVec2( 42, m_height - 3 ));
+		m_triggerTiles.push_back( IntVec2( 78, 3 ));
 		for( int i = 0; i < m_triggerTiles.size(); i++ ) {
 			SetTileTypeWithCoords( m_triggerTiles[i], triggerType );
 			SetTileSolid( m_triggerTiles[i], false );
@@ -892,6 +992,78 @@ void Map::InitializeMapDifferentTiles()
 	}
 
 
+}
+
+void Map::CheckNeedGenerateEnemies()
+{
+	if( m_isEnemiesGenerated ){ return; }
+	if( m_name != "level2" ){ return; }
+	Vec2 player1Pos = m_players[0]->GetPosition();
+	Vec2 player2Pos = m_players[1]->GetPosition();
+	if( player1Pos.x > 40.f && player2Pos.x > 40.f ) {
+		g_theEventSystem->SetTimerByFunction( 2.f, this, &Map::GenerateEnemies );
+		m_isEnemiesGenerated = true;
+	}
+}
+
+void Map::CheckNeedGenerateBoss()
+{
+	if( m_isBossGenerated ){ return; }
+	if( m_name != "level2" ){ return; }
+	Vec2 player1Pos = m_players[0]->GetPosition();
+	Vec2 player2Pos = m_players[1]->GetPosition();
+	if( player1Pos.x > 82.f && player2Pos.x > 82.f ) {
+		GenerateBoss();
+		m_isBossGenerated = true;
+	}
+}
+
+void Map::CheckPlayerStates()
+{
+	if( m_name != "level2" ){ return; }
+	float togetherDamage	= 15.f;
+	float splitDamage		= 10.f;
+	float togetherMaxSpeed	= 3.f;
+	float splitMaxSpeed		= 5.f;
+	Vec2 player1Pos = m_players[0]->GetPosition();
+	Vec2 player2Pos = m_players[1]->GetPosition();
+	float distanceSq = GetDistanceSquared2D( player1Pos, player2Pos );
+	if( distanceSq < 100.f ) {
+		m_players[0]->SetIsStronger( true );
+		m_players[1]->SetIsStronger( true );
+		m_players[0]->SetDamage( togetherDamage );
+		m_players[1]->SetDamage( togetherDamage );
+		m_players[0]->SetMaxSpeed( togetherMaxSpeed );
+		m_players[1]->SetMaxSpeed( togetherMaxSpeed	);
+	}
+	else {
+		m_players[0]->SetIsStronger( false );
+		m_players[1]->SetIsStronger( false );
+		m_players[0]->SetDamage( splitDamage );
+		m_players[1]->SetDamage( splitDamage );
+		m_players[0]->SetMaxSpeed( splitMaxSpeed );
+		m_players[1]->SetMaxSpeed( splitMaxSpeed );
+	}
+}
+
+bool Map::GenerateEnemies( EventArgs& args )
+{
+	for( int i = 0; i < 3; i++ ) {
+		Vec2 enemyPos = GetRandomEnemyPos();
+		SpawnNewEnemy( enemyPos );
+	}
+	return true;
+}
+
+void Map::GenerateBoss()
+{
+	m_boss = Player::SpawnBossWithPos( Vec2( 110.f,15.f ), m_players.size() );	
+	m_boss->SetMap( this ); 
+	m_boss->SetPhysicsRadius( 4.f );
+	g_theCameraSystem->CreateAndPushController( m_boss );
+	CameraController* bossController = g_theCameraSystem->GetCameraControllerWithPlayer( m_boss );
+	bossController->SetUseCameraFrame( false );
+	bossController->SetAllowMerge( false );
 }
 
 //////////////////////////////////////////////////////////////////////////

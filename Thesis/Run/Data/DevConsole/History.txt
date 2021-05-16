@@ -5,5 +5,5 @@ quit
 test
 set_asymptotic
 set_camera_smooth
-delete_player
 load_map
+delete_player

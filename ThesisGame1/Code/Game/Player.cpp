@@ -22,7 +22,7 @@ Player::Player()
 	unsigned char alpha = 255;
 	unsigned char intensity = 200;
 	if( m_index == 0 ) {
-		m_color = Rgba8( intensity, intensity, 0, alpha );
+		m_color = Rgba8( intensity, 0, intensity, alpha );
 	}
 	else if( m_index == 1 ) {
 		m_color = Rgba8( 0, intensity, intensity, alpha );
@@ -172,7 +172,7 @@ void Player::HandleInput( float deltaSeconds, int playerIndex )
 				else if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_LEFT_ARROW ) ) {
 					aimMoveDirt.x = -1.f;
 				}
-				if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_NUMPAD_1 ) ) {
+				if( g_theInputSystem->WasKeyJustPressed( KEYBOARD_BUTTON_ID_ENTER ) ) {
 					Shoot();
 				}
 				if( aimMoveDirt.GetLength() != 0.f ) {

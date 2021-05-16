@@ -24,6 +24,7 @@ public:
 
 	// Mutator
 	void SetColor( Rgba8 color );
+	void SetDamage( float damage );
 private:
 	bool m_isDead = false;
 
