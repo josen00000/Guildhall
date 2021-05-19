@@ -100,6 +100,8 @@ MapRaycastResult TileMap::RayCast( Vec3 startPos, Vec3 forwardNormal, float maxD
 	if( m_isDebug ) {
 		DebugAddWorldLine( startPos, startPos + forwardNormal * maxDistance, Rgba8::RED, 5.f, DEBUG_RENDER_ALWAYS );
 	}
+
+	// initialize
 	MapRaycastResult result[2];
 	for( int i = 0; i < 2; i++ ) {
 		result[i].startPosition = startPos;
@@ -107,6 +109,7 @@ MapRaycastResult TileMap::RayCast( Vec3 startPos, Vec3 forwardNormal, float maxD
 		result[i].maxDistance = maxDistance;
 		result[i].impactDistance = (float)INT_MAX;
 	}
+	
 	TileRaycast( result[0] );
 	EntityRaycast( result[1] );
  	
@@ -405,27 +408,14 @@ void TileMap::EntityRaycast( MapRaycastResult& result )
 		}
 
 		if( RangeXY_3D.DoesOverlap( RangeZ_3D ) ) {
-			// hit the entity;
 			result.didImpact = true;
 			FloatRange resultRange = FloatRange::GetIntersectRange( RangeXY_3D, RangeZ_3D );
-
-// 			DebugRaycast
-// 						if( m_isDebug ) {
-// 							Vec3 impactPos1 = result.startPosition + result.forwardNormal * resultRange.minimum;
-// 							Vec3 impactPos2 = result.startPosition + result.forwardNormal * resultRange.maximum;
-// 							AABB3 debugBox1 = AABB3( impactPos1 - Vec3( g_debugSideLength ), impactPos1 + Vec3( g_debugSideLength ) );
-// 							AABB3 debugBox2 = AABB3( impactPos2 - Vec3( g_debugSideLength ), impactPos2 + Vec3( g_debugSideLength ) );
-// 							AppendVertsForAABB3D( m_raycastDebugVerts, debugBox1, g_debugColorX, g_theGame->m_convension );
-// 							AppendVertsForAABB3D( m_raycastDebugVerts, debugBox2, g_debugColorY, g_theGame->m_convension );
-// 							
-// 						}
-
 			float tempImpactDist = resultRange.minimum;
 			if( tempImpactDist < result.impactDistance ) {
 				result.impactDistance = tempImpactDist;
 				result.impactEntity = tempEntity;
 				result.impactPosition = result.startPosition + result.forwardNormal * result.impactDistance;
-				result.impactSurfaceNormal = Vec3::ZERO; // temp
+				result.impactSurfaceNormal = Vec3::ZERO; 
 			}
 		}
 	}
