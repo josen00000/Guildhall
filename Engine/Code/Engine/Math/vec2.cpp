@@ -16,11 +16,14 @@
 
 
 //Static objects
-Vec2 Vec2::ZERO		= Vec2( 0, 0 );
-Vec2 Vec2::ONE		= Vec2( 1, 1 );
-Vec2 Vec2::ZERO_ONE = Vec2( 0, 1 );
-Vec2 Vec2::ONE_ZERO = Vec2( 1, 0 );
-
+Vec2 Vec2::ZERO						= Vec2( 0.f, 0.f );
+Vec2 Vec2::ONE						= Vec2( 1.f, 1.f );
+Vec2 Vec2::ZERO_ONE					= Vec2( 0.f, 1.f );
+Vec2 Vec2::ONE_ZERO					= Vec2( 1.f, 0.f );
+Vec2 Vec2::UP_NORMAL_DIRECTION		= Vec2( 0.f, 1.f );
+Vec2 Vec2::DOWN_NORMAL_DIRECTION	= Vec2( 0.f, -1.f );
+Vec2 Vec2::LEFT_NORMAL_DIRECTION	= Vec2( -1.f, 0.f );
+Vec2 Vec2::RIGHT_NORMAL_DIRECTION	= Vec2( 1.f, 0.f );
 
 //-----------------------------------------------------------------------------------------------
 Vec2::Vec2( const Vec2& copy )
@@ -91,14 +94,12 @@ float Vec2::GetAngleDegrees() const
 
 const Vec2 Vec2::GetRotated90Degrees() const
 {	
-	
 	return GetRotatedRadians(M_PI/2);
 }
 
 const Vec2 Vec2::GetRotatedMinus90Degrees() const
 {
 	return GetRotatedRadians(-M_PI/2);
-
 }
 
 const Vec2 Vec2::GetRotatedRadians( float deltaRadians ) const
@@ -155,7 +156,8 @@ const Vec2 Vec2::GetReflected( const Vec2& normal ) const
 
 std::string Vec2::ToString()
 {	
-	return std::string( "Vec2 x: " + std::to_string( x ) + ".  y: " + std::to_string( y ) );
+	return Stringf( "Vec2 X:%.2f, Y:%.2f", x, y );
+	//return std::string( "Vec2 x: " + std::to_string( x ) + ".  y: " + std::to_string( y ) );
 }
 
 float Vec2::NormalizeAndGetPreviousLength()
@@ -188,8 +190,8 @@ void Vec2::SetAngleRadians( float newAngleRadians ) {
 		
 }
 void Vec2::SetAngleDegrees(float newAngleDegess){
-	const float tem_Len=GetLength();
-	const float tem_Radians=ConvertDegreesToRadians(newAngleDegess);
+	const float tem_Len = GetLength();
+	const float tem_Radians = ConvertDegreesToRadians(newAngleDegess);
 	x=tem_Len*cos( tem_Radians );
 	y=tem_Len*sin( tem_Radians );
 }

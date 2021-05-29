@@ -46,6 +46,7 @@ public:
 	static void BeginFrame();
 
 	static Clock* GetMaster();
+	static float GetMasterDeltaSeconds();
 
 public:
 	bool m_isPause = false;

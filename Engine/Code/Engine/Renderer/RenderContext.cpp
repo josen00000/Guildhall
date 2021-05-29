@@ -3,10 +3,13 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/core/Time/Clock.hpp"
 #include "Engine/Core/Time/Time.hpp"
+#include "Engine/Core/Image.hpp"
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Math/Cylinder3.hpp"
+#include "Engine/Math/Polygon2.hpp"
+#include "Engine/Math/ConvexPoly2.hpp"
 #include "Engine/Platform/Window.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
@@ -22,7 +25,6 @@
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
-#include "Engine/Core/Image.hpp"
 #include "Engine/Renderer/Material.hpp"
 //third party library
 #include "Engine/stb_image.h"
@@ -61,7 +63,7 @@ void RenderContext::StartUp( Window* window )
 	m_sceneDataUBO		= new RenderBuffer( "test3", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 	m_dissolveUBO		= new RenderBuffer( "test4", this, UNIFORM_BUFFER_BIT, MEMORY_HINT_DYNAMIC );
 
-	m_defaultSampler = new Sampler( this, SAMPLER_POINT );
+	m_defaultSampler = new Sampler( this, SAMPLER_BILINEAR );
 
 	m_texDefaultColor = CreateTextureFromColor( Rgba8::WHITE );
 	m_texDefaultNormal = CreateTextureFromVec4( Vec4( 0.5f, 0.5f, 1.f, 1.f ) );
@@ -171,7 +173,6 @@ void RenderContext::BeginCamera( Camera* camera, Convention convention/*=X_RIGHT
 	SetDiffuseTexture( nullptr ); //default white texture;
 	SetNormalTexture( nullptr ); //default white texture;
 	BindSampler( nullptr );
-
 }
 
 void RenderContext::BeginCameraViewport( IntVec2 viewPortSize )
@@ -300,12 +301,39 @@ Texture* RenderContext::CreateRenderTarget( IntVec2 texSize )
 	desc.CPUAccessFlags		= 0;
 	desc.MiscFlags			= 0;
 
+
 	ID3D11Texture2D* texHandle = nullptr;
 	m_device->CreateTexture2D( &desc, nullptr, &texHandle );
 
 	Texture* newTexture = new Texture( this, texHandle );
 	return newTexture;
+}
 
+Texture* RenderContext::CreateRenderTargetWithSizeAndData( IntVec2 texSize, void* data )
+{
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width				= texSize.x;
+	desc.Height				= texSize.y;
+	desc.MipLevels			= 1;
+	desc.ArraySize			= 1;
+	desc.Format				= DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count	= 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage				= D3D11_USAGE_DEFAULT; // mip-chains, GPU/DEFAUTE
+	desc.BindFlags			= D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	desc.CPUAccessFlags		= 0;
+	desc.MiscFlags			= 0;
+
+	D3D11_SUBRESOURCE_DATA initialData;
+	initialData.pSysMem = data;
+	initialData.SysMemPitch = texSize.x * 4;
+	initialData.SysMemSlicePitch = 0; // for 3d texture
+
+	ID3D11Texture2D* texHandle = nullptr;
+	m_device->CreateTexture2D( &desc, &initialData, &texHandle );
+
+	Texture* newTexture = new Texture( this, texHandle );
+	return newTexture;
 }
 
 void RenderContext::CopyTexture( Texture* dst, Texture* src )
@@ -361,6 +389,7 @@ Texture* RenderContext::AcquireRenderTargetMatching( Texture* texture )
 
 void RenderContext::ReleaseRenderTarget( Texture* tex )
 {
+	if( tex == nullptr ){ return; }
 	m_renderTargetPool.push_back( tex );
 }
 
@@ -644,6 +673,11 @@ void RenderContext::SetMaterialBuffer( RenderBuffer* ubo )
 	BindUniformBuffer( UBO_MATERIAL_SLOT, ubo );
 }
 
+void RenderContext::SetOffsetBuffer( RenderBuffer* ubo, int index )
+{
+	BindUniformBuffer( UBO_OFFSET_SLOT1 + index, ubo );
+}
+
 void RenderContext::SetDissolveData( Vec3 startColor, Vec3 endColor, float width, float amount )
 {
 	m_dissolveData.burnStartColor = startColor;
@@ -866,6 +900,23 @@ void RenderContext::DrawVertexVector( const std::vector<Vertex_PCU>& vertices )
 	Draw( (int)vertices.size(), 0 );
 }
 
+void RenderContext::DrawIndexedVertexVector( const std::vector<Vertex_PCU>& vertices, const std::vector<uint>& indexes )
+{
+	if( vertices.size() == 0 ) { return;}
+	size_t elementSize = sizeof( Vertex_PCU );
+	size_t bufferByteSize = vertices.size() * elementSize;
+	m_immediateVBO->Update( &vertices[0], bufferByteSize, elementSize );
+
+	// bind
+	BindVertexBuffer( m_immediateVBO );
+
+	IndexBuffer indexBuf = IndexBuffer( "test", this, MEMORY_HINT_DYNAMIC );
+	indexBuf.Update( indexes );
+	BindIndexBuffer( &indexBuf );
+	
+	DrawIndexed( (int)indexes.size() );
+}
+
 void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 {
 	// Update a vertex buffer
@@ -880,21 +931,94 @@ void RenderContext::DrawVertexArray( int vertexNum, Vertex_PCU* vertexes )
 	Draw( vertexNum, 0 );
 }
 
-void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint )
+void RenderContext::DrawPlane2D( Plane2 const& plane, float drawLength, Rgba8 tint )
 {
-	//BindVertexBuffer( m_immediateVBO );
+	Vec2 point = plane.GetDistance() * plane.GetNormal();
+	Vec2 tangent = plane.GetNormal();
+	tangent.Rotate90Degrees();
+	LineSegment2 drawLine( ( point + tangent * drawLength), ( point - tangent * drawLength ));
+	DrawLine( drawLine, 0.5f, tint );
+	DrawLine( point, point + plane.GetNormal(), 0.5f, tint );
+}
+
+void RenderContext::DrawConvexHull( ConvexHull2 const& hull, Rgba8 tint )
+{
+	for( Plane2 plane : hull.m_planes ) {
+		DrawPlane2D( plane, 200.f, tint );
+	}
+}
+
+void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint, const Vec2& uvMin /*= Vec2::ZERO*/, const Vec2& uvMax /*= Vec2::ONE */ )
+{
+	
 	float temZ = 0.f; // set to zero or use default
 	Vertex_PCU temAABB2[6] ={
 		// triangle2
-		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
-		Vertex_PCU( Vec3( bounds.maxs.x, bounds.mins.y, temZ ), tint, Vec2( 1, 0 ) ),
-		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
+		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, uvMin ),
+		Vertex_PCU( Vec3( bounds.maxs.x, bounds.mins.y, temZ ), tint, Vec2( uvMax.x, uvMin.y ) ),
+		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, uvMax ),
 		// triangle2
-		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, Vec2( 0, 0 ) ),
-		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( 0, 1 ) ),
-		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, Vec2( 1, 1 ) ),
+		Vertex_PCU( Vec3( bounds.mins, temZ ), tint,uvMin ),
+		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, uvMax ),
+		Vertex_PCU( Vec3( bounds.mins.x,bounds.maxs.y, temZ ), tint, Vec2( uvMin.x, uvMax.y ) ),
 	};
 	DrawVertexArray( 6, temAABB2 );
+}
+
+void RenderContext::DrawAABB2DWithBound( const AABB2& bounds, const Rgba8& tint, float boundThick, const Rgba8& boundColor )
+{
+	DrawAABB2D( bounds, tint );
+	DrawLine( bounds.mins, Vec2( bounds.maxs.x, bounds.mins.y), boundThick, boundColor );
+	DrawLine( Vec2( bounds.maxs.x, bounds.mins.y), bounds.maxs, boundThick, boundColor );
+	DrawLine( bounds.maxs, Vec2( bounds.mins.x, bounds.maxs.y), boundThick, boundColor );
+	DrawLine( Vec2( bounds.mins.x, bounds.maxs.y), bounds.mins, boundThick, boundColor );
+}
+
+void RenderContext::DrawPolygon2D( Polygon2 polygon, Rgba8 tint )
+{
+	Vec2 centerPos = polygon.m_center;
+	std::vector<Vertex_PCU> tempVertices;
+	for( int i = 0; i < polygon.GetEdgeCount(); i++ ) {
+		LineSegment2 lineSeg = polygon.GetEdge( i );
+		tempVertices.push_back( Vertex_PCU( Vec3( centerPos ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetStartPos() + centerPos ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetEndPos() + centerPos ), tint, Vec2::ZERO ) );
+	}
+	DrawVertexVector( tempVertices );
+}
+
+void RenderContext::DrawPolygon2DWithBound( Polygon2 polygon, Rgba8 tint, float boundThick, Rgba8& boundColor )
+{
+	DrawPolygon2D( polygon, tint );
+	
+ 	for( int i = 0; i < polygon.GetEdgeCount(); i++ ) {
+		LineSegment2 lineSeg = polygon.GetEdgeInWorld( i );
+		DrawLine( lineSeg, boundThick, boundColor );
+	}
+}
+
+void RenderContext::DrawConvexPoly2D( ConvexPoly2 convPoly, Rgba8 tint )
+{
+	std::vector<Vec2> convPolyPoints = convPoly.GetPoints();
+	Vec2 ConvPolyCenter = convPoly.GetCenter();
+	std::vector<Vertex_PCU> tempVertices;
+	for( int i = 0; i < convPolyPoints.size() - 1; i++ ) {
+		tempVertices.push_back( Vertex_PCU( Vec3( ConvPolyCenter ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( convPolyPoints[i] ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( convPolyPoints[i+1] ), tint, Vec2::ZERO ) );
+	}
+	tempVertices.push_back( Vertex_PCU( Vec3( ConvPolyCenter ), tint, Vec2::ZERO ) );
+	tempVertices.push_back( Vertex_PCU( Vec3( convPolyPoints.back() ), tint, Vec2::ZERO ) );
+	tempVertices.push_back( Vertex_PCU( Vec3( convPolyPoints.front() ), tint, Vec2::ZERO ) );
+
+	for( int i = 0; i < convPolyPoints.size() - 1; i++ ) {
+		DrawLine( convPolyPoints[i], convPolyPoints[i+1], 0.2f, Rgba8::RED );
+	}
+	DrawLine( convPolyPoints.back(), convPolyPoints.front(), 0.2f, Rgba8::RED );
+
+	DrawVertexVector( tempVertices );
+
+
 }
 
 void RenderContext::DrawLine( const Vec2& startPoint, const Vec2& endPoint, const float thick, const Rgba8& lineColor )
@@ -907,7 +1031,7 @@ void RenderContext::DrawLine( const LineSegment2& lineSeg, float thick, const Rg
 {
 	//BindVertexBuffer( m_immediateVBO );
 	float halfThick = thick / 2;
-	Vec2 direction = lineSeg.GetDirection();
+	Vec2 direction = lineSeg.GetDisplacement();
 	direction.SetLength( halfThick );
 	Vec2 tem_position = lineSeg.GetEndPos() + direction;
 	Vec2 rightTop = tem_position + (Vec2( -direction.y, direction.x ));
@@ -931,7 +1055,7 @@ void RenderContext::DrawLine( const LineSegment2& lineSeg, float thick, const Rg
 void RenderContext::DrawLineWithHeight( const LineSegment2& lineSeg, float height, float thick, const Rgba8& lineColor )
 {
 	float halfThick = thick / 2;
-	Vec2 direction = lineSeg.GetDirection();
+	Vec2 direction = lineSeg.GetDisplacement();
 	direction.SetLength( halfThick );
 	Vec2 tem_position = lineSeg.GetEndPos() + direction;
 	Vec2 rightTop = tem_position + (Vec2( -direction.y, direction.x ));
@@ -952,7 +1076,7 @@ void RenderContext::DrawLineWithHeight( const LineSegment2& lineSeg, float heigh
 	DrawVertexArray( 6, line );
 }
 
-void RenderContext::DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor )
+void RenderContext::DrawCircle( Vec3 center, float radius, float thick, const Rgba8& circleColor )
 {
 	float degree = 0;
 	float nextDegree = 0;
@@ -960,10 +1084,10 @@ void RenderContext::DrawCircle( Vec3 center, float radiu, float thick, const Rgb
 	for( int i = 0; i < vertexNum; i++ ) {
 		nextDegree = (i + 1) * (360.f / vertexNum);
 		Vec2 startPoint = Vec2();
-		startPoint.SetPolarDegrees( degree, radiu );
+		startPoint.SetPolarDegrees( degree, radius );
 		startPoint += Vec2( center );
 		Vec2 endPoint = Vec2();
-		endPoint.SetPolarDegrees( nextDegree, radiu );
+		endPoint.SetPolarDegrees( nextDegree, radius );
 		endPoint += Vec2( center );
 		degree = nextDegree;
 		DrawLine( startPoint, endPoint, thick, circleColor );

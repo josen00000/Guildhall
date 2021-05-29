@@ -24,7 +24,7 @@ Clock::~Clock()
 
 	for( int i = 0; i < m_children.size(); i++ ) {
 		Clock* tempClock = m_children[i];
-		m_parent->AddChild( tempClock );
+		SELF_SAFE_RELEASE( tempClock );
 	}
 }
 
@@ -117,4 +117,9 @@ void Clock::BeginFrame()
 Clock* Clock::GetMaster()
 {
 	return g_masterClock;
+}
+
+float Clock::GetMasterDeltaSeconds()
+{
+	return (float)g_masterClock->GetLastDeltaSeconds();
 }

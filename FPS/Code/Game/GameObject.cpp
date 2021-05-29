@@ -18,7 +18,11 @@ GameObject::~GameObject()
 
 void GameObject::SetRotation( Vec3 rot )
 {
-	m_trans->SetRotationFromPitchRollYawDegrees( rot );
+	m_trans->SetPitchDegrees( rot.x );
+	m_trans->SetRollDegrees( rot.y );
+	m_trans->SetYawDegrees( rot.z );
+	
+	//SetRotationFromPitchRollYawDegrees( rot );
 }
 
 void GameObject::SetPosition( Vec3 pos )

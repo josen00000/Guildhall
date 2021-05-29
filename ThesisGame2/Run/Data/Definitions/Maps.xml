@@ -1,0 +1,18 @@
+<MapDefinitions>
+
+  <MapDefinition name="level1" width="80" height="40" fillTile="Grass" edgeTile="Wall" startTile="Entry">
+    <MapGenerateSteps>
+      <Room chanceToRun="1" iterations="1" roomsNum="4~4" width="5~7" height="6~8" floorType="Floor" wallType="Wall" doorType="OpenDoor"/>
+
+    </MapGenerateSteps>
+  </MapDefinition>
+  <MapDefinition name="level2" width="80" height="40" fillTile="Grass" edgeTile="Wall" startTile="Entry">
+    <MapGenerateSteps>
+      <Room chanceToRun="1" iterations="1" roomsNum="1~1" width="5~5" height="6~6" floorType="Floor" wallType="Wall" doorType="OpenDoor"/>
+      <Room chanceToRun="1" iterations="1" roomsNum="1~1" width="7~7" height="9~9" floorType="Floor" wallType="Wall" doorType="OpenDoor"/>
+      <Room chanceToRun="1" iterations="1" roomsNum="1~1" width="10~10" height="12~12" floorType="Floor" wallType="Wall" doorType="OpenDoor"/>
+    </MapGenerateSteps>
+  </MapDefinition>
+
+
+</MapDefinitions>

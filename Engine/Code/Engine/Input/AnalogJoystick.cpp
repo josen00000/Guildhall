@@ -42,9 +42,9 @@ void AnalogJoystick::CorrectPosition( Vec2& rawPosition )
 	}
 	
 	//update the degrees and magnitude;
-	m_correctedMagnitude=m_correctedPosition.GetLength();
-	if(m_correctedMagnitude>0){
-		m_correctedDegrees=m_correctedPosition.GetAngleDegrees();
+	m_correctedMagnitude = m_correctedPosition.GetLength();
+	if( m_correctedMagnitude > 0 ){
+		m_correctedDegrees = m_correctedPosition.GetAngleDegrees();
 	}
 	
 	// base on radial

@@ -1010,11 +1010,9 @@ void Map::CheckEntitiesCollision()
 					if(entityTypeIndex1 == entityTypeIndex2 && entityIndex1 == entityIndex2){ continue;}
 					CheckCollisionBetweenTwoEntities(temEntity1, temEntity2);
 				}
-
 			}
 		}
 	}
-
 }
 
 void Map::CheckCollisionBetweenTwoEntities( Entity* a, Entity* b )

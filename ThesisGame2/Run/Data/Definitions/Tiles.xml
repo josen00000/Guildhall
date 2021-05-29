@@ -1,0 +1,54 @@
+<TileDefinitions spriteSheet="Data/Images/Terrain_8x8.png" spriteLayout="8,8">
+
+	<TileDefinition
+		name="Grass"
+		spriteCoords="0,0"
+		allowsWalk="true"
+	/>
+
+  <TileDefinition
+		name="Water"
+		spriteCoords="5,7"
+		allowsWalk="false"
+	/>
+
+  <TileDefinition
+      name="Floor"
+      spriteCoords="1,6"
+      allowsWalk="true"
+	/>
+
+  <TileDefinition
+     name="Wall"
+     spriteCoords="0,4"
+     allowsWalk="false"
+	/>
+
+  <TileDefinition
+       name="Lava"
+       spriteCoords="6,7"
+       allowsWalk="true"
+	/>
+  <TileDefinition
+       name="Entry"
+       spriteCoords="0,7"
+       allowsWalk="true"
+	/>
+  <TileDefinition
+      name="Exit"
+      spriteCoords="1,7"
+      allowsWalk="true"
+	/>
+
+  <TileDefinition
+      name="OpenDoor"
+      spriteCoords="0,6"
+      allowsWalk="true"
+	/>
+  <TileDefinition
+      name="LockedDoor"
+      spriteCoords="0,5"
+      allowsWalk="false"
+	/>
+
+</TileDefinitions>

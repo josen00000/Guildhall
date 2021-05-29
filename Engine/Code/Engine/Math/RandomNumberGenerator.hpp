@@ -4,6 +4,7 @@
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Math/Vec3.hpp"
 
+struct AABB2;
 //constexpr long MAX_RAND_NOT_INCLUSIVE = UINT32_MAX + 1;  
 
 class RandomNumberGenerator {
@@ -21,8 +22,8 @@ public:
 	bool	RollPercentChance( float probabilityOfReturningTrue );
 	int		Rand();
 	Vec2	RollRandomVec2InRange(const Vec2& minInclusive, const Vec2& maxInclusive );
+	Vec2	RollPositionInBox(const AABB2& box );
 	Vec3	RollRandomVec3InRange(const Vec3& minInclusive, const Vec3& maxInclusive );
-
 
 public:
 	int m_seed = 0;

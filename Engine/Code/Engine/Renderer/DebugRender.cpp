@@ -30,7 +30,7 @@ static float g_basisCylinderLength = 0.7f;
 static float g_basisConeLength = 0.3f;
 static float g_basisCylinderRadius = 0.01f;
 static float g_basisConeRadius = 0.05f;
-static float g_defaultTextSize = 2.f;
+static float g_defaultTextSize = 1.5f;
 
 static Vec2 g_screenMax = Vec2( 1.f, 1.f );
 static Vec2 g_screenMin = Vec2::ZERO;
@@ -767,7 +767,7 @@ void DebugAddScreenText( Vec4 pos, Vec2 pivot, float size, Rgba8 startColor, Rgb
 	Vec2 textBoxMin = screenBox.GetPointAtUV( Vec2( pos.x, pos.y ) ) + Vec2( pos.z, pos.w ); 
 	AABB2 textBox = AABB2( textBoxMin, ( textBoxMin + textDimension ) );
 	Vec2 offset = textBox.GetPointAtUV( pivot );
-	g_defaultDebugFont->AddVertsForTextInBox2D( vertices, textBox, size, text, Rgba8::WHITE );
+	g_defaultDebugFont->AddVertsForTextInBox2D( vertices, textBox, size, text, startColor );
 
 
 	DebugRenderObject* textObject = DebugRenderObject::CreateObjectWithVertices( vertices, startColor, startColor, endColor, endColor, g_clock, duration );
@@ -820,6 +820,15 @@ void DebugAddScreenTextf( Vec4 pos, Vec2 pivot, Rgba8 color, const char* format,
 	DebugAddScreenText( pos, pivot, g_defaultTextSize, color, color, 0.f, result );
 }
 
+void DebugAddScreenStrings( Vec4 pos, Vec2 pivot, float size, Rgba8 color, Strings strings )
+{
+	
+	for( int i = 0; i < strings.size(); i++ ) 
+	{
+		DebugAddScreenText( pos + Vec4( 0.f, 0.f, 0.f, -i * size ), pivot, size, color, color, 0.f, strings[i].c_str() );
+	}
+}
+
 void DebugAddScreenLeftAlignText( float relativeY, float absoluteY, Vec2 pivot, Rgba8 color, float duration, std::string text )
 {
 	DebugAddScreenText( Vec4( 0.f, relativeY, 0.f, absoluteY ), pivot, g_defaultTextSize, color, color, duration, text );
@@ -844,6 +853,11 @@ void DebugAddScreenLeftAlignTextf( float relativeY, float absoluteY, Vec2 pivot,
 	va_end( args );
 	//float textWidth = g_defaultDebugFont->GetWidthForText2D( g_defaultTextSize, result );
 	DebugAddScreenText( Vec4( 0.f, relativeY, 0.f, absoluteY ), pivot, g_defaultTextSize, color, color, 0.f, result );
+}
+
+void DebugAddScreenLeftAlignStrings( float relativeY, float absoluteY, Rgba8 color, Strings strings )
+{
+	DebugAddScreenStrings( Vec4( 0.f, relativeY, 0.f, absoluteY ), Vec2::ZERO, g_defaultTextSize, color, strings );
 }
 
 void DebugAddScreenBasis( Vec2 screenOriginLocation, Mat44 basisToRender, Rgba8 startTint, Rgba8 endTint, float duration )
@@ -937,7 +951,7 @@ bool DebugRenderCommandAddScreenTextEvent( EventArgs& args )
 {
 	Vec2 position		= args.GetValue( std::to_string( 0 ), Vec2::ZERO );
 	Vec2 pivot			= args.GetValue( std::to_string( 1 ), Vec2::ZERO );
-	std::string text	= args.GetValue( std::to_string( 2 ), "" );
+	std::string text	= args.GetValue( std::to_string( 2 ), std::string() );
 
 	Vec4 pos = Vec4( position.x, position.y, 0.f, 0.f );
 	DebugAddScreenText( pos, pivot, 5.f, g_defaultColor, g_defaultColor, 5.f, text );

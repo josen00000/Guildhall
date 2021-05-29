@@ -5,8 +5,11 @@
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/Vertex_PCUTBN.hpp"
 #include "Engine/Math/Mat44.hpp"
+#include "Engine/Math/Plane2.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
+#include "Engine/Math/ConvexHull2.hpp"
+
 
 class BitmapFont;
 class Camera;
@@ -25,7 +28,9 @@ class Window;
 class Material;
 
 struct AABB2;
+struct ConvexPoly2;
 struct Cylinder3;
+struct Polygon2;
 struct D3D11_RASTERIZER_DESC;
 struct ID3D11BlendState;
 struct ID3D11Buffer;
@@ -59,6 +64,10 @@ enum BufferSlot {
 	UBO_SCENE_DATA_SLOT,
 	UBO_MATERIAL_SLOT,
 	UBO_DISSOLVE_SLOT,
+	UBO_OFFSET_SLOT1,
+	UBO_OFFSET_SLOT2,
+	UBO_OFFSET_SLOT3,
+	UBO_OFFSET_SLOT4,
 };
 
 enum TextureSlot: uint{
@@ -221,8 +230,13 @@ public:
 	void ClearState();
 	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 	
+	// Accessor
+	ID3D11DeviceContext* GetContext(){ return m_context; }
+	ID3D11Device* GetDevice(){ return m_device; }
+
 	// new for render target
 	Texture* CreateRenderTarget( IntVec2 texSize );
+	Texture* CreateRenderTargetWithSizeAndData( IntVec2 texSize, void* data );
 	void CopyTexture( Texture* dst, Texture* src );
 	void ApplyEffect( Texture* dst, Texture* src, Material* mat );
 	void StartEffect( Texture* dst, Texture* src, Shader* shader, RenderBuffer* ubo );
@@ -258,6 +272,7 @@ public:
 	void SetSpecularPow( float pow );
 	void SetModelAndSpecular( Mat44 model, float factor, float pow );
 	void SetMaterialBuffer( RenderBuffer* ubo );
+	void SetOffsetBuffer( RenderBuffer* ubo, int index );
 	void SetDissolveData( Vec3 startColor, Vec3 endColor, float width, float amount );
 	void SetTintColor( Vec4 color );
 	void SetTintColor( Rgba8 color );
@@ -280,12 +295,19 @@ public:
 	void DrawMesh( GPUMesh* mesh );
 
 	void DrawVertexVector( const std::vector<Vertex_PCU>& vertices );
+	void DrawIndexedVertexVector( const std::vector<Vertex_PCU>& vertices, const std::vector<uint>& indexes );
 	void DrawVertexArray( int vertexNum, Vertex_PCU* vertexArray );
-	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint );
+	void DrawPlane2D( Plane2 const& plane, float DrawLength, Rgba8 tint );
+	void DrawConvexHull( ConvexHull2 const& hull, Rgba8 tint );
+	void DrawAABB2D( const AABB2& bounds, const Rgba8& tint, const Vec2& uvMin = Vec2::ZERO, const Vec2& mvMax = Vec2::ONE );
+	void DrawAABB2DWithBound( const AABB2& bounds, const Rgba8& tint, float boundThick, const Rgba8& boundColor );
+	void DrawPolygon2D( Polygon2 polygon, Rgba8 tint );
+	void DrawPolygon2DWithBound( Polygon2 polygon, Rgba8 tint, float boundThick, Rgba8& boundColor );
+	void DrawConvexPoly2D( ConvexPoly2 convPoly, Rgba8 tint );
 	void DrawLine( const Vec2& startPoint, const Vec2&endPoint, const float thick, const Rgba8& lineColor );
 	void DrawLine( const LineSegment2& lineSeg, float thick, const Rgba8& lineColor );
 	void DrawLineWithHeight( const LineSegment2& lineSeg, float height, float thick, const Rgba8& lineColor );
-	void DrawCircle( Vec3 center, float radiu, float thick, const Rgba8& circleColor );
+	void DrawCircle( Vec3 center, float radius, float thick, const Rgba8& circleColor );
 	void DrawFilledCircle( Vec3 center, float radiu, const Rgba8& filledColor );
 
 	// 3d Draw

@@ -1,16 +1,21 @@
 #pragma once
 #include <math.h>
+#include <stack>
+#include <algorithm>
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/Mat44.hpp"
+#include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/Vec2.hpp"
 #include "Engine/Math/Vec3.hpp"
-#include "Engine/Math/IntVec2.hpp"
 #include "Engine/Math/OBB2.hpp"
 #include "Engine/Math/AABB2.hpp"
+#include "Engine/Math/Polygon2.hpp"
 #include "Engine/Math/FloatRange.hpp"
+#include "Engine/Math/Plane2.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Core/ErrorWarningAssert.hpp"
 
 
 #define _USE_MATH_DEFINES 
@@ -72,15 +77,35 @@ Vec2 GetNormalDirectionWithDegrees( const float degrees )
 	return Vec2( normalDirectionX, normalDirectionY );
 }
 
+float GetIntDistance2D( IntVec2 const& a, IntVec2 const& b )
+{
+	IntVec2 disp = a - b;
+	return disp.GetLength();
+}
+
 float RangeMapFloat(const float inStart, const float inEnd, const float outStart, const  float outEnd, const float inValue )
 {
-	float inDisplacement=inValue-inStart;
-	float inRange=inEnd-inStart;
-	float outRange=outEnd-outStart;
-	float fraction=inDisplacement/inRange;
-	float outDisplacement=outRange*fraction;
-	float outValue=outStart+outDisplacement;
+	float inDisplacement = inValue-inStart;
+	float inRange = inEnd - inStart;
+	float outRange = outEnd - outStart;
+	if( inStart == inEnd ) {
+		ERROR_RECOVERABLE( " range map float not vaild! inRange == 0 ");
+	}
+	float fraction = inDisplacement / inRange;
+	float outDisplacement = outRange * fraction;
+	float outValue = outStart + outDisplacement;
 	return outValue;
+}
+
+float ClampRangeMapFloat( const float inStart, const float inEnd, const float outStart, const float outEnd, float inValue )
+{
+	if( inValue < inStart ) {
+		inValue = inStart;
+	}
+	else if( inValue > inEnd ) {
+		inValue = inEnd;
+	}
+	return RangeMapFloat( inStart, inEnd, outStart, outEnd, inValue );
 }
 
 Vec3 RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 inValue )
@@ -98,6 +123,34 @@ Vec2 RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 ou
 	result.x = RangeMapFloat( inStart, inEnd, outStart.x, outEnd.x, inValue );
 	result.y = RangeMapFloat( inStart, inEnd, outStart.y, outEnd.y, inValue );
 	return result;
+}
+
+Vec2 ClampRangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue )
+{
+	Vec2 result;
+	result.x = ClampRangeMapFloat( inStart, inEnd, outStart.x, outEnd.x, inValue );
+	result.y = ClampRangeMapFloat( inStart, inEnd, outStart.y, outEnd.y, inValue );
+	return result;
+}
+
+Vec2 RangeMapPointFromBoxToBox( AABB2 inBox, AABB2 outBox, Vec2 inPoint )
+{
+	Vec2 uvPoint = inBox.GetUVForPoint( inPoint );
+	return outBox.GetPointAtUV( uvPoint );
+}
+
+Polygon2 RangeMapPolygonFromBoxToBox( AABB2 inBox, AABB2 outBox, Polygon2 inPolygon )
+{
+	std::vector<Vec2> inPolyPoints;
+	std::vector<Vec2> outPolyPoints;
+	
+	inPolygon.GetAllVerticesInWorld( inPolyPoints );
+	for( int i = 0; i < inPolyPoints.size(); i++ ) {
+		Vec2 outPoint = RangeMapPointFromBoxToBox( inBox, outBox, inPolyPoints[i] );
+		outPolyPoints.push_back( outPoint );
+	}
+
+	return Polygon2( outPolyPoints );
 }
 
 float ClampFloat( float inMin, float inMax, float inValue )
@@ -220,6 +273,23 @@ float GetDistanceSquared2D( const Vec2& positionA, const Vec2& positionB ){
 	const float dis_Y=positionB.y-positionA.y;
 	return dis_X*dis_X+dis_Y*dis_Y;
 }
+
+float GetSignedDistanceSquared2D( const Vec2& positionA, const Vec2& positionB, const Vec2& reference )
+{
+	const float dis_X = positionB.x - positionA.x;
+	const float dis_Y = positionB.y - positionA.y;
+	Vec2 dispAB = positionB - positionA;
+	Vec2 dispAR = reference - positionA;
+	float DP_AB_AR = DotProduct2D( dispAB , dispAR );
+	float result = ( dis_X * dis_X ) + ( dis_Y * dis_Y );
+	if( DP_AB_AR > 0 ) {
+		return result;
+	}
+	else {
+		return -result;
+	}
+}
+
 float GetDistance3D( const Vec3& positionA, const Vec3& positionB ){
 	const float dis_X=positionB.x-positionA.x;
 	const float dis_Y=positionB.y-positionA.y;
@@ -285,6 +355,11 @@ float GetShortestAngularDisplacement( float inDegree, float targetDegree )
 		displacement=-(360-displacement);
 	}
 	return displacement;
+}
+
+float GetQuadraticSum( float a, float b )
+{
+	return (( a * a ) + ( b * b ));
 }
 
 int GetTaxicabDistance2D( const IntVec2& a, const IntVec2& b )
@@ -527,15 +602,15 @@ Vec2 GetNearestPointOnAABB2D( const Vec2& point, const AABB2& square )
 	return nearestPoint;
 }
 
-void PushDiscOutOfDisc2D( Vec2& centerIn, float radiuIn, const Vec2& centerFix, float radiuFix )
+void PushDiscOutOfDisc2D( Vec2& pushedCenter, float pushedradius, const Vec2& pushCenter, float pushRadius )
 {
-	Vec2 direction=centerIn-centerFix;
-	float dis=direction.NormalizeAndGetPreviousLength();
-	if( dis > (radiuIn + radiuFix) ) {
+	Vec2 direction = pushedCenter - pushCenter;
+	float dis = direction.NormalizeAndGetPreviousLength();
+	if( dis > ( pushedradius + pushRadius ) ) {
 		return;
 	}
-	float pushDis=radiuIn+radiuFix-dis;
-	centerIn+=direction*pushDis;
+	float pushDis = pushedradius + pushRadius - dis;
+	pushedCenter += direction * pushDis;
 }
 
 /*
@@ -601,7 +676,7 @@ bool IsPointInSector( const Vec2& point, const Vec2& center, float radius, Vec2 
 
 }
 
-bool IsPointInDisc( const Vec2& point, const Vec2& center, float radius )
+bool IsPointInsideDisc( const Vec2& point, const Vec2& center, float radius )
 {
 	float distance = GetDistance2D( point, center );
 	if( distance > radius ) { return false; }
@@ -641,6 +716,12 @@ bool IsPointInForwardSector2D( const Vec2& point, const Vec2& observerPos, float
 	else{
 		return false;
 	}
+}
+
+bool IsPointForwardOfPoint2D( const Vec2& point, const Vec2& observerPoint, Vec2 const& forwardDirt )
+{
+	Vec2 disp = point - observerPoint;
+	return DotProduct2D( forwardDirt, disp ) > 0;
 }
 
 float GetAngleDegreesBetweenVectors2D( const Vec2& vectorA, const Vec2& vectorB )
@@ -787,6 +868,24 @@ bool IsMat44MostlyEqual( Mat44 a, Mat44 b, float epsilon/*=0.01f */ )
 	return true;
 }
 
+bool IsPlaneMostlyEqual( Plane2 a, Plane2 b, float epsilon/*=0.001f */ )
+{
+	return IsVec2MostlyEqual( a.GetNormal(), b.GetNormal(), epsilon ) && IsFloatMostlyEqual( a.GetDistance(), b.GetDistance() );
+}
+
+bool IsLineSeg2MostlyEqual( LineSegment2 a, LineSegment2 b, float epsilon/*=0.01f */ )
+{
+	if( IsVec2MostlyEqual( a.GetStartPos(), b.GetStartPos(), epsilon ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetEndPos(), epsilon ) ) {
+		return true;
+	}
+	else if ( IsVec2MostlyEqual( a.GetStartPos(), b.GetEndPos(), epsilon ) && IsVec2MostlyEqual( a.GetEndPos(), b.GetStartPos(), epsilon ) ) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c )
 {
 	Vec2 ab = b - a;
@@ -796,5 +895,132 @@ float GetAreaOfTriangle( Vec2 a, Vec2 b, Vec2 c )
 		area = - area;
 	}
 	return area;
+}
+
+Vec2 GetIntersectionPointOfTwoStraightLines( Vec2 pointAInLineA, Vec2 pointBInLineA, Vec2 pointAInLineB, Vec2 pointBInLineB )
+{
+	float a1 = pointBInLineA.y - pointAInLineA.y;
+	float b1 = pointAInLineA.x - pointBInLineA.x;
+	float c1 = a1 * pointAInLineA.x + b1 * pointAInLineA.y;
+
+	float a2 = pointBInLineB.y - pointAInLineB.y;
+	float b2 = pointAInLineB.x - pointBInLineB.x;
+	float c2 = a2 * pointAInLineB.x + b2 * pointAInLineB.y;
+
+	float determinant = a1 * b2 - a2 * b1;
+
+	if( determinant == 0 ) {
+		return Vec2( NAN, NAN );
+	}
+	else {
+		Vec2 result;
+		result.x = ( ( b2 * c1 ) - ( b1 * c2) ) / determinant;
+		result.y = ( ( a1 * c2 ) - ( a2 * c1) ) / determinant;
+		return result;
+	}
+}
+
+Vec2 GetIntersectionPointOfTwoStraightLines( LineSegment2 lineA, LineSegment2 lineB )
+{
+	return GetIntersectionPointOfTwoStraightLines( lineA.GetStartPos(), lineA.GetEndPos(), lineB.GetStartPos(), lineB.GetEndPos() );
+}
+
+bool GetIntersectionPointOfTwoLineSegments( Vec2& point, LineSegment2 lineA, LineSegment2 lineB )
+{
+	point = GetIntersectionPointOfTwoStraightLines( lineA, lineB );
+	return lineA.IsPointMostlyInEdge( point );
+}
+
+bool SortCompareFunc( const std::pair<float, Vec2>& a, const std::pair<float, Vec2>& b ) {
+	return ( a.first < b.first );
+}
+
+std::pair<Vec2, Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AABB2 box )
+{
+	LineSegment2 boxBottom	= LineSegment2( box.mins, Vec2( box.maxs.x, box.mins.y ) );
+	LineSegment2 boxTop		= LineSegment2( Vec2( box.mins.x, box.maxs.y ), box.maxs );
+	LineSegment2 boxLeft	= LineSegment2( box.mins, Vec2( box.mins.x, box.maxs.y ) );
+	LineSegment2 boxRight	= LineSegment2( Vec2( box.maxs.x, box.mins.y ), box.maxs );
+
+	std::pair<Vec2, Vec2> result;
+	if( line.GetStartPos().y == line.GetEndPos().y ) {
+		Vec2 pointA = GetIntersectionPointOfTwoStraightLines( boxLeft, line );
+		Vec2 pointB = GetIntersectionPointOfTwoStraightLines( boxRight, line );
+		result.first = pointA;
+		result.second = pointB;
+	}
+	else if( line.GetStartPos().x == line.GetEndPos().x ) {
+		Vec2 pointA = GetIntersectionPointOfTwoStraightLines( boxBottom, line );
+		Vec2 pointB = GetIntersectionPointOfTwoStraightLines( boxTop, line );
+		result.first = pointA;
+		result.second = pointB;
+	}
+	else {
+		Vec2 pointA = GetIntersectionPointOfTwoStraightLines( boxBottom, line );
+		Vec2 pointB = GetIntersectionPointOfTwoStraightLines( boxTop, line );
+		Vec2 pointC = GetIntersectionPointOfTwoStraightLines( boxLeft, line );
+		Vec2 pointD = GetIntersectionPointOfTwoStraightLines( boxRight, line );
+		Vec2 nearestPointA = box.GetNearestPoint( pointA );
+		Vec2 nearestPointB = box.GetNearestPoint( pointB );
+		Vec2 nearestPointC = box.GetNearestPoint( pointC );
+		Vec2 nearestPointD = box.GetNearestPoint( pointD );
+
+		// TODO debug
+		std::vector<std::pair<float, Vec2>> dists_points;
+		float distSQA =	GetDistanceSquared2D( nearestPointA, pointA );
+		float distSQB = GetDistanceSquared2D( nearestPointB, pointB );
+		float distSQC = GetDistanceSquared2D( nearestPointC, pointC );
+		float distSQD = GetDistanceSquared2D( nearestPointD, pointD );
+
+		dists_points.push_back( std::pair<float, Vec2 >( distSQA, pointA ) );
+		dists_points.push_back( std::pair<float, Vec2 >( distSQB, pointB ) );
+		dists_points.push_back( std::pair<float, Vec2 >( distSQC, pointC ) );
+		dists_points.push_back( std::pair<float, Vec2 >( distSQD, pointD ) );
+ 
+		std::sort( dists_points.begin(), dists_points.end(), SortCompareFunc );
+		result.first = dists_points[0].second;
+		result.second = dists_points[1].second;
+
+		if( result.first == Vec2::ZERO || result.second == Vec2::ZERO ) {
+			ERROR_RECOVERABLE( "intersect point not find. result is default vec2" );
+ 		}
+	}
+	return result;
+}
+
+LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB )
+{
+	Vec2 centerAB = ( pointA + pointB ) / 2;
+	Vec2 dirtAB;
+	if( pointA == pointB ) {
+		ERROR_RECOVERABLE( " can not get perpendicular bisector of same point" );
+	}
+	if( pointA.x == pointB.x ) {
+		dirtAB = Vec2( 1, 0 );
+	}
+	else if( pointA.y == pointB.y ) {
+		dirtAB = Vec2( 0, 1 );
+	}
+	else {
+		dirtAB = pointB - pointA;
+		dirtAB.Normalize();
+		dirtAB.Rotate90Degrees();
+	}
+	LineSegment2 PB_AB = LineSegment2( centerAB, centerAB + dirtAB );
+	return PB_AB; 
+}
+
+LineSegment2 GetAdjacentEdgeOfTwoPolygon( Polygon2 polyA, Polygon2 polyB )
+{
+	for( int i = 0; i < polyA.GetEdgeCount(); i++ ) {
+		LineSegment2 lineA = polyA.GetEdge( i );
+		for( int j = 0; j < polyB.GetEdgeCount(); j++ ) {
+			LineSegment2 lineB = polyB.GetEdge( j );
+			if( lineA.IsLineOverlapWith( lineB ) ) {
+				return lineA;
+			}
+		}
+	}
+	return LineSegment2();
 }
 

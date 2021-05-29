@@ -12,7 +12,6 @@
 
 
 void* FileReadToNewBuffer( std::string const& fileName, size_t* out_size ) {
-	
 	FILE* fp = nullptr;
 	fopen_s( &fp, fileName.c_str(), "r" );
 	GUARANTEE_RECOVERABLE( fp != nullptr, "Create Shader with wrong name." );
@@ -20,16 +19,16 @@ void* FileReadToNewBuffer( std::string const& fileName, size_t* out_size ) {
 
 	fseek( fp, 0, SEEK_END );
 	long file_size = ftell( fp );
-
+	size_t bytes_read = 0;
 	unsigned char* buffer = new unsigned char[file_size + 1];
 	if( nullptr != buffer ) {
 		fseek( fp, 0, SEEK_SET );
-		size_t bytes_read =  fread( buffer, 1, file_size, fp );
+		bytes_read =  fread( buffer, 1, file_size, fp );
 		buffer[bytes_read] = NULL;
 	}
 
 	if( out_size != nullptr ) {
-		*out_size = (size_t)file_size;
+		*out_size = (size_t)bytes_read;
 	}
 
 	fclose( fp );

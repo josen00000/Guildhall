@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="General">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{017fab79-49ae-4dc0-b7ff-69ee311be744}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{e98e7bd5-fec2-46a8-8ec4-c45c65611ec1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Map">
+      <UniqueIdentifier>{24469075-9003-4795-8e1a-2744720fec42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Map\MapGenerator">
+      <UniqueIdentifier>{1edc4308-9088-487b-a700-35454c1cc489}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Actor">
+      <UniqueIdentifier>{0f5ef36c-7b0d-4d55-b1ca-d7bd8eb4e756}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Items">
+      <UniqueIdentifier>{cbf7b5a6-6447-419a-9e52-58bb61e65be8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\CameraSystem">
+      <UniqueIdentifier>{426b7fd9-9d41-4421-a9d5-d8e785582b6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data\shader">
+      <UniqueIdentifier>{71b1018a-df25-436d-bd85-a9fbd9ad7beb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="App.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Main_Windows.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="World.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\MapGenStep.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\Mutator.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\MapDefinition.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\Tile.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\TileDefinition.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\CellularAutomata.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\GenRooms.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\Map.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\Room.cpp">
+      <Filter>Game\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Game\Actor</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Game\Actor</Filter>
+    </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>Game\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\CameraSystem.cpp">
+      <Filter>Game\CameraSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\CameraController.cpp">
+      <Filter>Game\CameraSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>Game\Actor</Filter>
+    </ClCompile>
+    <ClCompile Include="Item.cpp">
+      <Filter>Game\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\PerlinScroll.cpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="App.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCommon.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineBuildPreferences.hpp">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="World.hpp">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\MapGenStep.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\Mutator.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\MapDefinition.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\Tile.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\TileDefinition.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\CellularAutomata.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\GenRooms.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\Map.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\Room.hpp">
+      <Filter>Game\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.hpp">
+      <Filter>Game\Actor</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.hpp">
+      <Filter>Game\Actor</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.hpp">
+      <Filter>Game\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera\CameraSystem.hpp">
+      <Filter>Game\CameraSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera\CameraController.hpp">
+      <Filter>Game\CameraSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.hpp">
+      <Filter>Game\Actor</Filter>
+    </ClInclude>
+    <ClInclude Include="Item.hpp">
+      <Filter>Game\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\PerlinScroll.hpp">
+      <Filter>Game\Map\MapGenerator</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\..\Run\Data\Definitions\Tiles.xml">
+      <Filter>Data</Filter>
+    </Xml>
+    <Xml Include="..\..\Run\Data\Definitions\Maps.xml">
+      <Filter>Data</Filter>
+    </Xml>
+    <Xml Include="..\..\Run\Data\Definitions\Actors.xml">
+      <Filter>Data</Filter>
+    </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\..\Run\Data\Shader\Default.hlsl">
+      <Filter>Data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\multipleCamera.hlsl">
+      <Filter>Data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\VoronoiDiffuse.hlsl">
+      <Filter>Data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\VoronoiStencil.hlsl">
+      <Filter>Data\shader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\..\Run\Data\Shader\boxStencil.hlsl">
+      <Filter>Data\shader</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>

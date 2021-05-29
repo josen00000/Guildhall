@@ -52,6 +52,12 @@
     <Filter Include="Job">
       <UniqueIdentifier>{dd09c0ca-7073-4b08-92e8-ebd50d6d5670}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Math\SpacePartition">
+      <UniqueIdentifier>{69c9286b-3a35-426a-ae9a-d6ea9e981edc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\imgui">
+      <UniqueIdentifier>{fbe000d6-7b0d-4598-baeb-12b0aa7733db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer\Camera.cpp">
@@ -249,9 +255,6 @@
     <ClCompile Include="Physics\PolygonCollider2D.cpp">
       <Filter>physics</Filter>
     </ClCompile>
-    <ClCompile Include="Physics\RaycastResult.cpp">
-      <Filter>physics</Filter>
-    </ClCompile>
     <ClCompile Include="Physics\RigidBody2D.cpp">
       <Filter>physics</Filter>
     </ClCompile>
@@ -294,9 +297,6 @@
     <ClCompile Include="Core\Delegate.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Convention.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="Job\Job.cpp">
       <Filter>Job</Filter>
     </ClCompile>
@@ -305,6 +305,39 @@
     </ClCompile>
     <ClCompile Include="Job\JobSystemWorkerThread.cpp">
       <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\ConvexHull2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\ConvexPoly2.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\ShapeUtils.cpp">
+      <Filter>Math\shape</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics\RaycastResult2.cpp">
+      <Filter>physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Math\SpacePartition\SymmetricQuadTree.cpp">
+      <Filter>Math\SpacePartition</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_draw.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_impl_dx11.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_impl_win32.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_tables.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_widgets.cpp">
+      <Filter>ThirdParty\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -533,9 +566,6 @@
     <ClInclude Include="Physics\PolygonCollider2D.hpp">
       <Filter>physics</Filter>
     </ClInclude>
-    <ClInclude Include="Physics\RaycastResult.hpp">
-      <Filter>physics</Filter>
-    </ClInclude>
     <ClInclude Include="Physics\RigidBody2D.hpp">
       <Filter>physics</Filter>
     </ClInclude>
@@ -581,9 +611,6 @@
     <ClInclude Include="Core\ConsumableDelegate.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Convention.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Job\Job.hpp">
       <Filter>Job</Filter>
     </ClInclude>
@@ -592,6 +619,45 @@
     </ClInclude>
     <ClInclude Include="Job\JobSystemWorkerThread.hpp">
       <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\ConvexHull2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\ConvexPoly2.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\ShapeUtils.hpp">
+      <Filter>Math\shape</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics\RaycastResult2.hpp">
+      <Filter>physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Math\SpacePartition\SymmetricQuadTree.hpp">
+      <Filter>Math\SpacePartition</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imconfig.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imgui.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imgui_impl_dx11.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imgui_impl_win32.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imgui_internal.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imstb_rectpack.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imstb_textedit.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imstb_truetype.h">
+      <Filter>ThirdParty\imgui</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

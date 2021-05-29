@@ -5,6 +5,7 @@
 #include "Engine/Core/Rgba8.hpp"
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/Vec4.hpp"
+#include "Engine/Math/AABB2.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
@@ -85,7 +86,7 @@ void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float a
 {
 	m_dimension.x = topRight.x - bottomLeft.x;
 	m_dimension.y = topRight.y - bottomLeft.y;
-	m_projection = Mat44::CreateOrthographicProjectionMatrix( Vec3( bottomLeft, 0.f ), Vec3( topRight, -1.f ), aspectRatio );
+	m_projection = Mat44::CreateOrthographicProjectionMatrix( Vec3( bottomLeft, 10.f ), Vec3( topRight, -10.f ), aspectRatio );
 }
 
 void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float nearZ, float farZ, float aspectRatio )
@@ -98,6 +99,25 @@ void Camera::SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float n
 Vec3 Camera::GetPosition() const
 {
 	return m_transform.GetPosition();
+}
+
+Vec2 Camera::GetPosition2D() const
+{
+	return (Vec2)GetPosition();
+}
+
+Vec2 Camera::GetBottomLeftWorldPos2D() const
+{
+	Vec2 pos = GetPosition2D();
+	pos -= ( m_dimension / 2 );
+	return pos;
+}
+
+Vec2 Camera::GetTopRightWorldPos2D() const
+{
+	Vec2 pos = GetPosition2D();
+	pos += ( m_dimension / 2 );
+	return pos;
 }
 
 Vec3 Camera::GetForwardDirt( Convention convension ) const
@@ -118,6 +138,13 @@ Vec3 Camera::GetUpDirt( Convention convension ) const
 RenderContext* Camera::GetRenderContext() const
 {
 	return m_rctx;
+}
+
+AABB2 Camera::GetWorldBox() const
+{
+	Vec2 min = GetBottomLeftWorldPos2D();
+	Vec2 max = GetTopRightWorldPos2D();
+	return AABB2( min, max );
 }
 
 float Camera::GetOutputAspectRatio()
@@ -164,18 +191,38 @@ void Camera::SetPosition( const Vec3& position )
 	m_transform.SetPosition( position );
 }
 
+void Camera::SetPosition2D( const Vec2& pos )
+{
+	m_transform.SetPosition( Vec3( pos ) );
+}
+
+void Camera::SetCenterPosition2D( Vec2 pos )
+{
+	pos = pos - ( m_dimension / 2 ) ;
+	m_transform.SetPosition( Vec3( pos ) );
+}
+
+
 void Camera::SetRenderContext( RenderContext* ctx )
 {
 	m_rctx = ctx;
 }
+// 
+// void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f */ )
+// {
+// 	float aspectRatio = GetOutputAspectRatio();
+// 	Vec2 extents = Vec2( aspectRatio * height * 0.5f, height * 0.5f );
+// 	Vec3 min = Vec3( -extents, nearZ );
+// 	Vec3 max = Vec3( extents, farZ );
+// 	m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max, aspectRatio );
+// }
 
-void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f */ )
+void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f*/, float aspectRatio /*= 1.f */ )
 {
-	float aspectRatio = GetOutputAspectRatio();
 	Vec2 extents = Vec2( aspectRatio * height * 0.5f, height * 0.5f );
 	Vec3 min = Vec3( -extents, nearZ );
 	Vec3 max = Vec3( extents, farZ );
-	//m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max );
+	m_projection = Mat44::CreateOrthographicProjectionMatrix( min, max, aspectRatio );
 }
 
 void Camera::SetUseDepth( bool useDepth )
@@ -228,7 +275,7 @@ void Camera::DisableClearStencil()
 void Camera::SetColorTarget( Texture* colorTarget, uint slot )
 {
 	if( slot >= m_colorTargets.size() ) {
-		m_colorTargets.resize( slot +1 );
+		m_colorTargets.resize( slot + 1 );
 	}
 	m_colorTargets[slot] = colorTarget;
 }
@@ -329,20 +376,13 @@ void Camera::UpdateCameraYaw( float deltaYaw )
 
 Vec3 Camera::ClientToWorld( Vec2 client, float ndcZ )const
 {
-	Vec3 ndc = RangeMapVec3(  Vec3::ZERO, Vec3::ONE, Vec3( -1.f, -1.f, 0 ), Vec3( 1.f, 1.f, 1.f ),Vec3( client, ndcZ) );
+	Vec3 ndc = RangeMapVec3(  Vec3::ZERO, Vec3::ONE, Vec3( -1.f, -1.f, 0 ), Vec3( 1.f, 1.f, 1.f ),Vec3( client, ndcZ ) );
 
 	Mat44 proj = GetProjectionMatrix();
 	Mat44 worldToClip = proj;
 	worldToClip.Multiply( GetViewMatrix() );
 
 	Mat44 clipToWorld = worldToClip.GetInvertMatrix(); // no bug
-	Mat44 test = clipToWorld;
-	test.Multiply( worldToClip );
-
-	test = GetViewMatrix();
-
-
-
 	Vec4 worldHomogenous = clipToWorld.TransformHomogeneousPoint3D( Vec4( ndc.x, ndc.y, ndc.z, 1.f) );
 	Vec3 worldPos;
 	worldPos.x = worldHomogenous.x / worldHomogenous.w;
@@ -354,7 +394,15 @@ Vec3 Camera::ClientToWorld( Vec2 client, float ndcZ )const
 
 Vec3 Camera::WorldToClient( Vec3 worldPos )
 {
-	return Vec3::ZERO;
+	Mat44 worldToClip = GetProjectionMatrix();
+	worldToClip.Multiply( GetViewMatrix() );
+	Vec4 screenPos = worldToClip.TransformHomogeneousPoint3D( Vec4( worldPos, 0.f) );
+	return screenPos.getVec3();
+}
+
+Vec2 Camera::WorldToScreen2D( Vec2 worldPos )
+{
+	return Vec2::ZERO;
 }
 
 void Camera::UpdateViewMatrix( Convention convention )
@@ -365,9 +413,19 @@ void Camera::UpdateViewMatrix( Convention convention )
  	{
  	case X_RIGHT_Y_UP_Z_BACKWARD:
  		m_view = Mat44();
+		m_view.RotateZDegrees( -m_transform.GetRollDegrees() );
+		m_view.RotateXDegrees( -m_transform.GetPitchDegrees() );
+		m_view.RotateYDegrees( -m_transform.GetYawDegrees() );
+
+		m_view.Translate3D( -m_transform.GetPosition() );
  		break;
  	case X_FORWARD_Y_LEFT_Z_UP:
  		m_view =  Mat44( Vec3( 0.f, 0.f, -1.f ), Vec3( -1.f, 0.f, 0.f ), Vec3( 0.f, 1.f, 0.f ) );
+		m_view.RotateXDegrees( -m_transform.GetRollDegrees() );
+		m_view.RotateYDegrees( -m_transform.GetPitchDegrees() );
+		m_view.RotateZDegrees( -m_transform.GetYawDegrees() );
+
+		m_view.Translate3D( -m_transform.GetPosition() );
  		break;
  	}
 
@@ -390,17 +448,7 @@ void Camera::UpdateViewMatrix( Convention convention )
 	// squirrel way
 	//m_view = Mat44( Vec3( 0.f, 0.f, -1.f ), Vec3( -1.f, 0.f, 0.f ), Vec3( 0.f, 1.f, 0.f ) );
 	// Apply (anti-)transforms from camera, in reverse order (simulate camera by moving the world oppositely)
-	m_view.RotateXDegrees( -m_transform.GetRollDegrees() );
-	m_view.RotateYDegrees( -m_transform.GetPitchDegrees() );
-	m_view.RotateZDegrees( -m_transform.GetYawDegrees() );
 
-	m_view.Translate3D( -m_transform.GetPosition() );
-// 	if( IsMat44MostlyEqual( m_view, forsethTest ) ) {
-// 		int a = 0;
-// 	}
-// 	else {
-// 		int b = 0;
-// 	}
 }
 
 // Private
@@ -415,4 +463,15 @@ Vec2 Camera::GetOrthoMax() const
 	Vec3 worldPos = ClientToWorld( Vec2( 1.f, 1.f ), 0.f );
 	return Vec2( worldPos );
 
+}
+
+Vec2 Camera::GetCenterPosition2D() const
+{
+	Vec2 pos = GetPosition2D();
+	return pos + ( m_dimension / 2 );
+}
+
+Vec2 Camera::Get2DDimension() const
+{
+	return m_dimension;
 }

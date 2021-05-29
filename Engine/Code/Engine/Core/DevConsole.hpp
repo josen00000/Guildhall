@@ -119,7 +119,7 @@ public:
 	int m_caretIndex;
 	int m_historyCommandIndex;
 	Vec2 m_caretPos;
-	float m_lineHeight = 0.7f;
+	float m_lineHeight = 0.5f;
 	Rgba8 m_defaultColor = Rgba8::WHITE;
 	BitmapFont* m_font	= nullptr;
 	Camera* m_camera	= nullptr;

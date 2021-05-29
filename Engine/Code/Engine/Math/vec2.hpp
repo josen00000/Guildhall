@@ -73,6 +73,7 @@ public:
 	const Vec2	operator*( const Vec2& vecToMultiply ) const;	// vec2 * vec2
 	const Vec2	operator/( float inverseScale ) const;			// vec2 / float
 
+
 	// Operators (self-mutating / non-const)
 	void		operator+=( const Vec2& vecToAdd );				// vec2 += vec2
 	void		operator-=( const Vec2& vecToSubtract );		// vec2 -= vec2
@@ -88,5 +89,9 @@ public:
 	static Vec2 ONE;
 	static Vec2 ZERO_ONE;
 	static Vec2 ONE_ZERO;
+	static Vec2 UP_NORMAL_DIRECTION;
+	static Vec2 DOWN_NORMAL_DIRECTION;
+	static Vec2 LEFT_NORMAL_DIRECTION;
+	static Vec2 RIGHT_NORMAL_DIRECTION;
 };
 

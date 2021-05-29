@@ -43,7 +43,7 @@ void Collider2D::Destroy()
 
 void Collider2D::InitDelegate()
 {
-// 	SubscribeEnterEvent( g_theGame, &Game::OnCollliderEnter );
+ 	//SubscribeEnterEvent( g_theGame, &Game::OnCollliderEnter );
 // 	SubscribeStayEvent( g_theGame, &Game::OnCollliderStay );
 // 	SubscribeLeaveEvent( g_theGame, &Game::OnCollliderLeave );
 // 	SubscribeTriggerEnterEvent( g_theGame, &Game::OnTriggerEnter );
@@ -226,8 +226,8 @@ bool PolygonVSPolygonCollisionCheck( const Collider2D* colA, const Collider2D* c
 	
 	std::vector<Vec2> shapeA;
 	std::vector<Vec2> shapeB;
-	polyColA->m_worldPolygon.GetAllVertices( shapeA );
-	polyColB->m_worldPolygon.GetAllVertices( shapeB );
+	polyColA->m_worldPolygon.GetAllVerticesInWorld( shapeA );
+	polyColB->m_worldPolygon.GetAllVerticesInWorld( shapeB );
 
 	if( GJKIntersectCheck2D( Vec2( 1, 0 ), shapeA, shapeB ) ) {
 		return true;
@@ -281,8 +281,8 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 	std::vector<Vec2> shapeB;
 	std::vector<Vec2> simplex;
 	Manifold2D result;
-	polyColA->m_worldPolygon.GetAllVertices( shapeA );
-	polyColB->m_worldPolygon.GetAllVertices( shapeB );
+	polyColA->m_worldPolygon.GetAllVerticesInWorld( shapeA );
+	polyColB->m_worldPolygon.GetAllVerticesInWorld( shapeB );
 
 	GJKIntersectCheck2DAndGetSimplex( Vec2( 1.f, 0.f ), shapeA, shapeB, simplex );
 
@@ -310,7 +310,7 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
  	if( contacts.size() == 1 ) {
 		result.contact.m_start = tangentMin;
  		result.contact.m_end = tangentMin;
-		if( polyColA->m_worldPolygon.GetDistanceToEdge( tangentMin ) >= 0.2f ) {
+		if( polyColA->m_worldPolygon.GetShortestDistanceToEdge( tangentMin ) >= 0.2f ) {
 			//int test = 1;
 		}
  		return result;
@@ -391,7 +391,7 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 	result.contact.m_start = contactMin;
 	result.contact.m_end = contactMax;
 
-	if( polyColA->m_worldPolygon.GetDistanceToEdge( contactMin ) >= 0.2f || polyColA->m_worldPolygon.GetDistanceToEdge( contactMax ) >= 0.2f ){
+	if( polyColA->m_worldPolygon.GetShortestDistanceToEdge( contactMin ) >= 0.2f || polyColA->m_worldPolygon.GetShortestDistanceToEdge( contactMax ) >= 0.2f ){
 		//int test = 1;
 	}
 

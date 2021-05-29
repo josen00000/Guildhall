@@ -37,14 +37,32 @@ AABB2::AABB2( const IntVec2& intMins, const IntVec2& intMaxs )
 	maxs.y = (float)intMaxs.y;
 }
 
+AABB2::AABB2( Vec2 const& center, float width, float height )
+{
+	Vec2 halfDimension = Vec2( ( width / 2 ), ( height / 2 ) );
+	mins = center - halfDimension;
+	maxs = center + halfDimension;
+}
+
 bool AABB2::IsPointInside( const Vec2& point ) const
 {
-	if(( point.x > mins.x && point.x < maxs.x ) && (point.y > mins.y && point.y < maxs.y )){
+	if(( point.x >= mins.x && point.x <= maxs.x ) && (point.y >= mins.y && point.y <= maxs.y )){
 		return true;
 	}
 	else{
 		return false;
 	}
+}
+
+bool AABB2::IsPointMostInEdge( const Vec2& point ) const
+{
+	if( IsFloatMostlyEqual( point.x, mins.x ) || IsFloatMostlyEqual( point.x, maxs.x ) ) {
+		return( point.y >= mins.y && point.y <= maxs.y );
+	}
+	else if( IsFloatMostlyEqual( point.y, mins.y ) || IsFloatMostlyEqual( point.y, maxs.y ) ) {
+		return( point.x >= mins.x && point.x <= maxs.x );
+	}
+	return false;
 }
 
 const Vec2 AABB2::GetCenter() const
@@ -63,7 +81,7 @@ const Vec2 AABB2::GetDimensions() const
 
 const Vec2 AABB2::GetNearestPoint( const Vec2& referencePosition ) const
 {
-	Vec2 nearestPoint=Vec2();
+	Vec2 nearestPoint;
 	if(referencePosition.x <= mins.x){
 		nearestPoint.x = mins.x;
 	}
@@ -84,6 +102,14 @@ const Vec2 AABB2::GetNearestPoint( const Vec2& referencePosition ) const
 		nearestPoint.y = maxs.y;
 	}
 	return nearestPoint;
+}
+
+const Vec2 AABB2::GetNearestPointInside( const Vec2& refPos ) const
+{
+	AABB2 tempCheckBox = *this;
+	Vec2 dimension = GetDimensions() - Vec2( 5 );
+	tempCheckBox.SetDimensions( dimension );
+	return tempCheckBox.GetNearestPoint( refPos );
 }
 
 const Vec2 AABB2::GetPointAtUV( const Vec2& uvCoordsZeroToOne ) const
@@ -165,10 +191,35 @@ float AABB2::GetInnerRadius() const
 	return result;
 }
 
+float AABB2::GetWidth() const
+{
+	return ( maxs.x - mins.x );
+}
+
+float AABB2::GetHeight() const
+{
+	return ( maxs.y - mins.y );
+}
+
+float AABB2::GetDiagonalLength()
+{
+	float width = GetWidth();
+	float height = GetHeight();
+	float diagonalLength = sqrtf( ( width * width ) + ( height * height ) );
+	return diagonalLength;
+}
+
+float AABB2::GetArea() const
+{
+	return GetWidth() * GetHeight();
+}
+
 void AABB2::GetCornerPositions( Vec2* out_fourPoints ) const
 {
 	out_fourPoints[0] = mins;
-	out_fourPoints[1] = maxs;
+	out_fourPoints[1] = Vec2( mins.x, maxs.y );
+	out_fourPoints[2] = maxs;
+	out_fourPoints[3] = Vec2( maxs.x, mins.y );
 }
 
 void AABB2::Translate( const Vec2& translation )
@@ -208,6 +259,14 @@ void AABB2::StretchToIncludePoint( const Vec2& point )
 	if( nearestPoint.y==maxs.y ) {
 		maxs.y=point.y;
 	}
+}
+
+void AABB2::MoveToIncludePoint( const Vec2& point )
+{
+	Vec2 nearestPoint = GetNearestPoint( point );
+	Vec2 disp = nearestPoint - point;
+	Vec2 center = GetCenter();
+	SetCenter( center - disp );
 }
 
 void AABB2::filledWithinAABB2( const AABB2 filledAABB2 )

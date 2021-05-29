@@ -41,7 +41,6 @@ std::string NamedProperties::GetValue( std::string const& keyName, std::string c
 			return prop->m_value;
 		}
 	}
-
 	return defValue;
 }
 

@@ -1,6 +1,6 @@
 #pragma once
+#include "Engine/Math/Vec3.hpp"
 
-struct Vec3;
 struct Vec2;
 
 struct Vec4
@@ -17,12 +17,16 @@ public:
 	explicit Vec4(float inputX, float inputY, float inputZ, float inputW  );
 	Vec4( Vec2 XY );
 
+	// Accessor
+	Vec3 getVec3() const { return Vec3( x, y, z ); }
+
 	// Mutators
 	void SetFormText(const char* text);
 	void SetXYZ( Vec3 color ); // only use for color
 	void SetW( float intensity ); // only use for intensity
 
 	const Vec4 operator-( const Vec4& vecToSubtract ) const;
+	const Vec4 operator+( const Vec4& vecToAdd ) const;
 	const Vec4 operator*=( float uniformScale ) const;
 
 	// static variable

@@ -50,20 +50,28 @@ public:
 	float	GetCameraHeight() const;
 	float	GetCameraWidth() const;
 	float	GetOutputAspectRatio();
+
 	Vec2	GetOrthoMin() const;
 	Vec2	GetOrthoMax() const;
+	Vec2	GetCenterPosition2D() const;
+	Vec2	Get2DDimension() const;
+
 	Vec3	GetPosition() const;
+	Vec2	GetPosition2D() const;
+	Vec2	GetBottomLeftWorldPos2D() const;
+	Vec2	GetTopRightWorldPos2D() const;
 	Vec3	GetForwardDirt( Convention convension ) const;
 	Vec3	GetLeftDirt( Convention convension ) const;
 	Vec3	GetUpDirt( Convention convension ) const;
 
 	RenderContext* GetRenderContext() const;
 
+	AABB2	GetWorldBox() const; // temp for thesis usage
 	AABB2	GetCameraAsBox() const;
 	ProjectionType GetCameraProjectionType() const{ return m_projectionType; }
 
 	Mat44	GetViewMatrix() const { return m_view; }
-	Mat44	GetUpdatedViewMatrix( Convention convention );
+	Mat44	GetUpdatedViewMatrix( Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
 	Mat44	GetProjectionMatrix() const { return m_projection; }
 	Mat44	GetModelMatrix( Convention convention ) const;
 
@@ -86,10 +94,13 @@ public:
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio );
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float nearZ, float farZ, float aspectRatio );
 	void SetPosition( const Vec3& position );
+	void SetPosition2D( const Vec2& pos );
+	void SetCenterPosition2D( Vec2 pos );
 	
 	void SetRenderContext( RenderContext* ctx );
 
-	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f );
+	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f, float aspectRatio = 1.f );
+	//void SetOrthographicSize( Vec2 size, float nearZ = -1.f, float farZ = 1.f );
 
 	void SetUseDepth( bool useDepth );
 
@@ -109,7 +120,6 @@ public:
 	void SetProjectionPerspective( float fov=60, float nearZ=-0.1, float farZ=-100 );
 
 	void UpdateCameraUBO( Convention convention );
-	void UpdateCameraRotation( Vec3 deltaRot );
 	void UpdateCameraPitch( float deltaPitch );
 	void UpdateCameraRoll( float deltaRoll );
 	void UpdateCameraYaw( float deltaYaw );
@@ -117,6 +127,7 @@ public:
 	// Helper
 	Vec3 ClientToWorld( Vec2 client, float ndcZ ) const;
 	Vec3 WorldToClient( Vec3 worldPos );
+	Vec2 WorldToScreen2D( Vec2 worldPos );
 
 	void UpdateViewMatrix( Convention convention );
 

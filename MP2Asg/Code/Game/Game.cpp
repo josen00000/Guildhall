@@ -175,7 +175,7 @@ void Game::UpdateCameraHeight( float deltaSeconds )
 	float height = RangeMapFloat( 0.f, 100.f, 100.f, 50.f, clampedScroll );
 	std::string heightText = "height text :" + std::to_string( height );
 	DebugAddScreenText( Vec4( 0.f, 1.f, 10.f, -10.f), Vec2::ZERO, 3.f, Rgba8::RED, Rgba8::RED, 0.1f, heightText );
-	m_gameCamera->SetProjectionOrthographic( height );
+	//m_gameCamera->SetProjectionOrthographic( height );
 }
 
 void Game::UpdateCameraPos( float deltaSeconds )

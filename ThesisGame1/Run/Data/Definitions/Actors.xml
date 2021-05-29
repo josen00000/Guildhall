@@ -1,0 +1,38 @@
+<ActorDefinitions>
+
+	<ActorDefinition name="Player" >
+		<Size physicsRadius="0.25" />
+		<Movement speed="5.0"/>
+		<Health max="100"/>
+    <Fight attackStrength ="10"/>
+		<SpriteAnimSet spriteSheet="Data/Images/KushnariovaCharacters_12x53.png" spriteLayout="12,53" >
+			<SpriteAnim name="MoveEast"		spriteIndexes="3,4,5,4"/>
+			<SpriteAnim name="MoveWest"		spriteIndexes="9,10,11,10"/>
+			<SpriteAnim name="MoveNorth"	spriteIndexes="0,1,2,1"/>
+			<SpriteAnim name="MoveSouth"	spriteIndexes="6,7,8,7"/>
+			<SpriteAnim name="Idle"				spriteIndexes="6,7,8,7"/>
+		</SpriteAnimSet>
+	</ActorDefinition>
+  
+  <ActorDefinition name="Clown" >
+    <Size physicsRadius="0.25" />
+    <Movement speed="5.0"/>
+    <Health max="30"/>
+    <Fight attackStrength ="5"/>
+    <SpriteAnimSet spriteSheet="Data/Images/KushnariovaCharacters_12x53.png" spriteLayout="12,53" >
+      <SpriteAnim name="Idle"				spriteIndexes="54,55,56,55"/>
+    </SpriteAnimSet>
+  </ActorDefinition>
+
+  <ActorDefinition name="Ghost" >
+    <Size physicsRadius="0.25" />
+    <Movement speed="5.0"/>
+    <Health max="40"/>
+    <Fight attackStrength ="50"/>
+    <SpriteAnimSet spriteSheet="Data/Images/KushnariovaCharacters_12x53.png" spriteLayout="12,53" >
+      <SpriteAnim name="Idle"				spriteIndexes="66,67,68,67"/>
+    </SpriteAnimSet>
+  </ActorDefinition>
+</ActorDefinitions>
+
+
