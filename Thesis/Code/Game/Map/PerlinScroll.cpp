@@ -23,7 +23,6 @@ void PerlinScroll::RunStepOnce( Map* map ) const
 	std::vector<Tile>& mapTiles = map->GetTiles();
 	int mapWidth = map->GetWidth();
 	int mapHeight = map->GetHeight();
-	RandomNumberGenerator* mapRNG = map->GetRNG();
 	for( int i = 0; i < mapTiles.size(); i++ ) {
 		IntVec2 tileCoords = map->GetTileCoordsWithTileIndex( i );
 		float smoothNoize = Compute1dPerlinNoise( (float)tileCoords.x / 30.f );

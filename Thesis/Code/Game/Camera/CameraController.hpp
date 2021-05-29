@@ -132,12 +132,12 @@ public:
 	void UpdateCameraFrame							();
 
 	// Camera smooth
-	void SmoothMotion								( float deltaSeconds );
+	void SmoothMotion								();
 	float ComputeAsymptoticValueByDeltaDist			( float deltaDist );
 
 	// Multiple camera
-	void UpdateMultipleCameraSettings				( float deltaSeconds );
-	void UpdateMultipleCameraContributionRatio		( float deltaSeconds );
+	void UpdateMultipleCameraSettings				( );
+	void UpdateMultipleCameraContributionRatio		( );
 
 	// split screen
 	void RenderToStencilTexture();
@@ -202,9 +202,9 @@ private:
 	// camera smooth
 	bool m_isSmooth				= true;
 	float m_asymptoticValue		= 0.9f;
-	float m_maxDeltaDist		= 6.f;
-	float m_minAsymptotic		= 0.95f;
-	float m_maxAsymptotic		= 0.995f;
+	float m_maxDeltaDist		= 4.f;
+	float m_minAsymptotic		= 0.90f;
+	float m_maxAsymptotic		= 0.99f;
 
 	// Camera Shake
 	float m_trauma				= 0.f;

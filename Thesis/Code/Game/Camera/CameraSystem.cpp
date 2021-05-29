@@ -1,4 +1,3 @@
-#include <set>
 #include "CameraSystem.hpp"
 #include "Game/Player.hpp"
 #include "Game/Game.hpp"
@@ -13,10 +12,12 @@
 
 //#define DEBUG_MODE
 
+//-------------------------------------------------------------------------------------------------------
 extern Game*			g_theGame;
 extern Camera*			g_gameCamera;
 extern RenderContext*	g_theRenderer;
 
+//-------------------------------------------------------------------------------------------------------
 void CameraSystem::Startup()
 {
 	m_controllers.reserve( 4 );
@@ -26,14 +27,15 @@ void CameraSystem::Startup()
 	m_multipleCameraShader = g_theRenderer->GetOrCreateShader( "data/Shader/multipleCamera.hlsl" );
 }
 
+//-------------------------------------------------------------------------------------------------------
 void CameraSystem::Shutdown()
 {
 	delete m_rng;
-	DestroyAllControllers();
 	m_rng = nullptr;
-	
+	DestroyAllControllers();
 }
 
+//-------------------------------------------------------------------------------------------------------
 void CameraSystem::BeginFrame()
 {
 	m_postVoronoiIteration = 0;
@@ -42,8 +44,10 @@ void CameraSystem::BeginFrame()
 	}
 }
 
+//-------------------------------------------------------------------------------------------------------
 void CameraSystem::EndFrame()
 {
+	// game code. Should not exist in camera system
 	for( int i = 0; i < m_controllers.size(); i++ ) {
 		m_controllers[i]->EndFrame();
 		if( m_controllers[i]->m_player->GetAliveState() == READY_TO_DELETE_CONTROLLER ) {
@@ -57,10 +61,11 @@ void CameraSystem::EndFrame()
 	}
 }
 
+//-------------------------------------------------------------------------------------------------------
 void CameraSystem::Update( float deltaSeconds )
 {
 	UpdateControllers( deltaSeconds );
-	UpdateSplitScreenEffects( deltaSeconds );
+	UpdateSplitScreenEffects();
 	UpdateControllerCameras();
 #ifdef DEBUG_MODE
 	UpdateDebugInfo();
@@ -143,12 +148,13 @@ void CameraSystem::UpdateControllers( float deltaSeconds )
 	}
 }
 
-void CameraSystem::UpdateSplitScreenEffects( float deltaSeconds )
+//-------------------------------------------------------------------------------------------------------
+void CameraSystem::UpdateSplitScreenEffects( )
 {
 	switch( m_splitScreenState )
 	{
 		case NO_SPLIT_SCREEN: {
-			UpdateNoSplitScreenEffect( deltaSeconds );
+			UpdateNoSplitScreenEffect( );
 		}
 		break;
 		case VORONOI_SPLIT: {
@@ -164,33 +170,36 @@ void CameraSystem::UpdateSplitScreenEffects( float deltaSeconds )
 	}
 }
 
-void CameraSystem::UpdateNoSplitScreenEffect( float deltaSeconds )
+//-------------------------------------------------------------------------------------------------------
+void CameraSystem::UpdateNoSplitScreenEffect( )
 {
-	UNUSED (deltaSeconds);
 	if( m_controllers.size() == 0 ){ return; }
+
 	std::vector<CameraController*> notInsideControllers;
-	static int zoomRecoverWaitFrames = 0;
 	switch( m_noSplitScreenStrat )
 	{
 		case NO_STRAT:
 			break;
 		case ZOOM_TO_FIT: {
-			ZoomCameraToFitPlayers();
+			GetNotInsideControllers( notInsideControllers, m_notInsideOutPaddingLength );
+			ZoomCameraToFitPlayers( notInsideControllers );
 			break;
 		}
 		case KILL_AND_TELEPORT: {
-			GetNotInsideControllers( notInsideControllers, -2.f );
+			GetNotInsideControllers( notInsideControllers, m_notInsideInPaddingLength );
 			KillAndTeleportPlayers( notInsideControllers );
 		}
 		break;
 		case COMBINATION_ZOOM_AND_KILL: {
-			ZoomCameraToFitPlayers();
-			GetNotInsideControllers( notInsideControllers, -2.f );
+			GetNotInsideControllers( notInsideControllers, m_notInsideOutPaddingLength );
+			ZoomCameraToFitPlayers( notInsideControllers );
+			GetNotInsideControllers( notInsideControllers, m_notInsideInPaddingLength );
 			KillAndTeleportPlayers( notInsideControllers );
 		}
 	}
 }
 
+//-------------------------------------------------------------------------------------------------------
 void CameraSystem::UpdatePreVoronoiSplitScreenEffect()
 {
 	// initialize
@@ -260,26 +269,6 @@ void CameraSystem::UpdatePostVoronoiSplitScreenEffects()
 		case NO_POST_EFFECT: {
 			for( int i = 0; i < m_controllers.size(); i++ ) {
 				m_controllers[i]->SetVoronoiPolygon( m_controllers[i]->GetOriginalVoronoiPolygon() );
-			}
-		}
-		break;
-		case PUSH_PLANE_AND_REARRANGE_VORONOI_VERTEX: {
-				// 1 find min area voronoi poly
-				// expand convex hull.
-			while( DoesNeedBalanceVoronoiScreen() && m_postVoronoiIteration < m_targetPostVoronoiIteration ) {
-				if( ConstructAllAndIsAnyVoronoiVertex() ) {
-					CameraController*  minAreaController = FindControllerWithMinArea();
-					std::vector<Vec2> voronoiVertexPoss;
-					if( GetAllVoronoiVertexPosWithController( minAreaController, voronoiVertexPoss ) ) {
-						if( !RearrangeVoronoiVertexForMinVoronoiPoly( minAreaController, voronoiVertexPoss ) ) {
-							break;
-						}
-					}
-				}
-				else {
-					ExpandMinVoronoiPoly();
-				}
-				m_postVoronoiIteration++;
 			}
 		}
 		break;
@@ -477,23 +466,6 @@ std::string CameraSystem::GetCameraSnappingStateText() const
 	return " Error state";
 }
 
-std::string CameraSystem::GetCameraShakeStateText() const
-{
-	std::string result = "Camera shake state :";
-	switch( m_cameraShakeState )
-	{
-	case POSITION_SHAKE:
-		return result + std::string( "Position shake." );
-	case ROTATION_SHAKE:
-		return result + std::string( "Rotation shake." );
-	case BLEND_SHAKE:
-		return result + std::string( "Blend shake." );
-	case NUM_OF_SHAKE_STATE:
-		return result +std::string( "Num of camera Shake" );
-	}
-	return "Error state";
-}
-
 std::string CameraSystem::GetSplitScreenStateText() const
 {
 	std::string result = "split screen state : ";
@@ -548,8 +520,6 @@ std::string CameraSystem::GetPostVoronoiSettingText() const {
 	{
 	case NO_POST_EFFECT:
 		return result + "No post voronoi effect";
-	case PUSH_PLANE_AND_REARRANGE_VORONOI_VERTEX:
-		return result + "Average Area post voronoi effect";
 	case BALANCED_VORONOI_DIAGRAM:
 		return result + "Balanced voronoi diagram";
 	case HEALTH_BASED_VORONOI_DIAGRAM:
@@ -571,7 +541,7 @@ std::string CameraSystem::GetVoronoiAreaCheckStateText() const
 	return result + "Error state.";
 }
 
-Vec2 CameraSystem::GetAverageCameraPosition()
+Vec2 CameraSystem::GetAverageCameraPosition() const
 {
 	Vec2 totalPos = Vec2::ZERO;
 	for( int i = 0; i < m_controllers.size(); i++ ) {
@@ -582,7 +552,7 @@ Vec2 CameraSystem::GetAverageCameraPosition()
 	return totalPos;
 }
 
-AABB2 CameraSystem::GetWorldCameraBox()
+AABB2 CameraSystem::GetWorldCameraBox() const
 {
 	Vec2 boxCenter = GetAverageCameraPosition();
 	Vec2 boxDimension = g_gameCamera->Get2DDimension();
@@ -590,7 +560,7 @@ AABB2 CameraSystem::GetWorldCameraBox()
 	return worldCameraBox;
 }
 
-AABB2 CameraSystem::GetVoronoiBox()
+AABB2 CameraSystem::GetVoronoiBox() const
 {
 	Vec2 boxCenter = GetAverageCameraPosition();
 	AABB2 worldCameraBox = AABB2( boxCenter, GAME_CHECK_WIDTH, GAME_CHECK_HEIGHT );
@@ -665,11 +635,6 @@ void CameraSystem::SetCameraWindowState( CameraWindowState newState )
 void CameraSystem::SetCameraSnappingState( CameraSnappingState newState )
 {
 	m_cameraSnappingState = newState;
-}
-
-void CameraSystem::SetCameraShakeState( CameraShakeState newState )
-{
-	m_cameraShakeState = newState;
 }
 
 void CameraSystem::SetSplitScreenState( SplitScreenState newState )
@@ -842,8 +807,6 @@ void CameraSystem::UpdateDebugInfo()
 	std::string debugText				= "Press F1 to enable debug mode.";
 	std::string windowStateText			= "Press F2 to change: " + GetCameraWindowStateText();
 	std::string snappingStateText		= "Press F3 to change: " + GetCameraSnappingStateText(); 
-	std::string shakeStateText			= "Press F4 to change: " + GetCameraShakeStateText();
-	std::string frameStateText			= ""; //"Press F5 to change: " + GetCameraFrameStateText();
 	std::string splitStateText			= "Press F6 to change: " + GetSplitScreenStateText();
 	std::string splitStratText			= "Press F7 to change: ";
 	std::string postVoronoiSettingText	= "Press F8 to change: " + GetPostVoronoiSettingText();
@@ -1016,11 +979,10 @@ void CameraSystem::KillAndTeleportPlayers( std::vector<CameraController*>& vec )
 	}
 }
 
-void CameraSystem::ZoomCameraToFitPlayers()
+//-------------------------------------------------------------------------------------------------------
+void CameraSystem::ZoomCameraToFitPlayers( std::vector<CameraController*>& notInsideControllers )
 {
 	static int zoomRecoverWaitFrames = 0;
-	std::vector<CameraController*> notInsideControllers;
-	GetNotInsideControllers( notInsideControllers, m_notInsidePaddingLength );
 	float goalZoomCameraHeight = 0.f;
 	if( notInsideControllers.size() > 0 ) {
 		goalZoomCameraHeight =	ComputeCameraHeight( notInsideControllers );

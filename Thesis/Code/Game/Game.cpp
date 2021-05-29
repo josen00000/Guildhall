@@ -223,7 +223,7 @@ void Game::UpdateGame( float deltaSeconds )
 void Game::UpdateFrameRate( float deltaSeconds )
 {
 	float frameRate = 1.f / deltaSeconds;
-	//DebugAddScreenRightAlignTextf( 0.95f, 0.f, Vec2::ZERO, Rgba8::WHITE, "Frame Rate is : %.2f", frameRate );
+	DebugAddScreenRightAlignTextf( 0.95f, 0.f, Vec2::ZERO, Rgba8::WHITE, "Frame Rate is : %.2f", frameRate );
 }
 
 void Game::UpdateUI( )
@@ -654,6 +654,7 @@ void Game::InitializeMapSetting( int mapIndex )
 
 bool Game::DisableCentralize( EventArgs& args )
 {
+	UNUSED( args );
 	g_theCameraSystem->SetCameraSnappingState( NO_CAMERA_SNAPPING );
 	return true;
 }

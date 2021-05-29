@@ -21,9 +21,7 @@ extern RenderContext*	g_theRenderer;
 extern Camera*			g_gameCamera;
 extern Game*			g_theGame;
 
-
 Texture* CameraController::s_stencilTexture = nullptr;
-
 
 CameraController::CameraController( CameraSystem* owner, Player* player, Camera* camera )
 	:m_owner( owner )
@@ -57,8 +55,6 @@ void CameraController::BeginFrame()
 CameraController::~CameraController()
 {
 	// leave map delete player
-	// leave camera to future
-	//delete m_timer;
 	SELF_SAFE_RELEASE(m_offsetBuffer);
 	SELF_SAFE_RELEASE(m_voronoiOffsetBuffer);
 	SELF_SAFE_RELEASE(m_timer);
@@ -73,8 +69,8 @@ void CameraController::Update( float deltaSeconds )
 	UpdateCameraWindow( deltaSeconds );
 	UpdateCameraFrame( );
 	UpdateCameraShake( deltaSeconds );
-	UpdateMultipleCameraSettings( deltaSeconds );
-	SmoothMotion(deltaSeconds);
+	UpdateMultipleCameraSettings( );
+	SmoothMotion( );
 	BoundCameraPosInsideWindow();
 }
 
@@ -492,7 +488,7 @@ void CameraController::UpdateCameraFrame( )
 	m_goalCameraPos = ( m_fwdVelFocusRatio * fwdGoalPos ) + ( m_aimFocusRatio * projectGoalPos ) + ( m_cueFocusRatio * cueGoalPos );
 }
 
-void CameraController::SmoothMotion( float deltaSeconds )
+void CameraController::SmoothMotion()
 {
 	m_smoothedGoalCameraPos = m_goalCameraPos;
 	if( !m_isSmooth ){ 	return; }
@@ -508,16 +504,15 @@ float CameraController::ComputeAsymptoticValueByDeltaDist( float deltaDist )
 	return result;
 }
 
-void CameraController::UpdateMultipleCameraSettings( float deltaSeconds )
+void CameraController::UpdateMultipleCameraSettings()
 {
 	if( !m_ismultipleFactorStable ) {
-		UpdateMultipleCameraContributionRatio( deltaSeconds );
+		UpdateMultipleCameraContributionRatio( );
 	}
 }
 
-void CameraController::UpdateMultipleCameraContributionRatio( float deltaSeconds )
+void CameraController::UpdateMultipleCameraContributionRatio( )
 {
-	UNUSED(deltaSeconds);
 	float currentContributionSeconds = m_contributionRatioStableSeconds - (float)m_timer->GetSecondsRemaining();
 	float smoothValue = 0.f;
 	smoothValue = currentContributionSeconds / m_contributionRatioStableSeconds;

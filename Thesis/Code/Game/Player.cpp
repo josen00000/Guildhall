@@ -158,7 +158,6 @@ void Player::HandleInput( float deltaSeconds, int playerIndex )
 		}
 		break;
 	case AI_INPUT:
-		break; // temp disable ai moving for debug TODO: delete this line
 		CheckAIState();
 		switch( m_aiState )
 		{

@@ -7,13 +7,18 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Renderer/Camera.hpp"
 
+//////////////////////////////////////////////////////////////////////////
+// Definitions
+//////////////////////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------------------------------------------
 typedef	std::pair<Vec2, std::vector<CameraController*>> VoronoiVertexAndControllersPair;
-//typedef std::pair<CameraController*, float> ControllerVoronoiSplitBlendCoeff;
 
 class Player;
 class Camera;
 class RandomNumberGenerator;
 
+//-------------------------------------------------------------------------------------------------------
 enum eDebugBitFlag : uint {
 	DEBUG_NONE						= 0,
 	DEBUG_CAMERA_WINDOW_BIT			=	BIT_FLAG(0),
@@ -22,12 +27,15 @@ enum eDebugBitFlag : uint {
 	DEBUG_VORONOI_ANCHOR_POINT_BIT	=	BIT_FLAG(3),
 };
 
+//-------------------------------------------------------------------------------------------------------
 enum CameraWindowState: unsigned int {
 	NO_CAMERA_WINDOW = 0,
 	USE_CAMERA_WINDOW,
 	NUM_OF_CAMERA_WINDOW_STATE,
 };
 
+
+//-------------------------------------------------------------------------------------------------------
 enum CameraSnappingState : unsigned int {
 	NO_CAMERA_SNAPPING = 0,
 	POSITION_SNAPPING,
@@ -36,22 +44,7 @@ enum CameraSnappingState : unsigned int {
 	NUM_OF_CAMERA_SNAPPING_STATE
 };
 
-enum CameraShakeState : unsigned int {
-	POSITION_SHAKE = 0,
-	ROTATION_SHAKE,
-	BLEND_SHAKE,
-	NUM_OF_SHAKE_STATE
-};
-
-enum CameraFrameState : unsigned int {
-	NO_FRAMEING = 0,
-	FORWARD_VELOCITY_FRAMING,
-	AIM_FRAMING,
-	CUE_FRAMING,
-	BLEND_FRAMING,
-	NUM_OF_FRAME_STATE
-};
-
+//-------------------------------------------------------------------------------------------------------
 enum SplitScreenState : unsigned int {
 	NO_SPLIT_SCREEN = 0,
 	AXIS_ALIGNED_SPLIT,
@@ -59,6 +52,7 @@ enum SplitScreenState : unsigned int {
 	NUM_OF_SPLIT_SCREEN_STATE,
 };
 
+//-------------------------------------------------------------------------------------------------------
 enum NoSplitScreenStrat : unsigned int {
 	NO_STRAT = 0,
 	ZOOM_TO_FIT,
@@ -67,6 +61,7 @@ enum NoSplitScreenStrat : unsigned int {
 	NUM_OF_NO_SPLIT_SCREEN_STRAT
 };
 
+//-------------------------------------------------------------------------------------------------------
 enum DebugMode: unsigned int {
 	CONTROLLER_INFO = 0,
 	VORONOI_INFO,
@@ -74,20 +69,22 @@ enum DebugMode: unsigned int {
 	NUM_OF_DEBUG_MODE
 };
 
+//-------------------------------------------------------------------------------------------------------
 enum PostVoronoiSetting : unsigned int{
 	NO_POST_EFFECT = 0,
-	PUSH_PLANE_AND_REARRANGE_VORONOI_VERTEX,
 	BALANCED_VORONOI_DIAGRAM,
 	HEALTH_BASED_VORONOI_DIAGRAM,
 	NUM_OF_POST_VORONOI_SETTING
 };
 
+//-------------------------------------------------------------------------------------------------------
 enum VoronoiAreaCheckState : unsigned int {
 	POLYGON_AREA,
 	INCIRCLE_RADIUS,
 	NUM_OF_AREA_CHECK_STATE
 };
 
+//-------------------------------------------------------------------------------------------------------
 class CameraSystem {
 public:
 	CameraSystem(){}
@@ -101,8 +98,8 @@ public:
 	void Update( float deltaSeconds );
 	void Render();
 	void UpdateControllers( float deltaSeconds );
-	void UpdateSplitScreenEffects( float deltaSeconds );
-	void UpdateNoSplitScreenEffect( float deltaSeconds );
+	void UpdateSplitScreenEffects( );
+	void UpdateNoSplitScreenEffect( );
 	void UpdatePreVoronoiSplitScreenEffect();	// different split dicision, confirm the voronoi cells for cameraController
 	void UpdateVoronoiSplitScreenEffect();		// Construct the convexhull for each camera
 	void UpdatePostVoronoiSplitScreenEffects();	// Get voronoi poly base on convexhull and do area average.
@@ -113,7 +110,7 @@ public:
 
 	// Accessor
 	bool GetIsDebug() const { return m_isdebug; }
-	bool GetAllowMergeVoronoi()	const{ return m_doesAllowVoronoiMerge; }
+	bool GetAllowMergeVoronoi()	const { return m_doesAllowVoronoiMerge; }
 	int GetControllersNum() const { return (int)m_controllers.size(); }
 	int GetPostVoronoiIterationNum() const { return m_postVoronoiIteration; }
 	float GetTotalFactor() const ; 
@@ -125,7 +122,9 @@ public:
 	float GetPositionalShakeMaxDist() const;
 	float GetRotationalShakeMaxDeg() const;
 	Vec2 GetCameraWindowSize() const;
-	Vec2 GetSystemCameraPosition() const { return m_noSplitCamera->GetPosition2D(); }
+	Vec2 GetAverageCameraPosition() const;
+	AABB2 GetWorldCameraBox() const;
+	AABB2 GetVoronoiBox() const;
 
 	// Debug flags
 	bool GetDoesDebugCameraWindow() const;
@@ -134,27 +133,21 @@ public:
 
 	std::string GetCameraWindowStateText() const;
 	std::string GetCameraSnappingStateText() const;
-	std::string GetCameraShakeStateText() const;
 	std::string GetSplitScreenStateText() const;
 	std::string GetNoSplitScreenStratText() const;
 	std::string GetDebugModeText() const;
 	std::string GetPostVoronoiSettingText() const;
 	std::string GetVoronoiAreaCheckStateText() const;
 
-	//const char** GetAllCameraWindowText() const;
 	bool					GetDoesUseCameraFrame()	 const { return m_doesUseCameraFrame; }
 	CameraWindowState		GetCameraWindowState() const { return m_cameraWindowState; }
 	CameraSnappingState		GetCameraSnappingState() const { return m_cameraSnappingState; }
-	CameraShakeState		GetCameraShakeState() const { return m_cameraShakeState; }
 	SplitScreenState		GetSplitScreenState() const { return m_splitScreenState; }
 	NoSplitScreenStrat		GetNoSplitScreenStrat() const { return m_noSplitScreenStrat; }
 	PostVoronoiSetting		GetPostVoronoiSetting() const { return m_postVoronoiSetting; }
 	VoronoiAreaCheckState	GetVoronoiAreaCheckState() const { return m_voronoiAreaCheckState; }
-	DebugMode			GetDebugMode() const { return m_debugMode; }
+	DebugMode				GetDebugMode() const { return m_debugMode; }
 
-	Vec2 GetAverageCameraPosition();
-	AABB2 GetWorldCameraBox();
-	AABB2 GetVoronoiBox();
 
 	Camera*				GetNoSplitCamera() { return m_noSplitCamera; }
 	CameraController*	GetCameraControllerWithPlayer( Player* player );
@@ -171,7 +164,6 @@ public:
 	void SetDoesUseCameraFrame( bool doesUseFrame );
 	void SetCameraWindowState( CameraWindowState newState );
 	void SetCameraSnappingState( CameraSnappingState newState );
-	void SetCameraShakeState( CameraShakeState newState );
 	void SetSplitScreenState( SplitScreenState newState );
 	void SetNoSplitScreenStrat( NoSplitScreenStrat newStrat ); 
 	void SetDebugMode( DebugMode newMode );
@@ -215,7 +207,7 @@ public:
 	void GetNotInsideControllers( std::vector<CameraController*>& vec, float insidePaddingLength );
 	bool CheckIfZoomStable( float stablePaddingLength );
 	void KillAndTeleportPlayers( std::vector<CameraController*>& vec );
-	void ZoomCameraToFitPlayers();
+	void ZoomCameraToFitPlayers( std::vector<CameraController*>& notInsideControllers );
 	float ComputeCameraHeight( std::vector<CameraController*> const& vec );
 
 		// Axis Aligned split screen
@@ -276,8 +268,7 @@ private:
 	bool					m_doesUseCameraFrame	= false;
 	CameraWindowState		m_cameraWindowState		= NO_CAMERA_WINDOW;
 	CameraSnappingState		m_cameraSnappingState	= NO_CAMERA_SNAPPING;
-	CameraShakeState		m_cameraShakeState		= POSITION_SHAKE;
-	SplitScreenState		m_splitScreenState		= NO_SPLIT_SCREEN; // Temp for demo TODO: change back
+	SplitScreenState		m_splitScreenState		= NO_SPLIT_SCREEN;
 	NoSplitScreenStrat		m_noSplitScreenStrat	= NO_STRAT;
 	DebugMode				m_debugMode				= CONTROLLER_INFO;
 	PostVoronoiSetting		m_postVoronoiSetting	= NO_POST_EFFECT;
@@ -286,7 +277,8 @@ private:
 
 
 	// no split settings
-	float m_notInsidePaddingLength			= 3.f;
+	float m_notInsideOutPaddingLength		= 3.f;
+	float m_notInsideInPaddingLength		= -2.f;
 	float m_zoomStablePaddingLength			= 4.f;
 	float m_idealCameraHeight				= GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y;
 	float m_maxCameraHeight					= ( GAME_CAMERA_MAX_Y - GAME_CAMERA_MIN_Y ) * 1.5f;

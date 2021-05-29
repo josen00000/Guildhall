@@ -1048,6 +1048,7 @@ void Map::CheckPlayerStates()
 
 bool Map::GenerateEnemies( EventArgs& args )
 {
+	UNUSED( args );
 	for( int i = 0; i < 3; i++ ) {
 		Vec2 enemyPos = GetRandomEnemyPos();
 		SpawnNewEnemy( enemyPos );
@@ -1057,7 +1058,7 @@ bool Map::GenerateEnemies( EventArgs& args )
 
 void Map::GenerateBoss()
 {
-	m_boss = Player::SpawnBossWithPos( Vec2( 110.f,15.f ), m_players.size() );	
+	m_boss = Player::SpawnBossWithPos( Vec2( 110.f,15.f ), (int)m_players.size() );	
 	m_boss->SetMap( this ); 
 	m_boss->SetPhysicsRadius( 4.f );
 	g_theCameraSystem->CreateAndPushController( m_boss );
