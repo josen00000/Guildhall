@@ -42,6 +42,7 @@ public:
 	const Vec2 GetNormalized() const;
 	const Vec2 GetReflected(const Vec2& normal) const;
 
+	std::string ToDebugString();
 	std::string ToString();
 
 	// Mutators(non-const methods)

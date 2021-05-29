@@ -103,7 +103,10 @@ $RECYCLE.BIN/
 *.mp4
 *.mp3
 *.wav
+<<<<<<< HEAD
 
+=======
+>>>>>>> SD3/asg5
 
 # EXAMPLES
 # Don't ignore all files with `obj` extension underneat `build` folder, including subfolders

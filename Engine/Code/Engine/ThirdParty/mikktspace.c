@@ -33,6 +33,10 @@
 
 #include "mikktspace.h"
 
+#pragma warning(disable:4204)
+#pragma warning(disable:4456)
+#pragma warning(disable:4201)
+
 #define TFALSE    0
 #define TTRUE     1
 

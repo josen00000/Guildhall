@@ -18,6 +18,14 @@ enum Convention
 	X_RIGHT_Y_UP_Z_BACKWARD
 };
 
+struct DataHeader {
+	std::uint32_t protocol	= 0;
+	std::uint16_t messageID = 0;
+	std::uint16_t messageLen = 0;
+	std::uint32_t messageSeq = 0;
+};
+
+
 typedef unsigned int uint;
 typedef unsigned char byte;
 
@@ -27,6 +35,7 @@ extern BitmapFont* g_defaultFont;
 extern NamedStrings g_gameConfigBlackboard;
 extern Convention g_convention;
 
+<<<<<<< HEAD
 constexpr float LONGEST_RAYCAST_DETECT_DIST = 1000.f;
 
 const Vec2 ALIGN_BOTTOM_LEFT	= Vec2( 0.f, 0.f);
@@ -42,3 +51,9 @@ const Vec2 ALIGN_TOP_CENTER		= Vec2( 0.5f, 1.f );
 const Vec2 ALIGN_TOP_RIGHT		= Vec2( 1.f, 1.f);
 
 constexpr int MAX_LIGHTS_NUM = 8;
+
+// network
+constexpr int NET_BUFFER_SIZE		= 520;
+constexpr int NET_MESSAGE_SIZE		= 512;
+constexpr int TCP_HEADER_PROTOCOL	= 12345678;
+constexpr int UDP_HEADER_PROTOCOL	= 87654321;

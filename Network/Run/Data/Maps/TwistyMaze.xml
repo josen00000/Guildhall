@@ -1,0 +1,26 @@
+<MapDefinition type="TileMap" version="2" dimensions="8,8">
+
+	<Legend>
+		<Tile glyph="#" regionType="CobblestoneWall"/>
+		<Tile glyph="W" regionType="WoodWall"/>
+		<Tile glyph="." regionType="StoneFloor"/>
+		<Tile glyph="," regionType="GrassFloor"/>
+	</Legend>
+	<MapRows>
+		<MapRow tiles="WWWW####"/>
+		<MapRow tiles="W,,,.#.#"/>
+		<MapRow tiles="###,#..#"/>
+		<MapRow tiles="#..,#.##"/>
+		<MapRow tiles="#.#,#..#"/>
+		<MapRow tiles="###,##.#"/>
+		<MapRow tiles="#,,,...#"/>
+		<MapRow tiles="########"/>
+	</MapRows>
+	<Entities>
+		<PlayerStart pos="1.5,1.5" yaw="0"/>
+    <Actor type="Pinky" pos="3.5,1.5" yaw="180"/>
+	</Entities>
+
+</MapDefinition>
+
+

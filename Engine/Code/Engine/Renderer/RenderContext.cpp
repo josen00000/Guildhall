@@ -953,7 +953,7 @@ void RenderContext::DrawAABB2D( const AABB2& bounds, const Rgba8& tint, const Ve
 	
 	float temZ = 0.f; // set to zero or use default
 	Vertex_PCU temAABB2[6] ={
-		// triangle2
+		// triangle1
 		Vertex_PCU( Vec3( bounds.mins, temZ ), tint, uvMin ),
 		Vertex_PCU( Vec3( bounds.maxs.x, bounds.mins.y, temZ ), tint, Vec2( uvMax.x, uvMin.y ) ),
 		Vertex_PCU( Vec3( bounds.maxs, temZ ), tint, uvMax ),
