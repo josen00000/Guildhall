@@ -35,7 +35,6 @@ extern BitmapFont* g_defaultFont;
 extern NamedStrings g_gameConfigBlackboard;
 extern Convention g_convention;
 
-<<<<<<< HEAD
 constexpr float LONGEST_RAYCAST_DETECT_DIST = 1000.f;
 
 const Vec2 ALIGN_BOTTOM_LEFT	= Vec2( 0.f, 0.f);

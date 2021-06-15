@@ -623,7 +623,7 @@ void Game::Render() const
 	// sd a09
 	if( m_isUsingGrayEffect ) {
 		g_grayBuffer->Update( &m_colorData, sizeof(Mat44), sizeof(Mat44) );
-		//g_theRenderer->BindUniformBuffer( 6, g_grayBuffer);
+		g_theRenderer->BindUniformBuffer( 6, g_grayBuffer);
 		//g_theRenderer->SetMaterialBuffer( g_grayBuffer );
 		TestImageEffect( grayScaleTex, colorTarget, m_grayShader, g_grayBuffer );
 	}
@@ -654,7 +654,7 @@ void Game::Render() const
 		g_theRenderer->CopyTexture( backBuffer, grayScaleTex );
 	}
 	else {
-		g_theRenderer->CopyTexture( backBuffer, colorTarget );
+		//g_theRenderer->CopyTexture( backBuffer, colorTarget );
 	}
 
 	g_theRenderer->ReleaseRenderTarget( colorTarget );
