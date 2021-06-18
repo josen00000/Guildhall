@@ -127,6 +127,9 @@ Vec2 GetGJK2DManifold( std::vector<Vec2>& simplex, const std::vector<Vec2>& shap
 		Vec2 direction;
 		if( IsVec2MostlyEqual( closestPoint, Vec2::ZERO ) ){
 			int edgeIndex = polySimplex.GetEdgeIndexWithPoint( closestPoint );	
+			if( edgeIndex == -1 ) {
+				int a = 0;
+			}
 			direction = polySimplex.GetEdgeNormal( edgeIndex );
 		}
 		else {
