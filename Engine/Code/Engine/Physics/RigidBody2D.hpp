@@ -92,6 +92,7 @@ public:
 	// help
 	void DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
 	void DebugRender( RenderContext* ctx );
+	NamedProperties m_userProperties;
 
 private:
 	bool m_isDestroyed	= false;
@@ -114,7 +115,6 @@ private:
 	SimulationMode m_mode = RIGIDBODY_DYNAMIC;
 	Physics2D*	m_system	= nullptr;
 	Collider2D* m_collider	= nullptr;
-	NamedProperties m_userProperties;
 };
 
 template<typename T>

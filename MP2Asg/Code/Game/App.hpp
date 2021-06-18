@@ -1,6 +1,7 @@
 #pragma once
-#include<Engine/Math/vec2.hpp>
-#include<Game/GameCommon.hpp>
+#include "Engine/Math/vec2.hpp"
+#include "Game/GameCommon.hpp"
+#include <windows.h>
 
 
 class Game;
@@ -24,6 +25,8 @@ public:
 	void HandleKeyPressed( unsigned char inValue );
 	void HandleKeyReleased( unsigned char inValue );
 	void ResetGame();
+	bool DoesUseIMGUI() const { return false; }
+	void handleIMGUIInput( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam );
 
 private:
 	void Update( float deltaSeconds );

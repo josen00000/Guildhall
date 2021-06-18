@@ -50,6 +50,8 @@ GameObject::~GameObject()
 void GameObject::CheckIfMouseIn( Vec2 mousePos )
 {
 	Collider2D* col = m_rb->GetCollider();
+	if( col == nullptr ) { 
+		return; }
 	switch( col->m_type )
 	{
 		case COLLIDER2D_DISC: {

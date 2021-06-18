@@ -601,6 +601,11 @@ void Game::CreateContactTestObjects()
 	GameObject* testCubeObject = new GameObject( cubePoints );
 	GameObject* testTriObject = new GameObject( triPoints );
 	testTriObject->m_rb->SetLayer( 1 );
+	g_thePhysics->EnableLayerInteraction( 0, 1 );
+
+	testCubeObject->m_rb->m_userProperties.SetValue("GameObject", *testTriObject );
+	GameObject iniObj = GameObject( Vec2::ZERO, 0.f );
+	static GameObject testObj = testCubeObject->m_rb->m_userProperties.GetValue("GameObject",  iniObj );
 	m_gameObjects.push_back( testCubeObject );
 	m_gameObjects.push_back( testTriObject );
 }

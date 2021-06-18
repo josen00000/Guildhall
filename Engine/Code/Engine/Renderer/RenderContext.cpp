@@ -497,7 +497,9 @@ void RenderContext::SetNormalTexture( Texture* texture, int index )
 	if( texture == nullptr ) {
 		BindTexture( m_texDefaultNormal, TEXTURE_NORMAL_SLOT0 + index  );
 	}
-	BindTexture( texture, TEXTURE_NORMAL_SLOT0 + index );
+	else {
+		BindTexture( texture, TEXTURE_NORMAL_SLOT0 + index );
+	}
 }
 
 void RenderContext::SetMaterialTexture( Texture* texture, int index /*= 0 */ )

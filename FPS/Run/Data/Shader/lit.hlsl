@@ -109,8 +109,9 @@ fragment_output_t FragmentFunction( v2f_t input )
 	float4 texture_normal_color = tNormal.Sample( sSampler, input.uv );
 	float3 surface_normal = NormalColorToVector( texture_normal_color ); 
 	float3 final_normal = mul( surface_normal, TBN );
+	//final_normal = normal;
 	float4 object_color = texture_color * input.color;
-
+	//output.color =  float4( final_normal, 1 );
 	// phong model
 	// ambient
 	float3 ambient = SCENE_DATA.ambient_light.xyz * SCENE_DATA.ambient_light.w;
@@ -122,6 +123,8 @@ fragment_output_t FragmentFunction( v2f_t input )
 	float3 bloom = ComputeBloomAt( input.world_pos, final_normal, object_color );
 
 	fragment_output_t output;
+	//output.color = float4( final_color.xyz, object_color.w  );
+	float3 normal_color = VectorToNormalColor( final_normal );
 	output.color = float4( final_color.xyz, object_color.w  );
 	output.bloom = float4( bloom,  1 );
 	output.normal = float4( ( final_normal + float3( 1, 1, 1 ) ) * .5f, 1 );

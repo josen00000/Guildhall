@@ -896,9 +896,11 @@ void Game::Updatea08Objects( float deltaSeconds )
 
 void Game::Rendera08Objects() const
 {
+	g_theRenderer->SetSpecularFactor( m_specularFactor );
 	g_theRenderer->DisableFog();
 	//g_theRenderer->BindShader( nullptr );
 	g_theRenderer->BindShaderState( m_testShaderState );
+	g_theRenderer->SetNormalTexture( nullptr );
 	//g_theRenderer->BindMaterial( m_testMaterial );
 	//g_theRenderer->SetFillMode( RASTER_FILL_WIREFRAME );
 	m_loadObject->Render();
