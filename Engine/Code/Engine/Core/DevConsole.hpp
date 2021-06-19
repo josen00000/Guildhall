@@ -98,6 +98,8 @@ private:
 	void RenderSelectArea() const;
 	void UpdateAbleRenderCaret( float deltaSeconds );
 
+	void RenderBackground() const;
+
 	// History
 	void StartDisplayHistory();
 	void EndDisplayHistory();

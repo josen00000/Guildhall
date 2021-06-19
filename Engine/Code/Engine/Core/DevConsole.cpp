@@ -132,6 +132,7 @@ void DevConsole::Render( RenderContext& renderer ) const
 	// render content
 	// render caret
 	// render select area ( if possible )
+	RenderBackground();
 	AddVertForInput();
 	AddVertForContent();
 	Texture* temTexture = m_font->GetTexture();
@@ -564,6 +565,14 @@ void DevConsole::UpdateAbleRenderCaret( float deltaSeconds )
 		m_ableRenderCaret = false;
 	}
 }
+
+void DevConsole::RenderBackground() const
+{
+	g_theRenderer->SetDiffuseTexture( nullptr );
+	g_theRenderer->DrawAABB2D( m_camera->GetCameraAsBox(), Rgba8( 0, 0, 0, 125 ) );
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 // History
