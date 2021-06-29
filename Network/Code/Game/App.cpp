@@ -272,6 +272,13 @@ void App::ResetGame()
 	Startup();
 }
 
+void App::handleIMGUIInput( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam )
+{
+	UNUSED( windowHandle );
+	UNUSED( wmMessageCode );
+	UNUSED( wParam );
+	UNUSED( lParam );
+}
 
 void App::BeginFrame()
 {

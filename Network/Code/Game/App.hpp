@@ -3,6 +3,8 @@
 #include "Engine/Math/vec2.hpp"
 #include "Game/GameCommon.hpp"
 #include "Engine/Renderer/ObjectReader.hpp"
+#define _WINSOCKAPI_
+#include <windows.h>
 
 class Game;
 class Clock;
@@ -29,6 +31,8 @@ public:
 	void HandleQuitRequested();
 	void HandleDevConsoleInput();
 	void ResetGame();
+	bool DoesUseIMGUI() const { return false; }
+	void handleIMGUIInput( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam );
 	std::string GetWindowsName() const { return m_windowName; }
 
 

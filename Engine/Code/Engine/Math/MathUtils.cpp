@@ -226,6 +226,11 @@ float DotProduct2D( const Vec2 a, const Vec2 b )
 	return a.x * b.x + a.y * b.y;
 }
 
+float DotProduct3D( const Vec3& a, Vec3 const& b )
+{
+	return a.x * b.x + a.y * b.y + a.z * b.z ;
+}
+
 float CrossProduct2D( const Vec2& a, const Vec2& b )
 {
 	return a.x * b.y - b.x * a.y;

@@ -19,5 +19,5 @@ disconnect
 open_udp_port
 send_udp_msg
 connect_to_mul_server
-help
 start_mul_server
+help

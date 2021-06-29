@@ -110,6 +110,7 @@ float		GetFloatFromText(const char* text);
 // product
 // 
 float DotProduct2D(const Vec2 a, const Vec2 b);
+float DotProduct3D( const Vec3& a, Vec3 const& b );
 float CrossProduct2D( const Vec2& a, const Vec2& b );
 float CrossProduct2D( const Vec2& commonPoint, const Vec2& point1, const Vec2& point2 );
 Vec3 CrossProduct3D( const Vec3& a, const Vec3& b );
