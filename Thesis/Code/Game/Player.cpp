@@ -84,6 +84,9 @@ void Player::UpdatePlayer( float deltaSeconds, int playerIndex )
 	}
 
 	UpdatePlayerSpeed( deltaSeconds );
+	if( m_speed > 0 ){
+		int a =  0;
+	}
 	__super::UpdateActor( deltaSeconds, m_color );
 }
 
@@ -159,6 +162,7 @@ void Player::HandleInput( float deltaSeconds, int playerIndex )
 		break;
 	case AI_INPUT:
 		CheckAIState();
+		break;	// temp disable the ai moving
 		switch( m_aiState )
 		{
 		case PLAYER_PATROL:

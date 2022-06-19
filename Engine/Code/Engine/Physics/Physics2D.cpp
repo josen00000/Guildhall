@@ -521,18 +521,18 @@ DiscCollider2D* Physics2D::CreateDiscCollider( Vec2 worldPosition, float radius,
 PolygonCollider2D* Physics2D::CreatePolyCollider( std::vector<Vec2> points, Rigidbody2D* rb /*= nullptr */ )
 {
 	PolygonCollider2D* tempPolyCol = dynamic_cast<PolygonCollider2D*> ( CreateCollider( Collider2DType::COLLIDER2D_POLYGON, rb ) );
-	tempPolyCol->m_localPolygon.SetEdgesFromPoints( points );
+	tempPolyCol->m_localPolygon.SetPoints( points );
 	tempPolyCol->m_worldPolygon = tempPolyCol->m_localPolygon;
 	rb->SetSimulationMode( RIGIDBODY_STATIC );
 	return tempPolyCol;
 }
 
-PolygonCollider2D* Physics2D::CreatePolyCollider( Polygon2 polygon, Rigidbody2D* rb /*= nullptr */ )
+PolygonCollider2D* Physics2D::CreatePolyCollider( ConvexPoly2 polygon, Rigidbody2D* rb /*= nullptr */ )
 {
 	PolygonCollider2D* polyCol = dynamic_cast<PolygonCollider2D*> (CreateCollider( COLLIDER2D_POLYGON, rb ));
 	polyCol->m_localPolygon = polygon;
 	polyCol->m_worldPolygon = polygon;
-	polyCol->m_worldPos = polygon.m_center;
+	polyCol->m_worldPos = polygon.GetCenter();
 	rb->SetSimulationMode( RIGIDBODY_STATIC );
 	return polyCol;
 }

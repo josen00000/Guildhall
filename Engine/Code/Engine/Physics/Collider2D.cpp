@@ -227,8 +227,8 @@ bool PolygonVSPolygonCollisionCheck( const Collider2D* colA, const Collider2D* c
 	
 	std::vector<Vec2> shapeA;
 	std::vector<Vec2> shapeB;
-	polyColA->m_worldPolygon.GetAllVerticesInWorld( shapeA );
-	polyColB->m_worldPolygon.GetAllVerticesInWorld( shapeB );
+// 	polyColA->m_worldPolygon.GetAllVerticesInWorld( shapeA );	//ConvexPoly Not Implemented
+// 	polyColB->m_worldPolygon.GetAllVerticesInWorld( shapeB );	//ConvexPoly Not Implemented
 
 	if( GJKIntersectCheck2D( Vec2( 1, 0 ), shapeA, shapeB ) ) {
 		return true;
@@ -282,8 +282,8 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 	std::vector<Vec2> shapeB;
 	std::vector<Vec2> simplex;
 	Manifold2D result;
-	polyColA->m_worldPolygon.GetAllVerticesInWorld( shapeA );
-	polyColB->m_worldPolygon.GetAllVerticesInWorld( shapeB );
+	polyColA->m_worldPolygon.GetPoints( shapeA );
+	polyColB->m_worldPolygon.GetPoints( shapeB );
 
 	GJKIntersectCheck2DAndGetSimplex( Vec2( 1.f, 0.f ), shapeA, shapeB, simplex );
 
@@ -311,9 +311,6 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
  	if( contacts.size() == 1 ) {
 		result.contact.m_start = tangentMin;
  		result.contact.m_end = tangentMin;
-		if( polyColA->m_worldPolygon.GetShortestDistanceToEdge( tangentMin ) >= 0.2f ) {
-			//int test = 1;
-		}
  		return result;
   	}
 	FloatRange referenceRange = FloatRange(); 
@@ -346,8 +343,18 @@ Manifold2D GetPolyVSPolyManifold( const Collider2D* colA, const Collider2D* colB
 	FloatRange contactRange = FloatRange( referenceRange.minimum - 1.f );
 
 	// get contact point
-	for( int i = 0; i < polyColA->m_worldPolygon.GetEdgeCount(); i++ ) {
-		LineSegment2 checkSeg = polyColA->m_worldPolygon.GetEdgeInWorld( i );
+	std::vector<Vec2> points;
+	polyColA->m_worldPolygon.GetPoints( points );
+
+	for( int i = 0; i < points.size(); i++  ) {
+
+		LineSegment2 checkSeg;
+		if( i == points.size() - 1 ) {
+			checkSeg = LineSegment2( points[i], points[0] );
+		}
+		else {
+			checkSeg = LineSegment2( points[i], points[i + 1] );
+		}
 		LineSegment2 clippedSeg = LineSegment2::ClipSegmentToSegment( checkSeg, referenceSeg );
 
 		if( clippedSeg.GetStartPos() == clippedSeg.GetEndPos() ){ continue; }

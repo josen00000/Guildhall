@@ -34,7 +34,6 @@ enum CameraWindowState: unsigned int {
 	NUM_OF_CAMERA_WINDOW_STATE,
 };
 
-
 //-------------------------------------------------------------------------------------------------------
 enum CameraSnappingState : unsigned int {
 	NO_CAMERA_SNAPPING = 0,
@@ -82,6 +81,14 @@ enum VoronoiAreaCheckState : unsigned int {
 	POLYGON_AREA,
 	INCIRCLE_RADIUS,
 	NUM_OF_AREA_CHECK_STATE
+};
+
+//-------------------------------------------------------------------------------------------------------
+enum VoronoiControllerPositionsState : unsigned int { // three voronoi
+	ALL_SPLIT,
+	ALL_MERGED,
+	TWO_MERGED,
+	BLENDING
 };
 
 //-------------------------------------------------------------------------------------------------------
@@ -218,6 +225,7 @@ public:
 	void ConstructVoronoiDiagramForThreeControllers( AABB2 worldCameraBox, AABB2 voronoiBox, PolyType type );
 	void ConstructVoronoiDiagramForMoreThanThreeControllers( AABB2 worldCameraBox, AABB2 voronoiBox, PolyType type );
 	void UpdateVoronoiPolyAndOffset();
+	void UpdateVoronoiPosState( std::vector<CameraController*>& mergedControllers, std::vector<CameraController*>& blendedControllers );
 	void ConstructVoronoiHullsWithThreePointsInCollinearOrder( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	void ConstructVoronoiHullsWithThreePointsNotCollinear( Vec2 a, Vec2 b, Vec2 c, AABB2 worldCameraBox, ConvexHull2& hullA, ConvexHull2& hullB, ConvexHull2& hullC );
 	
@@ -244,20 +252,24 @@ public:
 	Vec2 GetSplitToMergeBlendingColorTargetOffsetAndBlendingEdges( int controllerIndex, std::vector<edgeAndThickness>& blendingEdgeIndexes );
 	Vec2 GetBlendingColorTargetOffsetAndBlendingEdgeIndexesOfTwoControllers( int controllerIndexA, int controllerIndexB,  std::vector<edgeAndThickness>& edgeIndexes  );
 	Vec2 GetMergedColorTargetOffset( std::vector<int> controllerIndexes );
-	void GetTotalMergedColorTargetOffsetAndMergedPoly( int controllerIndexA, Vec2& mergedColorTargetOffset, Polygon2& mergedPoly );
-	void GetMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly );
-	LineSegment2 GetBlendingEdgeAndMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly );
-	void GetMergedVoronoiPolygonWithThreeControllers( CameraController* a, CameraController* b, CameraController* c,  Polygon2& mergedPoly );
+	void GetTotalMergedColorTargetOffsetAndMergedPoly( int controllerIndexA, Vec2& mergedColorTargetOffset, ConvexPoly2& mergedPoly );
+	void UpdateAllMergedPolyAndOffset();
+	void UpdateAllBlendedPolysAndOffsets();
+	void UpdateAtLeastTwoMergedPoly();
+	void GetMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, ConvexPoly2& mergedPoly );
+	LineSegment2 GetBlendingEdgeAndMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, ConvexPoly2& mergedPoly );
+	void GetMergedVoronoiPolygonWithThreeControllers( CameraController* a, CameraController* b, CameraController* c,  ConvexPoly2& mergedPoly );
 
 
 	// helper function
-	bool GetSharedPointOfVoronoiPolygonABC( Polygon2 polygonA, Polygon2 polygonB, Polygon2 polygonC, Vec2& sharedPoint );
+	bool GetSharedPointOfVoronoiPolygonABC( ConvexPoly2 polygonA, ConvexPoly2 polygonB, ConvexPoly2 polygonC, Vec2& sharedPoint );
 	bool GetAllVoronoiVertexPosWithController( const CameraController* controller, std::vector<Vec2>& vertexPosArray );
 	CameraController* FindCurrentControllerContainsPointWithConstructedCellNum( Vec2 point, int constructedCellNum );
 	CameraController* FindControllerWithMinArea();
 	CameraController* FindControllerWithMinRadius();
 	CameraController* FindNextAdjacentControllerWithPlane( Plane2 plane, std::vector<bool>& controllerCheckStates );
-	void GetMergedPolygonWithTwoPolygonShareOneEdge( const Polygon2& polyA, const Polygon2& polyB, Polygon2& mergedPoly );
+	int FindRenderControllerIndex();
+	void GetMergedPolygonWithTwoPolygonShareOneEdge( const ConvexPoly2& polyA, const ConvexPoly2& polyB, ConvexPoly2& mergedPoly );
 
 private:
 	bool m_isdebug					= false;
@@ -273,6 +285,7 @@ private:
 	DebugMode				m_debugMode				= CONTROLLER_INFO;
 	PostVoronoiSetting		m_postVoronoiSetting	= NO_POST_EFFECT;
 	VoronoiAreaCheckState	m_voronoiAreaCheckState	= POLYGON_AREA;
+	VoronoiControllerPositionsState m_voronoiPosState = ALL_SPLIT;
 	RandomNumberGenerator* m_rng	= nullptr;
 
 

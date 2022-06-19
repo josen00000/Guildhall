@@ -183,12 +183,12 @@ Vec2 CameraController::GetCuePos() const
 	return currentMap->GetCuePos( m_index );
 }
 
-Polygon2 const& CameraController::GetVoronoiPolygon() const 
+ConvexPoly2 const& CameraController::GetVoronoiPolygon() const 
 {
 	return m_voronoiPolygon;
 }
 
-Polygon2 const& CameraController::GetOriginalVoronoiPolygon() const
+ConvexPoly2 const& CameraController::GetOriginalVoronoiPolygon() const
 {
 	return m_originalVoronoiPolygon;
 }
@@ -308,13 +308,13 @@ void CameraController::SetMultipleCameraStableFactorNotStableUntil( float totalS
 	m_contributionRatioStableSeconds = totalSeconds;
 }
 
-void CameraController::SetVoronoiPolygon( Polygon2 const& poly )
+void CameraController::SetVoronoiPolygon( ConvexPoly2 const& poly )
 {
 	m_voronoiPolygon = poly;
 	m_voronoiPolyArea = m_voronoiPolygon.GetArea();
 }
 
-void CameraController::SetOriginalVoronoiPolygon( Polygon2 const& poly )
+void CameraController::SetOriginalVoronoiPolygon( ConvexPoly2 const& poly )
 {
 	m_originalVoronoiPolygon = poly;
 	m_originalVoronoiPolyArea = m_originalVoronoiPolygon.GetArea();
@@ -375,9 +375,9 @@ void CameraController::addBlendingEdgeIndexAndThickness( LineSegment2 const& lin
 
 bool CameraController::ReplaceVoronoiPointWithPoint( Vec2 replacedPoint, Vec2 newPoint )
 {
-	bool result = m_voronoiPolygon.ReplacePointWithPoint( replacedPoint, newPoint );
-	UpdateVoronoiHull();
-	return result;
+// 	bool result = m_voronoiPolygon.ReplacePointWithPoint( replacedPoint, newPoint );
+// 	UpdateVoronoiHull();
+	return true;
 }
 
 void CameraController::SetCameraPos( Vec2 pos )
@@ -573,20 +573,23 @@ void CameraController::RenderToStencilTexture()
 void CameraController::AppendVertsForStencilTexture()
 {
 	AppendVertsForPolygon2D( m_stencilVertices, m_voronoiPolygon, Rgba8::WHITE );
-	for( int i = 0; i <m_voronoiPolygon.m_edges.size(); i++ ) {
+	std::vector<Vec2> points;
+	m_voronoiPolygon.GetPoints( points );
+	for( int i = 0; i < points.size(); i++ ) {
 		float thickness = m_maxedgeThickness;
-		LineSegment2 line = m_voronoiPolygon.GetEdgeInWorld( i );
+		int endIndex = ( i == points.size() - 1 ? 0 : i + 1 );
+		LineSegment2 line = LineSegment2( points[i], points[endIndex] );
 		for( int j = 0; j < m_blendingEdgeAndThickness.size(); j++ ) {
 			if( IsLineSeg2MostlyEqual( m_blendingEdgeAndThickness[j].first, line ) ) {
 				thickness = RangeMapFloat( 0.f, 1.f, m_maxedgeThickness, 0.f, m_blendingEdgeAndThickness[j].second );
 			}
 		}
-		LineSegment2 lineInworld = m_voronoiPolygon.GetEdgeInWorld( i );
-		Vec2 lineDirt = lineInworld.GetNormalizedDirection();
+		LineSegment2 movedLine = line;
+		Vec2 lineDirt = movedLine.GetNormalizedDirection();
 		Vec2 moveDirt = Vec2( -lineDirt.y, lineDirt.x );
-		lineInworld.SetStartPos( lineInworld.GetStartPos() + moveDirt * thickness * 0.4f );
-		lineInworld.SetEndPos( lineInworld.GetEndPos() + moveDirt * thickness * 0.4f );
-		AppendVertsForLineSegment2D( m_stencilVertices, lineInworld, thickness, m_splitScreenEdgeColor );
+		movedLine.SetStartPos( line.GetStartPos() + moveDirt * thickness * 0.4f );
+		movedLine.SetEndPos( line.GetEndPos() + moveDirt * thickness * 0.4f );
+		AppendVertsForLineSegment2D( m_stencilVertices, movedLine, thickness, m_splitScreenEdgeColor );
 	}
 }
 
@@ -665,7 +668,7 @@ void CameraController::ReleaseRenderTarget()
 	g_theRenderer->ReleaseRenderTarget( m_stencilTexture );
 }
 
-bool CameraController::IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, Polygon2 renderArea, AABB2 quickOutBox )
+bool CameraController::IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, ConvexPoly2 renderArea, AABB2 quickOutBox )
 {
  	Vec2 coords_Vec2 = (Vec2)coords;
 
@@ -781,7 +784,7 @@ void CameraController::UpdateVoronoiPoly( PolyType type )
 	switch( type )
 	{
 		case ORIGINAL_POLY: {
-			m_originalVoronoiPolygon		= Polygon2::MakeConvexFromPointCloud( polyPoints );
+			m_originalVoronoiPolygon		= ConvexPoly2::MakeConvexPolyFromPointCloud( polyPoints );
 			m_originalVoronoiPolyArea		= m_originalVoronoiPolygon.GetArea();
 			Vec2 polyCenter					= m_originalVoronoiPolygon.GetCenter();
 			minRadius						= GetMinimumInCircleRadiusForVoronoiHullWithPoint( polyCenter );
@@ -790,7 +793,7 @@ void CameraController::UpdateVoronoiPoly( PolyType type )
 		}
 			break;
 		case CURRENT_POLY: {
-			m_voronoiPolygon			= Polygon2::MakeConvexFromPointCloud( polyPoints );
+			m_voronoiPolygon			= ConvexPoly2::MakeConvexPolyFromPointCloud( polyPoints );
 			m_voronoiPolyArea			= m_voronoiPolygon.GetArea();
 			Vec2 polyCenter				= m_voronoiPolygon.GetCenter();
 			minRadius					= GetMinimumInCircleRadiusForVoronoiHullWithPoint( polyCenter );
@@ -798,7 +801,7 @@ void CameraController::UpdateVoronoiPoly( PolyType type )
 		}
 		break;
 		case INITIALIZE_POLY: {
-			m_originalVoronoiPolygon		= Polygon2::MakeConvexFromPointCloud( polyPoints );
+			m_originalVoronoiPolygon		= ConvexPoly2::MakeConvexPolyFromPointCloud( polyPoints );
 			m_originalVoronoiPolyArea		= m_originalVoronoiPolygon.GetArea();
 			Vec2 polyCenter					= m_originalVoronoiPolygon.GetCenter();
 			minRadius						= GetMinimumInCircleRadiusForVoronoiHullWithPoint( polyCenter );
@@ -814,7 +817,7 @@ void CameraController::UpdateVoronoiPoly( PolyType type )
 void CameraController::UpdateVoronoiHull()
 {
 	std::vector<Vec2> voronoiPoints;
-	m_voronoiPolygon.GetAllVerticesInWorld( voronoiPoints );
+	m_voronoiPolygon.GetPoints( voronoiPoints );
 	ConvexPoly2 tempPoly = ConvexPoly2( voronoiPoints );
 	m_voronoiHull = ConvexHull2::MakeConvexHullFromConvexPoly( tempPoly );
 }

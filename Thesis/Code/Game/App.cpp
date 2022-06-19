@@ -125,8 +125,8 @@ void App::Shutdown()
 void App::RunFrame()
 {
 	BeginFrame();
-	//Update( 0.016f );
-	Update( Clock::GetMasterDeltaSeconds() );
+	Update( 0.016f );
+	//Update( Clock::GetMasterDeltaSeconds() );
 	Render();
 	EndFrame();
 }

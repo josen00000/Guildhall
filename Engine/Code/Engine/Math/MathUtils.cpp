@@ -9,7 +9,7 @@
 #include "Engine/Math/Vec3.hpp"
 #include "Engine/Math/OBB2.hpp"
 #include "Engine/Math/AABB2.hpp"
-#include "Engine/Math/Polygon2.hpp"
+#include "Engine/Math/ConvexPoly2.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/Plane2.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
@@ -139,18 +139,18 @@ Vec2 RangeMapPointFromBoxToBox( AABB2 inBox, AABB2 outBox, Vec2 inPoint )
 	return outBox.GetPointAtUV( uvPoint );
 }
 
-Polygon2 RangeMapPolygonFromBoxToBox( AABB2 inBox, AABB2 outBox, Polygon2 inPolygon )
+ConvexPoly2 RangeMapPolygonFromBoxToBox( AABB2 inBox, AABB2 outBox, ConvexPoly2 inPolygon )
 {
 	std::vector<Vec2> inPolyPoints;
 	std::vector<Vec2> outPolyPoints;
 	
-	inPolygon.GetAllVerticesInWorld( inPolyPoints );
+	inPolygon.GetPoints( inPolyPoints );
 	for( int i = 0; i < inPolyPoints.size(); i++ ) {
 		Vec2 outPoint = RangeMapPointFromBoxToBox( inBox, outBox, inPolyPoints[i] );
 		outPolyPoints.push_back( outPoint );
 	}
 
-	return Polygon2( outPolyPoints );
+	return ConvexPoly2( outPolyPoints );
 }
 
 float ClampFloat( float inMin, float inMax, float inValue )
@@ -273,10 +273,11 @@ float GetDistance2D( const Vec2& positionA, const Vec2& positionB ){
 	const float dis_Y=positionB.y-positionA.y;
 	return sqrtf(dis_X*dis_X+dis_Y*dis_Y);
 }
+
 float GetDistanceSquared2D( const Vec2& positionA, const Vec2& positionB ){
-	const float dis_X=positionB.x-positionA.x;
-	const float dis_Y=positionB.y-positionA.y;
-	return dis_X*dis_X+dis_Y*dis_Y;
+	const float dis_X = positionB.x - positionA.x;
+	const float dis_Y = positionB.y - positionA.y;
+	return ( dis_X * dis_X ) + ( dis_Y * dis_Y );
 }
 
 float GetSignedDistanceSquared2D( const Vec2& positionA, const Vec2& positionB, const Vec2& reference )
@@ -1015,17 +1016,17 @@ LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB )
 	return PB_AB; 
 }
 
-LineSegment2 GetAdjacentEdgeOfTwoPolygon( Polygon2 polyA, Polygon2 polyB )
+LineSegment2 GetAdjacentEdgeOfTwoPolygon( ConvexPoly2 polyA, ConvexPoly2 polyB )
 {
-	for( int i = 0; i < polyA.GetEdgeCount(); i++ ) {
-		LineSegment2 lineA = polyA.GetEdge( i );
-		for( int j = 0; j < polyB.GetEdgeCount(); j++ ) {
-			LineSegment2 lineB = polyB.GetEdge( j );
-			if( lineA.IsLineOverlapWith( lineB ) ) {
-				return lineA;
-			}
-		}
-	}
+// 	for( int i = 0; i < polyA.GetEdgeCount(); i++ ) {
+// 		LineSegment2 lineA = polyA.GetEdge( i );
+// 		for( int j = 0; j < polyB.GetEdgeCount(); j++ ) {
+// 			LineSegment2 lineB = polyB.GetEdge( j );
+// 			if( lineA.IsLineOverlapWith( lineB ) ) {
+// 				return lineA;
+// 			}
+// 		}
+// 	}
 	return LineSegment2();
 }
 

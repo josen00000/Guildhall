@@ -298,9 +298,6 @@ void NetworkSystem::WriteReliableUDPMessageToGame( UDPSocket* socket )
 		}
 		if( topMsg.id == socket->GetRecvReliableSequence() ) {
 			GameInfo tempInfo = g_theNetworkSystem->GetGameInfoWithReliableUDPMessage( topMsg );
-			if( &tempInfo == NULL ) {
-				int a = 0;
-			}
 			g_theNetworkSystem->m_receiveQueue.Push( tempInfo );
 			socket->SetRecvReliableSequence( ( topMsg.id + 1 ) );
 		}
@@ -323,9 +320,6 @@ void NetworkSystem::ReceiveUDPMessageAndWriteToGame( UDPSocket* socket )
 			dataStr = /*std::string( "received data is :") +*/ socket->ReadDataAsString();
 			bool isReliable = socket->GetIsDataReliable();
 			GameInfo result = GameInfo( isReliable, IPAddr, dataStr );
-			if( &result == NULL ) {
-				int a =0;
-			}
 			pMsg = socket->GetReceiveHeader();
 			g_theNetworkSystem->m_receiveQueue.Push( result );
 		}

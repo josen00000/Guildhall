@@ -205,7 +205,7 @@ void CameraSystem::UpdatePreVoronoiSplitScreenEffect()
 	// initialize
 	for( int i = 0; i < MAX_CAMERA_CONTROLLER_NUM; i++ ) {
 		if( i < m_controllers.size() ) {
-			m_controllers[i]->SetNeedRenderWhenMerged( false );
+			m_controllers[i]->SetNeedRenderWhenMerged( true );
 		}
 		for( int j = i; j < 5; j++ ) {
 			m_controllersSplitToMergeBlendCoeffs[i][j] =  0.f ;
@@ -233,11 +233,11 @@ void CameraSystem::UpdatePreVoronoiSplitScreenEffect()
 		}
 	}
 
-	for( int i = 0; i < MAX_CAMERA_CONTROLLER_NUM; i++ ) {
-		if( IsControllerNeedRenderWhenMerged( i ) && i < m_controllers.size()  ) {
-			m_controllers[i]->SetNeedRenderWhenMerged( true );
-		}
-	}
+// 	for( int i = 0; i < MAX_CAMERA_CONTROLLER_NUM; i++ ) {
+// 		if( IsControllerNeedRenderWhenMerged( i ) && i < m_controllers.size()  ) {
+// 			m_controllers[i]->SetNeedRenderWhenMerged( true );
+// 		}
+// 	}
 }
 
 void CameraSystem::UpdateVoronoiSplitScreenEffect()
@@ -1045,7 +1045,7 @@ void CameraSystem::ConstructVoronoiDiagramForControllers( AABB2 worldCameraBox, 
 {
 	if( m_controllers.size() == 0 ){ return; }
 	else if( m_controllers.size() == 1 ){
-		Polygon2 worldCameraBoxPoly = Polygon2::MakeConvexFromAABB2( worldCameraBox );
+		ConvexPoly2 worldCameraBoxPoly = ConvexPoly2::MakeConvexPolyFromAABB2( worldCameraBox );
 		m_controllers[0]->SetOriginalVoronoiPolygon( worldCameraBoxPoly );
 	}
 	else if( m_controllers.size() == 2 ) {
@@ -1090,8 +1090,8 @@ void CameraSystem::ConstructVoronoiDiagramForTwoControllers( AABB2 worldCameraBo
 			pointsB.push_back( worldCameraBoxCorners[i] );
 		}
 	}
-	Polygon2 polygonA = Polygon2::MakeConvexFromPointCloud( pointsA );
-	Polygon2 polygonB = Polygon2::MakeConvexFromPointCloud( pointsB );
+	ConvexPoly2 polygonA = ConvexPoly2::MakeConvexPolyFromPointCloud( pointsA );
+	ConvexPoly2 polygonB = ConvexPoly2::MakeConvexPolyFromPointCloud( pointsB );
 
 	m_controllers[0]->SetOriginalVoronoiPolygon( polygonA );
 	m_controllers[1]->SetOriginalVoronoiPolygon( polygonB );
@@ -1247,30 +1247,80 @@ void CameraSystem::UpdateVoronoiPolyAndOffset()
 		Vec2 stencilOffset = cameraPos - m_noSplitCamera->GetPosition2D();
 		m_controllers[i]->SetVoronoiStencilOffset( stencilOffset );
 
-		Vec2 colorTargetOffset;
+// 		Vec2 colorTargetOffset;
+// 		if( IsControllerTotalSplit( i ) ) {
+// 			colorTargetOffset = GetTotalSplitColorTargetOffset( i );
+// 		}
+// 		else if( IsControllerMerged( i ) ) {
+// 			// two merged or three merged
+// 			if( !m_controllers[i]->GetNeedRenderWhenMerged() ){ continue; }
+// 			Polygon2 mergedPoly;
+// 			 GetTotalMergedColorTargetOffsetAndMergedPoly( i, colorTargetOffset, mergedPoly );
+// 			 std::vector<Vec2> testpoints;
+// 			 mergedPoly.GetAllVerticesInWorld( testpoints );
+// 			 m_controllers[i]->SetVoronoiPolygon( mergedPoly );
+// 		}
+// 		else {
+// 			// blending
+// 			// blending and merged
+// 			std::vector<edgeAndThickness> blendingEdgeIndexesAndThickness;
+// 			colorTargetOffset =	GetSplitToMergeBlendingColorTargetOffsetAndBlendingEdges( i, blendingEdgeIndexesAndThickness );
+// 			for( int j = 0; j < blendingEdgeIndexesAndThickness.size(); j++ ) {
+// 				m_controllers[i]->addBlendingEdgeIndexAndThickness( blendingEdgeIndexesAndThickness[j].first, blendingEdgeIndexesAndThickness[j].second );
+// 			}
+// 		}
+// 
+// 		m_controllers[i]->SetVoronoiColorTargetOffset( colorTargetOffset );
+	}
+
+	// update voronoi position state
+	// update colorTargetOffset base on state
+	std::vector<CameraController*> mergedControllers;
+	std::vector<CameraController*> blendedControllers;
+	UpdateVoronoiPosState( mergedControllers, blendedControllers );
+	if( mergedControllers.size() == 0 && blendedControllers.size() == 0 ) { // all split
+		// all split
+		for( int i = 0; i < m_controllers.size(); i++ ) {
+			m_controllers[i]->SetVoronoiColorTargetOffset( GetTotalSplitColorTargetOffset( i ) );
+		}
+	}
+	else if( mergedControllers.size() == m_controllers.size() ) { // all merged
+		UpdateAllMergedPolyAndOffset();
+	}
+	else if (blendedControllers.size() == m_controllers.size() ) { // all blended
+		UpdateAllBlendedPolysAndOffsets();
+	}
+// 	switch (m_voronoiPosState)
+// 	{
+// 	case ALL_SPLIT: 
+// 	{
+// 		for( int i = 0; i < m_controllers.size(); i++ ) {
+// 			m_controllers[i]->SetVoronoiColorTargetOffset( GetTotalSplitColorTargetOffset( i ));
+// 		}
+// 	}
+// 		break;
+// 	case ALL_MERGED: 
+// 		UpdateTotalMergedPoly();
+// 		break;
+// 	case TWO_MERGED:
+// 		UpdateAtLeastTwoMergedPoly();
+// 		break;
+// 	}
+}
+
+void CameraSystem::UpdateVoronoiPosState( std::vector<CameraController*>& mergedControllers, std::vector<CameraController*>& blendedControllers )
+{
+	for( int i = 0; i < m_controllers.size(); i++ ){
 		if( IsControllerTotalSplit( i ) ) {
-			colorTargetOffset = GetTotalSplitColorTargetOffset( i );
+			continue;
 		}
 		else if( IsControllerMerged( i ) ) {
-			// two merged or three merged
-			if( !m_controllers[i]->GetNeedRenderWhenMerged() ){ continue; }
-			Polygon2 mergedPoly;
-			 GetTotalMergedColorTargetOffsetAndMergedPoly( i, colorTargetOffset, mergedPoly );
-			 std::vector<Vec2> testpoints;
-			 mergedPoly.GetAllVerticesInWorld( testpoints );
-			 m_controllers[i]->SetVoronoiPolygon( mergedPoly );
+			mergedControllers.push_back( m_controllers[i] );
 		}
 		else {
-			// blending
-			// blending and merged
-			std::vector<edgeAndThickness> blendingEdgeIndexesAndThickness;
-			colorTargetOffset =	GetSplitToMergeBlendingColorTargetOffsetAndBlendingEdges( i, blendingEdgeIndexesAndThickness );
-			for( int j = 0; j < blendingEdgeIndexesAndThickness.size(); j++ ) {
-				m_controllers[i]->addBlendingEdgeIndexAndThickness( blendingEdgeIndexesAndThickness[j].first, blendingEdgeIndexesAndThickness[j].second );
-			}
+			blendedControllers.push_back( m_controllers[i] );
 		}
-
-		m_controllers[i]->SetVoronoiColorTargetOffset( colorTargetOffset );
+		
 	}
 }
 
@@ -1373,9 +1423,9 @@ bool CameraSystem::ConstructAllAndIsAnyVoronoiVertex()
 	std::vector<Vec2> testPointsA;
 	std::vector<Vec2> testPointsB;
 	std::vector<Vec2> testPointsC;
-	m_controllers[0]->GetVoronoiPolygon().GetAllVerticesInWorld( testPointsA );
-	m_controllers[1]->GetVoronoiPolygon().GetAllVerticesInWorld( testPointsB );
-	m_controllers[2]->GetVoronoiPolygon().GetAllVerticesInWorld( testPointsC );
+	m_controllers[0]->GetVoronoiPolygon().GetPoints( testPointsA );
+	m_controllers[1]->GetVoronoiPolygon().GetPoints( testPointsB );
+	m_controllers[2]->GetVoronoiPolygon().GetPoints( testPointsC );
 	for( int i = 0; i < m_controllers.size(); i++ ){
 		for( int j = i + 1; j < m_controllers.size(); j++ ){
 			for( int k = j + 1; k < m_controllers.size(); k++ ){
@@ -1390,9 +1440,9 @@ bool CameraSystem::ConstructAllAndIsAnyVoronoiVertex()
 	std::vector<Vec2> testPointsD;
 	std::vector<Vec2> testPointsE;
 	std::vector<Vec2> testPointsF;
-	m_controllers[0]->GetVoronoiPolygon().GetAllVerticesInWorld( testPointsD );
-	m_controllers[1]->GetVoronoiPolygon().GetAllVerticesInWorld( testPointsE );
-	m_controllers[2]->GetVoronoiPolygon().GetAllVerticesInWorld( testPointsF );
+	m_controllers[0]->GetVoronoiPolygon().GetPoints( testPointsD );
+	m_controllers[1]->GetVoronoiPolygon().GetPoints( testPointsE );
+	m_controllers[2]->GetVoronoiPolygon().GetPoints( testPointsF );
 	return !m_voronoiVertices.empty();
 }
 
@@ -1400,7 +1450,7 @@ bool CameraSystem::RearrangeVoronoiVertexForMinVoronoiPoly( CameraController* mi
 {
 	// rearrange voronoi vertex 
 	AABB2 worldCameraBox = GetWorldCameraBox();
-	Polygon2 voronoiPoly = minController->GetVoronoiPolygon();
+	ConvexPoly2 voronoiPoly = minController->GetVoronoiPolygon();
 	Vec2 polyCenter = voronoiPoly.GetCenter();
 	for( Vec2 voronoiVertexPos : voronoiVertexPoss ) {
 		Vec2 expandDirt = ( voronoiVertexPos - polyCenter ).GetNormalized();
@@ -1652,15 +1702,15 @@ bool CameraSystem::IsControllerNeedRenderWhenMerged( int controllerIndex )
 	return true;
 }
 
-bool CameraSystem::GetSharedPointOfVoronoiPolygonABC( Polygon2 polygonA, Polygon2 polygonB, Polygon2 polygonC, Vec2& sharedPoint )
+bool CameraSystem::GetSharedPointOfVoronoiPolygonABC( ConvexPoly2 polygonA, ConvexPoly2 polygonB, ConvexPoly2 polygonC, Vec2& sharedPoint )
 {
 	std::vector<Vec2> polyAWorldPoints;
 	std::vector<Vec2> polyBWorldPoints;
 	std::vector<Vec2> polyCWorldPoints;
 	std::vector<Vec2> sharedPoints;
-	polygonA.GetAllVerticesInWorld( polyAWorldPoints );
-	polygonB.GetAllVerticesInWorld( polyBWorldPoints );
-	polygonC.GetAllVerticesInWorld( polyCWorldPoints );
+	polygonA.GetPoints( polyAWorldPoints );
+	polygonB.GetPoints( polyBWorldPoints );
+	polygonC.GetPoints( polyCWorldPoints );
 	for( int i = 0; i < polyAWorldPoints.size(); i++ ) {
 		for( int j = 0; j < polyBWorldPoints.size(); j++ ) {
 			if( IsVec2MostlyEqual( polyAWorldPoints[i], polyBWorldPoints[j] ) ) {
@@ -1755,7 +1805,12 @@ CameraController* CameraSystem::FindNextAdjacentControllerWithPlane( Plane2 plan
 	return nullptr;
 }
 
-void CameraSystem::GetMergedPolygonWithTwoPolygonShareOneEdge( const Polygon2& polyA, const Polygon2& polyB, Polygon2& mergedPoly )
+int CameraSystem::FindRenderControllerIndex()
+{
+	return 0;
+}
+
+void CameraSystem::GetMergedPolygonWithTwoPolygonShareOneEdge( const ConvexPoly2& polyA, const ConvexPoly2& polyB, ConvexPoly2& mergedPoly )
 {
 	// find same point 
 	// reorder the point index
@@ -1763,8 +1818,8 @@ void CameraSystem::GetMergedPolygonWithTwoPolygonShareOneEdge( const Polygon2& p
 	std::vector<Vec2> mergedPolyWorldPoints;
 	std::vector<Vec2> polyAWorldPoints;
 	std::vector<Vec2> polyBWorldPoints;
-	polyA.GetAllVerticesInWorld( polyAWorldPoints );
-	polyB.GetAllVerticesInWorld( polyBWorldPoints );
+	polyA.GetPoints( polyAWorldPoints );
+	polyB.GetPoints( polyBWorldPoints );
 	mergedPolyWorldPoints.reserve( polyAWorldPoints.size() + polyBWorldPoints.size() );
 	int samePointIndexInPolyA = 0;
 	int samePointIndexInPolyB = 0;
@@ -1817,13 +1872,13 @@ void CameraSystem::GetMergedPolygonWithTwoPolygonShareOneEdge( const Polygon2& p
 		}
 	}
 
-	mergedPoly = Polygon2( mergedPolyWorldPoints );
+	mergedPoly = ConvexPoly2( mergedPolyWorldPoints );
 }
 
 
 Vec2 CameraSystem::GetTotalSplitColorTargetOffset( int controllerIndex )
 {
-	Polygon2 splitPolygon = m_controllers[controllerIndex]->GetVoronoiPolygon();
+	ConvexPoly2 splitPolygon = m_controllers[controllerIndex]->GetVoronoiPolygon();
 	Vec2 splitPolygonCenter = splitPolygon.GetCenter();
 	Vec2 splitColorTargetOffset = splitPolygonCenter - m_noSplitCamera->GetPosition2D();
 	return splitColorTargetOffset;
@@ -1881,7 +1936,7 @@ Vec2 CameraSystem::GetSplitToMergeBlendingColorTargetOffsetAndBlendingEdges( int
 
 Vec2 CameraSystem::GetBlendingColorTargetOffsetAndBlendingEdgeIndexesOfTwoControllers( int controllerIndexA, int controllerIndexB, std::vector<edgeAndThickness>& edges )
 {
-	Polygon2 mergedPoly;
+	ConvexPoly2 mergedPoly;
 	LineSegment2 blendEdge = GetBlendingEdgeAndMergedVoronoiPolygonWithTwoControllers( m_controllers[controllerIndexA], m_controllers[controllerIndexB], mergedPoly );
 	edges.push_back( edgeAndThickness( blendEdge, m_controllersSplitToMergeBlendCoeffs[controllerIndexA][controllerIndexB] ) );
 	
@@ -1914,7 +1969,7 @@ Vec2 CameraSystem::GetMergedColorTargetOffset( std::vector<int> controllerIndexe
 	return result;
 }
 
-void CameraSystem::GetTotalMergedColorTargetOffsetAndMergedPoly( int controllerIndexA, Vec2& mergedColorTargetOffset, Polygon2& mergedPoly )
+void CameraSystem::GetTotalMergedColorTargetOffsetAndMergedPoly( int controllerIndexA, Vec2& mergedColorTargetOffset, ConvexPoly2& mergedPoly )
 {
 	std::vector<int> mergedControllerIndexes;
 	std::vector<int> blendingControllerIndexes;
@@ -1972,44 +2027,82 @@ void CameraSystem::GetTotalMergedColorTargetOffsetAndMergedPoly( int controllerI
 	}
 }
 
-void CameraSystem::GetMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly )
+void CameraSystem::UpdateAllMergedPolyAndOffset()
 {
-	Polygon2 polyA = a->GetVoronoiPolygon();
-	Polygon2 polyB = b->GetVoronoiPolygon();
+	AABB2 worldCameraBox = GetWorldCameraBox();
+	Vec2 centerPos = m_controllers[0]->GetCameraPos();
+	Vec2 playerCenterPos = m_controllers[0]->m_player->GetPosition();
+	for( int i = 1; i < m_controllers.size(); i++ ) {
+		centerPos += m_controllers[i]->GetCameraPos();
+		playerCenterPos += m_controllers[i]->m_player->GetPosition();
+		m_controllers[i]->SetNeedRenderWhenMerged( false );
+	}
+	playerCenterPos /= m_controllers.size();
+	centerPos /= m_controllers.size();
+	worldCameraBox.SetCenter( centerPos );
+	ConvexPoly2 poly = ConvexPoly2::MakeConvexPolyFromAABB2( GetWorldCameraBox() );
+	m_controllers[0]->SetVoronoiPolygon( poly );
+	m_controllers[0]->SetVoronoiColorTargetOffset( Vec2::ZERO );
+}
+
+void CameraSystem::UpdateAllBlendedPolysAndOffsets()
+{
+	
+}
+
+void CameraSystem::UpdateAtLeastTwoMergedPoly()
+{
+	// find two merged controller
+	// merged as one
+	// handle last one
+	CameraController* mergedController = nullptr;
+	for( int i = 0; i < m_controllers.size(); i++ ) {
+		if( m_controllers[] )
+	}
+}
+
+void CameraSystem::GetMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, ConvexPoly2& mergedPoly )
+{
+	ConvexPoly2 polyA = a->GetVoronoiPolygon();
+	ConvexPoly2 polyB = b->GetVoronoiPolygon();
 	GetMergedPolygonWithTwoPolygonShareOneEdge( polyA,  polyB, mergedPoly );
 }
 
-LineSegment2 CameraSystem::GetBlendingEdgeAndMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, Polygon2& mergedPoly )
+LineSegment2 CameraSystem::GetBlendingEdgeAndMergedVoronoiPolygonWithTwoControllers( CameraController* a, CameraController* b, ConvexPoly2& mergedPoly )
 {
-	Polygon2 polyA = a->GetVoronoiPolygon();
-	Polygon2 polyB = b->GetVoronoiPolygon();
+	ConvexPoly2 polyA = a->GetVoronoiPolygon();
+	ConvexPoly2 polyB = b->GetVoronoiPolygon();
 	GetMergedPolygonWithTwoPolygonShareOneEdge( polyA, polyB, mergedPoly );
-	for( int i = 0; i < polyA.m_edges.size(); i++ ) {
-		for( int j = 0; j < polyB.m_edges.size(); j++ ) {
-			if( IsLineSeg2MostlyEqual( polyA.GetEdgeInWorld( i ), polyB.GetEdgeInWorld( j ) ) ) {
-				return polyA.GetEdgeInWorld( i );
+	std::vector<LineSegment2> edgesA;
+	std::vector<LineSegment2> edgesB;
+	polyA.GetEdges( edgesA );
+	polyB.GetEdges( edgesB );
+	for( int i = 0; i < edgesA.size(); i++ ) {
+		for( int j = 0; j < edgesB.size(); j++ ) {
+			if( IsLineSeg2MostlyEqual( edgesA[i], edgesB[j] ) ) {
+				return edgesA[i];
 			}
 		}
 	}
 	return LineSegment2();
 }
 
-void CameraSystem::GetMergedVoronoiPolygonWithThreeControllers( CameraController* a, CameraController* b, CameraController* c, Polygon2& mergedPoly )
+void CameraSystem::GetMergedVoronoiPolygonWithThreeControllers( CameraController* a, CameraController* b, CameraController* c, ConvexPoly2& mergedPoly )
 {
-	Polygon2 polyA = a->GetVoronoiPolygon();
-	Polygon2 polyB = b->GetVoronoiPolygon();
-	Polygon2 polyC = c->GetVoronoiPolygon();
+	ConvexPoly2 polyA = a->GetVoronoiPolygon();
+	ConvexPoly2 polyB = b->GetVoronoiPolygon();
+	ConvexPoly2 polyC = c->GetVoronoiPolygon();
 	std::vector<Vec2> polyAWorldPoints;
 	std::vector<Vec2> polyBWorldPoints;
 	std::vector<Vec2> polyCWorldPoints;
 	std::vector<Vec2> mergedWorldPoints;
-	polyAWorldPoints.reserve( polyA.GetVertexCount() );
-	polyBWorldPoints.reserve( polyB.GetVertexCount() );
-	polyCWorldPoints.reserve( polyC.GetVertexCount() );
+	polyAWorldPoints.reserve( polyA.GetPointsCount() );
+	polyBWorldPoints.reserve( polyB.GetPointsCount() );
+	polyCWorldPoints.reserve( polyC.GetPointsCount() );
 	mergedWorldPoints.reserve( polyAWorldPoints.size() + polyBWorldPoints.size() + polyCWorldPoints.size() );
-	polyA.GetAllVerticesInWorld( polyAWorldPoints );
-	polyB.GetAllVerticesInWorld( polyBWorldPoints );
-	polyC.GetAllVerticesInWorld( polyCWorldPoints );
+	polyA.GetPoints( polyAWorldPoints );
+	polyB.GetPoints( polyBWorldPoints );
+	polyC.GetPoints( polyCWorldPoints );
 
 	for( Vec2 pointA : polyAWorldPoints ) {
 		bool isPointExist = false;
@@ -2047,7 +2140,7 @@ void CameraSystem::GetMergedVoronoiPolygonWithThreeControllers( CameraController
 			mergedWorldPoints.push_back( pointA );
 		}
 	}
-	mergedPoly = Polygon2::MakeConvexFromPointCloud( mergedWorldPoints );
+	mergedPoly = ConvexPoly2::MakeConvexPolyFromPointCloud( mergedWorldPoints );
 }
 
 

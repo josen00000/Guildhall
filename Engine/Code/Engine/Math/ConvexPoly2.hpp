@@ -4,7 +4,6 @@
 #include "Engine/Math/LineSegment2.hpp"
 #include "Engine/Math/AABB2.hpp"
 
-
 struct LineSegment2;
 struct ConvexHull2;
 
@@ -18,12 +17,23 @@ public:
 	ConvexPoly2( std::vector<Vec2> points );
 	static ConvexPoly2 MakeConvexPolyFromPointCloud( std::vector<Vec2> points );
 	static ConvexPoly2 MakeConvexPolyFromConvexHull( ConvexHull2 hull );
+	static ConvexPoly2 MakeConvexPolyFromAABB2( AABB2 const& box );
 
 	// Accessor
 	bool IsPointInside( Vec2 point ) const;
 	bool IsPossibleIntersectWithLine( LineSegment2 line ) const;
 
-	Vec2 GetCenter() const;
+	void GetPoints( std::vector<Vec2>& points ) const;
+	void GetEdges( std::vector<LineSegment2>& edges ) const;
+	int GetPointsCount() const {  return (int)m_points.size(); }
+	float GetLongestDistance() const;
+	float GetShortestDistanceToEdge( Vec2 const& point ) const;
 	float GetBounderDiscRadius() const;
-	std::vector<Vec2>& GetPoints(){ return m_points; }
+	float GetArea() const;
+	Vec2 GetCenter() const;
+ 	Vec2 GetClosestPointOnEdges( Vec2 const& point ) const;
+
+	// Mutator
+	void SetPoints( std::vector<Vec2>& points);
+	void SetCenterPos( Vec2 const& center );
 };

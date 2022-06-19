@@ -976,32 +976,38 @@ void RenderContext::DrawAABB2DWithBound( const AABB2& bounds, const Rgba8& tint,
 	DrawLine( Vec2( bounds.mins.x, bounds.maxs.y), bounds.mins, boundThick, boundColor );
 }
 
-void RenderContext::DrawPolygon2D( Polygon2 polygon, Rgba8 tint )
+void RenderContext::DrawPolygon2D( ConvexPoly2 polygon, Rgba8 tint )
 {
-	Vec2 centerPos = polygon.m_center;
+	Vec2 centerPos = polygon.GetCenter();
 	std::vector<Vertex_PCU> tempVertices;
-	for( int i = 0; i < polygon.GetEdgeCount(); i++ ) {
-		LineSegment2 lineSeg = polygon.GetEdge( i );
+	std::vector<Vec2> points;
+	polygon.GetPoints( points );
+	for( int i = 0; i < points.size(); i++ ) {
+		Vec2 endPos = ( i == points.size() - 1 ? points[0] : points[i + 1] );
 		tempVertices.push_back( Vertex_PCU( Vec3( centerPos ), tint, Vec2::ZERO ) );
-		tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetStartPos() + centerPos ), tint, Vec2::ZERO ) );
-		tempVertices.push_back( Vertex_PCU( Vec3( lineSeg.GetEndPos() + centerPos ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( points[i] ), tint, Vec2::ZERO ) );
+		tempVertices.push_back( Vertex_PCU( Vec3( endPos ), tint, Vec2::ZERO ) );
 	}
 	DrawVertexVector( tempVertices );
 }
 
-void RenderContext::DrawPolygon2DWithBound( Polygon2 polygon, Rgba8 tint, float boundThick, Rgba8& boundColor )
+void RenderContext::DrawPolygon2DWithBound( ConvexPoly2 polygon, Rgba8 tint, float boundThick, Rgba8& boundColor )
 {
 	DrawPolygon2D( polygon, tint );
 	
- 	for( int i = 0; i < polygon.GetEdgeCount(); i++ ) {
-		LineSegment2 lineSeg = polygon.GetEdgeInWorld( i );
-		DrawLine( lineSeg, boundThick, boundColor );
+	std::vector<Vec2> points;
+	polygon.GetPoints( points );
+
+ 	for( int i = 0; i < points.size(); i++ ) {
+		int endIndex = ( i == points.size() - 1 ? 0 : i + 1 );
+		DrawLine( points[i], points[endIndex], boundThick, boundColor );
 	}
 }
 
 void RenderContext::DrawConvexPoly2D( ConvexPoly2 convPoly, Rgba8 tint )
 {
-	std::vector<Vec2> convPolyPoints = convPoly.GetPoints();
+	std::vector<Vec2> convPolyPoints;
+	convPoly.GetPoints( convPolyPoints );
 	Vec2 ConvPolyCenter = convPoly.GetCenter();
 	std::vector<Vertex_PCU> tempVertices;
 	for( int i = 0; i < convPolyPoints.size() - 1; i++ ) {

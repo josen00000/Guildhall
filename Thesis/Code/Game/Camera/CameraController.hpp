@@ -1,8 +1,8 @@
 #pragma once
 #include "Game/GameCommon.hpp"
 #include "Engine/Math/AABB2.hpp"
-#include "Engine/Math/Polygon2.hpp"
 #include "Engine/Math/ConvexHull2.hpp"
+#include "Engine/Math/ConvexPoly2.hpp"
 #include "Engine/Math/LineSegment2.hpp"
 #include <chrono>
 
@@ -12,8 +12,10 @@ class CameraSystem;
 class Timer;
 class Texture;
 struct Vec4;
+struct ConvexPoly2;
 class RenderBuffer;
 class Shader;
+
 
 typedef std::pair<LineSegment2, float> edgeAndThickness;
 
@@ -66,8 +68,8 @@ public:
 	Vec2 GetTargetVoronoiAnchorPointPos() const		{ return m_targetVoronoiAnchorPointPos; }
 	Vec2 GetVoronoiColortargetOffset() const		{ return m_voronoiColorTargetOffset; }
 
-	Polygon2 const& GetVoronoiPolygon() const;
-	Polygon2 const& GetOriginalVoronoiPolygon() const;
+	ConvexPoly2 const& GetVoronoiPolygon() const;
+	ConvexPoly2 const& GetOriginalVoronoiPolygon() const;
 	ConvexHull2 GetVoronoiHull() const				{ return m_voronoiHull; }
 
 	Texture* GetColorTarget()						{ return m_colorTarget; }
@@ -115,8 +117,8 @@ public:
 	void SetOriginalVoronoiAnchorPointPos			( Vec2 smoothedVoronoiAnchorPoint );
 	bool ReplaceVoronoiPointWithPoint				( Vec2 replacedPoint,  Vec2 newPoint );
 
-	void SetVoronoiPolygon							( Polygon2 const & poly );
-	void SetOriginalVoronoiPolygon					( Polygon2 const & poly );
+	void SetVoronoiPolygon							( ConvexPoly2 const & poly );
+	void SetOriginalVoronoiPolygon					( ConvexPoly2 const & poly );
 	void SetVoronoiHullAndUpdateVoronoiPoly			( ConvexHull2 const& hull, PolyType type  );
 	void AddPlaneToVoronoiHull						( Plane2 const& plane, PolyType type );
 	void addBlendingEdgeIndexAndThickness			( LineSegment2 const& line, float thicknessRatio );
@@ -146,7 +148,7 @@ public:
 	void UpdateMultipleCameraOffsetAndBuffer();
 	void ReleaseRenderTarget();
 	
-	bool IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, Polygon2 renderArea, AABB2 quickOutBox );
+	bool IsPointInRenderArea( IntVec2 coords, IntVec2 textureSize, ConvexPoly2 renderArea, AABB2 quickOutBox );
 	AABB2 GetScreenRenderBox( IntVec2 size );
 	AABB2 GetWorldSpaceRenderBox();
 	Vec2 GetSplitScreenBoxDimension();
@@ -246,12 +248,12 @@ private:
 	Rgba8			m_splitScreenEdgeColor			= Rgba8::BLACK;
 	Vec2			m_voronoiStencilOffset			= Vec2::ZERO;
 	Vec2			m_voronoiColorTargetOffset		= Vec2::ZERO;
-	Polygon2		m_voronoiPolygon;
-	Polygon2		m_originalVoronoiPolygon;
+	ConvexPoly2		m_voronoiPolygon;
+	ConvexPoly2		m_originalVoronoiPolygon;
 	ConvexHull2		m_voronoiHull;
 	std::vector<edgeAndThickness> m_blendingEdgeAndThickness;
 	std::vector<Vertex_PCU> m_stencilVertices;
 
 	// Debug
-	Polygon2 m_debugVoronoiPoly;
+	ConvexPoly2 m_debugVoronoiPoly;
 };

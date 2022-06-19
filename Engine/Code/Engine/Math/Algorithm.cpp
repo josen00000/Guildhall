@@ -13,6 +13,7 @@
 #include "Engine/Math/AABB2.hpp"
 #include "Engine/Math/FloatRange.hpp"
 #include "Engine/Math/Plane2.hpp"
+#include "Engine/Math/ConvexPoly2.hpp"
 
 
 #define GJK_CHECK(a,b)  ( DotProduct2D(a,b) > 0 )
@@ -117,48 +118,49 @@ bool GJK2DIfEncloseAndFindNextDirection( std::vector<Vec2>& simplex, Vec2 point,
 
 Vec2 GetGJK2DManifold( std::vector<Vec2>& simplex, const std::vector<Vec2>& shapeA, const std::vector<Vec2> shapeB )
 {
-	GUARANTEE_OR_DIE( simplex.size() == 3, std::string( "simplex size != 3!" ));
-
-	bool ifBreak = false;
-	while( true ) {
-		Polygon2 polySimplex = Polygon2::MakeConvexFromPointCloud( simplex );
-
-		Vec2 closestPoint = polySimplex.GetClosestPointOnEdges( Vec2::ZERO );
-		Vec2 direction;
-		if( IsVec2MostlyEqual( closestPoint, Vec2::ZERO ) ){
-			int edgeIndex = polySimplex.GetEdgeIndexWithPoint( closestPoint );	
-			if( edgeIndex == -1 ) {
-				int a = 0;
-			}
-			direction = polySimplex.GetEdgeNormal( edgeIndex );
-		}
-		else {
-			direction = closestPoint; 
-
-		}
-		Vec2 supportPoint = GetGJK2DSupportPointOfSum( direction, shapeA, shapeB );
-		for( int i = 0; i < simplex.size(); i++ ) {
-			if( IsVec2MostlyEqual( supportPoint, simplex[i] ) ) {
-				ifBreak = true;
-				break;
-			}
-		}
-		if( ifBreak ) {
-			break;
-		}
-		simplex.push_back( supportPoint );
-	}
-
-	Polygon2 polyFinalSimplex = Polygon2::MakeConvexFromPointCloud( simplex );
-	Vec2 closestPoint = polyFinalSimplex.GetClosestPointOnEdges( Vec2::ZERO );
-	Vec2 direction = closestPoint;
-	if( IsVec2MostlyEqual( closestPoint, Vec2::ZERO ) ) {
-		int edgeIndex = polyFinalSimplex.GetEdgeIndexWithPoint( closestPoint );
-		direction = -polyFinalSimplex.GetEdgeNormal( edgeIndex );
-	}
-	else {
-		direction = closestPoint;
-
-	}
-	return direction;
+	return Vec2::ZERO;
+// 	GUARANTEE_OR_DIE( simplex.size() == 3, std::string( "simplex size != 3!" ));
+// 
+// 	bool ifBreak = false;
+// 	while( true ) {
+// 		ConvexPoly2 polySimplex = ConvexPoly2::MakeConvexPolyFromPointCloud( simplex );
+// 
+// 		Vec2 closestPoint = polySimplex.GetClosestPointOnEdges( Vec2::ZERO );
+// 		Vec2 direction;
+// 		if( IsVec2MostlyEqual( closestPoint, Vec2::ZERO ) ){
+// 			int edgeIndex = polySimplex.GetEdgeIndexWithPoint( closestPoint );	
+// 			if( edgeIndex == -1 ) {
+// 				int a = 0;
+// 			}
+// 			direction = polySimplex.GetEdgeNormal( edgeIndex );
+// 		}
+// 		else {
+// 			direction = closestPoint; 
+// 
+// 		}
+// 		Vec2 supportPoint = GetGJK2DSupportPointOfSum( direction, shapeA, shapeB );
+// 		for( int i = 0; i < simplex.size(); i++ ) {
+// 			if( IsVec2MostlyEqual( supportPoint, simplex[i] ) ) {
+// 				ifBreak = true;
+// 				break;
+// 			}
+// 		}
+// 		if( ifBreak ) {
+// 			break;
+// 		}
+// 		simplex.push_back( supportPoint );
+// 	}
+// 
+// 	ConvexPoly2 polyFinalSimplex = ConvexPoly2::MakeConvexPolyFromPointCloud( simplex );
+// 	Vec2 closestPoint = polyFinalSimplex.GetClosestPointOnEdges( Vec2::ZERO );
+// 	Vec2 direction = closestPoint;
+// 	if( IsVec2MostlyEqual( closestPoint, Vec2::ZERO ) ) {
+// 		int edgeIndex = polyFinalSimplex.GetEdgeIndexWithPoint( closestPoint );
+// 		direction = -polyFinalSimplex.GetEdgeNormal( edgeIndex );
+// 	}
+// 	else {
+// 		direction = closestPoint;
+// 
+// 	}
+// 	return direction;
 }

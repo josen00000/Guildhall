@@ -36,9 +36,7 @@ LineSegment2 LineSegment2::ClipSegmentToSegment( LineSegment2 toClip, LineSegmen
 	}
 	
 	FloatRange toClipRange = FloatRange( startLength, endLength );
-	
 	FloatRange refRange		= FloatRange( 0.f, refLength );
-
 	FloatRange clippedRange = FloatRange::GetIntersectRange( toClipRange, refRange );
 
 	if( !clippedRange.IsInRange( refRange ) ) {

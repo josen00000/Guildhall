@@ -1,14 +1,14 @@
 #pragma once
 #include "Engine/Math/vec2.hpp"
 #include "Engine/Physics/Collider2D.hpp"
-#include "Engine/Math/Polygon2.hpp"
+#include "Engine/Math/ConvexPoly2.hpp"
 
 struct Disc2;
 
 class PolygonCollider2D : public Collider2D {
 public:
 	PolygonCollider2D();
-	PolygonCollider2D( Polygon2 polygon );
+	PolygonCollider2D( ConvexPoly2 polygon );
 	PolygonCollider2D( std::vector <Vec2> points  );
 	~PolygonCollider2D();
 
@@ -31,7 +31,7 @@ public:
 	void testRenderLocal( RenderContext* ctx );
 
 public:
-	Polygon2 m_localPolygon;
-	Polygon2 m_worldPolygon;
+	ConvexPoly2 m_localPolygon;
+	ConvexPoly2 m_worldPolygon;
 	Vec2 m_worldPos;
 };

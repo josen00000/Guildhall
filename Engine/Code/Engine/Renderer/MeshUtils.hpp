@@ -17,7 +17,7 @@ struct OBB3;
 //Append Vertices for Vertex_PCU
 void AppendVertsForAABB2D( std::vector<Vertex_PCU>& vertices, const AABB2& bound, const Rgba8& tintColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
 void AppendVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, const ConvexPoly2& poly, const Rgba8& tintColor );
-void AppendVertsForPolygon2D( std::vector<Vertex_PCU>& vertices, const Polygon2& poly, const Rgba8& tintColor ); // different data structure
+void AppendVertsForPolygon2D( std::vector<Vertex_PCU>& vertices, const ConvexPoly2& poly, const Rgba8& tintColor ); // different data structure
 void AppendVertsForAABB2DWithHeight( std::vector<Vertex_PCU>& vertices, const AABB2& bound, float height, const Rgba8& tintColor, const Vec2& uvAtMins=Vec2::ZERO, const Vec2& uvAtMaxs=Vec2::ONE );
 void AppendVertsForAABB3D( std::vector<Vertex_PCU>& vertices, AABB3 box, Rgba8& tintColor, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD );
 void AppendVertsForCapsule2D( std::vector<Vertex_PCU>& vertices, const Capsule2& bound, const Rgba8& tintColor );

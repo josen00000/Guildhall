@@ -28,7 +28,6 @@ public:
 		for( sub_t& cb : m_callbacks ) {
 			if( cb.callable( args... ) ) {
 				return true;
-
 			}
 		}
 		return false;

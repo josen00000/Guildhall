@@ -42,14 +42,14 @@ void AppendVertsForConvexPoly2D( std::vector<Vertex_PCU>& vertices, const Convex
 	vertices.push_back( Vertex_PCU( Vec3( center, posZ ), tintColor, Vec2::ZERO ) );
 }
 
-void AppendVertsForPolygon2D( std::vector<Vertex_PCU>& vertices, const Polygon2& poly, const Rgba8& tintColor )
+void AppendVertsForPolygon2D( std::vector<Vertex_PCU>& vertices, const ConvexPoly2& poly, const Rgba8& tintColor )
 {
-	if( poly.m_edges.size() == 0 ){ return; }
-	vertices.reserve( poly.m_edges.size() * 3 );
+	if( poly.GetPointsCount() == 0 ){ return; }
+	vertices.reserve( poly.GetPointsCount()  * 3 );
 	float posZ = 0.f;
 	Vec2 center = poly.GetCenter();
 	std::vector<Vec2> polyWorldPoints;
-	poly.GetAllVerticesInWorld( polyWorldPoints );
+	poly.GetPoints( polyWorldPoints );
 	for( int i = 0; i < polyWorldPoints.size() - 1; i++ ) {
 		vertices.push_back( Vertex_PCU( Vec3( center, posZ ), tintColor, Vec2::ZERO ) );
 		vertices.push_back( Vertex_PCU( Vec3( polyWorldPoints[i], posZ ), tintColor, Vec2::ZERO ) );

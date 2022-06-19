@@ -8,7 +8,7 @@ struct AABB2;
 struct OBB2;
 struct IntVec2;
 struct FloatRange;
-struct Polygon2;
+struct ConvexPoly2;
 struct Mat44;
 struct LineSegment2;
 struct Plane2;
@@ -94,7 +94,7 @@ Vec3		RangeMapVec3( Vec3 inStart, Vec3 inEnd, Vec3 outStart, Vec3 outEnd, Vec3 i
 Vec2		RangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue );
 Vec2		ClampRangeMapFromFloatToVec2( float inStart, float inEnd, Vec2 outStart, Vec2 outEnd, float inValue );
 Vec2		RangeMapPointFromBoxToBox( AABB2 inBox, AABB2 outBox, Vec2 inPoint );
-Polygon2	RangeMapPolygonFromBoxToBox( AABB2 inBox, AABB2 outBox, Polygon2 inPolygon );
+ConvexPoly2	RangeMapPolygonFromBoxToBox( AABB2 inBox, AABB2 outBox, ConvexPoly2 inPolygon );
 
 int			ClampInt( int inMin, int inMax, int inValue );
 int			RoundDownToInt(float value);
@@ -158,4 +158,4 @@ std::pair<Vec2, Vec2> GetIntersectionPointOfLineAndAABB2( LineSegment2 line, AAB
 LineSegment2 GetPerpendicularBisectorOfTwoPoints( Vec2 pointA, Vec2 pointB );
 
 // polygon
-LineSegment2 GetAdjacentEdgeOfTwoPolygon( Polygon2 polyA, Polygon2 polyB ); // get first adjacent edge
+LineSegment2 GetAdjacentEdgeOfTwoPolygon( ConvexPoly2 polyA, ConvexPoly2 polyB ); // get first adjacent edge
