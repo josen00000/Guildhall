@@ -1,5 +1,4 @@
 #include "AABB2.hpp"
-#include "Engine/Core/StringUtils.hpp"
 #include "Engine/Math/MathUtils.hpp"
 
 AABB2::AABB2( const Vec2& i_min, const Vec2& i_max )
