@@ -1,6 +1,7 @@
 #pragma once
-#include<Engine/Math/vec2.hpp>
-#include<Game/GameCommon.hpp>
+#include <windows.h>
+#include "Engine/Math/vec2.hpp"
+#include "Game/GameCommon.hpp"
 
 
 class Game;
@@ -11,32 +12,32 @@ public:
 	App(){}
 	~App() {}
 	void Startup();
+	void StartupStage1();	// Critial system
+	void StartupStage2();	// Other system dependencies 
+	void StartupStage3();	// Object
 	void Shutdown();
+	void BeginFrame();
 	void RunFrame();
+	void EndFrame();
 	bool IsQuitting() const { return m_isQuitting; }
-	//bool HandleKeyPressed( unsigned char keyCode );
-	//bool HandleKeyReleased( unsigned char keyCode );
-	void HandleQuitRequested();
 	void CheckGameQuit();
-	void HandleKeyPressed(unsigned char inValue);
-	void HandleKeyReleased(unsigned char inValue);
+	void HandleQuitRequested();
 	void ResetGame();
-	void ImportAndPopulateGameConfig();
+	void PauseGame();
+	void UnPauseGame();
+
+	// accessor
+	bool DoesUseIMGUI() const { return m_doesUseIMGUI; }
+
+	void handleIMGUIInput( HWND windowHandle, UINT wmMessageCode, WPARAM wParam, LPARAM lParam );
 
 private:
-	void BeginFrame();
 	void Update( float deltaSeconds );
 	const void Render() const;
-	void EndFrame();
-	
-private:
-	float m_deltaTime=0;
-	bool m_isQuitting=false;
-	bool m_isPaused=false;
-	bool m_isSlowMo=false;
-	bool m_isDevelopMode=false;
-	Vec2 m_shipPos;
-	Game* m_theGame=nullptr;
-	float m_timeFraction=1.f;
 
+private:
+	bool m_doesUseIMGUI		= true;
+	bool m_isQuitting		= false;
+	bool m_isPauseTime		= false;
+	float m_timeFraction	= 1.f;
 };
