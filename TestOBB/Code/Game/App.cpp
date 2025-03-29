@@ -77,7 +77,7 @@ void App::StartupStage3()
 	g_debugCamera		= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
 	g_UICamera			= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) ); 
 	g_devCamera			= Camera::CreateOrthographicCamera( g_theRenderer, Vec2::ZERO, Vec2( 30, 20 ) ); 
-
+	g_gameCamera->EnableClearColor( Rgba8::BLACK );
 	DebugRenderSystemStartup( g_theRenderer, g_gameCamera );
 	g_theGame			= new Game( g_gameCamera, g_UICamera );
 	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
@@ -186,6 +186,10 @@ const void App::Render() const
 	g_theGame->RenderUI();
 	g_theRenderer->EndCamera();
 
+	g_theRenderer->BeginCamera( g_gameCamera );
+	g_theGame->Render();
+	g_theRenderer->EndCamera();
+	
 	g_theConsole->Render( *g_theRenderer );
 	// debug render
 	DebugRenderScreenTo( g_gameCamera->GetColorTarget() );
