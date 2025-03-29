@@ -35,14 +35,9 @@ Game::Game( Camera* gameCamera, Camera* UICamera )
 void Game::Startup()
 {	
 	LoadGameAsset();
-	InitialAlignText();
-	TestSprite();
-	TestImage();
 	CreateRandomOBB();
 	CreateOtherShapes();
 	CreateRandomCapsule();
-	TestSplitString();
-	TestSetFromText();
 }
 
 void Game::Shutdown()
@@ -56,9 +51,6 @@ void Game::RunFrame(float deltaTime)
 
 void Game::Render() const
 {
-	//g_theRenderer->DrawLine( Vec2( 40, 40 ), Vec2( 80, 80 ), 2, Rgba8::WHITE );
-	//g_theRenderer->DrawCircle(Vec3(80,80,0), 20, 20,Rgba8::WHITE);
-	
 	RenderOBBs();
 	RenderCapsules();
 	RenderOtherShapes();
@@ -70,13 +62,8 @@ void Game::Render() const
 void Game::RenderUI() const
 {
 	g_theRenderer->DrawLine( Vec2( 40, 40 ), Vec2( 80, 80 ), 2, Rgba8::WHITE );
-
 }
 
-void Game::PrintSomething( const std::string stringToPrint )
-{
-	g_theConsole->PrintString( Rgba8::RED, stringToPrint);
-}
 
 void Game::EndFrame()
 {
@@ -85,10 +72,10 @@ void Game::EndFrame()
 
 void Game::Update(float deltaTime)
 {
+	CheckIfExit();
+
 	TestMouse();
 	std::string testMousestring = "m_mousePos is " + std::to_string(m_mousePos.x) + " " + std::to_string(m_mousePos.y);
-	//m_testConsole->PrintString(Rgba8::WHITE, testMousestring);
-	UpdateAlignText(deltaTime);
 	TestOBBOverlap();
 	UpdateOBBs( deltaTime );
 	UpdateOtherShapes();
@@ -97,51 +84,8 @@ void Game::Update(float deltaTime)
 	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_C ) ) {
 		RecreateShapes();
 	}
-
-	// DevConsole
-	/*
-	static float currentTime = 0;
-	currentTime += deltaTime;
-	if(currentTime > 3){
-		/ableDevConsole = true;
-	}
-	if(ableDevConsole){
-		m_testConsole->SetIsOpen(true);
-	}*/
-	static bool ableDevConsole = false;
-// 	if( g_theInputSystem->GetKeyBoardController().GetButtonState( KEYBOARD_BUTTON_ID_P ).WasJustPressed() ) {
-// 		ableDevConsole = !ableDevConsole;
-// 		m_testConsole->SetIsOpen(ableDevConsole);
-// 	}
 }
 
-void Game::TestSprite()
-{
-	//temSpriteSheet = new SpriteSheet(temTexture, IntVec2(8,2));
-
-}
-
-void Game::TestImage()
-{
-	//Image *temImage = new Image("Data/Images/Test_StbiFlippedAndOpenGL.png");
-	//Image *temImage1 = new Image("Data/Images/Test_StbiAndDirectX.png");
-
-}
-
-void Game::TestDrawMouse( const Camera& camera)
-{
-	UNUSED( camera );
-	/*Vec2 mouseNormalizedPos = g_theInputSystem->UpdateMouse();
-	AABB2 orthoBounds(camera.GetOrthoBottomLeft(), camera.GetOrthoTopRight());
-	Vec2 mouseDrawPos = orthoBounds.GetPointAtUV(mouseNormalizedPos); */
-}
-
-void Game::TestSetFromText()
-{
-	Vec2 testVec2 = Vec2();
-	testVec2.SetFromText("6,4");
-	testVec2.SetFromText(" -.6 , 0.44 ");
-}
 
 void Game::TestMouse()
 {
@@ -167,51 +111,19 @@ void Game::RenderMouse( const Camera& camera) const
 {
 	g_theRenderer->SetDiffuseTexture(nullptr);
 	AABB2 orthoBounds( camera.GetBottomLeftWorldPos2D(), camera.GetTopRightWorldPos2D() );
-	Vec2 m_mouseDrawPos = orthoBounds.GetPointAtUV( m_mousePos );
-	Vec3 mouseDrawPos3 = Vec3( m_mouseDrawPos );
+	Vec3 mouseDrawPos3 = Vec3( m_mousePos );
 	g_theRenderer->DrawCircle(mouseDrawPos3, 1, 1, Rgba8::WHITE);
-}
-
-void Game::TestSplitString()
-{
-	Strings s1 = SplitStringOnDelimiter( "Amy,Bret,Carl", "," ); // split into 3 substrings: "Amy", "Bret", "Carl"
-	Strings s2 = SplitStringOnDelimiter( " -7.5, 3 ", "," );     // split into 2: " -7.5" and " 3 " (including whitespace!)
-	Strings s3 = SplitStringOnDelimiter( "3~7", "~" );           // split into 2: "3" and "7"
-	Strings s4 = SplitStringOnDelimiter( "255, 128, 40", "," );  // split into 3: "255", " 128", and " 40" (including spaces!)
-	Strings s5 = SplitStringOnDelimiter( "apple", "/" );         // split into 1: "apple"
-	Strings s6 = SplitStringOnDelimiter( "8/2/1973", "/" );      // split into 3: "8", "2", and "1973"
-	Strings s7 = SplitStringOnDelimiter( ",,", "," );            // split into 3: "", "", and ""
-	Strings s8 = SplitStringOnDelimiter( ",,Hello,,", "," );     // split into 5: "", "", "Hello", "", and ""
-	Strings s9 = SplitStringOnDelimiter( "", "," );              // split into 1: ""
-
-	
-}
-
-void Game::InitialAlignText()
-{
-	//m_alignTestString = "alignment Testing";
-}
-
-void Game::UpdateAlignText( float deltaTime )
-{	m_alignTextVertices.clear();
-	
-	static int coe = 1;
-	if(m_alignPos.x > 1 || m_alignPos.x < 0 ){
-		coe *= -1;
-	}
-	m_alignPos.x += coe * deltaTime * m_alignMoveSpeed;
-	m_alignPos.y -= coe * deltaTime * m_alignMoveSpeed;
-	
-
-
-	std::string temString = "testing";
-	temString = temString + "  alignPos (" + std::to_string( m_alignPos.x) + " , " + std::to_string( m_alignPos.y) + " )";
-	temString = "Try press button R and C, R to rotate the mouse obb. C to recreate the shapes";
-	g_squirrelFont->AddVertsForTextInBox2D(m_alignTextVertices, m_alignBox, 1.5, temString, Rgba8::WHITE, 1, Vec2::ZERO);
 }
 
 void Game::LoadGameAsset()
 {
+}
+
+void Game::CheckIfExit()
+{
+	if( g_theInputSystem->IsKeyDown( KEYBOARD_BUTTON_ID_ESC ) ) {
+		g_theApp->HandleQuitRequested();
+	}
 }
 
 void Game::CreateRandomOBB()
@@ -323,8 +235,6 @@ void Game::UpdateCapsule()
 		}
 
  		Vec2 tempPoint = tempCapsule.GetNearestPoint( mouseDrawPos );
- 		//std::string pointPosString = "nearest point position is "+ std::to_string( tempPoint.x ) + "  " + std::to_string( tempPoint.y );
- 		//m_testConsole->PrintString( Rgba8::RED, pointPosString );
  		m_nearestPoints.push_back( tempPoint );
 	}
 }

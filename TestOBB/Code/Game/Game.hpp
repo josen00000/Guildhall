@@ -32,23 +32,16 @@ public:
 	void RunFrame(float deltaTime);
 	void Render() const;
 	void RenderUI() const;
-	void PrintSomething( const std::string stringToPrint );
 	void EndFrame();
 
 private:
 	void Update( float deltaTime);
-	void TestSprite();
-	void TestImage();
-	void TestDrawMouse( const Camera& camera);
 	void TestSetFromText();
 	void TestMouse();
 	void TestOBBOverlap();
 	void RenderMouse( const Camera& camera) const;
-	void TestSplitString();
-	void InitialAlignText();
-	void UpdateAlignText(float deltaTime);
 	void LoadGameAsset();
-	
+	void CheckIfExit();
 	//Create shapes
 	void CreateRandomOBB();
 	void CreateRandomCapsule();
