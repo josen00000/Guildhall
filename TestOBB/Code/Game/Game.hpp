@@ -24,7 +24,7 @@ class Game {
 public:
 	Game(){}
 	~Game(){}
-	Game(Camera* inCamera);
+	Game(Camera* gameCamera, Camera* UICamera);
 
 	//basic
 	void Startup();
@@ -33,6 +33,7 @@ public:
 	void Render() const;
 	void RenderUI() const;
 	void PrintSomething( const std::string stringToPrint );
+	void EndFrame();
 
 private:
 	void Update( float deltaTime);
@@ -68,13 +69,13 @@ private:
 
 public:
 	bool m_debugCamera = false;
-	bool isAppQuit = false;
+	bool m_isAppQuit = false;
 	//should using global.
 	
 	//mouse testing
 	Vec2 m_mousePos;
-	Camera* m_camera = nullptr;
-	
+	Camera* m_gameCamera = nullptr;
+	Camera* m_UICamera = nullptr;
 	//OBB testing
 	std::vector<OBB2> m_OBBs;
 	std::vector<Vertex_PCU> m_OBBVertices;
@@ -110,11 +111,6 @@ public:
 	//std::vector<Strings> m_stringsVector;
 	float m_alignMoveSpeed = 0.5;
 	
-	BitmapFont* m_testFont = nullptr;
-	DevConsole* m_testConsole = nullptr;
-
-
-
 };
 
 

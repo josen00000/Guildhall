@@ -19,13 +19,15 @@ extern App* g_theApp;
 extern InputSystem* g_theInputSystem;
 extern RenderContext* g_theRenderer;
 extern Camera* g_UICamera;
-extern Camera* g_camera;
+extern Camera* g_gameCamera;
+extern BitmapFont* g_squirrelFont;
 Texture* temTexture = nullptr;
-SpriteSheet* temSpriteSheet = nullptr;
 EventSystem* g_eventSystem = new EventSystem();
 
-Game::Game(Camera* inCamera)
-	:m_camera(inCamera)
+
+Game::Game( Camera* gameCamera, Camera* UICamera )
+	:m_gameCamera( gameCamera )
+	,m_UICamera(UICamera)
 {
 	m_rng=RandomNumberGenerator();
 }
@@ -41,16 +43,10 @@ void Game::Startup()
 	CreateRandomCapsule();
 	TestSplitString();
 	TestSetFromText();
-	m_testConsole = new DevConsole(m_testFont);
-
-
-	
-
 }
 
 void Game::Shutdown()
 {
-	delete m_testConsole;
 }
 
 void Game::RunFrame(float deltaTime)
@@ -66,12 +62,8 @@ void Game::Render() const
 	RenderOBBs();
 	RenderCapsules();
 	RenderOtherShapes();
-	RenderMouse( *g_camera );
+	RenderMouse( *g_gameCamera );
 	RenderNearestPoints();
-
-	g_theRenderer->BindTexture(m_testFont->GetTexture());
-	g_theRenderer->DrawVertexVector(m_alignTextVertices);
-
 }
 
 
@@ -79,12 +71,16 @@ void Game::RenderUI() const
 {
 	g_theRenderer->DrawLine( Vec2( 40, 40 ), Vec2( 80, 80 ), 2, Rgba8::WHITE );
 
-	m_testConsole->Render(*g_theRenderer, *g_UICamera, 1);
 }
 
 void Game::PrintSomething( const std::string stringToPrint )
 {
-	m_testConsole->PrintString( Rgba8::RED, stringToPrint);
+	g_theConsole->PrintString( Rgba8::RED, stringToPrint);
+}
+
+void Game::EndFrame()
+{
+	// TODO: Add what need to do when the frame end
 }
 
 void Game::Update(float deltaTime)
@@ -121,7 +117,7 @@ void Game::Update(float deltaTime)
 
 void Game::TestSprite()
 {
-	temSpriteSheet = new SpriteSheet(*temTexture, IntVec2(8,2));
+	//temSpriteSheet = new SpriteSheet(temTexture, IntVec2(8,2));
 
 }
 
@@ -149,8 +145,9 @@ void Game::TestSetFromText()
 
 void Game::TestMouse()
 {
-	m_mousePos = g_theInputSystem->GetNormalizedMousePos();
-
+	HWND handle = (HWND)g_theWindow->GetHandle();
+	Vec2 mousePosInClient = g_theInputSystem->GetNormalizedMousePosInClient( handle );
+	m_mousePos = (Vec2)m_gameCamera->ClientToWorld( mousePosInClient, 1.f );
 }
 
 void Game::TestOBBOverlap()
@@ -168,8 +165,8 @@ void Game::TestOBBOverlap()
 
 void Game::RenderMouse( const Camera& camera) const
 {
-	g_theRenderer->BindTexture(nullptr);
-	AABB2 orthoBounds( camera.GetOrthoBottomLeft(), camera.GetOrthoTopRight() );
+	g_theRenderer->SetDiffuseTexture(nullptr);
+	AABB2 orthoBounds( camera.GetBottomLeftWorldPos2D(), camera.GetTopRightWorldPos2D() );
 	Vec2 m_mouseDrawPos = orthoBounds.GetPointAtUV( m_mousePos );
 	Vec3 mouseDrawPos3 = Vec3( m_mouseDrawPos );
 	g_theRenderer->DrawCircle(mouseDrawPos3, 1, 1, Rgba8::WHITE);
@@ -210,12 +207,11 @@ void Game::UpdateAlignText( float deltaTime )
 	std::string temString = "testing";
 	temString = temString + "  alignPos (" + std::to_string( m_alignPos.x) + " , " + std::to_string( m_alignPos.y) + " )";
 	temString = "Try press button R and C, R to rotate the mouse obb. C to recreate the shapes";
-	m_testFont->AddVertsForTextInBox2D(m_alignTextVertices, m_alignBox, 1.5, temString, Rgba8::WHITE, 1, Vec2::ZERO);
+	g_squirrelFont->AddVertsForTextInBox2D(m_alignTextVertices, m_alignBox, 1.5, temString, Rgba8::WHITE, 1, Vec2::ZERO);
 }
 
-void Game::LoadGameAsset(){
-	//g_theRenderer->CreateOrGetTextureFromFile( "Data/Images/SpriteSheetStarterKit/Test_SpriteSheet8x2.png");
-	m_testFont = g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+void Game::LoadGameAsset()
+{
 }
 
 void Game::CreateRandomOBB()
@@ -224,7 +220,7 @@ void Game::CreateRandomOBB()
 	for( int obbIndex = 0; obbIndex < m_obbNum; obbIndex++ ){
 		Vec2 tempDimension = m_rng.RollRandomVec2InRange( Vec2(5, 5), Vec2(10, 10) );
 		
-		Vec2 tempCenter = m_rng.RollRandomVec2InRange( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
+		Vec2 tempCenter = m_rng.RollRandomVec2InRange( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetTopRightWorldPos2D() );
 		tempCenter = Vec2(30,30); //testing
 		float tempDegree = m_rng.RollRandomFloatInRange( 0, 360 );
 		OBB2 tempOBB = OBB2( tempDimension, tempCenter, tempDegree );
@@ -238,7 +234,7 @@ void Game::CreateRandomCapsule()
 {
 	m_capsules.clear();
 	for( int capsuleIndex = 0; capsuleIndex < m_capNum; capsuleIndex++ ) {
-		Vec2 tempStart = m_rng.RollRandomVec2InRange( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
+		Vec2 tempStart = m_rng.RollRandomVec2InRange( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetTopRightWorldPos2D() );
 		float length = m_rng.RollRandomFloatLessThan( 10 );
 		Vec2 direction = m_rng.RollRandomVec2InRange( Vec2( -1, -1 ), Vec2::ONE );
 		float radius = m_rng.RollRandomFloatLessThan( 10 );
@@ -250,16 +246,16 @@ void Game::CreateRandomCapsule()
 void Game::CreateOtherShapes()
 {
 	//Disc
-	m_center = m_rng.RollRandomVec2InRange( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
+	m_center = m_rng.RollRandomVec2InRange( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetTopRightWorldPos2D() );
 	m_radius = m_rng.RollRandomFloatInRange( 3, 5 );
 	
 	//line
-	Vec2 tempStart = m_rng.RollRandomVec2InRange( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
-	Vec2 tempEnd = m_rng.RollRandomVec2InRange( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
+	Vec2 tempStart = m_rng.RollRandomVec2InRange( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetTopRightWorldPos2D() );
+	Vec2 tempEnd = m_rng.RollRandomVec2InRange( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetTopRightWorldPos2D() );
 	m_line = LineSegment2(tempStart, tempEnd);
 
 	// aabb
-	Vec2 min = m_rng.RollRandomVec2InRange( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
+	Vec2 min = m_rng.RollRandomVec2InRange( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetTopRightWorldPos2D() );
 	float maxX = m_rng.RollRandomFloatInRange( min.x +5, min.x + 10);
 	float maxY = m_rng.RollRandomFloatInRange( min.y +5, min.y + 10);
 	m_box = AABB2(min.x, min.y, maxX, maxY );
@@ -280,7 +276,7 @@ void Game::UpdateOBBs( float deltaSeconds)
 	UNUSED(deltaSeconds);
 	m_OBBVertices.clear();
 	m_nearestPoints.clear();
-	AABB2 orthoBounds( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
+	AABB2 orthoBounds( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetBottomLeftWorldPos2D() );
 	Vec2 mouseDrawPos = orthoBounds.GetPointAtUV( m_mousePos );
 	for( int obbIndex = 0; obbIndex < m_obbNum; obbIndex++ ) {
 		OBB2 tempOBB = m_OBBs[obbIndex];
@@ -317,13 +313,13 @@ void Game::UpdateCapsule()
 	m_capsuleVertices.clear();
 	for( int capsuleIndex = 0; capsuleIndex < m_capNum; capsuleIndex++ ) {
 		Capsule2 tempCapsule = m_capsules[capsuleIndex];
-		AABB2 orthoBounds( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
+		AABB2 orthoBounds( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetTopRightWorldPos2D() );
  		Vec2 mouseDrawPos = orthoBounds.GetPointAtUV( m_mousePos );
 		if(IsPointInsideCapsule2D(mouseDrawPos, tempCapsule.m_start, tempCapsule.m_end, tempCapsule.m_radius)){
-			AppendVertsForCapsule2D( m_capsuleVertices, tempCapsule, Rgba8::BLUE, Vec2::ZERO, Vec2::ZERO );
+			AppendVertsForCapsule2D( m_capsuleVertices, tempCapsule, Rgba8::BLUE);
 		}
 		else{
-			AppendVertsForCapsule2D( m_capsuleVertices, tempCapsule, Rgba8::WHITE, Vec2::ZERO, Vec2::ZERO );
+			AppendVertsForCapsule2D( m_capsuleVertices, tempCapsule, Rgba8::WHITE);
 		}
 
  		Vec2 tempPoint = tempCapsule.GetNearestPoint( mouseDrawPos );
@@ -337,11 +333,11 @@ void Game::UpdateOtherShapes()
 {
 	m_discVertices.clear();
 	m_boxVertices.clear();
-	AABB2 orthoBounds( g_camera->GetOrthoBottomLeft(), g_camera->GetOrthoTopRight() );
+	AABB2 orthoBounds( g_gameCamera->GetBottomLeftWorldPos2D(), g_gameCamera->GetTopRightWorldPos2D() );
 	Vec2 mouseDrawPos = orthoBounds.GetPointAtUV( m_mousePos );
 	Rgba8 discColor = Rgba8::BLUE;
 	Rgba8 aabbColor = Rgba8::BLUE;
-	if(IsPointInDisc( mouseDrawPos, m_center, m_radius)){
+	if( IsPointInsideDisc( mouseDrawPos, m_center, m_radius)){
 		discColor = Rgba8::WHITE;
 	}
 	else{
@@ -367,19 +363,19 @@ void Game::UpdateOtherShapes()
 
 void Game::RenderOBBs() const
 {
-	g_theRenderer->BindTexture(nullptr);
+	g_theRenderer->SetDiffuseTexture(nullptr);
 	g_theRenderer->DrawVertexVector(m_OBBVertices);
 }
 
 void Game::RenderCapsules() const
 {
-	g_theRenderer->BindTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 	g_theRenderer->DrawVertexVector( m_capsuleVertices );
 }
 
 void Game::RenderOtherShapes() const
 {
-	g_theRenderer->BindTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 	g_theRenderer->DrawLine(m_line.m_start, m_line.m_end, 0.1f, Rgba8::WHITE);
 	g_theRenderer->DrawVertexVector( m_discVertices );
 	g_theRenderer->DrawVertexVector( m_boxVertices );
@@ -387,7 +383,7 @@ void Game::RenderOtherShapes() const
 
 void Game::RenderNearestPoints() const
 {
-	g_theRenderer->BindTexture( nullptr );
+	g_theRenderer->SetDiffuseTexture( nullptr );
 	for( int pointIndex = 0; pointIndex < m_nearestPoints.size(); pointIndex++ ) {
 		g_theRenderer->DrawCircle( Vec3( m_nearestPoints[pointIndex] ), 1, 1, Rgba8::RED );
 	}
