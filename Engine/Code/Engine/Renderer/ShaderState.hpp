@@ -1,26 +1,26 @@
 #pragma once
 #include <string>
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 #include "Engine/ThirdParty/XmlUtils.hpp"
 
 class ShaderState {
 public:
 	ShaderState()=delete;
 	~ShaderState(){}
-	explicit ShaderState( RenderContext* ctx, std::string statePath );
+	explicit ShaderState( RenderContext_d3d11* ctx, std::string statePath );
 
 	// mutator
 	void SetBlendMode( BlendMode mode );
 	void SetDepth( DepthCompareFunc compFunc, bool ableWriteDepth );
 	void SetCullMode( RasterCullMode mode );
-	void SetFillMode( RasterFillMode mode );
+	void SetRasterFillMode( RasterFillMode mode );
 	void PrepareForDraw();
 
 private:
 	void LoadShaderState();
 	void ParseMode( XmlElement* element );
 private:
-	RenderContext* m_owner = nullptr;
+	RenderContext_d3d11* m_owner = nullptr;
 	std::string m_shaderPath;
 	std::string m_name;
 	std::string m_statePath;

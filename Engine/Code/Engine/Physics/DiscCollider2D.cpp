@@ -3,7 +3,7 @@
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Physics/PolygonCollider2D.hpp"
 #include "Engine/Physics/RigidBody2D.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 
 
 DiscCollider2D::DiscCollider2D( const Vec2& localPos, const Vec2& worldPos, float radius )
@@ -111,7 +111,7 @@ float DiscCollider2D::CalculateMoment( float mass ) const
 	return 0.5f * mass * m_radius * m_radius;
 }
 
-void DiscCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
+void DiscCollider2D::DebugRender( RenderContext_d3d11* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
 {
 	// TODO test and debug 
 	float m_rotRadians = m_rigidbody->GetRotationInRadians();

@@ -14,7 +14,7 @@
 #include "Engine/Math/Plane2.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Core/StringUtils.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
 
 
@@ -26,7 +26,7 @@
 // Forward type declarations
 //
 
-extern RenderContext* g_theRenderer;
+extern RenderContext_d3d11* g_theRenderer;
 
 //
 //Angle utilities

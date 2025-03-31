@@ -2,7 +2,7 @@
 #include <string>
 #include "Engine/Math/IntVec2.hpp"
 
-class RenderContext;
+class RenderContext_d3d11;
 class TextureView;
 struct ID3D11Texture2D;
 
@@ -10,9 +10,9 @@ class Texture {
 public:
 	Texture(){}
 	~Texture();
-	Texture( RenderContext* ctx, ID3D11Texture2D* handle );
-	Texture( const char* filePath, RenderContext* ctx, ID3D11Texture2D* handle );
-	static Texture* CreateDepthStencilBuffer( RenderContext* ctx, int width, int height );
+	Texture( RenderContext_d3d11* ctx, ID3D11Texture2D* handle );
+	Texture( const char* filePath, RenderContext_d3d11* ctx, ID3D11Texture2D* handle );
+	static Texture* CreateDepthStencilBuffer( RenderContext_d3d11* ctx, int width, int height );
 
 
 	// accessor
@@ -30,7 +30,7 @@ public:
 	IntVec2 m_texelSizeCoords;
 	std::string m_imageFilePath;
 
-	RenderContext* m_owner		= nullptr;
+	RenderContext_d3d11* m_owner		= nullptr;
 	ID3D11Texture2D* m_handle	= nullptr;
 
 	TextureView* m_renderTargetView		= nullptr;

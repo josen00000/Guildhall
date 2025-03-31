@@ -30,6 +30,8 @@ public:
 	void Cleanup();
 private:
 	bool Create( size_t dataByteSize, size_t elementByteSize );
+	bool D3d11Create( size_t dataByteSize, size_t elementByteSize );
+	bool D3d11Update( void const* data, size_t dataByteSize, size_t elementByteSize );
 
 public:
 		RenderContext* m_owner	= nullptr;

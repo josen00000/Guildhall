@@ -1,8 +1,8 @@
 #include "Sampler.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 
-Sampler::Sampler( RenderContext* ctx, SamplerType type )
+Sampler::Sampler( RenderContext_d3d11* ctx, SamplerType type )
 {
 	m_owner = ctx;
 	m_handle = nullptr;

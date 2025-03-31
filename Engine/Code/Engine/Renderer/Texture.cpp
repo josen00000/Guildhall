@@ -1,11 +1,11 @@
 #include"Texture.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 
 
-Texture::Texture( RenderContext* ctx, ID3D11Texture2D* handle )
+Texture::Texture( RenderContext_d3d11* ctx, ID3D11Texture2D* handle )
 	:m_owner(ctx)
 	,m_handle(handle)
 {
@@ -14,7 +14,7 @@ Texture::Texture( RenderContext* ctx, ID3D11Texture2D* handle )
 	m_texelSizeCoords = IntVec2( desc.Width, desc.Height ); 
 }
 
-Texture::Texture( const char* filePath, RenderContext* ctx, ID3D11Texture2D* handle )
+Texture::Texture( const char* filePath, RenderContext_d3d11* ctx, ID3D11Texture2D* handle )
 {
 	m_owner = ctx;
 	m_handle = handle;
@@ -42,7 +42,7 @@ Texture::~Texture()
 
 }
 
-Texture* Texture::CreateDepthStencilBuffer( RenderContext* ctx, int width, int height )
+Texture* Texture::CreateDepthStencilBuffer( RenderContext_d3d11* ctx, int width, int height )
 {
 	// Create depth texture desc
 	D3D11_TEXTURE2D_DESC desc;

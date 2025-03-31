@@ -1,14 +1,14 @@
 #pragma once
 
 
-class RenderContext;
+class RenderContext_d3d11;
 struct IDXGISwapChain;
 class Texture;
 
 
 class SwapChain {
 public:
-	SwapChain( RenderContext* owner, IDXGISwapChain* handle);
+	SwapChain( RenderContext_d3d11* owner, IDXGISwapChain* handle);
 	~SwapChain();
 
 	void Present( int vsync = 0 );
@@ -22,7 +22,7 @@ private:
 	Texture* m_backBuffer	= nullptr; // is color target
 
 public:
-	RenderContext* m_owner;
+	RenderContext_d3d11* m_owner;
 	IDXGISwapChain* m_handle;
 
 };

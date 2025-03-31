@@ -13,7 +13,8 @@
 #include "Engine/Renderer/Camera.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/DebugRender.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderUtils.hpp"
+#include "engine/Renderer/RenderContext_d3d11.hpp"
 #include "Engine/Physics/Physics2D.hpp"
 #include "Engine/Audio/AudioSystem.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
@@ -57,7 +58,7 @@ void App::StartupStage1()
 void App::StartupStage2()
 {
 	// initialize system
-	g_theRenderer		= new RenderContext();
+	g_theRenderer		= CreateOrGetRenderContext( RENDER_CONTEXT_TYPE_D3D11 );
 	g_theInputSystem	= new InputSystem();
 	g_theAudioSystem	= new AudioSystem();
 	g_thePhysics		= new Physics2D();
@@ -73,14 +74,14 @@ void App::StartupStage2()
 
 void App::StartupStage3()
 {
-	g_gameCamera		= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
-	g_debugCamera		= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
-	g_UICamera			= Camera::CreateOrthographicCamera( g_theRenderer, Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) ); 
-	g_devCamera			= Camera::CreateOrthographicCamera( g_theRenderer, Vec2::ZERO, Vec2( 30, 20 ) ); 
+	g_gameCamera		= Camera::CreateOrthographicCamera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_debugCamera		= Camera::CreateOrthographicCamera( Vec2( GAME_CAMERA_MIN_X, GAME_CAMERA_MIN_Y ), Vec2( GAME_CAMERA_MAX_X, GAME_CAMERA_MAX_Y ) );
+	g_UICamera			= Camera::CreateOrthographicCamera( Vec2( UI_CAMERA_MIN_X, UI_CAMERA_MIN_Y ), Vec2( UI_CAMERA_MAX_X, UI_CAMERA_MAX_Y ) ); 
+	g_devCamera			= Camera::CreateOrthographicCamera( Vec2::ZERO, Vec2( 30, 20 ) ); 
 	g_gameCamera->EnableClearColor( Rgba8::BLACK );
 	DebugRenderSystemStartup( g_theRenderer, g_gameCamera );
 	g_theGame			= new Game( g_gameCamera, g_UICamera );
-	g_squirrelFont		= g_theRenderer->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+	g_squirrelFont		= CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 	g_theConsole = DevConsole::InitialDevConsole( g_squirrelFont, g_devCamera );
 
 	g_theGame->Startup();
@@ -92,13 +93,14 @@ void App::StartupStage3()
 	//ImGuiIO& io = ImGui::GetIO();
 	HWND topWindow = (HWND)g_theWindow->GetTopWindowHandle();
 	ImGui_ImplWin32_Init( topWindow );
-	ImGui_ImplDX11_Init( g_theRenderer->GetDevice(), g_theRenderer->GetContext() );
+	RenderContext_d3d11* d3d11 = (RenderContext_d3d11*)g_theRenderer;
+	ImGui_ImplDX11_Init( d3d11->GetDevice(), d3d11->GetContext() );// TODO: Implemet imgui init for general render context
 	ImGui::StyleColorsDark();
 }
 
 void App::Shutdown()
 {
-	g_theRenderer->Shutdown();
+	g_theRenderer->ShutDown();
 	g_theInputSystem->Shutdown();
 	g_theGame->Shutdown();
 	g_theConsole->Shutdown();

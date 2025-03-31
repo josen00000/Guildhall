@@ -2,7 +2,7 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 
 
 RenderBuffer::RenderBuffer( char const* debugName, RenderContext* owner, RenderBufferUsage usage, RenderMemoryHint memHint )	
@@ -23,46 +23,14 @@ RenderBuffer::~RenderBuffer()
 
 bool RenderBuffer::Update( void const* data, size_t dataByteSize, size_t elementByteSize )
 {
-	// 1. if not compatible - destroy the old buffer
-	if( !IsCompatible( dataByteSize,elementByteSize ) ) {
-		Cleanup();// destroy the handle, reset things
-		Create( dataByteSize, elementByteSize );
+	switch( m_owner->GetRenderContextType() )
+	{
+		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
+			return D3d11Update( data, dataByteSize, elementByteSize );
+		default:
+			ERROR_AND_DIE( "Unknown render context type" );
 	}
-	// our elementSize matches the passed in 
-	// if we're GPU
-		// bufferSizes MUST match
-	// if we're dynamic
-		// passed in buffer size is less than our bufferSize 
-	// 2. if no buffer, create one that is compatible
-	// 3. updating the buffer
 
-	ID3D11DeviceContext* ctx = m_owner->m_context;
-	if( m_memHint == MEMORY_HINT_DYNAMIC ){
-		// mapping
-		// memcpy( very fast for bit to bit copy )
-		// block call : wait for the result 
-		D3D11_MAPPED_SUBRESOURCE mapped;
-		HRESULT  result = ctx->Map( m_handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped ); // lock the memory
-		if( SUCCEEDED( result ) ) {
-			memcpy( mapped.pData, data, dataByteSize );
-			ctx->Unmap( m_handle, 0 );
-		}
-		else {
-			return false;
-		}
-	}
-	else {
-		// if this is MEMORY_HINT_GPU (gpu memory)
-		ctx->UpdateSubresource( m_handle, 0, nullptr, data, 0, 0 );
-	}
-	return true;
-		// mapping buffer
-	// Only available to DYNAMIC buffer,
-	// but, don't have to reallocate if going smaller
-
-	// CopySubresource ( direct copy )
-	//	Only available to GPU buffers that have 
-	//	exactly the same size, and element size
 }
 
 bool RenderBuffer::IsCompatible( size_t dataByteSize, size_t elementByteSize )
@@ -122,7 +90,19 @@ UINT ToDXUsage( RenderBufferUsage usage )
 
 bool RenderBuffer::Create( size_t dataByteSize, size_t elementByteSize )
 {
-	ID3D11Device* device = m_owner->m_device;
+	switch( m_owner->GetRenderContextType() )
+	{
+		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
+			return D3d11Create( dataByteSize, elementByteSize );
+		default:
+			ERROR_AND_DIE( "Unknown render context type" );
+	}
+}
+
+bool RenderBuffer::D3d11Create( size_t dataByteSize, size_t elementByteSize )
+{
+	RenderContext_d3d11* ctx = dynamic_cast<RenderContext_d3d11*>( m_owner );
+	ID3D11Device* device = ctx->m_device;
 
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = (UINT)dataByteSize;
@@ -132,7 +112,7 @@ bool RenderBuffer::Create( size_t dataByteSize, size_t elementByteSize )
 	if( m_memHint == MEMORY_HINT_DYNAMIC ) {
 		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	}
-	else if ( m_memHint == MEMORY_HINT_STAGING){
+	else if( m_memHint == MEMORY_HINT_STAGING ){
 		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
 	}
 
@@ -147,4 +127,51 @@ bool RenderBuffer::Create( size_t dataByteSize, size_t elementByteSize )
 		//m_handle->SetPrivateData( WKPDID_D3DDebugObjectName, (size_t)m_debugName.size() , m_debugName.c_str() );
 	}
 	return ( m_handle != nullptr );
+}
+
+bool RenderBuffer::D3d11Update( void const* data, size_t dataByteSize, size_t elementByteSize )
+{
+	// 1. if not compatible - destroy the old buffer
+	if( !IsCompatible( dataByteSize, elementByteSize ) ) {
+		Cleanup();// destroy the handle, reset things
+		Create( dataByteSize, elementByteSize );
+	}
+	// our elementSize matches the passed in 
+	// if we're GPU
+		// bufferSizes MUST match
+	// if we're dynamic
+		// passed in buffer size is less than our bufferSize 
+	// 2. if no buffer, create one that is compatible
+	// 3. updating the buffer
+
+	// TODO: Implement this dynamically for different type of render context.
+	RenderContext_d3d11* d3d11 = dynamic_cast<RenderContext_d3d11*>( m_owner );
+	ID3D11DeviceContext* ctx = d3d11->m_context;
+	if( m_memHint == MEMORY_HINT_DYNAMIC ){
+		// mapping
+		// memcpy( very fast for bit to bit copy )
+		// block call : wait for the result 
+		D3D11_MAPPED_SUBRESOURCE mapped;
+		HRESULT  result = ctx->Map( m_handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped ); // lock the memory
+		if( SUCCEEDED( result ) ) {
+			memcpy( mapped.pData, data, dataByteSize );
+			ctx->Unmap( m_handle, 0 );
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		// if this is MEMORY_HINT_GPU (gpu memory)
+		ctx->UpdateSubresource( m_handle, 0, nullptr, data, 0, 0 );
+	}
+	return true;
+	// mapping buffer
+// Only available to DYNAMIC buffer,
+// but, don't have to reallocate if going smaller
+
+// CopySubresource ( direct copy )
+//	Only available to GPU buffers that have 
+//	exactly the same size, and element size
+
 }

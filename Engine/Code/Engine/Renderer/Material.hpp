@@ -8,7 +8,7 @@ class Texture;
 class RenderBuffer;
 
 class Material {
-friend class RenderContext;
+friend class RenderContext_d3d11;
 
 public:
 	Material(){}

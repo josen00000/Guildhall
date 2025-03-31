@@ -6,7 +6,7 @@
 #include "Engine/Math/MathUtils.hpp"
 #include "Engine/Math/Vec4.hpp"
 #include "Engine/Math/AABB2.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 
@@ -14,46 +14,43 @@
 extern RenderContext* g_theRenderer;
 
 
-Camera::Camera( RenderContext* ctx, float nZ, float fZ, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
+Camera::Camera(  float nZ, float fZ, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
 {
 	m_transform = Transform();
 	SetOrthoView( bottomLeft, topRight, nZ, fZ, aspectRatio );
 	m_projectionType = PROJECTION_ORTHOGRAPHIC;
-	m_rctx = ctx;
 }
 
-Camera::Camera( RenderContext* ctx, const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
+Camera::Camera( const Vec2& bottomLeft/*=Vec2::ZERO*/, const Vec2& topRight/*=Vec2::ONE*/, float aspectRatio/*=1 */ )
 {
 	m_transform = Transform();
 	SetOrthoView( bottomLeft, topRight, aspectRatio );
 	m_projectionType = PROJECTION_ORTHOGRAPHIC;
-	m_rctx = ctx;
 }
 
-Camera::Camera( RenderContext* ctx, float fov/*60.f*/, float nearZ/*=-0.1*/, float farZ/*=-100*/, Vec3 pos/*=Vec3::ZERO*/, Vec3 rotPRY/*=Vec3::ZERO*/, Vec3 scale/*=Vec3::ONE */, Convention convention )
+Camera::Camera( float fov/*60.f*/, float nearZ/*=-0.1*/, float farZ/*=-100*/, Vec3 pos/*=Vec3::ZERO*/, Vec3 rotPRY/*=Vec3::ZERO*/, Vec3 scale/*=Vec3::ONE */, Convention convention )
 {
 	m_transform = Transform( pos, rotPRY.x, rotPRY.y, rotPRY.z, scale, convention );
 	SetProjectionPerspective( fov, nearZ, farZ );
 	m_projectionType = PROJECTION_PERSPECTIVE;
-	m_rctx = ctx;
 }
 
-Camera* Camera::CreateOrthographicCamera( RenderContext* ctx, const Vec2& bottomLeft, const Vec2& topRight )
+Camera* Camera::CreateOrthographicCamera( const Vec2& bottomLeft, const Vec2& topRight )
 {
-	Camera* result = new Camera( ctx, bottomLeft, topRight, 1 );
+	Camera* result = new Camera( bottomLeft, topRight, 1 );
 	return result;
 }
 
-Camera* Camera::CreatePerspectiveCamera( RenderContext* ctx, float fov, float nearZ, float farZ, Vec3 pos, Vec3 rotPRY, Vec3 scale )
+Camera* Camera::CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos, Vec3 rotPRY, Vec3 scale )
 {
-	Camera* result = new Camera( ctx, fov, nearZ, farZ, pos, rotPRY, scale );
+	Camera* result = new Camera( fov, nearZ, farZ, pos, rotPRY, scale );
 	return result;
 }
 
-Camera* Camera::CreatePerspectiveCamera( RenderContext* ctx, const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos/*=Vec3::ZERO*/, Vec3 rotPRY/*=Vec3::ZERO*/, Vec3 scale/*=Vec3::ONE */ )
+Camera* Camera::CreatePerspectiveCamera( const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos/*=Vec3::ZERO*/, Vec3 rotPRY/*=Vec3::ZERO*/, Vec3 scale/*=Vec3::ONE */ )
 {
 	UNUSED(debugMsg);
-	Camera* result = new Camera( ctx, fov, nearZ, farZ, pos, rotPRY, scale );
+	Camera* result = new Camera( fov, nearZ, farZ, pos, rotPRY, scale );
 	return result;
 }
 
@@ -135,10 +132,6 @@ Vec3 Camera::GetUpDirt( Convention convension ) const
 	return m_transform.GetUpDirt( convension );
 }
 
-RenderContext* Camera::GetRenderContext() const
-{
-	return m_rctx;
-}
 
 AABB2 Camera::GetWorldBox() const
 {
@@ -203,10 +196,6 @@ void Camera::SetCenterPosition2D( Vec2 pos )
 }
 
 
-void Camera::SetRenderContext( RenderContext* ctx )
-{
-	m_rctx = ctx;
-}
 // 
 // void Camera::SetProjectionOrthographic( float height, float nearZ /*= -1.0f*/, float farZ /*= 1.0f */ )
 // {
@@ -316,7 +305,7 @@ Texture* Camera::GetColorTarget( uint slot ) const
 	return g_theRenderer->GetSwapChainBackBuffer();
 }
 
-Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext* ctx )
+Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext_d3d11* ctx )
 {
 	if( m_depthStencilTarget != nullptr ){
 		return m_depthStencilTarget;
@@ -327,7 +316,7 @@ Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext* ctx )
 	return m_depthStencilTarget;
 }
 
-RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx, Convention convention )
+RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext_d3d11* ctx, Convention convention )
 {
 	static int i = 0;
 	i++;
