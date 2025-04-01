@@ -58,11 +58,11 @@ void App::StartupStage1()
 void App::StartupStage2()
 {
 	// initialize system
-	g_theRenderer		= CreateOrGetRenderContext( RENDER_CONTEXT_TYPE_D3D11 );
-	g_theInputSystem	= new InputSystem();
-	g_theAudioSystem	= new AudioSystem();
-	g_thePhysics		= new Physics2D();
-	g_theEventSystem	= new EventSystem();
+	g_theRenderer = CreateOrGetRenderContext( RENDER_CONTEXT_TYPE_VULKAN );
+	g_theInputSystem = new InputSystem();
+	g_theAudioSystem = new AudioSystem();
+	g_thePhysics = new Physics2D();
+	g_theEventSystem = new EventSystem();
 
 	g_theWindow->SetInputSystem( g_theInputSystem );
 	g_theRenderer->StartUp( g_theWindow );

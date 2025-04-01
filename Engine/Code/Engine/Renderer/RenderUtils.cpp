@@ -2,6 +2,7 @@
 
 #include "RenderUtils.hpp"
 #include "Engine/Renderer/RenderContext_d3d11.hpp"
+#include "Engine/Renderer/RenderContext_vulkan.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
 
 RenderContext* CreateOrGetRenderContext( RenderContextType type )
@@ -18,7 +19,7 @@ RenderContext* CreateOrGetRenderContext( RenderContextType type )
 		case RENDER_CONTEXT_TYPE_OPENGL:
 			ERROR_AND_DIE( "OpenGL not supported" );
 		case RENDER_CONTEXT_TYPE_VULKAN:
-			ERROR_AND_DIE( "Vulkan not supported yet, just yet." );
+			return new RenderContext_vulkan();
 		case RENDER_CONTEXT_TYPE_NONE:
 			return nullptr;
 	}

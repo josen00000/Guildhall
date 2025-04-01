@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Math/Mat44.hpp"
+#include "Engine/Platform/Window.hpp"
+#include "Engine/Renderer/Camera.hpp"
 
-class Window;
-class Camera;
 class Texture;
 class Clock;
 class GPUMesh;
