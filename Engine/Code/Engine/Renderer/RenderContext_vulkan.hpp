@@ -50,7 +50,13 @@ private:
 	void GetAllExtensions();
 	void CreateInstance();
 	void SetupDebugMessenger();
+	void PickPhysicalDevice();
+	void CreateLogicalDevice();
+
 private:
-	VkInstance m_instance;
-	VkDebugUtilsMessengerEXT m_debugMessenger;
+	VkInstance m_instance = NULL;
+	VkDebugUtilsMessengerEXT m_debugMessenger = NULL;
+	VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
+	VkDevice m_device = VK_NULL_HANDLE;
+	VkQueue m_graphicsQueue = VK_NULL_HANDLE;
 };

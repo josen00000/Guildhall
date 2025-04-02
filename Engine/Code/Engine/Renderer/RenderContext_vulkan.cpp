@@ -1,7 +1,22 @@
 #include "RenderContext_vulkan.hpp"
 #include <iostream>
+#include <optional>
 
 #define RENDER_DEBUG
+#ifdef RENDER_DEBUG
+const std::vector<const char*> validationLayers = {
+		"VK_LAYER_KHRONOS_validation"
+};
+#endif
+
+struct QueueFamilyIndices{
+	std::optional<uint32_t> graphicsFamily;
+
+	bool IsComplete() 
+	{
+		return graphicsFamily.has_value();
+	}
+ };
 
 RenderContext_vulkan::RenderContext_vulkan()
 	:RenderContext(RENDER_CONTEXT_TYPE_VULKAN)
@@ -45,11 +60,52 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 	return VK_FALSE;
 }
 
+static QueueFamilyIndices FindQueueFamilies( VkPhysicalDevice device )
+{
+	QueueFamilyIndices indices;
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties( device, &queueFamilyCount, nullptr );
+	std::vector<VkQueueFamilyProperties> queueFamilies( queueFamilyCount );
+	vkGetPhysicalDeviceQueueFamilyProperties( device, &queueFamilyCount, queueFamilies.data() );
+
+	int i = 0;
+	for( const VkQueueFamilyProperties& queueFamily : queueFamilies )
+	{
+		if( queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT )
+		{
+			indices.graphicsFamily = i;
+		}
+		if( indices.IsComplete() )
+		{
+			break;
+		}
+		i++;
+	}
+	return indices;
+}
+
+static bool IsDeviceSuitable( const VkPhysicalDevice& device )
+{
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties( device, &deviceProperties );
+
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceFeatures( device, &deviceFeatures );
+
+	bool passDeviceCheck = ( deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ) && deviceFeatures.geometryShader;
+
+	QueueFamilyIndices indices = FindQueueFamilies( device );
+	return passDeviceCheck && indices.IsComplete();
+}
+
+
 
 void RenderContext_vulkan::StartUp( Window* window )
 {
 	CreateInstance();
 	SetupDebugMessenger();
+	PickPhysicalDevice();
+	CreateLogicalDevice();
 }
 
 void RenderContext_vulkan::ShutDown()
@@ -58,6 +114,7 @@ void RenderContext_vulkan::ShutDown()
 	DestroyDebugUtilsMessengerEXT( m_instance, m_debugMessenger, nullptr );
 #endif
 
+	vkDestroyDevice( m_device, nullptr );
 	vkDestroyInstance( m_instance, nullptr );
 }
 
@@ -206,10 +263,6 @@ void RenderContext_vulkan::CreateInstance()
 
 	// debug layer
 #if defined(RENDER_DEBUG)
-	const std::vector<const char*> validationLayers = {
-		"VK_LAYER_KHRONOS_validation"
-	};
-
 	if( !CheckValidationLayersSupport( validationLayers ) )
 	{
 		ERROR_AND_DIE( "Validation layers requested, but not available!" );
@@ -243,5 +296,67 @@ void RenderContext_vulkan::SetupDebugMessenger()
 	}
 
 }
+
+void RenderContext_vulkan::PickPhysicalDevice()
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices( m_instance, &deviceCount, nullptr );
+	if( deviceCount == 0 )
+	{
+		ERROR_AND_DIE( "Failed to find GPUs with Vulkan support!" );
+	}
+
+	std::vector<VkPhysicalDevice> devices( deviceCount );
+	vkEnumeratePhysicalDevices( m_instance, &deviceCount, devices.data() );
+
+	for( const VkPhysicalDevice& device : devices )
+	{
+		if( IsDeviceSuitable( device ) ){
+			m_physicalDevice = device;
+			// we only have one GPU for now so don't bother to check and rate the GPU
+			break;
+		}
+	}
+
+	if( m_physicalDevice == VK_NULL_HANDLE )
+	{
+		ERROR_AND_DIE( "Failed to find a suitable GPU!" );
+	}
+}
+
+void RenderContext_vulkan::CreateLogicalDevice()
+{
+	QueueFamilyIndices indices = FindQueueFamilies( m_physicalDevice );
+
+	VkDeviceQueueCreateInfo queueCreateInfo = {};
+	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+	queueCreateInfo.queueCount = 1;
+	float queuePriority = 1.0f;
+	queueCreateInfo.pQueuePriorities = &queuePriority;
+
+
+	VkPhysicalDeviceFeatures deviceFeatures = {};
+	VkDeviceCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	createInfo.pQueueCreateInfos = &queueCreateInfo;
+	createInfo.queueCreateInfoCount = 1;
+	createInfo.pEnabledFeatures = &deviceFeatures;
+#ifdef RENDER_DEBUG
+	createInfo.enabledLayerCount = static_cast<uint32_t>( validationLayers.size() );
+	createInfo.ppEnabledLayerNames = validationLayers.data();
+#else
+	createInfo.enabledExtensionCount = 0;
+#endif
+
+	if(vkCreateDevice( m_physicalDevice, &createInfo, nullptr, &m_device ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create logical device!" );
+	}
+
+	vkGetDeviceQueue( m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue );
+}
+
+
 
 
