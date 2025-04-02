@@ -36,7 +36,7 @@ private:
 	const void Render() const;
 
 private:
-	bool m_doesUseIMGUI		= true;
+	bool m_doesUseIMGUI		= false;
 	bool m_isQuitting		= false;
 	bool m_isPauseTime		= false;
 	float m_timeFraction	= 1.f;

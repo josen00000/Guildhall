@@ -88,14 +88,16 @@ void App::StartupStage3()
 	g_theConsole->Startup();
 
 	// imgui setup
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	//ImGuiIO& io = ImGui::GetIO();
-	HWND topWindow = (HWND)g_theWindow->GetTopWindowHandle();
-	ImGui_ImplWin32_Init( topWindow );
-	RenderContext_d3d11* d3d11 = (RenderContext_d3d11*)g_theRenderer;
-	ImGui_ImplDX11_Init( d3d11->GetDevice(), d3d11->GetContext() );// TODO: Implemet imgui init for general render context
-	ImGui::StyleColorsDark();
+	if( m_doesUseIMGUI ){
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		//ImGuiIO& io = ImGui::GetIO();
+		HWND topWindow = (HWND)g_theWindow->GetTopWindowHandle();
+		ImGui_ImplWin32_Init( topWindow );
+		RenderContext_d3d11* d3d11 = (RenderContext_d3d11*)g_theRenderer;
+		ImGui_ImplDX11_Init( d3d11->GetDevice(), d3d11->GetContext() );// TODO: Implemet imgui init for general render context
+		ImGui::StyleColorsDark();
+	}
 }
 
 void App::Shutdown()
@@ -184,6 +186,7 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
+	return; // working on rendering part. 
 	g_theRenderer->BeginCamera( g_UICamera );
 	g_theGame->RenderUI();
 	g_theRenderer->EndCamera();

@@ -46,5 +46,11 @@ public:
 	virtual void DrawCircle( Vec3 center, float radius, float thick, const Rgba8& circleColor )  ;
 
 private:
-	VkInstance m_instance = nullptr;
+	bool CheckValidationLayersSupport( const std::vector<const char*>& validationLayers );
+	void GetAllExtensions();
+	void CreateInstance();
+	void SetupDebugMessenger();
+private:
+	VkInstance m_instance;
+	VkDebugUtilsMessengerEXT m_debugMessenger;
 };
