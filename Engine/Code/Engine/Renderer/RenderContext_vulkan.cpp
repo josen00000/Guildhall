@@ -1,6 +1,7 @@
 #include "RenderContext_vulkan.hpp"
 #include <iostream>
 #include <optional>
+#include <set>
 
 #define RENDER_DEBUG
 #ifdef RENDER_DEBUG
@@ -11,10 +12,11 @@ const std::vector<const char*> validationLayers = {
 
 struct QueueFamilyIndices{
 	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
 
 	bool IsComplete() 
 	{
-		return graphicsFamily.has_value();
+		return graphicsFamily.has_value() && presentFamily.has_value();
 	}
  };
 
@@ -60,7 +62,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 	return VK_FALSE;
 }
 
-static QueueFamilyIndices FindQueueFamilies( VkPhysicalDevice device )
+static QueueFamilyIndices FindQueueFamilies( VkPhysicalDevice device, VkSurfaceKHR surface )
 {
 	QueueFamilyIndices indices;
 	uint32_t queueFamilyCount = 0;
@@ -75,6 +77,14 @@ static QueueFamilyIndices FindQueueFamilies( VkPhysicalDevice device )
 		{
 			indices.graphicsFamily = i;
 		}
+
+		VkBool32 presentSupport = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR( device, i, surface, &presentSupport );
+		if( presentSupport )
+		{
+			indices.presentFamily = i;
+		}
+
 		if( indices.IsComplete() )
 		{
 			break;
@@ -84,7 +94,7 @@ static QueueFamilyIndices FindQueueFamilies( VkPhysicalDevice device )
 	return indices;
 }
 
-static bool IsDeviceSuitable( const VkPhysicalDevice& device )
+static bool IsDeviceSuitable( const VkPhysicalDevice& device, VkSurfaceKHR surface )
 {
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties( device, &deviceProperties );
@@ -94,7 +104,7 @@ static bool IsDeviceSuitable( const VkPhysicalDevice& device )
 
 	bool passDeviceCheck = ( deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ) && deviceFeatures.geometryShader;
 
-	QueueFamilyIndices indices = FindQueueFamilies( device );
+	QueueFamilyIndices indices = FindQueueFamilies( device, surface );
 	return passDeviceCheck && indices.IsComplete();
 }
 
@@ -104,6 +114,7 @@ void RenderContext_vulkan::StartUp( Window* window )
 {
 	CreateInstance();
 	SetupDebugMessenger();
+	CreateSurface( window );
 	PickPhysicalDevice();
 	CreateLogicalDevice();
 }
@@ -113,7 +124,7 @@ void RenderContext_vulkan::ShutDown()
 #if defined(RENDER_DEBUG)
 	DestroyDebugUtilsMessengerEXT( m_instance, m_debugMessenger, nullptr );
 #endif
-
+	vkDestroySurfaceKHR( m_instance, m_surface, nullptr );
 	vkDestroyDevice( m_device, nullptr );
 	vkDestroyInstance( m_instance, nullptr );
 }
@@ -311,7 +322,7 @@ void RenderContext_vulkan::PickPhysicalDevice()
 
 	for( const VkPhysicalDevice& device : devices )
 	{
-		if( IsDeviceSuitable( device ) ){
+		if( IsDeviceSuitable( device, m_surface ) ){
 			m_physicalDevice = device;
 			// we only have one GPU for now so don't bother to check and rate the GPU
 			break;
@@ -326,21 +337,26 @@ void RenderContext_vulkan::PickPhysicalDevice()
 
 void RenderContext_vulkan::CreateLogicalDevice()
 {
-	QueueFamilyIndices indices = FindQueueFamilies( m_physicalDevice );
+	QueueFamilyIndices indices = FindQueueFamilies( m_physicalDevice, m_surface );
 
-	VkDeviceQueueCreateInfo queueCreateInfo = {};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-	queueCreateInfo.queueCount = 1;
-	float queuePriority = 1.0f;
-	queueCreateInfo.pQueuePriorities = &queuePriority;
-
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+	for( uint32_t queueFamily : uniqueQueueFamilies )
+	{
+		VkDeviceQueueCreateInfo queueCreateInfo = {};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		float queuePriority = 1.0f;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back( queueCreateInfo );
+	}
 
 	VkPhysicalDeviceFeatures deviceFeatures = {};
 	VkDeviceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	createInfo.pQueueCreateInfos = &queueCreateInfo;
-	createInfo.queueCreateInfoCount = 1;
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	createInfo.queueCreateInfoCount = static_cast<uint32_t>( queueCreateInfos.size() );
 	createInfo.pEnabledFeatures = &deviceFeatures;
 #ifdef RENDER_DEBUG
 	createInfo.enabledLayerCount = static_cast<uint32_t>( validationLayers.size() );
@@ -355,6 +371,19 @@ void RenderContext_vulkan::CreateLogicalDevice()
 	}
 
 	vkGetDeviceQueue( m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue );
+	vkGetDeviceQueue( m_device, indices.presentFamily.value(), 0, &m_presentQueue );
+}
+
+void RenderContext_vulkan::CreateSurface( Window* window )
+{
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	surfaceCreateInfo.hwnd = (HWND)window->GetHandle();
+	surfaceCreateInfo.hinstance = GetModuleHandle( nullptr );
+	if( vkCreateWin32SurfaceKHR( m_instance, &surfaceCreateInfo, nullptr, &m_surface ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create window surface!" );
+	}
 }
 
 

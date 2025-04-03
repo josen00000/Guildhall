@@ -52,11 +52,14 @@ private:
 	void SetupDebugMessenger();
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
+	void CreateSurface(Window* window);
 
 private:
 	VkInstance m_instance = NULL;
 	VkDebugUtilsMessengerEXT m_debugMessenger = NULL;
 	VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
 	VkDevice m_device = VK_NULL_HANDLE;
+	VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 	VkQueue m_graphicsQueue = VK_NULL_HANDLE;
+	VkQueue m_presentQueue = VK_NULL_HANDLE;
 };
