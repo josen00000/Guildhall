@@ -53,6 +53,7 @@ private:
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
 	void CreateSurface(Window* window);
+	void CreateSwapChain(Window* window);
 
 private:
 	VkInstance m_instance = NULL;
@@ -62,4 +63,8 @@ private:
 	VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 	VkQueue m_graphicsQueue = VK_NULL_HANDLE;
 	VkQueue m_presentQueue = VK_NULL_HANDLE;
+	VkSwapchainKHR m_VkSwapChain = VK_NULL_HANDLE; // TODO: Need to integrate with swapchain
+	std::vector<VkImage> m_swapChainImages;
+	VkFormat m_swapChainImageFormat;
+	VkExtent2D m_swapChainExtent;
 };
