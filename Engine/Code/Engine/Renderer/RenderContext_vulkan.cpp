@@ -3,6 +3,8 @@
 #include <optional>
 #include <set>
 #include <algorithm>
+#include <array>
+#include <fstream>
 
 #define RENDER_DEBUG
 #ifdef RENDER_DEBUG
@@ -168,7 +170,6 @@ static bool IsDeviceSuitable( const VkPhysicalDevice& device, VkSurfaceKHR surfa
 	return passDeviceCheck && passExtensionsCheck && indices.IsComplete() && passSwapChainSupportCheck;
 }
 
-
 static VkSurfaceFormatKHR ChooseSwapSurfaceFormat( const std::vector<VkSurfaceFormatKHR>& availableFormats )
 {
 	for( const VkSurfaceFormatKHR& availableFormat : availableFormats )
@@ -210,6 +211,74 @@ static VkExtent2D ChooseSwapExtent( const VkSurfaceCapabilitiesKHR& capabilities
 		return actualExtent;
 	}
 }
+
+static VkVertexInputBindingDescription GetBindingDescription()
+{
+	// TODO: Need to implement vertex_PCUTBN later.
+	// TODO: we will use vertex input rate vertex for now. Later we will implement instance buffer
+	// TODO: Move to static function of Vertex_PCU
+	//VK_VERTEX_INPUT_RATE_VERTEX: Move to the next data entry after each vertex
+	//VK_VERTEX_INPUT_RATE_INSTANCE: Move to the next data entry after each instance
+	VkVertexInputBindingDescription bindingDescription = {};
+	bindingDescription.binding = 0;
+	bindingDescription.stride = sizeof( Vertex_PCU );
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	return bindingDescription;
+}
+
+static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions()
+{
+	// TODO: Move to static function of Vertex_PCU
+	std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+	// position
+	attributeDescriptions[0].binding = 0;
+	attributeDescriptions[0].location = 0;
+	attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescriptions[0].offset = offsetof( Vertex_PCU, m_pos );
+
+	// color
+	attributeDescriptions[1].binding = 0;
+	attributeDescriptions[1].location = 1;
+	attributeDescriptions[1].format = VK_FORMAT_R8G8B8A8_UINT;
+	attributeDescriptions[1].offset = offsetof( Vertex_PCU, m_color );
+
+	return attributeDescriptions;
+}
+
+static std::vector<char> ReadFile( const std::string& fileName )
+{
+	std::ifstream file( fileName, std::ios::ate | std::ios::binary );
+	if( !file.is_open() )
+	{
+		ERROR_AND_DIE( "Failed to open file!" );
+	}
+
+	size_t fileSize = (size_t)file.tellg();
+	std::vector<char> buffer( fileSize );
+
+	file.seekg( 0 );
+	file.read( buffer.data(), fileSize );
+	file.close();
+
+	return buffer;
+}
+
+static VkShaderModule  CreateShaderModule( const std::vector<char>& code, VkDevice device )
+{
+	VkShaderModuleCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.codeSize = code.size();
+	createInfo.pCode = reinterpret_cast<const uint32_t*>( code.data() );
+
+	VkShaderModule shaderModule;
+	if( vkCreateShaderModule( device, &createInfo, nullptr, &shaderModule ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create shader module!" );
+	}
+	return shaderModule;
+
+}
 // End of helper functions
 
 
@@ -221,6 +290,7 @@ void RenderContext_vulkan::StartUp( Window* window )
 	PickPhysicalDevice();
 	CreateLogicalDevice();
 	CreateSwapChain( window );
+	CreateGraphicsPipeline();
 }
 
 void RenderContext_vulkan::ShutDown()
@@ -234,6 +304,9 @@ void RenderContext_vulkan::ShutDown()
 		vkDestroyImageView( m_device, imageView, nullptr );
 	}
 	vkDestroySwapchainKHR( m_device, m_VkSwapChain, nullptr );
+
+	vkDestroyShaderModule( m_device, m_vertShaderModule, nullptr );
+	vkDestroyShaderModule( m_device, m_fragShaderModule, nullptr );
 	vkDestroyDevice( m_device, nullptr );
 	vkDestroySurfaceKHR( m_instance, m_surface, nullptr );
 	vkDestroyInstance( m_instance, nullptr );
@@ -584,6 +657,40 @@ void RenderContext_vulkan::CreateImageViews()
 			ERROR_AND_DIE( "Failed to create image views!" );
 		}
 	}
+}
+
+void RenderContext_vulkan::CreateGraphicsPipeline()
+{
+	// vertex shader
+	auto vertShaderCode = ReadFile( "data/Shader/vert.spv" );
+	auto fragShaderCode = ReadFile( "data/Shader/frag.spv" );
+	
+	m_vertShaderModule = CreateShaderModule( vertShaderCode, m_device );
+	m_fragShaderModule = CreateShaderModule( fragShaderCode, m_device );
+
+	VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
+	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertShaderStageInfo.module = m_vertShaderModule;
+	vertShaderStageInfo.pName = "main";
+	//vertShaderStageInfo.pSpecializationInfo = nullptr; // specify values for shader constants
+
+	VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
+	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragShaderStageInfo.module = m_fragShaderModule;
+	fragShaderStageInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo  shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+	//auto bindingDescription = GetBindingDescription();
+	//auto attributeDescriptions = GetAttributeDescriptions();
+	//VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
+	//vertexInputInfo.vertexBindingDescriptionCount = 1;
+	//vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>( attributeDescriptions.size() );
+	//vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+	//vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
 }
 
 

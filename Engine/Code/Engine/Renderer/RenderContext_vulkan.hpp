@@ -55,6 +55,7 @@ private:
 	void CreateSurface(Window* window);
 	void CreateSwapChain(Window* window);
 	void CreateImageViews();
+	void CreateGraphicsPipeline();
 
 private:
 	VkInstance m_instance = NULL;
@@ -69,4 +70,6 @@ private:
 	VkFormat m_swapChainImageFormat;
 	VkExtent2D m_swapChainExtent;
 	std::vector<VkImageView> m_swapChainImageViews;
+	VkShaderModule m_vertShaderModule = VK_NULL_HANDLE;
+	VkShaderModule m_fragShaderModule = VK_NULL_HANDLE;
 };
