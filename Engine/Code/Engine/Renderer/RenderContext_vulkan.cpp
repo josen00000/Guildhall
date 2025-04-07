@@ -293,6 +293,7 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateImageViews();
 	CreateRenderPass();
 	CreateGraphicsPipeline();
+	CreateFramebuffers();
 }
 
 void RenderContext_vulkan::ShutDown()
@@ -305,6 +306,12 @@ void RenderContext_vulkan::ShutDown()
 	{
 		vkDestroyImageView( m_device, imageView, nullptr );
 	}
+
+	for( auto framebuffer : m_swapChainFramebuffers )
+	{
+		vkDestroyFramebuffer( m_device, framebuffer, nullptr );
+	}
+	vkDestroyCommandPool( m_device, m_commandPool, nullptr );
 	vkDestroySwapchainKHR( m_device, m_VkSwapChain, nullptr );
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
 	vkDestroyPipelineLayout( m_device, m_pipelineLayout, nullptr );
@@ -873,6 +880,109 @@ void RenderContext_vulkan::CreateGraphicsPipeline()
 	{
 		ERROR_AND_DIE( "Failed to create graphics pipeline!" );
 	}
+}
+
+void RenderContext_vulkan::CreateFramebuffers()
+{
+	m_swapChainFramebuffers.resize( m_swapChainImageViews.size() );
+	for( size_t i = 0; i < m_swapChainImageViews.size(); i++ )
+	{
+		VkImageView attachments[] = {
+			m_swapChainImageViews[i]
+		};
+
+		VkFramebufferCreateInfo framebufferInfo = {};
+		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebufferInfo.renderPass = m_renderPass;
+		framebufferInfo.attachmentCount = 1;
+		framebufferInfo.pAttachments = attachments;
+		framebufferInfo.width = m_swapChainExtent.width;
+		framebufferInfo.height = m_swapChainExtent.height;
+		framebufferInfo.layers = 1;
+
+		if( vkCreateFramebuffer( m_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i] ) != VK_SUCCESS )
+		{
+			ERROR_AND_DIE( "Failed to create framebuffer!" );
+		}
+	}
+}
+
+void RenderContext_vulkan::CreateCommandPool()
+{
+	QueueFamilyIndices indices = FindQueueFamilies( m_physicalDevice, m_surface );
+	VkCommandPoolCreateInfo poolInfo = {};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.queueFamilyIndex = indices.graphicsFamily.value(); 
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+	if( vkCreateCommandPool( m_device, &poolInfo, nullptr, &m_commandPool ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create command pool!" );
+	}
+}
+
+void RenderContext_vulkan::CreateCommandBuffer()
+{
+	VkCommandBufferAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = m_commandPool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = 1;
+
+	if( vkAllocateCommandBuffers( m_device, &allocInfo, &m_commandBuffer ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to allocate command buffer!" );
+	}
+}
+
+void RenderContext_vulkan::RecordCommandBuffer( uint32_t imageIndex )
+{
+	VkCommandBufferBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = 0; // Optional
+	beginInfo.pInheritanceInfo = nullptr; // Optional
+
+	if( vkBeginCommandBuffer( m_commandBuffer, &beginInfo ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to begin recording command buffer!" );
+	}
+
+	VkRenderPassBeginInfo renderPassInfo = {};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = m_renderPass;
+	renderPassInfo.framebuffer = m_swapChainFramebuffers[imageIndex];
+	renderPassInfo.renderArea.offset = { 0, 0 };
+	renderPassInfo.renderArea.extent = m_swapChainExtent;
+	VkClearValue clearColor = { { {0.0f, 0.0f, 0.0f, 1.0f} } };
+	renderPassInfo.clearValueCount = 1;
+	renderPassInfo.pClearValues = &clearColor;
+	vkCmdBeginRenderPass( m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
+
+	vkCmdBindPipeline( m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline );
+
+	// viewport and scissor
+	VkViewport viewport = {};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)m_swapChainExtent.width;
+	viewport.height = (float)m_swapChainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport( m_commandBuffer, 0, 1, &viewport );
+
+	VkRect2D scissor = {};
+	scissor.offset = { 0, 0 };
+	scissor.extent = m_swapChainExtent;
+	vkCmdSetScissor( m_commandBuffer, 0, 1, &scissor );
+
+	vkCmdDraw(m_commandBuffer, 3, 1, 0, 0 ); // draw a triangle
+
+	vkCmdEndRenderPass( m_commandBuffer );
+	if( vkEndCommandBuffer( m_commandBuffer ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to record command buffer!" );
+	}
+
 }
 
 

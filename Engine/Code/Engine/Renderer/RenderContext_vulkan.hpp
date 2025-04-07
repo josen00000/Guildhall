@@ -57,7 +57,11 @@ private:
 	void CreateImageViews();
 	void CreateRenderPass();
 	void CreateGraphicsPipeline();
-
+	void CreateFramebuffers();
+	void CreateCommandPool();
+	void CreateCommandBuffer();
+	void RecordCommandBuffer( uint32_t imageIndex );
+	void CreateSyncObjects();
 private:
 	VkInstance m_instance = NULL;
 	VkDebugUtilsMessengerEXT m_debugMessenger = NULL;
@@ -76,4 +80,10 @@ private:
 	VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
 	VkRenderPass m_renderPass = VK_NULL_HANDLE;
 	VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
+	std::vector<VkFramebuffer> m_swapChainFramebuffers;
+	VkCommandPool m_commandPool = VK_NULL_HANDLE;
+	VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
+	VkSemaphore m_imageAvailableSemaphore = VK_NULL_HANDLE;
+	VkSemaphore m_renderFinishedSemaphore = VK_NULL_HANDLE;
+	VkFence m_inFlightFence = VK_NULL_HANDLE; // is rendering finished
 };

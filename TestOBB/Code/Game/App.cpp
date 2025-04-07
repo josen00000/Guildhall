@@ -186,6 +186,10 @@ void App::Update( float deltaSeconds )
 
 const void App::Render() const
 {
+	// test vulkan render functions
+	// draw frame
+	
+
 	return; // working on rendering part. 
 	g_theRenderer->BeginCamera( g_UICamera );
 	g_theGame->RenderUI();
