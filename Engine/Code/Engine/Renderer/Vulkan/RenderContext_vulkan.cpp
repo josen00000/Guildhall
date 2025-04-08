@@ -285,12 +285,13 @@ static VkShaderModule  CreateShaderModule( const std::vector<char>& code, VkDevi
 
 void RenderContext_vulkan::StartUp( Window* window )
 {
+	m_window = window;
 	CreateInstance();
 	SetupDebugMessenger();
-	CreateSurface( window );
+	CreateSurface();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
-	CreateSwapChain( window );
+	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
 	CreateGraphicsPipeline();
@@ -306,15 +307,8 @@ void RenderContext_vulkan::ShutDown()
 	DestroyDebugUtilsMessengerEXT( m_instance, m_debugMessenger, nullptr );
 #endif
 	// destroy device first and then instance
-	for( auto imageView : m_swapChainImageViews )
-	{
-		vkDestroyImageView( m_device, imageView, nullptr );
-	}
+	ShutDownSwapChain();
 
-	for( auto framebuffer : m_swapChainFramebuffers )
-	{
-		vkDestroyFramebuffer( m_device, framebuffer, nullptr );
-	}
 	for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
 	{
 		vkDestroySemaphore( m_device, m_renderFinishedSemaphores[i], nullptr );
@@ -322,7 +316,6 @@ void RenderContext_vulkan::ShutDown()
 		vkDestroyFence( m_device, m_inFlightFences[i], nullptr );
 	}
 	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
-	vkDestroySwapchainKHR( m_device, m_VkSwapChain, nullptr );
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
 	vkDestroyPipelineLayout( m_device, m_pipelineLayout, nullptr );
 	vkDestroyRenderPass( m_device, m_renderPass, nullptr );
@@ -336,14 +329,22 @@ void RenderContext_vulkan::ShutDown()
 void RenderContext_vulkan::BeginFrame()
 {
 	vkWaitForFences( m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
-	vkResetFences( m_device, 1, &m_inFlightFences[m_currentFrame]);
-
 }
 
 void RenderContext_vulkan::EndFrame()
 {
 	uint32_t imageIndex;
-	vkAcquireNextImageKHR( m_device, m_VkSwapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR( m_device, m_VkSwapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
+	if(result == VK_ERROR_OUT_OF_DATE_KHR ){
+		RecreateSwapChain();
+		return;
+	}
+	else if( result != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to acquire swap chain image!" );
+	}
+
+	vkResetFences( m_device, 1, &m_inFlightFences[m_currentFrame] );
 	vkResetCommandBuffer(m_commandBuffers[m_currentFrame], 0);
 	RecordCommandBuffer( m_commandBuffers[m_currentFrame], imageIndex );
 
@@ -619,11 +620,11 @@ void RenderContext_vulkan::CreateLogicalDevice()
 	vkGetDeviceQueue( m_device, indices.presentFamily.value(), 0, &m_presentQueue );
 }
 
-void RenderContext_vulkan::CreateSurface( Window* window )
+void RenderContext_vulkan::CreateSurface()
 {
 	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.hwnd = (HWND)window->GetHandle();
+	surfaceCreateInfo.hwnd = (HWND)m_window->GetHandle();
 	surfaceCreateInfo.hinstance = GetModuleHandle( nullptr );
 	if( vkCreateWin32SurfaceKHR( m_instance, &surfaceCreateInfo, nullptr, &m_surface ) != VK_SUCCESS )
 	{
@@ -631,12 +632,12 @@ void RenderContext_vulkan::CreateSurface( Window* window )
 	}
 }
 
-void RenderContext_vulkan::CreateSwapChain(Window* window)
+void RenderContext_vulkan::CreateSwapChain()
 {
 	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport( m_physicalDevice, m_surface );
 	VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat( swapChainSupport.formats );
 	VkPresentModeKHR presentMode = ChooseSwapPresentMode( swapChainSupport.presentModes );
-	VkExtent2D extent = ChooseSwapExtent( swapChainSupport.capabilities, window);
+	VkExtent2D extent = ChooseSwapExtent( swapChainSupport.capabilities, m_window);
 
 	//we may sometimes have to wait on the driver to complete internal operations before we can acquire another image to render to. 
 	//Therefore it is recommended to request at least one more image than the minimum:
@@ -1070,6 +1071,32 @@ void RenderContext_vulkan::CreateSyncObjects()
 			ERROR_AND_DIE( "Failed to create synchronization objects!" );
 		}
 	}
+}
+
+void RenderContext_vulkan::RecreateSwapChain( )
+{
+	vkDeviceWaitIdle( m_device ); // wait for the device to finish all operations
+
+	ShutDownSwapChain();
+
+	CreateSwapChain();
+	CreateImageViews();
+	CreateFrameBuffers();
+}
+
+void RenderContext_vulkan::ShutDownSwapChain()
+{
+	for(size_t i = 0; i < m_swapChainFramebuffers.size(); i++ )
+	{
+		vkDestroyFramebuffer( m_device, m_swapChainFramebuffers[i], nullptr );
+	}
+
+	for(size_t i = 0; i < m_swapChainImageViews.size(); i++ )
+	{
+		vkDestroyImageView( m_device, m_swapChainImageViews[i], nullptr );
+	}
+
+	vkDestroySwapchainKHR( m_device, m_VkSwapChain, nullptr );
 }
 
 

@@ -51,8 +51,8 @@ private:
 	void SetupDebugMessenger();
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
-	void CreateSurface(Window* window);
-	void CreateSwapChain(Window* window);
+	void CreateSurface();
+	void CreateSwapChain();
 	void CreateImageViews();
 	void CreateRenderPass();
 	void CreateGraphicsPipeline();
@@ -61,9 +61,12 @@ private:
 	void CreateCommandBuffers();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer,  uint32_t imageIndex );
 	void CreateSyncObjects();
+	void RecreateSwapChain();
+	void ShutDownSwapChain();
 
 private:
 	uint32_t m_currentFrame = 0;
+	Window* m_window = nullptr;
 	VkInstance m_instance = NULL;
 	VkDebugUtilsMessengerEXT m_debugMessenger = NULL;
 	VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
