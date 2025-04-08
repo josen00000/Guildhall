@@ -57,7 +57,7 @@ private:
 	void CreateImageViews();
 	void CreateRenderPass();
 	void CreateGraphicsPipeline();
-	void CreateFramebuffers();
+	void CreateFrameBuffers();
 	void CreateCommandPool();
 	void CreateCommandBuffer();
 	void RecordCommandBuffer( uint32_t imageIndex );

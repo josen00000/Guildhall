@@ -279,6 +279,7 @@ static VkShaderModule  CreateShaderModule( const std::vector<char>& code, VkDevi
 	return shaderModule;
 
 }
+
 // End of helper functions
 
 
@@ -293,7 +294,9 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateImageViews();
 	CreateRenderPass();
 	CreateGraphicsPipeline();
-	CreateFramebuffers();
+	CreateFrameBuffers();
+	CreateCommandPool();
+	CreateCommandBuffer();
 }
 
 void RenderContext_vulkan::ShutDown()
@@ -882,7 +885,7 @@ void RenderContext_vulkan::CreateGraphicsPipeline()
 	}
 }
 
-void RenderContext_vulkan::CreateFramebuffers()
+void RenderContext_vulkan::CreateFrameBuffers()
 {
 	m_swapChainFramebuffers.resize( m_swapChainImageViews.size() );
 	for( size_t i = 0; i < m_swapChainImageViews.size(); i++ )
