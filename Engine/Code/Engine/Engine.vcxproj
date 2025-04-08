@@ -260,7 +260,6 @@
     <ClCompile Include="Renderer\RenderBuffer.cpp" />
     <ClCompile Include="Renderer\RenderContext.cpp" />
     <ClCompile Include="Renderer\RenderContext_d3d11.cpp" />
-    <ClCompile Include="Renderer\RenderContext_vulkan.cpp" />
     <ClCompile Include="Renderer\RenderUtils.cpp" />
     <ClCompile Include="Renderer\Sampler.cpp" />
     <ClCompile Include="Renderer\Shader.cpp" />
@@ -272,6 +271,7 @@
     <ClCompile Include="Renderer\Texture.cpp" />
     <ClCompile Include="Renderer\TextureView.cpp" />
     <ClCompile Include="Renderer\VertexBuffer.cpp" />
+    <ClCompile Include="Renderer\Vulkan\RenderContext_vulkan.cpp" />
     <ClCompile Include="ThirdParty\mikktspace.c" />
     <ClCompile Include="ThirdParty\XmlUtils.cpp" />
   </ItemGroup>
@@ -378,7 +378,6 @@
     <ClInclude Include="Renderer\RenderCommon.hpp" />
     <ClInclude Include="Renderer\RenderContext.hpp" />
     <ClInclude Include="Renderer\RenderContext_d3d11.hpp" />
-    <ClInclude Include="Renderer\RenderContext_vulkan.hpp" />
     <ClInclude Include="Renderer\RenderUtils.hpp" />
     <ClInclude Include="Renderer\Sampler.hpp" />
     <ClInclude Include="Renderer\Shader.hpp" />
@@ -390,6 +389,8 @@
     <ClInclude Include="Renderer\Texture.hpp" />
     <ClInclude Include="Renderer\TextureView.hpp" />
     <ClInclude Include="Renderer\VertexBuffer.hpp" />
+    <ClInclude Include="Renderer\Vulkan\RenderContext_vulkan.hpp" />
+    <ClInclude Include="Renderer\Vulkan\VulkanCommon.hpp" />
     <ClInclude Include="ThirdParty\mikktspace.h" />
     <ClInclude Include="ThirdParty\XmlUtils.hpp" />
   </ItemGroup>

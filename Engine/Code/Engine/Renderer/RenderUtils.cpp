@@ -2,7 +2,7 @@
 
 #include "RenderUtils.hpp"
 #include "Engine/Renderer/RenderContext_d3d11.hpp"
-#include "Engine/Renderer/RenderContext_vulkan.hpp"
+#include "Engine/Renderer/Vulkan/RenderContext_vulkan.hpp"
 #include "Engine/Core/ErrorWarningAssert.hpp"
 
 RenderContext* CreateOrGetRenderContext( RenderContextType type )

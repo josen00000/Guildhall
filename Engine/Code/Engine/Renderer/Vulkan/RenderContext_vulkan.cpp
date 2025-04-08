@@ -296,7 +296,7 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPool();
-	CreateCommandBuffer();
+	CreateCommandBuffers();
 	CreateSyncObjects();
 }
 
@@ -315,10 +315,13 @@ void RenderContext_vulkan::ShutDown()
 	{
 		vkDestroyFramebuffer( m_device, framebuffer, nullptr );
 	}
-	vkDestroySemaphore( m_device, m_renderFinishedSemaphore, nullptr );
-	vkDestroySemaphore( m_device, m_imageAvailableSemaphore, nullptr );
-	vkDestroyFence( m_device, m_inFlightFence, nullptr );
-	vkDestroyCommandPool( m_device, m_commandPool, nullptr );
+	for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
+	{
+		vkDestroySemaphore( m_device, m_renderFinishedSemaphores[i], nullptr );
+		vkDestroySemaphore( m_device, m_imageAvailableSemaphores[i], nullptr );
+		vkDestroyFence( m_device, m_inFlightFences[i], nullptr );
+	}
+	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
 	vkDestroySwapchainKHR( m_device, m_VkSwapChain, nullptr );
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
 	vkDestroyPipelineLayout( m_device, m_pipelineLayout, nullptr );
@@ -332,31 +335,31 @@ void RenderContext_vulkan::ShutDown()
 
 void RenderContext_vulkan::BeginFrame()
 {
-	vkWaitForFences( m_device, 1, &m_inFlightFence, VK_TRUE, UINT64_MAX );
-	vkResetFences( m_device, 1, &m_inFlightFence );
+	vkWaitForFences( m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
+	vkResetFences( m_device, 1, &m_inFlightFences[m_currentFrame]);
 
 }
 
 void RenderContext_vulkan::EndFrame()
 {
 	uint32_t imageIndex;
-	vkAcquireNextImageKHR( m_device, m_VkSwapChain, UINT64_MAX, m_imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex );
-	vkResetCommandBuffer(m_commandBuffer, 0 );
-	RecordCommandBuffer( imageIndex );
+	vkAcquireNextImageKHR( m_device, m_VkSwapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
+	vkResetCommandBuffer(m_commandBuffers[m_currentFrame], 0);
+	RecordCommandBuffer( m_commandBuffers[m_currentFrame], imageIndex );
 
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	VkSemaphore waitSemaphores[] = { m_imageAvailableSemaphore };
+	VkSemaphore waitSemaphores[] = { m_imageAvailableSemaphores[m_currentFrame]};
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &m_commandBuffer;
-	VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphore };
+	submitInfo.pCommandBuffers = &m_commandBuffers[m_currentFrame];
+	VkSemaphore signalSemaphores[] = { m_renderFinishedSemaphores[m_currentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
-	if( vkQueueSubmit( m_graphicsQueue, 1, &submitInfo, m_inFlightFence ) != VK_SUCCESS )
+	if( vkQueueSubmit( m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS )
 	{
 		ERROR_AND_DIE( "Failed to submit draw command buffer!" );
 	}
@@ -373,6 +376,8 @@ void RenderContext_vulkan::EndFrame()
 	presentInfo.pResults = nullptr; // Optional
 	
 	vkQueuePresentKHR( m_presentQueue, &presentInfo );
+
+	m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void RenderContext_vulkan::BeginCamera( Camera* camera, Convention convention )
@@ -978,28 +983,29 @@ void RenderContext_vulkan::CreateCommandPool()
 	}
 }
 
-void RenderContext_vulkan::CreateCommandBuffer()
+void RenderContext_vulkan::CreateCommandBuffers()
 {
+	m_commandBuffers.resize( m_swapChainFramebuffers.size() );
 	VkCommandBufferAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.commandPool = m_commandPool;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = 1;
+	allocInfo.commandBufferCount = (uint32_t)m_commandBuffers.size();
 
-	if( vkAllocateCommandBuffers( m_device, &allocInfo, &m_commandBuffer ) != VK_SUCCESS )
+	if( vkAllocateCommandBuffers( m_device, &allocInfo, m_commandBuffers.data() ) != VK_SUCCESS )
 	{
 		ERROR_AND_DIE( "Failed to allocate command buffer!" );
 	}
 }
 
-void RenderContext_vulkan::RecordCommandBuffer( uint32_t imageIndex )
+void RenderContext_vulkan::RecordCommandBuffer( VkCommandBuffer commandBuffer, uint32_t imageIndex )
 {
 	VkCommandBufferBeginInfo beginInfo = {};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	beginInfo.flags = 0; // Optional
 	beginInfo.pInheritanceInfo = nullptr; // Optional
 
-	if( vkBeginCommandBuffer( m_commandBuffer, &beginInfo ) != VK_SUCCESS )
+	if( vkBeginCommandBuffer( commandBuffer, &beginInfo) != VK_SUCCESS )
 	{
 		ERROR_AND_DIE( "Failed to begin recording command buffer!" );
 	}
@@ -1013,9 +1019,9 @@ void RenderContext_vulkan::RecordCommandBuffer( uint32_t imageIndex )
 	VkClearValue clearColor = { { {0.0f, 0.0f, 0.0f, 1.0f} } };
 	renderPassInfo.clearValueCount = 1;
 	renderPassInfo.pClearValues = &clearColor;
-	vkCmdBeginRenderPass( m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
+	vkCmdBeginRenderPass( commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline( m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline );
+	vkCmdBindPipeline( commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline );
 
 	// viewport and scissor
 	VkViewport viewport = {};
@@ -1025,17 +1031,17 @@ void RenderContext_vulkan::RecordCommandBuffer( uint32_t imageIndex )
 	viewport.height = (float)m_swapChainExtent.height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport( m_commandBuffer, 0, 1, &viewport );
+	vkCmdSetViewport( commandBuffer, 0, 1, &viewport );
 
 	VkRect2D scissor = {};
 	scissor.offset = { 0, 0 };
 	scissor.extent = m_swapChainExtent;
-	vkCmdSetScissor( m_commandBuffer, 0, 1, &scissor );
+	vkCmdSetScissor( commandBuffer, 0, 1, &scissor );
 
-	vkCmdDraw(m_commandBuffer, 3, 1, 0, 0 ); // draw a triangle
+	vkCmdDraw( commandBuffer, 3, 1, 0, 0 ); // draw a triangle
 
-	vkCmdEndRenderPass( m_commandBuffer );
-	if( vkEndCommandBuffer( m_commandBuffer ) != VK_SUCCESS )
+	vkCmdEndRenderPass( commandBuffer );
+	if( vkEndCommandBuffer( commandBuffer ) != VK_SUCCESS )
 	{
 		ERROR_AND_DIE( "Failed to record command buffer!" );
 	}
@@ -1044,6 +1050,10 @@ void RenderContext_vulkan::RecordCommandBuffer( uint32_t imageIndex )
 
 void RenderContext_vulkan::CreateSyncObjects()
 {
+	m_imageAvailableSemaphores.resize( MAX_FRAMES_IN_FLIGHT );
+	m_renderFinishedSemaphores.resize( MAX_FRAMES_IN_FLIGHT );
+	m_inFlightFences.resize( MAX_FRAMES_IN_FLIGHT );
+
 	VkSemaphoreCreateInfo semaphoreInfo = {};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -1052,13 +1062,14 @@ void RenderContext_vulkan::CreateSyncObjects()
 	// fence is signaled when creating. The first frame will not wait cause the fence is signaled already 
 	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT; 
 
-	if(vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphore) != VK_SUCCESS ||
-		vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphore) != VK_SUCCESS ||
-		vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFence) != VK_SUCCESS )
-	{
-		ERROR_AND_DIE( "Failed to create synchronization objects!" );
+	for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ ){
+		if(vkCreateSemaphore( m_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i] ) != VK_SUCCESS ||
+			vkCreateSemaphore( m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i] ) != VK_SUCCESS ||
+			vkCreateFence( m_device, &fenceInfo, nullptr, &m_inFlightFences[i] ) != VK_SUCCESS )
+		{
+			ERROR_AND_DIE( "Failed to create synchronization objects!" );
+		}
 	}
-
 }
 
 

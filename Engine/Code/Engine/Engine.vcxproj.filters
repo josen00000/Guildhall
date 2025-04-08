@@ -103,7 +103,7 @@
     <ClCompile Include="Renderer\RenderContext_d3d11.cpp" />
     <ClCompile Include="Renderer\RenderContext.cpp" />
     <ClCompile Include="Renderer\RenderUtils.cpp" />
-    <ClCompile Include="Renderer\RenderContext_vulkan.cpp" />
+    <ClCompile Include="Renderer\Vulkan\RenderContext_vulkan.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ThirdParty\fmod\fmod.h" />
@@ -221,6 +221,7 @@
     <ClInclude Include="Renderer\RenderContext_d3d11.hpp" />
     <ClInclude Include="Renderer\RenderContext.hpp" />
     <ClInclude Include="Renderer\RenderUtils.hpp" />
-    <ClInclude Include="Renderer\RenderContext_vulkan.hpp" />
+    <ClInclude Include="Renderer\Vulkan\RenderContext_vulkan.hpp" />
+    <ClInclude Include="Renderer\Vulkan\VulkanCommon.hpp" />
   </ItemGroup>
 </Project>

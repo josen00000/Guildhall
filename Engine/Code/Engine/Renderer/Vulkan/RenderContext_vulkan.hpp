@@ -1,8 +1,7 @@
 ﻿#pragma once
-#define VK_USE_PLATFORM_WIN32_KHR
 
 #include "Engine/Renderer/RenderContext.hpp"
-#include <vulkan/vulkan.h>
+#include "Engine/Renderer/Vulkan/VulkanCommon.hpp"
 
 
 class RenderContext_vulkan : public RenderContext
@@ -59,10 +58,12 @@ private:
 	void CreateGraphicsPipeline();
 	void CreateFrameBuffers();
 	void CreateCommandPool();
-	void CreateCommandBuffer();
-	void RecordCommandBuffer( uint32_t imageIndex );
+	void CreateCommandBuffers();
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer,  uint32_t imageIndex );
 	void CreateSyncObjects();
+
 private:
+	uint32_t m_currentFrame = 0;
 	VkInstance m_instance = NULL;
 	VkDebugUtilsMessengerEXT m_debugMessenger = NULL;
 	VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
@@ -82,8 +83,8 @@ private:
 	VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
 	std::vector<VkFramebuffer> m_swapChainFramebuffers;
 	VkCommandPool m_commandPool = VK_NULL_HANDLE;
-	VkCommandBuffer m_commandBuffer = VK_NULL_HANDLE;
-	VkSemaphore m_imageAvailableSemaphore = VK_NULL_HANDLE;
-	VkSemaphore m_renderFinishedSemaphore = VK_NULL_HANDLE;
-	VkFence m_inFlightFence = VK_NULL_HANDLE; // is rendering finished
+	std::vector<VkCommandBuffer> m_commandBuffers;
+	std::vector<VkSemaphore> m_imageAvailableSemaphores;
+	std::vector<VkSemaphore> m_renderFinishedSemaphores;
+	std::vector<VkFence> m_inFlightFences; // is rendering finished
 };
