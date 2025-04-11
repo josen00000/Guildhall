@@ -34,6 +34,14 @@ struct QueueFamilyIndices{
 	}
  };
 
+// debug draw data
+const std::vector<Vertex_PCU> debugDrawData = {
+	Vertex_PCU( Vec3( 0.f, -0.5f, 0.f ), Rgba8::GREEN, Vec2( 0.f, 0.f ) ),
+	Vertex_PCU( Vec3( 0.5f, 0.5f, 0.f ), Rgba8::BLUE , Vec2( 1.f, 1.f ) ),
+	Vertex_PCU( Vec3( -0.5f, 0.5f, 0.f ), Rgba8::RED, Vec2( -1.f, -1.f ) )
+};
+
+
 RenderContext_vulkan::RenderContext_vulkan()
 	:RenderContext(RENDER_CONTEXT_TYPE_VULKAN)
 {
@@ -42,7 +50,7 @@ RenderContext_vulkan::RenderContext_vulkan()
 RenderContext_vulkan::~RenderContext_vulkan()
 {
 }
-
+#pragma region HelperFunction
 // Helper functions
 static VkResult CreateDebugUtilsMessengerEXT( VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger )
 {
@@ -280,8 +288,22 @@ static VkShaderModule  CreateShaderModule( const std::vector<char>& code, VkDevi
 
 }
 
+uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice)
+{
+	VkPhysicalDeviceMemoryProperties memProperties;
+	vkGetPhysicalDeviceMemoryProperties( physicalDevice, &memProperties );
+	for( uint32_t i = 0; i < memProperties.memoryTypeCount; i++ )
+	{
+		if( ( typeFilter & ( 1 << i ) ) && ( memProperties.memoryTypes[i].propertyFlags & properties ) == properties )
+		{
+			return i;
+		}
+	}
+	ERROR_AND_DIE( "Failed to find suitable memory type!" );
+	return 0;
+}
 // End of helper functions
-
+#pragma endregion
 
 void RenderContext_vulkan::StartUp( Window* window )
 {
@@ -297,6 +319,7 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPool();
+	createVertexBuffer();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -315,6 +338,8 @@ void RenderContext_vulkan::ShutDown()
 		vkDestroySemaphore( m_device, m_imageAvailableSemaphores[i], nullptr );
 		vkDestroyFence( m_device, m_inFlightFences[i], nullptr );
 	}
+	vkDestroyBuffer( m_device, m_vertexBuffer, nullptr );
+	vkFreeMemory( m_device, m_vertexBufferMemory, nullptr );
 	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
 	vkDestroyPipelineLayout( m_device, m_pipelineLayout, nullptr );
@@ -791,12 +816,15 @@ void RenderContext_vulkan::CreateGraphicsPipeline()
 
 	VkPipelineShaderStageCreateInfo  shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
+	auto bindingDescription = GetBindingDescription();
+	auto attributeDescriptions = GetAttributeDescriptions();
+
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputInfo.pVertexBindingDescriptions = nullptr;//&GetBindingDescription();
-	vertexInputInfo.pVertexAttributeDescriptions = nullptr;//GetAttributeDescriptions().data();
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -984,6 +1012,45 @@ void RenderContext_vulkan::CreateCommandPool()
 	}
 }
 
+void RenderContext_vulkan::createVertexBuffer()
+{
+	// create vertex buffer
+	VkBufferCreateInfo bufferInfo = {};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = sizeof( Vertex_PCU ) * 3; // 3 vertices
+	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if( vkCreateBuffer( m_device, &bufferInfo, nullptr, &m_vertexBuffer ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create vertex buffer!" );
+	}
+
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements( m_device, m_vertexBuffer, &memRequirements );
+
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = FindMemoryType( memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_physicalDevice );
+
+	if( vkAllocateMemory( m_device, &allocInfo, nullptr, &m_vertexBufferMemory ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to allocate vertex buffer memory!" );
+	}
+	// last parameter is offset. If not 0, required to be divisible by memRequirements.alignment
+	vkBindBufferMemory( m_device, m_vertexBuffer, m_vertexBufferMemory, 0 );
+
+	void* data;
+	// driver may not be able to copy the data to the buffer immediately.
+	// 1.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT - the driver will make sure that the data is always in a coherent state
+	// 2.Call vkFlushMappedMemoryRanges after writing to the mapped memory, 
+	//		and call vkInvalidateMappedMemoryRanges before reading from the mapped memory
+	vkMapMemory( m_device, m_vertexBufferMemory, 0, bufferInfo.size, 0, &data );
+	memcpy(data, debugDrawData.data(), (size_t)bufferInfo.size);
+	vkUnmapMemory( m_device, m_vertexBufferMemory );
+}
+
 void RenderContext_vulkan::CreateCommandBuffers()
 {
 	m_commandBuffers.resize( m_swapChainFramebuffers.size() );
@@ -1039,7 +1106,11 @@ void RenderContext_vulkan::RecordCommandBuffer( VkCommandBuffer commandBuffer, u
 	scissor.extent = m_swapChainExtent;
 	vkCmdSetScissor( commandBuffer, 0, 1, &scissor );
 
-	vkCmdDraw( commandBuffer, 3, 1, 0, 0 ); // draw a triangle
+	VkBuffer vertexBuffers[] = { m_vertexBuffer };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers( commandBuffer, 0, 1, vertexBuffers, offsets );
+
+	vkCmdDraw( commandBuffer, static_cast<uint32_t>(debugDrawData.size() ), 1, 0, 0); // draw a triangle
 
 	vkCmdEndRenderPass( commandBuffer );
 	if( vkEndCommandBuffer( commandBuffer ) != VK_SUCCESS )
