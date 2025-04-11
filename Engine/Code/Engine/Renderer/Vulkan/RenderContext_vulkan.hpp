@@ -3,6 +3,15 @@
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Vulkan/VulkanCommon.hpp"
 
+//-----------------------------------------------------------------------------------------------
+// TODO:	
+//		1.	vkallocatememory should not be called for every buffer
+//			The maximum number of simultaneous memory allocations is limited by the maxMemoryAllocationCount physical device limit,
+//			The right way to allocate memory for a large number of objects at the same time is to create a custom allocator 
+//			that splits up a single allocation among many different objects by using the offset parameters that we've seen in many functions.
+//			You can either implement such an allocator yourself, or use the VulkanMemoryAllocator library provided by the GPUOpen initiative.
+//		2.
+
 
 class RenderContext_vulkan : public RenderContext
 {

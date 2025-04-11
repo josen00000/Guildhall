@@ -302,6 +302,75 @@ uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, V
 	ERROR_AND_DIE( "Failed to find suitable memory type!" );
 	return 0;
 }
+
+static void CreateBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+{
+	VkBufferCreateInfo bufferInfo = {};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = size;
+	bufferInfo.usage = usage;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if( vkCreateBuffer( device, &bufferInfo, nullptr, &buffer ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create buffer!" );
+	}
+
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements( device, buffer, &memRequirements );
+
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = FindMemoryType( memRequirements.memoryTypeBits, properties, physicalDevice );
+
+	if( vkAllocateMemory( device, &allocInfo, nullptr, &bufferMemory ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to allocate buffer memory!" );
+	}
+
+	vkBindBufferMemory( device, buffer, bufferMemory, 0 );
+}
+
+static void CopyBuffer( VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size )
+{
+	//TODO: Need to implement another command pool for short-lived buffer.
+	// use VK_CMMAND_POOL_TRANSIENT_BIT for short-lived command buffer
+	VkCommandBufferAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = commandPool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo );
+
+	VkBufferCopy copyRegion = {};
+	copyRegion.srcOffset = 0; // Optional
+	copyRegion.dstOffset = 0; // Optional
+	copyRegion.size = size;
+	vkCmdCopyBuffer( commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion );
+
+	vkEndCommandBuffer( commandBuffer );
+
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	// TODO: use fence to  schedule multiple transfer simultaneously and wait for all complete.
+	vkQueueSubmit( graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE );
+	vkQueueWaitIdle( graphicsQueue );
+
+	vkFreeCommandBuffers( device, commandPool, 1, &commandBuffer );
+
+}
 // End of helper functions
 #pragma endregion
 
@@ -1014,41 +1083,28 @@ void RenderContext_vulkan::CreateCommandPool()
 
 void RenderContext_vulkan::createVertexBuffer()
 {
-	// create vertex buffer
-	VkBufferCreateInfo bufferInfo = {};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = sizeof( Vertex_PCU ) * 3; // 3 vertices
-	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	if( vkCreateBuffer( m_device, &bufferInfo, nullptr, &m_vertexBuffer ) != VK_SUCCESS )
-	{
-		ERROR_AND_DIE( "Failed to create vertex buffer!" );
-	}
-
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements( m_device, m_vertexBuffer, &memRequirements );
-
-	VkMemoryAllocateInfo allocInfo = {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = FindMemoryType( memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_physicalDevice );
-
-	if( vkAllocateMemory( m_device, &allocInfo, nullptr, &m_vertexBufferMemory ) != VK_SUCCESS )
-	{
-		ERROR_AND_DIE( "Failed to allocate vertex buffer memory!" );
-	}
-	// last parameter is offset. If not 0, required to be divisible by memRequirements.alignment
-	vkBindBufferMemory( m_device, m_vertexBuffer, m_vertexBufferMemory, 0 );
-
+	// create staging buffer
+	VkBuffer stageBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	VkDeviceSize bufferSize = sizeof( Vertex_PCU ) * debugDrawData.size();
+	CreateBuffer( m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stageBuffer, stagingBufferMemory );
 	void* data;
 	// driver may not be able to copy the data to the buffer immediately.
 	// 1.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT - the driver will make sure that the data is always in a coherent state
 	// 2.Call vkFlushMappedMemoryRanges after writing to the mapped memory, 
 	//		and call vkInvalidateMappedMemoryRanges before reading from the mapped memory
-	vkMapMemory( m_device, m_vertexBufferMemory, 0, bufferInfo.size, 0, &data );
-	memcpy(data, debugDrawData.data(), (size_t)bufferInfo.size);
-	vkUnmapMemory( m_device, m_vertexBufferMemory );
+	vkMapMemory( m_device, stagingBufferMemory, 0, bufferSize, 0, &data );
+	memcpy(data, debugDrawData.data(), (size_t)bufferSize);
+	vkUnmapMemory( m_device, stagingBufferMemory );
+
+
+	// create vertex buffer
+	CreateBuffer(m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vertexBuffer, m_vertexBufferMemory);
+
+
+	CopyBuffer(m_device, m_commandPool, m_graphicsQueue, stageBuffer, m_vertexBuffer, bufferSize);
 }
 
 void RenderContext_vulkan::CreateCommandBuffers()
