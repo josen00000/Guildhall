@@ -36,9 +36,15 @@ struct QueueFamilyIndices{
 
 // debug draw data
 const std::vector<Vertex_PCU> debugDrawData = {
-	Vertex_PCU( Vec3( 0.f, -0.5f, 0.f ), Rgba8::GREEN, Vec2( 0.f, 0.f ) ),
-	Vertex_PCU( Vec3( 0.5f, 0.5f, 0.f ), Rgba8::BLUE , Vec2( 1.f, 1.f ) ),
-	Vertex_PCU( Vec3( -0.5f, 0.5f, 0.f ), Rgba8::RED, Vec2( -1.f, -1.f ) )
+	Vertex_PCU( Vec3( -0.5f, -0.5f, 0.f ), Rgba8::GREEN, Vec2( 0.f, 0.f ) ),
+	Vertex_PCU( Vec3( 0.5f, -0.5f, 0.f ), Rgba8::BLUE , Vec2( 1.f, 1.f ) ),
+	Vertex_PCU( Vec3( 0.5f, 0.5f, 0.f ), Rgba8::RED, Vec2( -1.f, -1.f ) ),
+	Vertex_PCU( Vec3( -0.5f, 0.5f, 0.f ), Rgba8::BLACK, Vec2( -1.f, -1.f ) )
+};
+
+const std::vector<uint16_t> debugDrawIndexes = {
+	0, 1, 2,
+	2, 3, 0
 };
 
 
@@ -389,6 +395,7 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateFrameBuffers();
 	CreateCommandPool();
 	createVertexBuffer();
+	CreateIndexBuffer();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -408,7 +415,9 @@ void RenderContext_vulkan::ShutDown()
 		vkDestroyFence( m_device, m_inFlightFences[i], nullptr );
 	}
 	vkDestroyBuffer( m_device, m_vertexBuffer, nullptr );
+	vkDestroyBuffer( m_device, m_indexBuffer, nullptr );
 	vkFreeMemory( m_device, m_vertexBufferMemory, nullptr );
+	vkFreeMemory( m_device, m_indexBufferMemory, nullptr );
 	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
 	vkDestroyPipelineLayout( m_device, m_pipelineLayout, nullptr );
@@ -1107,6 +1116,28 @@ void RenderContext_vulkan::createVertexBuffer()
 	CopyBuffer(m_device, m_commandPool, m_graphicsQueue, stageBuffer, m_vertexBuffer, bufferSize);
 }
 
+void RenderContext_vulkan::CreateIndexBuffer()
+{
+	VkDeviceSize bufferSize = sizeof(debugDrawIndexes[0]) * debugDrawIndexes.size();
+
+	VkBuffer stageBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	CreateBuffer( m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stageBuffer, stagingBufferMemory );
+
+	void* data;
+	vkMapMemory( m_device, stagingBufferMemory, 0, bufferSize, 0, &data );
+	memcpy(data, debugDrawIndexes.data(), (size_t)bufferSize);
+	vkUnmapMemory( m_device, stagingBufferMemory );
+
+	CreateBuffer(m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indexBuffer, m_indexBufferMemory);
+
+	CopyBuffer(m_device, m_commandPool, m_graphicsQueue, stageBuffer, m_indexBuffer, bufferSize);
+	vkDestroyBuffer( m_device, stageBuffer, nullptr );
+	vkFreeMemory( m_device, stagingBufferMemory, nullptr );
+}
+
 void RenderContext_vulkan::CreateCommandBuffers()
 {
 	m_commandBuffers.resize( m_swapChainFramebuffers.size() );
@@ -1165,9 +1196,10 @@ void RenderContext_vulkan::RecordCommandBuffer( VkCommandBuffer commandBuffer, u
 	VkBuffer vertexBuffers[] = { m_vertexBuffer };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers( commandBuffer, 0, 1, vertexBuffers, offsets );
+	vkCmdBindIndexBuffer( commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT16 );
 
-	vkCmdDraw( commandBuffer, static_cast<uint32_t>(debugDrawData.size() ), 1, 0, 0); // draw a triangle
-
+	// vkCmdDraw( commandBuffer, static_cast<uint32_t>(debugDrawData.size() ), 1, 0, 0); // draw a triangle
+	vkCmdDrawIndexed( commandBuffer, static_cast<uint32_t>(debugDrawIndexes.size()), 1, 0, 0, 0); // draw a triangle
 	vkCmdEndRenderPass( commandBuffer );
 	if( vkEndCommandBuffer( commandBuffer ) != VK_SUCCESS )
 	{

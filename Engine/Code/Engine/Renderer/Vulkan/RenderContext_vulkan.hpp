@@ -10,7 +10,11 @@
 //			The right way to allocate memory for a large number of objects at the same time is to create a custom allocator 
 //			that splits up a single allocation among many different objects by using the offset parameters that we've seen in many functions.
 //			You can either implement such an allocator yourself, or use the VulkanMemoryAllocator library provided by the GPUOpen initiative.
-//		2.
+//		2.	The previous chapter already mentioned that you should allocate multiple resources like buffers from a single memory allocation, 
+//			but in fact you should go a step further. Driver developers recommend that you also store multiple buffers, like the vertex and index buffer, 
+//			into a single VkBuffer and use offsets in commands like vkCmdBindVertexBuffers. The advantage is that your data is more cache friendly in that case, because it's closer together.
+//			It is even possible to reuse the same chunk of memory for multiple resources if they are not used during the same render operations, 
+//			provided that their data is refreshed, of course. This is known as aliasing and some Vulkan functions have explicit flags to specify that you want to do this.
 
 
 class RenderContext_vulkan : public RenderContext
@@ -68,6 +72,7 @@ private:
 	void CreateFrameBuffers();
 	void CreateCommandPool();
 	void createVertexBuffer();
+	void CreateIndexBuffer();
 	void CreateCommandBuffers();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer,  uint32_t imageIndex );
 	void CreateSyncObjects();
@@ -102,4 +107,6 @@ private:
 	std::vector<VkFence> m_inFlightFences; // is rendering finished
 	VkBuffer m_vertexBuffer = VK_NULL_HANDLE;
 	VkDeviceMemory m_vertexBufferMemory = VK_NULL_HANDLE;
+	VkBuffer m_indexBuffer = VK_NULL_HANDLE;
+	VkDeviceMemory m_indexBufferMemory = VK_NULL_HANDLE;
 };
