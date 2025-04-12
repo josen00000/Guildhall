@@ -581,7 +581,7 @@ void RenderContext_d3d11::BindVertexBuffer( VertexBuffer* vbo )
 	// interlaced format
 	// using PCU array of struct
 	// if using struct of array
-	ID3D11Buffer* vboHandle = vbo->m_handle;
+	ID3D11Buffer* vboHandle = vbo->GetD3D11Buffer();
 	UINT stride = (UINT)vbo->m_elementByteSize;
 	UINT offset = 0; // not do here, for multiple vertexbuffer
 
@@ -595,7 +595,7 @@ void RenderContext_d3d11::BindVertexBuffer( VertexBuffer* vbo )
 
 void RenderContext_d3d11::BindIndexBuffer( IndexBuffer* ibo )
 {
-	ID3D11Buffer* iboHandle = ibo->m_handle;
+	ID3D11Buffer* iboHandle = ibo->GetD3D11Buffer();
 	UINT offset = 0;
 
 	if( m_lastBoundIBO != iboHandle ) {
@@ -606,7 +606,7 @@ void RenderContext_d3d11::BindIndexBuffer( IndexBuffer* ibo )
 
 void RenderContext_d3d11::BindUniformBuffer( uint slot, RenderBuffer* ubo )
 {
-	ID3D11Buffer* uboHandle = ubo->m_handle;
+	ID3D11Buffer* uboHandle = ubo->GetD3D11Buffer();
 
 	m_context->VSSetConstantBuffers( slot, 1, &uboHandle ); // bind to vertex shader
 	m_context->PSSetConstantBuffers( slot, 1, &uboHandle ); // bind to pixel shader

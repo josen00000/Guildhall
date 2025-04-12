@@ -18,7 +18,13 @@ RenderBuffer::RenderBuffer( char const* debugName, RenderContext* owner, RenderB
 
 RenderBuffer::~RenderBuffer()
 {
-	DX_SAFE_RELEASE(m_handle);
+	switch( m_owner->GetRenderContextType() )
+	{
+		case RENDER_CONTEXT_TYPE_D3D11:
+			ID3D11Buffer* buffer = GetD3D11Buffer();
+			DX_SAFE_RELEASE(buffer);
+			break;
+	}
 }
 
 bool RenderBuffer::Update( void const* data, size_t dataByteSize, size_t elementByteSize )
@@ -44,17 +50,26 @@ bool RenderBuffer::IsCompatible( size_t dataByteSize, size_t elementByteSize )
 		return false;
 	}
 
-	if( m_memHint == MEMORY_HINT_DYNAMIC ) {
+	if( m_memHint == MEMORY_HINT_DYNAMIC ) 
+	{
 		return dataByteSize <= m_bufferByteSize;
 	}
-	else {
+	else 
+	{
 		return dataByteSize == m_bufferByteSize;
 	}
 }
 
 void RenderBuffer::Cleanup()
 {
-	DX_SAFE_RELEASE(m_handle);
+	switch( m_owner->GetRenderContextType() )
+	{
+		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
+			ID3D11Buffer* buffer = GetD3D11Buffer();
+			DX_SAFE_RELEASE(buffer);
+			break;
+	}
+
 	m_bufferByteSize	= 0;
 	m_elementByteSize	= 0;
 }
@@ -118,7 +133,7 @@ bool RenderBuffer::D3d11Create( size_t dataByteSize, size_t elementByteSize )
 
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = (UINT)elementByteSize;
-	device->CreateBuffer( &desc, nullptr, &m_handle );
+	device->CreateBuffer( &desc, nullptr, (ID3D11Buffer**) & m_handle);
 
 	m_bufferByteSize = dataByteSize;
 	m_elementByteSize = elementByteSize;
@@ -147,15 +162,16 @@ bool RenderBuffer::D3d11Update( void const* data, size_t dataByteSize, size_t el
 	// TODO: Implement this dynamically for different type of render context.
 	RenderContext_d3d11* d3d11 = dynamic_cast<RenderContext_d3d11*>( m_owner );
 	ID3D11DeviceContext* ctx = d3d11->m_context;
+	ID3D11Buffer* d3d11Handle = GetD3D11Buffer();
 	if( m_memHint == MEMORY_HINT_DYNAMIC ){
 		// mapping
 		// memcpy( very fast for bit to bit copy )
 		// block call : wait for the result 
 		D3D11_MAPPED_SUBRESOURCE mapped;
-		HRESULT  result = ctx->Map( m_handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped ); // lock the memory
+		HRESULT  result = ctx->Map( d3d11Handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped ); // lock the memory
 		if( SUCCEEDED( result ) ) {
 			memcpy( mapped.pData, data, dataByteSize );
-			ctx->Unmap( m_handle, 0 );
+			ctx->Unmap( d3d11Handle, 0 );
 		}
 		else {
 			return false;
@@ -163,7 +179,7 @@ bool RenderBuffer::D3d11Update( void const* data, size_t dataByteSize, size_t el
 	}
 	else {
 		// if this is MEMORY_HINT_GPU (gpu memory)
-		ctx->UpdateSubresource( m_handle, 0, nullptr, data, 0, 0 );
+		ctx->UpdateSubresource( d3d11Handle, 0, nullptr, data, 0, 0 );
 	}
 	return true;
 	// mapping buffer
