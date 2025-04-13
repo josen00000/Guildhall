@@ -3,8 +3,8 @@
 
 class RenderContext;
 struct ID3D11Buffer;
-struct VkBuffer;
-
+class RenderContext_d3d11;
+class RenderContext_vulkan;
 
 // what we use it for
 // naming. bit shows only one
@@ -23,6 +23,9 @@ enum RenderMemoryHint : uint {
 };
 
 class RenderBuffer {
+	friend class RenderContext_d3d11;
+	friend class RenderContext_vulkan;
+
 public:
 	RenderBuffer( char const* debugName, RenderContext* owner, RenderBufferUsage usage, RenderMemoryHint memHint );
 	~RenderBuffer();
@@ -30,13 +33,15 @@ public:
 	bool Update( void const* data, size_t dataByteSize, size_t elementByteSize );
 	bool IsCompatible( size_t dataByteSize, size_t elementByteSize );
 	void Cleanup();
-	ID3D11Buffer* GetD3D11Buffer() const{ return (ID3D11Buffer*)m_handle; }
-	VkBuffer* GetVulkanBuffer() const{ return (VkBuffer*)&m_handle; }
 
 private:
-	bool Create( size_t dataByteSize, size_t elementByteSize );
-	bool D3d11Create( size_t dataByteSize, size_t elementByteSize );
+	//bool D3d11Create( size_t dataByteSize, size_t elementByteSize );
+	//bool ValkunCreate( size_t dataByteSize, size_t elementByteSize );
 	bool D3d11Update( void const* data, size_t dataByteSize, size_t elementByteSize );
+	bool ValkunUpdate( void const* data, size_t dataByteSize, size_t elementByteSize );
+	int GetDXMemoryUsage();
+	unsigned int GetDXUsage();
+
 public:
 
 	RenderBufferUsage m_usage;

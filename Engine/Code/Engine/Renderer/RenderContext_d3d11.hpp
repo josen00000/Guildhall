@@ -183,13 +183,14 @@ public :
 	virtual ~RenderContext_d3d11() override {};
 
 public:
-	void virtual StartUp( Window* window ) override;
-	void virtual ShutDown() override;
-	void virtual BeginFrame() override;
-	void virtual EndFrame() override;
-	void virtual BeginCamera( Camera* camera, Convention convention=X_RIGHT_Y_UP_Z_BACKWARD ) override;
-	void virtual EndCamera() override;
-	void virtual ClearState() override;
+	virtual void StartUp( Window* window ) override;
+	virtual void ShutDown() override;
+	virtual void BeginFrame() override;
+	virtual void EndFrame() override;
+	virtual void BeginCamera( Camera* camera, Convention convention = X_RIGHT_Y_UP_Z_BACKWARD ) override;
+	virtual void EndCamera() override;
+	virtual void ClearState() override;
+	virtual void CreateRenderBuffer( RenderBuffer& buffer ) override;
 	
 
 	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;

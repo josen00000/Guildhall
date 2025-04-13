@@ -21,7 +21,7 @@ RenderBuffer::~RenderBuffer()
 	switch( m_owner->GetRenderContextType() )
 	{
 		case RENDER_CONTEXT_TYPE_D3D11:
-			ID3D11Buffer* buffer = GetD3D11Buffer();
+			ID3D11Buffer* buffer = (ID3D11Buffer*)m_handle;
 			DX_SAFE_RELEASE(buffer);
 			break;
 	}
@@ -33,6 +33,8 @@ bool RenderBuffer::Update( void const* data, size_t dataByteSize, size_t element
 	{
 		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
 			return D3d11Update( data, dataByteSize, elementByteSize );
+		case RenderContextType::RENDER_CONTEXT_TYPE_VULKAN:
+			return ValkunUpdate( data, dataByteSize, elementByteSize );
 		default:
 			ERROR_AND_DIE( "Unknown render context type" );
 	}
@@ -65,7 +67,7 @@ void RenderBuffer::Cleanup()
 	switch( m_owner->GetRenderContextType() )
 	{
 		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
-			ID3D11Buffer* buffer = GetD3D11Buffer();
+			ID3D11Buffer* buffer = (ID3D11Buffer*)m_handle;
 			DX_SAFE_RELEASE(buffer);
 			break;
 	}
@@ -74,9 +76,9 @@ void RenderBuffer::Cleanup()
 	m_elementByteSize	= 0;
 }
 
-D3D11_USAGE ToDXMemoryUsage( RenderMemoryHint hint )
+int RenderBuffer::GetDXMemoryUsage( )
 {
-	switch( hint )
+	switch( m_memHint )
 	{
 	case MEMORY_HINT_GPU:		return D3D11_USAGE_DEFAULT;
 	case MEMORY_HINT_DYNAMIC:	return D3D11_USAGE_DYNAMIC;
@@ -86,34 +88,25 @@ D3D11_USAGE ToDXMemoryUsage( RenderMemoryHint hint )
 	}
 }
 
-UINT ToDXUsage( RenderBufferUsage usage )
+
+unsigned int RenderBuffer::GetDXUsage( )
 {
 	UINT ret = 0;
-	if( usage & VERTEX_BUFFER_BIT ) {
+	if( m_usage & VERTEX_BUFFER_BIT ) {
 		ret |= D3D11_BIND_VERTEX_BUFFER;
 	}
 
-	if( usage & INDEX_BUFFER_BIT ) {
+	if( m_usage & INDEX_BUFFER_BIT ) {
 		ret |= D3D11_BIND_INDEX_BUFFER;
 	}
-	if( usage & UNIFORM_BUFFER_BIT ) {
+	if( m_usage & UNIFORM_BUFFER_BIT ) {
 		ret |= D3D11_BIND_CONSTANT_BUFFER;
 	}
 
 	return ret;
 }
 
-bool RenderBuffer::Create( size_t dataByteSize, size_t elementByteSize )
-{
-	switch( m_owner->GetRenderContextType() )
-	{
-		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
-			return D3d11Create( dataByteSize, elementByteSize );
-		default:
-			ERROR_AND_DIE( "Unknown render context type" );
-	}
-}
-
+/*
 bool RenderBuffer::D3d11Create( size_t dataByteSize, size_t elementByteSize )
 {
 	RenderContext_d3d11* ctx = dynamic_cast<RenderContext_d3d11*>( m_owner );
@@ -121,8 +114,8 @@ bool RenderBuffer::D3d11Create( size_t dataByteSize, size_t elementByteSize )
 
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = (UINT)dataByteSize;
-	desc.Usage = ToDXMemoryUsage( m_memHint );
-	desc.BindFlags = ToDXUsage( m_usage );
+	desc.Usage = GetDXMemoryUsage( m_memHint );
+	desc.BindFlags = GetDXUsage( m_usage );
 	desc.CPUAccessFlags = 0;
 	if( m_memHint == MEMORY_HINT_DYNAMIC ) {
 		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -143,13 +136,24 @@ bool RenderBuffer::D3d11Create( size_t dataByteSize, size_t elementByteSize )
 	}
 	return ( m_handle != nullptr );
 }
+*/
+
+/*
+bool RenderBuffer::ValkunCreate( size_t dataByteSize, size_t elementByteSize )
+{
+	rendercontext
+	return false;
+}
+*/
 
 bool RenderBuffer::D3d11Update( void const* data, size_t dataByteSize, size_t elementByteSize )
 {
 	// 1. if not compatible - destroy the old buffer
 	if( !IsCompatible( dataByteSize, elementByteSize ) ) {
 		Cleanup();// destroy the handle, reset things
-		Create( dataByteSize, elementByteSize );
+		m_bufferByteSize = dataByteSize;
+		m_elementByteSize = elementByteSize;
+		m_owner->CreateRenderBuffer( *this );
 	}
 	// our elementSize matches the passed in 
 	// if we're GPU
@@ -162,7 +166,7 @@ bool RenderBuffer::D3d11Update( void const* data, size_t dataByteSize, size_t el
 	// TODO: Implement this dynamically for different type of render context.
 	RenderContext_d3d11* d3d11 = dynamic_cast<RenderContext_d3d11*>( m_owner );
 	ID3D11DeviceContext* ctx = d3d11->m_context;
-	ID3D11Buffer* d3d11Handle = GetD3D11Buffer();
+	ID3D11Buffer* d3d11Handle = (ID3D11Buffer*)m_handle;
 	if( m_memHint == MEMORY_HINT_DYNAMIC ){
 		// mapping
 		// memcpy( very fast for bit to bit copy )
@@ -190,4 +194,9 @@ bool RenderBuffer::D3d11Update( void const* data, size_t dataByteSize, size_t el
 //	Only available to GPU buffers that have 
 //	exactly the same size, and element size
 
+}
+
+bool RenderBuffer::ValkunUpdate( void const* data, size_t dataByteSize, size_t elementByteSize )
+{
+	return false;
 }

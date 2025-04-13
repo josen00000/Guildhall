@@ -275,6 +275,32 @@ void RenderContext_d3d11::ClearState()
 	m_currentShader = nullptr;
 }
 
+void RenderContext_d3d11::CreateRenderBuffer( RenderBuffer& buffer )
+{
+	D3D11_BUFFER_DESC desc;
+	desc.ByteWidth = (UINT)buffer.m_bufferByteSize;
+	desc.Usage = (D3D11_USAGE)buffer.GetDXMemoryUsage();
+	desc.BindFlags = buffer.GetDXUsage();
+	desc.CPUAccessFlags = 0;
+	if( buffer.m_memHint == MEMORY_HINT_DYNAMIC ) {
+		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	}
+	else if( buffer.m_memHint == MEMORY_HINT_STAGING ){
+		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
+	}
+	
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = (UINT)buffer.m_elementByteSize;
+	m_device->CreateBuffer( &desc, nullptr, (ID3D11Buffer**)&buffer.m_handle );
+	
+	
+	if( buffer.m_handle != nullptr ) {
+		//m_handle->SetPrivateData( WKPDID_D3DDebugObjectName, (size_t)m_debugName.size() , m_debugName.c_str() );
+	}
+	//return ( buffer.m_handle != nullptr );
+}
+
+
 void RenderContext_d3d11::ClearTargetView( Texture* output, const Rgba8& clearColor )
 {
 	float clearFolats[4];
@@ -581,7 +607,7 @@ void RenderContext_d3d11::BindVertexBuffer( VertexBuffer* vbo )
 	// interlaced format
 	// using PCU array of struct
 	// if using struct of array
-	ID3D11Buffer* vboHandle = vbo->GetD3D11Buffer();
+	ID3D11Buffer* vboHandle = (ID3D11Buffer*)vbo->m_handle;
 	UINT stride = (UINT)vbo->m_elementByteSize;
 	UINT offset = 0; // not do here, for multiple vertexbuffer
 
@@ -595,7 +621,7 @@ void RenderContext_d3d11::BindVertexBuffer( VertexBuffer* vbo )
 
 void RenderContext_d3d11::BindIndexBuffer( IndexBuffer* ibo )
 {
-	ID3D11Buffer* iboHandle = ibo->GetD3D11Buffer();
+	ID3D11Buffer* iboHandle = (ID3D11Buffer*)ibo->m_handle;
 	UINT offset = 0;
 
 	if( m_lastBoundIBO != iboHandle ) {
@@ -606,7 +632,7 @@ void RenderContext_d3d11::BindIndexBuffer( IndexBuffer* ibo )
 
 void RenderContext_d3d11::BindUniformBuffer( uint slot, RenderBuffer* ubo )
 {
-	ID3D11Buffer* uboHandle = ubo->GetD3D11Buffer();
+	ID3D11Buffer* uboHandle = (ID3D11Buffer*)ubo->m_handle;
 
 	m_context->VSSetConstantBuffers( slot, 1, &uboHandle ); // bind to vertex shader
 	m_context->PSSetConstantBuffers( slot, 1, &uboHandle ); // bind to pixel shader

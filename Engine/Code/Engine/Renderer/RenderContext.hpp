@@ -3,6 +3,7 @@
 #include "Engine/Math/Mat44.hpp"
 #include "Engine/Platform/Window.hpp"
 #include "Engine/Renderer/Camera.hpp"
+#include "Engine/Renderer/RenderBuffer.hpp"
 
 class Texture;
 class Clock;
@@ -72,6 +73,7 @@ public:
 	virtual void BeginCamera( Camera* camera, Convention convention = X_RIGHT_Y_UP_Z_BACKWARD ) = 0;
 	virtual void EndCamera() = 0;
 	virtual void ClearState() = 0;
+	virtual void CreateRenderBuffer(RenderBuffer& buffer) = 0;
 
 	// Accessors
 	RenderContextType GetRenderContextType() const { return m_type; }
