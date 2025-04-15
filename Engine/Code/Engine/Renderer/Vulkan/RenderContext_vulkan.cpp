@@ -1,4 +1,5 @@
 #include "RenderContext_vulkan.hpp"
+#include "Engine/Renderer/VertexBuffer.hpp"
 #include <iostream>
 #include <optional>
 #include <set>
@@ -33,6 +34,12 @@ struct QueueFamilyIndices{
 		return graphicsFamily.has_value() && presentFamily.has_value();
 	}
  };
+
+struct UniformBufferObject{
+	Mat44 model;
+	Mat44 view;
+	Mat44 proj;
+};
 
 // debug draw data
 const std::vector<Vertex_PCU> debugDrawData = {
@@ -83,7 +90,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 	void* pUserData )
 {
 	if( messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT ){
-		std::string errorMsg = "Validation layer";
+		std::string errorMsg = "Validation layer: ";
 		errorMsg += pCallbackData->pMessage;
 		ERROR_RECOVERABLE( errorMsg );
 	}
@@ -391,11 +398,15 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
+	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPool();
 	createVertexBuffer();
 	CreateIndexBuffer();
+	CreateUniformBuffers();
+	CreateDescriptorPool();
+	CreateDescriptorSets();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -414,12 +425,20 @@ void RenderContext_vulkan::ShutDown()
 		vkDestroySemaphore( m_device, m_imageAvailableSemaphores[i], nullptr );
 		vkDestroyFence( m_device, m_inFlightFences[i], nullptr );
 	}
-	vkDestroyBuffer( m_device, m_vertexBuffer, nullptr );
+	m_vertexBuffer->Cleanup();
 	vkDestroyBuffer( m_device, m_indexBuffer, nullptr );
-	vkFreeMemory( m_device, m_vertexBufferMemory, nullptr );
+
+	for( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
+	{
+		vkDestroyBuffer( m_device, m_uniformBuffers[i], nullptr );
+		vkFreeMemory( m_device, m_uniformBuffersMemory[i], nullptr );
+	}
+
 	vkFreeMemory( m_device, m_indexBufferMemory, nullptr );
 	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
+	vkDestroyDescriptorPool( m_device, m_descriptorPool, nullptr );
+	vkDestroyDescriptorSetLayout( m_device, m_descriptorSetLayout, nullptr );
 	vkDestroyPipelineLayout( m_device, m_pipelineLayout, nullptr );
 	vkDestroyRenderPass( m_device, m_renderPass, nullptr );
 	vkDestroyShaderModule( m_device, m_vertShaderModule, nullptr );
@@ -447,6 +466,7 @@ void RenderContext_vulkan::EndFrame()
 		ERROR_AND_DIE( "Failed to acquire swap chain image!" );
 	}
 
+	UpdateUniformBuffer(m_currentFrame);
 	vkResetFences( m_device, 1, &m_inFlightFences[m_currentFrame] );
 	vkResetCommandBuffer(m_commandBuffers[m_currentFrame], 0);
 	RecordCommandBuffer( m_commandBuffers[m_currentFrame], imageIndex );
@@ -494,6 +514,66 @@ void RenderContext_vulkan::EndCamera()
 
 void RenderContext_vulkan::ClearState()
 {
+}
+
+void RenderContext_vulkan::CreateRenderBuffer( RenderBuffer& buffer )
+{	
+	VkBufferUsageFlags usage = buffer.GetVulkanUsage();
+	VkMemoryPropertyFlags memUsage = buffer.GetMemoryUsage();
+	VkBuffer bufferHandle; 
+	VkDeviceMemory bufferMemory;
+	CreateBuffer( m_device, m_physicalDevice, buffer.m_bufferByteSize, usage, memUsage, bufferHandle, bufferMemory);
+	if( buffer.m_memHint == MEMORY_HINT_DYNAMIC )
+	{
+		// use persist mapped memory
+		vkMapMemory( m_device, bufferMemory, 0, buffer.m_bufferByteSize, 0, &buffer.m_mappedMemoryData );
+	}
+	buffer.m_handle = (void*)bufferHandle;
+	buffer.m_mappedMemory = (void*)bufferMemory;
+}
+
+void RenderContext_vulkan::UpdateRenderBuffer( RenderBuffer& buffer, void const* data, size_t dataByteSize, size_t elementByteSize )
+{
+	if( buffer.m_memHint == MEMORY_HINT_DYNAMIC ){
+		// already mapped when created
+		memcpy( buffer.m_mappedMemoryData, data, dataByteSize );
+	}
+	else if(buffer.m_memHint == MEMORY_HINT_GPU )
+	{
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		CreateBuffer( m_device, m_physicalDevice, buffer.m_bufferByteSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
+		void* bufferData;
+		vkMapMemory( m_device, stagingBufferMemory, 0, buffer.m_bufferByteSize, 0, &bufferData);
+		memcpy( bufferData, data, (size_t)buffer.m_bufferByteSize );
+		vkUnmapMemory( m_device, stagingBufferMemory );
+
+		CopyBuffer( m_device, m_commandPool, m_graphicsQueue, stagingBuffer,  (VkBuffer)buffer.m_handle, buffer.m_bufferByteSize );
+		vkDestroyBuffer( m_device, stagingBuffer, nullptr );
+		vkFreeMemory( m_device, stagingBufferMemory, nullptr );
+	}
+	else
+	{
+		ERROR_AND_DIE( "Unknown memory hint!" );
+	}
+}
+
+void RenderContext_vulkan::CleanUpRenderBuffer( RenderBuffer& buffer )
+{
+	if( buffer.m_memHint == MEMORY_HINT_DYNAMIC )
+	{
+		if( buffer.m_mappedMemory != nullptr )
+		{
+			VkDeviceMemory mappedMemory = (VkDeviceMemory)buffer.m_mappedMemory;
+			vkUnmapMemory( m_device, mappedMemory );
+		}
+	}
+
+	vkDestroyBuffer( m_device, (VkBuffer)buffer.m_handle, nullptr );
+	vkFreeMemory( m_device, (VkDeviceMemory)buffer.m_mappedMemory, nullptr );
+	buffer.m_handle = nullptr;
+	buffer.m_mappedMemory = nullptr;
+	buffer.m_mappedMemoryData = nullptr;
 }
 
 void RenderContext_vulkan::EnableDepth( DepthCompareFunc func, bool writeDepthOnPass )
@@ -870,6 +950,27 @@ void RenderContext_vulkan::CreateRenderPass()
 	}
 }
 
+void RenderContext_vulkan::CreateDescriptorSetLayout()
+{
+	VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+	uboLayoutBinding.binding = 0;
+	uboLayoutBinding.descriptorCount = 1;
+	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional For image sampling
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = &uboLayoutBinding;
+
+	if( vkCreateDescriptorSetLayout( m_device, &layoutInfo, nullptr, &m_descriptorSetLayout ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create descriptor set layout!" );
+	}
+
+}
+
 void RenderContext_vulkan::CreateGraphicsPipeline()
 {
 	// vertex shader
@@ -951,6 +1052,7 @@ void RenderContext_vulkan::CreateGraphicsPipeline()
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL; 
 	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // cull the back face
+	//TODO: Need to double check if I need to change the cullmode to counter clockwise
 	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE; // clockwise or counter clockwise
 	rasterizer.depthBiasEnable = VK_FALSE; // depth bias is used for shadow mapping
 	rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -1016,9 +1118,9 @@ void RenderContext_vulkan::CreateGraphicsPipeline()
 	
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0; // Optional
+	pipelineLayoutInfo.setLayoutCount = 1; 
+	pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout; 
 	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-	pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
 	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
 	if(vkCreatePipelineLayout( m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout ) != VK_SUCCESS )
@@ -1092,28 +1194,30 @@ void RenderContext_vulkan::CreateCommandPool()
 
 void RenderContext_vulkan::createVertexBuffer()
 {
+	m_vertexBuffer = new VertexBuffer(this, RenderMemoryHint::MEMORY_HINT_GPU);
+	size_t bufferSize = sizeof( Vertex_PCU ) * debugDrawData.size();
+	m_vertexBuffer->Update( debugDrawData.data(), bufferSize, sizeof( Vertex_PCU ) );
 	// create staging buffer
-	VkBuffer stageBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	VkDeviceSize bufferSize = sizeof( Vertex_PCU ) * debugDrawData.size();
-	CreateBuffer( m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stageBuffer, stagingBufferMemory );
-	void* data;
-	// driver may not be able to copy the data to the buffer immediately.
-	// 1.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT - the driver will make sure that the data is always in a coherent state
-	// 2.Call vkFlushMappedMemoryRanges after writing to the mapped memory, 
-	//		and call vkInvalidateMappedMemoryRanges before reading from the mapped memory
-	vkMapMemory( m_device, stagingBufferMemory, 0, bufferSize, 0, &data );
-	memcpy(data, debugDrawData.data(), (size_t)bufferSize);
-	vkUnmapMemory( m_device, stagingBufferMemory );
-
-
-	// create vertex buffer
-	CreateBuffer(m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vertexBuffer, m_vertexBufferMemory);
-
-
-	CopyBuffer(m_device, m_commandPool, m_graphicsQueue, stageBuffer, m_vertexBuffer, bufferSize);
+	//VkBuffer stageBuffer;
+	//VkDeviceMemory stagingBufferMemory;
+	//CreateBuffer( m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+	//	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stageBuffer, stagingBufferMemory );
+	//void* data;
+	//// driver may not be able to copy the data to the buffer immediately.
+	//// 1.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT - the driver will make sure that the data is always in a coherent state
+	//// 2.Call vkFlushMappedMemoryRanges after writing to the mapped memory, 
+	////		and call vkInvalidateMappedMemoryRanges before reading from the mapped memory
+	//vkMapMemory( m_device, stagingBufferMemory, 0, bufferSize, 0, &data );
+	//memcpy(data, debugDrawData.data(), (size_t)bufferSize);
+	//vkUnmapMemory( m_device, stagingBufferMemory );
+	//
+	//
+	//// create vertex buffer
+	//CreateBuffer(m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+	//	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vertexBuffer, m_vertexBufferMemory);
+	//
+	//
+	//CopyBuffer(m_device, m_commandPool, m_graphicsQueue, stageBuffer, m_vertexBuffer, bufferSize);
 }
 
 void RenderContext_vulkan::CreateIndexBuffer()
@@ -1136,6 +1240,78 @@ void RenderContext_vulkan::CreateIndexBuffer()
 	CopyBuffer(m_device, m_commandPool, m_graphicsQueue, stageBuffer, m_indexBuffer, bufferSize);
 	vkDestroyBuffer( m_device, stageBuffer, nullptr );
 	vkFreeMemory( m_device, stagingBufferMemory, nullptr );
+}
+
+void RenderContext_vulkan::CreateUniformBuffers()
+{
+	VkDeviceSize bufferSize = sizeof( UniformBufferObject );
+	m_uniformBuffers.resize( MAX_FRAMES_IN_FLIGHT );
+	m_uniformBuffersMemory.resize( MAX_FRAMES_IN_FLIGHT );
+	m_uniformBufferMapped.resize( MAX_FRAMES_IN_FLIGHT );
+
+
+	for( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
+	{
+		CreateBuffer( m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i], m_uniformBuffersMemory[i] );
+
+		vkMapMemory( m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBufferMapped[i] );
+	}
+
+}
+
+void RenderContext_vulkan::CreateDescriptorPool()
+{
+	VkDescriptorPoolSize poolSize = {};
+	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSize.descriptorCount = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT );
+
+	VkDescriptorPoolCreateInfo poolInfo = {};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = 1;
+	poolInfo.pPoolSizes = &poolSize;
+	poolInfo.maxSets = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT );
+
+	if( vkCreateDescriptorPool( m_device, &poolInfo, nullptr, &m_descriptorPool ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create descriptor pool!" );
+	}
+}
+
+void RenderContext_vulkan::CreateDescriptorSets()
+{
+	std::vector<VkDescriptorSetLayout> layouts( MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout );
+	VkDescriptorSetAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = m_descriptorPool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT );
+	allocInfo.pSetLayouts = layouts.data();
+
+	m_descriptorSets.resize( MAX_FRAMES_IN_FLIGHT );
+	if( vkAllocateDescriptorSets( m_device, &allocInfo, m_descriptorSets.data() ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to allocate descriptor sets!" );
+	}
+
+	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
+	{
+		VkDescriptorBufferInfo bufferInfo = {};
+		bufferInfo.buffer = m_uniformBuffers[i];
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof( UniformBufferObject );
+
+		VkWriteDescriptorSet descriptorWrite = {};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_descriptorSets[i];
+		descriptorWrite.dstBinding = 0;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets( m_device, 1, &descriptorWrite, 0, nullptr );
+	}
+
 }
 
 void RenderContext_vulkan::CreateCommandBuffers()
@@ -1193,11 +1369,12 @@ void RenderContext_vulkan::RecordCommandBuffer( VkCommandBuffer commandBuffer, u
 	scissor.extent = m_swapChainExtent;
 	vkCmdSetScissor( commandBuffer, 0, 1, &scissor );
 
-	VkBuffer vertexBuffers[] = { m_vertexBuffer };
+	VkBuffer vertexBuffers[] = { (VkBuffer)m_vertexBuffer->m_handle };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers( commandBuffer, 0, 1, vertexBuffers, offsets );
 	vkCmdBindIndexBuffer( commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT16 );
 
+	vkCmdBindDescriptorSets( commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[m_currentFrame], 0, nullptr );
 	// vkCmdDraw( commandBuffer, static_cast<uint32_t>(debugDrawData.size() ), 1, 0, 0); // draw a triangle
 	vkCmdDrawIndexed( commandBuffer, static_cast<uint32_t>(debugDrawIndexes.size()), 1, 0, 0, 0); // draw a triangle
 	vkCmdEndRenderPass( commandBuffer );
@@ -1256,6 +1433,12 @@ void RenderContext_vulkan::ShutDownSwapChain()
 	}
 
 	vkDestroySwapchainKHR( m_device, m_VkSwapChain, nullptr );
+}
+
+void RenderContext_vulkan::UpdateUniformBuffer( uint32_t currentImage )
+{
+	UniformBufferObject ubo = {};
+	memcpy( m_uniformBufferMapped[currentImage], &ubo, sizeof( ubo ) );
 }
 
 

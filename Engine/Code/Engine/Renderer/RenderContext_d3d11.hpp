@@ -191,7 +191,9 @@ public:
 	virtual void EndCamera() override;
 	virtual void ClearState() override;
 	virtual void CreateRenderBuffer( RenderBuffer& buffer ) override;
-	
+	virtual void UpdateRenderBuffer( RenderBuffer& buffer, void const* data, size_t dataByteSize, size_t elementByteSize ) override;
+	virtual void CleanUpRenderBuffer( RenderBuffer& buffer ) override;
+
 
 	void ClearTargetView( Texture* output, const Rgba8& clearColor ); // TODO: Change name to clear target target;
 	

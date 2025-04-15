@@ -59,6 +59,7 @@ void App::StartupStage2()
 {
 	// initialize system
 	g_theRenderer = CreateOrGetRenderContext( RENDER_CONTEXT_TYPE_VULKAN );
+	//g_theRenderer = CreateOrGetRenderContext( RENDER_CONTEXT_TYPE_D3D11 );
 	g_theInputSystem = new InputSystem();
 	g_theAudioSystem = new AudioSystem();
 	g_thePhysics = new Physics2D();
@@ -188,7 +189,8 @@ const void App::Render() const
 {
 	// test vulkan render functions
 	// draw frame
-	
+	RenderContext_vulkan* vk = (RenderContext_vulkan*)g_theRenderer;
+	//vk->UpdateUniformBuffer();
 
 	return; // working on rendering part. 
 	g_theRenderer->BeginCamera( g_UICamera );

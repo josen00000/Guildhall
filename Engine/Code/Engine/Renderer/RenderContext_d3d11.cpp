@@ -300,6 +300,42 @@ void RenderContext_d3d11::CreateRenderBuffer( RenderBuffer& buffer )
 	//return ( buffer.m_handle != nullptr );
 }
 
+void RenderContext_d3d11::UpdateRenderBuffer( RenderBuffer& buffer, void const* data, size_t dataByteSize, size_t elementByteSize )
+{
+	ID3D11Buffer* d3d11Handle = (ID3D11Buffer*)buffer.m_handle;
+	if( buffer.m_memHint == MEMORY_HINT_DYNAMIC ){
+		// mapping
+		// memcpy( very fast for bit to bit copy )
+		// block call : wait for the result 
+		D3D11_MAPPED_SUBRESOURCE mapped;
+		HRESULT  result = m_context->Map( d3d11Handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped ); // lock the memory
+		if( SUCCEEDED( result ) ) {
+			memcpy( mapped.pData, data, dataByteSize );
+			m_context->Unmap( d3d11Handle, 0 );
+		}
+		else {
+			ERROR_AND_DIE( "Failed to map the buffer" );
+		}
+	}
+	else {
+		// if this is MEMORY_HINT_GPU (gpu memory)
+		m_context->UpdateSubresource( d3d11Handle, 0, nullptr, data, 0, 0 );
+	}
+	// mapping buffer
+// Only available to DYNAMIC buffer,
+// but, don't have to reallocate if going smaller
+
+// CopySubresource ( direct copy )
+//	Only available to GPU buffers that have 
+//	exactly the same size, and element size
+}
+
+void RenderContext_d3d11::CleanUpRenderBuffer( RenderBuffer& buffer )
+{
+	ID3D11Buffer* handle = (ID3D11Buffer*)buffer.m_handle;
+	DX_SAFE_RELEASE( handle );
+}
+
 
 void RenderContext_d3d11::ClearTargetView( Texture* output, const Rgba8& clearColor )
 {

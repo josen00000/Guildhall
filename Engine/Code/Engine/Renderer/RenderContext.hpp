@@ -74,6 +74,8 @@ public:
 	virtual void EndCamera() = 0;
 	virtual void ClearState() = 0;
 	virtual void CreateRenderBuffer(RenderBuffer& buffer) = 0;
+	virtual void UpdateRenderBuffer(RenderBuffer& buffer, void const* data, size_t dataByteSize, size_t elementByteSize) = 0;
+	virtual void CleanUpRenderBuffer(RenderBuffer& buffer) = 0;
 
 	// Accessors
 	RenderContextType GetRenderContextType() const { return m_type; }

@@ -16,6 +16,8 @@
 //			It is even possible to reuse the same chunk of memory for multiple resources if they are not used during the same render operations, 
 //			provided that their data is refreshed, of course. This is known as aliasing and some Vulkan functions have explicit flags to specify that you want to do this.
 
+class VertexBuffer;
+
 
 class RenderContext_vulkan : public RenderContext
 {
@@ -32,6 +34,10 @@ public:
 	virtual void BeginCamera( Camera* camera, Convention convention = X_RIGHT_Y_UP_Z_BACKWARD );
 	virtual void EndCamera();
 	virtual void ClearState();
+	virtual void CreateRenderBuffer( RenderBuffer& buffer ) override;
+	virtual void UpdateRenderBuffer( RenderBuffer& buffer, void const* data, size_t dataByteSize, size_t elementByteSize ) override;
+	virtual void CleanUpRenderBuffer( RenderBuffer& buffer ) override;
+
 
 	virtual void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
 	virtual void DisableDepth();
@@ -68,16 +74,21 @@ private:
 	void CreateSwapChain();
 	void CreateImageViews();
 	void CreateRenderPass();
+	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
 	void CreateFrameBuffers();
 	void CreateCommandPool();
 	void createVertexBuffer();
 	void CreateIndexBuffer();
+	void CreateUniformBuffers();
+	void CreateDescriptorPool();
+	void CreateDescriptorSets();
 	void CreateCommandBuffers();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer,  uint32_t imageIndex );
 	void CreateSyncObjects();
 	void RecreateSwapChain();
 	void ShutDownSwapChain();
+	void UpdateUniformBuffer( uint32_t currentImage );
 
 private:
 	uint32_t m_currentFrame = 0;
@@ -96,6 +107,7 @@ private:
 	std::vector<VkImageView> m_swapChainImageViews;
 	VkShaderModule m_vertShaderModule = VK_NULL_HANDLE;
 	VkShaderModule m_fragShaderModule = VK_NULL_HANDLE;
+	VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
 	VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
 	VkRenderPass m_renderPass = VK_NULL_HANDLE;
 	VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
@@ -105,8 +117,13 @@ private:
 	std::vector<VkSemaphore> m_imageAvailableSemaphores;
 	std::vector<VkSemaphore> m_renderFinishedSemaphores;
 	std::vector<VkFence> m_inFlightFences; // is rendering finished
-	VkBuffer m_vertexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory m_vertexBufferMemory = VK_NULL_HANDLE;
+	
+	VertexBuffer* m_vertexBuffer = nullptr;
 	VkBuffer m_indexBuffer = VK_NULL_HANDLE;
 	VkDeviceMemory m_indexBufferMemory = VK_NULL_HANDLE;
+	std::vector<VkBuffer> m_uniformBuffers;
+	std::vector<VkDeviceMemory> m_uniformBuffersMemory;
+	std::vector<void*> m_uniformBufferMapped;
+	VkDescriptorPool m_descriptorPool = VK_NULL_HANDLE;
+	std::vector<VkDescriptorSet> m_descriptorSets;
 };

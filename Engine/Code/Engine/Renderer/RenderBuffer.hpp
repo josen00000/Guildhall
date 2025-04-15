@@ -11,7 +11,7 @@ class RenderContext_vulkan;
 enum RenderBufferUsageBit : uint {
 	VERTEX_BUFFER_BIT		= BIT_FLAG(0),
 	INDEX_BUFFER_BIT		= BIT_FLAG(1),
-	UNIFORM_BUFFER_BIT		= BIT_FLAG(2)
+	UNIFORM_BUFFER_BIT		= BIT_FLAG(2),
 };
 typedef uint RenderBufferUsage;
 
@@ -30,17 +30,16 @@ public:
 	RenderBuffer( char const* debugName, RenderContext* owner, RenderBufferUsage usage, RenderMemoryHint memHint );
 	~RenderBuffer();
 
-	bool Update( void const* data, size_t dataByteSize, size_t elementByteSize );
+	void Update( void const* data, size_t dataByteSize, size_t elementByteSize );
 	bool IsCompatible( size_t dataByteSize, size_t elementByteSize );
 	void Cleanup();
+	int GetMemoryUsage();
 
 private:
-	//bool D3d11Create( size_t dataByteSize, size_t elementByteSize );
-	//bool ValkunCreate( size_t dataByteSize, size_t elementByteSize );
-	bool D3d11Update( void const* data, size_t dataByteSize, size_t elementByteSize );
-	bool ValkunUpdate( void const* data, size_t dataByteSize, size_t elementByteSize );
+	int GetVulkanMemoryUsage();
 	int GetDXMemoryUsage();
 	unsigned int GetDXUsage();
+	int GetVulkanUsage();
 
 public:
 
@@ -54,6 +53,9 @@ public:
 private:
 	RenderContext* m_owner	= nullptr;
 	void* m_handle	= nullptr; // buffer handle for specific render context
+	void* m_mappedMemory = nullptr; // mapped memory for specific render context. Only used for Vulkan for now.
+	void* m_mappedMemoryData = nullptr; // mapped data for specific render context. Only used for Vulkan for now.
+
 };
 
 

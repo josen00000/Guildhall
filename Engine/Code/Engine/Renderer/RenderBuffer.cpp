@@ -1,6 +1,7 @@
 #include "RenderBuffer.hpp"
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
+#include "Engine/Renderer/Vulkan/VulkanCommon.hpp"
 #include "Engine/Renderer/RenderBuffer.hpp"
 #include "Engine/Renderer/RenderContext_d3d11.hpp"
 
@@ -27,22 +28,12 @@ RenderBuffer::~RenderBuffer()
 	}
 }
 
-bool RenderBuffer::Update( void const* data, size_t dataByteSize, size_t elementByteSize )
-{
-	switch( m_owner->GetRenderContextType() )
-	{
-		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
-			return D3d11Update( data, dataByteSize, elementByteSize );
-		case RenderContextType::RENDER_CONTEXT_TYPE_VULKAN:
-			return ValkunUpdate( data, dataByteSize, elementByteSize );
-		default:
-			ERROR_AND_DIE( "Unknown render context type" );
-	}
-
-}
-
 bool RenderBuffer::IsCompatible( size_t dataByteSize, size_t elementByteSize )
 {
+	// if we're GPU
+		// bufferSizes MUST match
+	// if we're dynamic
+		// passed in buffer size is less than our bufferSize 
 	if( m_handle == nullptr ) {
 		return false;
 
@@ -64,14 +55,7 @@ bool RenderBuffer::IsCompatible( size_t dataByteSize, size_t elementByteSize )
 
 void RenderBuffer::Cleanup()
 {
-	switch( m_owner->GetRenderContextType() )
-	{
-		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
-			ID3D11Buffer* buffer = (ID3D11Buffer*)m_handle;
-			DX_SAFE_RELEASE(buffer);
-			break;
-	}
-
+	m_owner->CleanUpRenderBuffer( *this );
 	m_bufferByteSize	= 0;
 	m_elementByteSize	= 0;
 }
@@ -101,6 +85,26 @@ unsigned int RenderBuffer::GetDXUsage( )
 	}
 	if( m_usage & UNIFORM_BUFFER_BIT ) {
 		ret |= D3D11_BIND_CONSTANT_BUFFER;
+	}
+
+	return ret;
+}
+
+int RenderBuffer::GetVulkanUsage()
+{
+	int ret = 0;
+	if( m_usage & VERTEX_BUFFER_BIT ) {
+		ret |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	}
+	if( m_usage & INDEX_BUFFER_BIT ) {
+		ret |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+	}
+	if( m_usage & UNIFORM_BUFFER_BIT ) {
+		ret |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	}
+
+	if( m_memHint == MEMORY_HINT_GPU ){
+		ret |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 	}
 
 	return ret;
@@ -146,57 +150,42 @@ bool RenderBuffer::ValkunCreate( size_t dataByteSize, size_t elementByteSize )
 }
 */
 
-bool RenderBuffer::D3d11Update( void const* data, size_t dataByteSize, size_t elementByteSize )
+void RenderBuffer::Update( void const* data, size_t dataByteSize, size_t elementByteSize )
 {
 	// 1. if not compatible - destroy the old buffer
+		// our elementSize matches the passed in 
+	// 2. if no buffer, create one that is compatible
+	// 3. updating the buffer
 	if( !IsCompatible( dataByteSize, elementByteSize ) ) {
 		Cleanup();// destroy the handle, reset things
 		m_bufferByteSize = dataByteSize;
 		m_elementByteSize = elementByteSize;
 		m_owner->CreateRenderBuffer( *this );
 	}
-	// our elementSize matches the passed in 
-	// if we're GPU
-		// bufferSizes MUST match
-	// if we're dynamic
-		// passed in buffer size is less than our bufferSize 
-	// 2. if no buffer, create one that is compatible
-	// 3. updating the buffer
-
-	// TODO: Implement this dynamically for different type of render context.
-	RenderContext_d3d11* d3d11 = dynamic_cast<RenderContext_d3d11*>( m_owner );
-	ID3D11DeviceContext* ctx = d3d11->m_context;
-	ID3D11Buffer* d3d11Handle = (ID3D11Buffer*)m_handle;
-	if( m_memHint == MEMORY_HINT_DYNAMIC ){
-		// mapping
-		// memcpy( very fast for bit to bit copy )
-		// block call : wait for the result 
-		D3D11_MAPPED_SUBRESOURCE mapped;
-		HRESULT  result = ctx->Map( d3d11Handle, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped ); // lock the memory
-		if( SUCCEEDED( result ) ) {
-			memcpy( mapped.pData, data, dataByteSize );
-			ctx->Unmap( d3d11Handle, 0 );
-		}
-		else {
-			return false;
-		}
-	}
-	else {
-		// if this is MEMORY_HINT_GPU (gpu memory)
-		ctx->UpdateSubresource( d3d11Handle, 0, nullptr, data, 0, 0 );
-	}
-	return true;
-	// mapping buffer
-// Only available to DYNAMIC buffer,
-// but, don't have to reallocate if going smaller
-
-// CopySubresource ( direct copy )
-//	Only available to GPU buffers that have 
-//	exactly the same size, and element size
-
+	m_owner->UpdateRenderBuffer( *this, data, dataByteSize, elementByteSize );
 }
 
-bool RenderBuffer::ValkunUpdate( void const* data, size_t dataByteSize, size_t elementByteSize )
+
+int RenderBuffer::GetMemoryUsage()
 {
-	return false;
+	switch( m_owner->GetRenderContextType() )
+	{
+		case RenderContextType::RENDER_CONTEXT_TYPE_D3D11:
+			return GetDXMemoryUsage();
+		case RenderContextType::RENDER_CONTEXT_TYPE_VULKAN:
+			return GetVulkanMemoryUsage();
+		default:
+			break;
+	}
+}
+
+int RenderBuffer::GetVulkanMemoryUsage()
+{
+	switch( m_memHint )
+	{
+		case MEMORY_HINT_GPU:		return VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		case MEMORY_HINT_DYNAMIC:	return VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		case MEMORY_HINT_STAGING:	return VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		default:				ERROR_AND_DIE( "Unknown hint! " );
+	}
 }
