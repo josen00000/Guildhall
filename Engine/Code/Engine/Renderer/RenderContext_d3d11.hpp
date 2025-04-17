@@ -361,7 +361,6 @@ private:
 	std::map<std::string, Shader*>			m_shaders;
 
 	// default
-	Camera*		m_currentCamera		= nullptr;
 	Camera*		m_effectCamera		= nullptr;
 	Shader*		m_currentShader		= nullptr;
 	Shader*		m_defaultShader		= nullptr;

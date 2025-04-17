@@ -316,7 +316,7 @@ Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext_d3d11* ctx )
 	return m_depthStencilTarget;
 }
 
-RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext_d3d11* ctx, Convention convention )
+RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx, Convention convention )
 {
 	static int i = 0;
 	i++;

@@ -17,7 +17,14 @@
 //			provided that their data is refreshed, of course. This is known as aliasing and some Vulkan functions have explicit flags to specify that you want to do this.
 
 class VertexBuffer;
+class IndexBuffer;
+class RenderBuffer;
 
+struct UniformBufferObject{
+	Mat44 model;
+	Mat44 view;
+	Mat44 proj;
+};
 
 class RenderContext_vulkan : public RenderContext
 {
@@ -38,6 +45,10 @@ public:
 	virtual void UpdateRenderBuffer( RenderBuffer& buffer, void const* data, size_t dataByteSize, size_t elementByteSize ) override;
 	virtual void CleanUpRenderBuffer( RenderBuffer& buffer ) override;
 
+	// buffer
+	void BindVertexBuffer( VertexBuffer* buffer );
+	void BindIndexBuffer( RenderBuffer* buffer );
+	void BindUniformBuffer( RenderBuffer* buffer, uint bindingPoint );
 
 	virtual void EnableDepth( DepthCompareFunc func, bool writeDepthOnPass );
 	virtual void DisableDepth();
@@ -83,6 +94,7 @@ private:
 	void CreateUniformBuffers();
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
+	void CreateDescriptorSet(VertexBuffer* ubo);
 	void CreateCommandBuffers();
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer,  uint32_t imageIndex );
 	void CreateSyncObjects();
@@ -118,12 +130,13 @@ private:
 	std::vector<VkSemaphore> m_renderFinishedSemaphores;
 	std::vector<VkFence> m_inFlightFences; // is rendering finished
 	
-	VertexBuffer* m_vertexBuffer = nullptr;
-	VkBuffer m_indexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory m_indexBufferMemory = VK_NULL_HANDLE;
-	std::vector<VkBuffer> m_uniformBuffers;
-	std::vector<VkDeviceMemory> m_uniformBuffersMemory;
-	std::vector<void*> m_uniformBufferMapped;
+	// buffer
 	VkDescriptorPool m_descriptorPool = VK_NULL_HANDLE;
 	std::vector<VkDescriptorSet> m_descriptorSets;
+	VkBuffer m_lastBoundIBO = VK_NULL_HANDLE;
+	VkBuffer m_lastBoundVBO = VK_NULL_HANDLE;
+	VertexBuffer* m_immediateVBO = nullptr;
+	IndexBuffer* m_devIBO = nullptr;
+	std::vector<RenderBuffer*> m_uniformBuffers;
+	UniformBufferObject m_ubo; // temp usage for development.
 };

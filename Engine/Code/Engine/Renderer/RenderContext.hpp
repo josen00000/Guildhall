@@ -9,6 +9,7 @@ class Texture;
 class Clock;
 class GPUMesh;
 class SwapChain;
+class Camera;
 
 enum RenderContextType
 {
@@ -114,6 +115,7 @@ protected:
 	RenderContextType m_type = RENDER_CONTEXT_TYPE_NONE;
 	SwapChain* m_swapChain = nullptr;
 	Clock* m_clock = nullptr;
+	Camera* m_currentCamera = nullptr;
 	model_t m_model;
 	bool m_modelHasChanged = false;
 };

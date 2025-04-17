@@ -1,5 +1,6 @@
 #include "RenderContext_vulkan.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
+#include "Engine/Renderer/IndexBuffer.hpp"
 #include <iostream>
 #include <optional>
 #include <set>
@@ -35,11 +36,7 @@ struct QueueFamilyIndices{
 	}
  };
 
-struct UniformBufferObject{
-	Mat44 model;
-	Mat44 view;
-	Mat44 proj;
-};
+
 
 // debug draw data
 const std::vector<Vertex_PCU> debugDrawData = {
@@ -49,8 +46,8 @@ const std::vector<Vertex_PCU> debugDrawData = {
 	Vertex_PCU( Vec3( -0.5f, 0.5f, 0.f ), Rgba8::BLACK, Vec2( -1.f, -1.f ) )
 };
 
-const std::vector<uint16_t> debugDrawIndexes = {
-	0, 1, 2,
+const std::vector<uint> debugDrawIndexes = {
+	0, 1, 2,	
 	2, 3, 0
 };
 
@@ -398,16 +395,13 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
-	CreateDescriptorSetLayout();
+	CreateUniformBuffers();
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPool();
+	CreateCommandBuffers();
 	createVertexBuffer();
 	CreateIndexBuffer();
-	CreateUniformBuffers();
-	CreateDescriptorPool();
-	CreateDescriptorSets();
-	CreateCommandBuffers();
 	CreateSyncObjects();
 }
 
@@ -425,16 +419,12 @@ void RenderContext_vulkan::ShutDown()
 		vkDestroySemaphore( m_device, m_imageAvailableSemaphores[i], nullptr );
 		vkDestroyFence( m_device, m_inFlightFences[i], nullptr );
 	}
-	m_vertexBuffer->Cleanup();
-	vkDestroyBuffer( m_device, m_indexBuffer, nullptr );
+	m_immediateVBO->Cleanup();
+	vkDestroyBuffer( m_device, m_lastBoundIBO, nullptr );
 
-	for( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
-	{
-		vkDestroyBuffer( m_device, m_uniformBuffers[i], nullptr );
-		vkFreeMemory( m_device, m_uniformBuffersMemory[i], nullptr );
+	for( int i = 0; i < m_uniformBuffers.size(); i++ ){
+		m_uniformBuffers[i]->Cleanup();
 	}
-
-	vkFreeMemory( m_device, m_indexBufferMemory, nullptr );
 	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
 	vkDestroyDescriptorPool( m_device, m_descriptorPool, nullptr );
@@ -506,6 +496,11 @@ void RenderContext_vulkan::EndFrame()
 
 void RenderContext_vulkan::BeginCamera( Camera* camera, Convention convention )
 {
+	m_currentCamera = camera;
+	// TODO: Need to implement camera render target
+
+	RenderBuffer* cameraUBO = camera->GetOrCreateCameraBuffer( this, convention );
+
 }
 
 void RenderContext_vulkan::EndCamera()
@@ -574,6 +569,33 @@ void RenderContext_vulkan::CleanUpRenderBuffer( RenderBuffer& buffer )
 	buffer.m_handle = nullptr;
 	buffer.m_mappedMemory = nullptr;
 	buffer.m_mappedMemoryData = nullptr;
+}
+
+void RenderContext_vulkan::BindVertexBuffer( VertexBuffer* buffer )
+{
+	VkBuffer vboHandle = (VkBuffer)buffer->m_handle;
+	if( m_lastBoundVBO != vboHandle ){
+		VkBuffer vertexBuffers[] = { (VkBuffer)m_immediateVBO->m_handle };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers( m_commandBuffers[m_currentFrame], 0, 1, vertexBuffers, offsets);
+		m_lastBoundIBO = vboHandle;
+	}
+}
+
+void RenderContext_vulkan::BindIndexBuffer( RenderBuffer* buffer )
+{
+	VkBuffer iboHandle = (VkBuffer)buffer->m_handle;
+	if( m_lastBoundIBO != iboHandle )
+	{
+		vkCmdBindIndexBuffer( m_commandBuffers[m_currentFrame], iboHandle, 0, VK_INDEX_TYPE_UINT32 );
+		m_lastBoundIBO = iboHandle;
+	}
+}
+
+void RenderContext_vulkan::BindUniformBuffer( RenderBuffer* buffer, uint bindingPoint )
+{
+	VkBuffer uboHandle = (VkBuffer)buffer->m_handle;
+	CreateDescriptorSets();
 }
 
 void RenderContext_vulkan::EnableDepth( DepthCompareFunc func, bool writeDepthOnPass )
@@ -1194,9 +1216,9 @@ void RenderContext_vulkan::CreateCommandPool()
 
 void RenderContext_vulkan::createVertexBuffer()
 {
-	m_vertexBuffer = new VertexBuffer(this, RenderMemoryHint::MEMORY_HINT_GPU);
+	m_immediateVBO = new VertexBuffer(this, RenderMemoryHint::MEMORY_HINT_GPU);
 	size_t bufferSize = sizeof( Vertex_PCU ) * debugDrawData.size();
-	m_vertexBuffer->Update( debugDrawData.data(), bufferSize, sizeof( Vertex_PCU ) );
+	m_immediateVBO->Update( debugDrawData.data(), bufferSize, sizeof( Vertex_PCU ) );
 	// create staging buffer
 	//VkBuffer stageBuffer;
 	//VkDeviceMemory stagingBufferMemory;
@@ -1222,42 +1244,43 @@ void RenderContext_vulkan::createVertexBuffer()
 
 void RenderContext_vulkan::CreateIndexBuffer()
 {
-	VkDeviceSize bufferSize = sizeof(debugDrawIndexes[0]) * debugDrawIndexes.size();
-
-	VkBuffer stageBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	CreateBuffer( m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stageBuffer, stagingBufferMemory );
-
-	void* data;
-	vkMapMemory( m_device, stagingBufferMemory, 0, bufferSize, 0, &data );
-	memcpy(data, debugDrawIndexes.data(), (size_t)bufferSize);
-	vkUnmapMemory( m_device, stagingBufferMemory );
-
-	CreateBuffer(m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indexBuffer, m_indexBufferMemory);
-
-	CopyBuffer(m_device, m_commandPool, m_graphicsQueue, stageBuffer, m_indexBuffer, bufferSize);
-	vkDestroyBuffer( m_device, stageBuffer, nullptr );
-	vkFreeMemory( m_device, stagingBufferMemory, nullptr );
+	m_devIBO = new IndexBuffer(this, RenderMemoryHint::MEMORY_HINT_GPU);
+	m_devIBO->Update( debugDrawIndexes );
+	//VkDeviceSize bufferSize = sizeof(debugDrawIndexes[0]) * debugDrawIndexes.size();
+	//
+	//VkBuffer stageBuffer;
+	//VkDeviceMemory stagingBufferMemory;
+	//CreateBuffer( m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+	//	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stageBuffer, stagingBufferMemory );
+	//
+	//void* data;
+	//vkMapMemory( m_device, stagingBufferMemory, 0, bufferSize, 0, &data );
+	//memcpy(data, debugDrawIndexes.data(), (size_t)bufferSize);
+	//vkUnmapMemory( m_device, stagingBufferMemory );
+	//
+	//CreateBuffer(m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+	//	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_lastBoundIBO, m_indexBufferMemory);
+	//
+	//CopyBuffer(m_device, m_commandPool, m_graphicsQueue, stageBuffer, m_lastBoundIBO, bufferSize);
+	//vkDestroyBuffer( m_device, stageBuffer, nullptr );
+	//vkFreeMemory( m_device, stagingBufferMemory, nullptr );
 }
 
 void RenderContext_vulkan::CreateUniformBuffers()
 {
 	VkDeviceSize bufferSize = sizeof( UniformBufferObject );
 	m_uniformBuffers.resize( MAX_FRAMES_IN_FLIGHT );
-	m_uniformBuffersMemory.resize( MAX_FRAMES_IN_FLIGHT );
-	m_uniformBufferMapped.resize( MAX_FRAMES_IN_FLIGHT );
 
 
 	for( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
 	{
-		CreateBuffer( m_device, m_physicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i], m_uniformBuffersMemory[i] );
-
-		vkMapMemory( m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBufferMapped[i] );
+		m_uniformBuffers[i]	= new RenderBuffer( "Uniform Buffer", this, RenderBufferUsageBit::UNIFORM_BUFFER_BIT, RenderMemoryHint::MEMORY_HINT_DYNAMIC);
+		m_uniformBuffers[i]->Update(&m_ubo, sizeof(m_ubo), sizeof(m_ubo));
 	}
-
+	CreateDescriptorSetLayout();
+	CreateDescriptorPool();
+	// bind uniform buffer here
+	CreateDescriptorSets();
 }
 
 void RenderContext_vulkan::CreateDescriptorPool()
@@ -1288,6 +1311,7 @@ void RenderContext_vulkan::CreateDescriptorSets()
 	allocInfo.pSetLayouts = layouts.data();
 
 	m_descriptorSets.resize( MAX_FRAMES_IN_FLIGHT );
+
 	if( vkAllocateDescriptorSets( m_device, &allocInfo, m_descriptorSets.data() ) != VK_SUCCESS )
 	{
 		ERROR_AND_DIE( "Failed to allocate descriptor sets!" );
@@ -1296,7 +1320,8 @@ void RenderContext_vulkan::CreateDescriptorSets()
 	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
 	{
 		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = m_uniformBuffers[i];
+		VkBuffer uboHandle = (VkBuffer)m_uniformBuffers[i]->m_handle;
+		bufferInfo.buffer = uboHandle;
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof( UniformBufferObject );
 
@@ -1312,6 +1337,22 @@ void RenderContext_vulkan::CreateDescriptorSets()
 		vkUpdateDescriptorSets( m_device, 1, &descriptorWrite, 0, nullptr );
 	}
 
+}
+
+void RenderContext_vulkan::CreateDescriptorSet( VertexBuffer* ubo )
+{
+	std::vector<VkDescriptorSetLayout> layouts( 1, m_descriptorSetLayout );
+	VkDescriptorSetAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = m_descriptorPool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>( 1 );
+	allocInfo.pSetLayouts = layouts.data();
+
+
+	if( vkAllocateDescriptorSets( m_device, &allocInfo, m_descriptorSets.data() ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to allocate descriptor sets!" );
+	}
 }
 
 void RenderContext_vulkan::CreateCommandBuffers()
@@ -1368,11 +1409,9 @@ void RenderContext_vulkan::RecordCommandBuffer( VkCommandBuffer commandBuffer, u
 	scissor.offset = { 0, 0 };
 	scissor.extent = m_swapChainExtent;
 	vkCmdSetScissor( commandBuffer, 0, 1, &scissor );
-
-	VkBuffer vertexBuffers[] = { (VkBuffer)m_vertexBuffer->m_handle };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers( commandBuffer, 0, 1, vertexBuffers, offsets );
-	vkCmdBindIndexBuffer( commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT16 );
+	BindVertexBuffer(m_immediateVBO);
+	BindIndexBuffer( m_devIBO );
+	
 
 	vkCmdBindDescriptorSets( commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[m_currentFrame], 0, nullptr );
 	// vkCmdDraw( commandBuffer, static_cast<uint32_t>(debugDrawData.size() ), 1, 0, 0); // draw a triangle
@@ -1437,8 +1476,7 @@ void RenderContext_vulkan::ShutDownSwapChain()
 
 void RenderContext_vulkan::UpdateUniformBuffer( uint32_t currentImage )
 {
-	UniformBufferObject ubo = {};
-	memcpy( m_uniformBufferMapped[currentImage], &ubo, sizeof( ubo ) );
+	m_uniformBuffers[currentImage]->Update(&m_ubo, sizeof(m_ubo), sizeof(m_ubo) );
 }
 
 

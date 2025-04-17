@@ -86,7 +86,7 @@ public:
 	Texture*		GetColorTarget( uint slot=0 ) const;
 	Texture*		GetDepthStencilTarget() const { return m_depthStencilTarget; }
 	Texture*		GetOrCreateDepthStencilTarget( RenderContext_d3d11* ctx );
-	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext_d3d11* ctx, Convention convention );
+	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx, Convention convention );
 
 		// Mutator
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio );
