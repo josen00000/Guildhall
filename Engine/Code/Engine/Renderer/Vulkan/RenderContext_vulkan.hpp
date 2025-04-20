@@ -105,6 +105,8 @@ private:
 	void CreateIndexBuffer();
 	void CreateUniformBuffers();
 	RenderBuffer* CreateUniformBufferWithUsage( UNIFORM_BUFFER_USAGE usage );
+	void CreateTextureImage();
+
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
 	void CreateDescriptorSet(VertexBuffer* ubo);

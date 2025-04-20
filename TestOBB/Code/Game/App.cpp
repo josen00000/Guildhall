@@ -22,6 +22,9 @@
 #include "ThirdParty/imgui/imgui_impl_dx11.h"
 #include "ThirdParty/imgui/imgui_impl_win32.h"
 
+//#define VULKAN_DEV
+
+
 // Game
 App*			g_theApp			= nullptr;
 Game*			g_theGame			= nullptr;
@@ -48,8 +51,10 @@ void App::Startup()
 	StartupStage2();
 	StartupStage3();
 
+#ifdef VULKAN_DEV
 	// vulkan setup dev debug
 	g_gameCamera->SetPosition( Vec3( 0, 0, -1 ) );
+#endif
 }
 
 void App::StartupStage1()
@@ -61,8 +66,11 @@ void App::StartupStage1()
 void App::StartupStage2()
 {
 	// initialize system
+#ifdef VULKAN_DEV
 	g_theRenderer = CreateOrGetRenderContext( RENDER_CONTEXT_TYPE_VULKAN );
-	//g_theRenderer = CreateOrGetRenderContext( RENDER_CONTEXT_TYPE_D3D11 );
+#else
+	g_theRenderer = CreateOrGetRenderContext( RENDER_CONTEXT_TYPE_D3D11 );
+#endif
 	g_theInputSystem = new InputSystem();
 	g_theAudioSystem = new AudioSystem();
 	g_thePhysics = new Physics2D();
@@ -188,18 +196,20 @@ void App::Update( float deltaSeconds )
 	CheckGameQuit();
 	
 	Vec3 cameraPos = g_gameCamera->GetPosition();
-	cameraPos += Vec3( 0, 0.01, 0 ) * deltaSeconds;
+	cameraPos += Vec3( 0.01, -0.01, 0 ) * deltaSeconds;
 	g_gameCamera->SetPosition( cameraPos );
 }
 
 const void App::Render() const
 {
+#if defined( VULKAN_DEV )
 	// test vulkan render functions
 	// draw frame
 	g_theRenderer->BeginCamera( g_gameCamera );
 	//vk->UpdateUniformBuffer();
 
 	return; // working on rendering part. 
+#endif
 	g_theRenderer->BeginCamera( g_UICamera );
 	g_theGame->RenderUI();
 	g_theRenderer->EndCamera();

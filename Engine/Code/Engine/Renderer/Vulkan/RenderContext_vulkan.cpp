@@ -1321,6 +1321,10 @@ RenderBuffer* RenderContext_vulkan::CreateUniformBufferWithUsage( UNIFORM_BUFFER
 	return buffer;	
 }
 
+void RenderContext_vulkan::CreateTextureImage()
+{
+}
+
 void RenderContext_vulkan::CreateDescriptorPool()
 {
 	VkDescriptorPoolSize poolSize = {};
