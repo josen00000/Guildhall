@@ -114,13 +114,6 @@ struct time_data_t {
 	float padding[2];
 };
 
-struct camera_ortho_t {
-	Mat44 projection;
-	Mat44 view;
-	Vec3 position;
-	float pad00;
-};
-
 struct tint_color_t {
 	float r;
 	float g;

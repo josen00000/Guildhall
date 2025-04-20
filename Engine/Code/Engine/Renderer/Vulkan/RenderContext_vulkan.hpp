@@ -20,6 +20,18 @@ class VertexBuffer;
 class IndexBuffer;
 class RenderBuffer;
 
+typedef std::vector<RenderBuffer*> UniformBuffers;
+
+enum UNIFORM_BUFFER_USAGE
+{
+	UBO_USAGE_MODEL = 0,
+	UBO_USAGE_CAMERA = 1,
+	UBO_USAGE_MAX = 2
+	//UBO_USAGE_LIGHT = 2,
+	//UBO_USAGE_MATERIAL = 3,
+	//UBO_USAGE_MAX = 4
+};
+
 struct UniformBufferObject{
 	Mat44 model;
 	Mat44 view;
@@ -92,6 +104,7 @@ private:
 	void createVertexBuffer();
 	void CreateIndexBuffer();
 	void CreateUniformBuffers();
+	RenderBuffer* CreateUniformBufferWithUsage( UNIFORM_BUFFER_USAGE usage );
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
 	void CreateDescriptorSet(VertexBuffer* ubo);
@@ -137,6 +150,5 @@ private:
 	VkBuffer m_lastBoundVBO = VK_NULL_HANDLE;
 	VertexBuffer* m_immediateVBO = nullptr;
 	IndexBuffer* m_devIBO = nullptr;
-	std::vector<RenderBuffer*> m_uniformBuffers;
-	UniformBufferObject m_ubo; // temp usage for development.
+	std::vector<UniformBuffers> m_uniformBuffers;
 };

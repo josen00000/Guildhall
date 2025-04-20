@@ -10,6 +10,11 @@
 
 class RenderBuffer;
 
+struct camera_data_t {
+	Mat44 projection;
+	Mat44 view;
+};
+
 
 enum eCameraClearBitFlag : uint {
 	// what is this
@@ -87,6 +92,7 @@ public:
 	Texture*		GetDepthStencilTarget() const { return m_depthStencilTarget; }
 	Texture*		GetOrCreateDepthStencilTarget( RenderContext_d3d11* ctx );
 	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx, Convention convention );
+	camera_data_t  GetCameraData( Convention convention );
 
 		// Mutator
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio );

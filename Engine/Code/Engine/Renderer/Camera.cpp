@@ -328,13 +328,21 @@ RenderBuffer* Camera::GetOrCreateCameraBuffer( RenderContext* ctx, Convention co
 	return m_cameraUBO;
 }
 
+camera_data_t Camera::GetCameraData( Convention convention )
+{
+	camera_data_t cameraData;
+	cameraData.projection = m_projection;
+	UpdateViewMatrix( convention );
+	cameraData.view = m_view;
+	return cameraData;
+}
+
 void Camera::UpdateCameraUBO( Convention convention )
 {
-	camera_ortho_t cameraData;
+	camera_data_t cameraData;
 	cameraData.projection = m_projection; 
 	UpdateViewMatrix( convention );
 	cameraData.view = m_view;
-	cameraData.position = m_transform.GetPosition();
 	m_cameraUBO->Update( &cameraData, sizeof( cameraData ), sizeof( cameraData ) );
 }
 

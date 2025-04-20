@@ -423,8 +423,11 @@ void RenderContext_vulkan::ShutDown()
 	vkDestroyBuffer( m_device, m_lastBoundIBO, nullptr );
 
 	for( int i = 0; i < m_uniformBuffers.size(); i++ ){
-		m_uniformBuffers[i]->Cleanup();
+		for( int j = 0; j < m_uniformBuffers[i].size(); j++ ){
+			m_uniformBuffers[i][j]->Cleanup();
+		}
 	}
+
 	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
 	vkDestroyDescriptorPool( m_device, m_descriptorPool, nullptr );
@@ -499,8 +502,12 @@ void RenderContext_vulkan::BeginCamera( Camera* camera, Convention convention )
 	m_currentCamera = camera;
 	// TODO: Need to implement camera render target
 
-	RenderBuffer* cameraUBO = camera->GetOrCreateCameraBuffer( this, convention );
-
+	camera_data_t cameraData = camera->GetCameraData(convention);
+	// debug
+	cameraData.projection = Mat44::IDENTITY;
+	//cameraData.view = Mat44::IDENTITY;
+	m_uniformBuffers[m_currentFrame][UNIFORM_BUFFER_USAGE::UBO_USAGE_CAMERA]->Update(&cameraData, sizeof(camera_data_t), sizeof(camera_data_t));
+	
 }
 
 void RenderContext_vulkan::EndCamera()
@@ -594,8 +601,6 @@ void RenderContext_vulkan::BindIndexBuffer( RenderBuffer* buffer )
 
 void RenderContext_vulkan::BindUniformBuffer( RenderBuffer* buffer, uint bindingPoint )
 {
-	VkBuffer uboHandle = (VkBuffer)buffer->m_handle;
-	CreateDescriptorSets();
 }
 
 void RenderContext_vulkan::EnableDepth( DepthCompareFunc func, bool writeDepthOnPass )
@@ -974,17 +979,23 @@ void RenderContext_vulkan::CreateRenderPass()
 
 void RenderContext_vulkan::CreateDescriptorSetLayout()
 {
-	VkDescriptorSetLayoutBinding uboLayoutBinding = {};
-	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional For image sampling
+	std::vector<VkDescriptorSetLayoutBinding> uboLayoutBindings;
+	uboLayoutBindings.reserve( UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX );
+	for(int i = 0; i < UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX; i++ )
+	{
+		VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+		uboLayoutBinding.binding = i;
+		uboLayoutBinding.descriptorCount = 1;
+		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+		uboLayoutBindings.push_back( uboLayoutBinding );
+	}
 
 	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 1;
-	layoutInfo.pBindings = &uboLayoutBinding;
+	layoutInfo.bindingCount = 2;
+	layoutInfo.pBindings = uboLayoutBindings.data();
 
 	if( vkCreateDescriptorSetLayout( m_device, &layoutInfo, nullptr, &m_descriptorSetLayout ) != VK_SUCCESS )
 	{
@@ -1269,13 +1280,17 @@ void RenderContext_vulkan::CreateIndexBuffer()
 void RenderContext_vulkan::CreateUniformBuffers()
 {
 	VkDeviceSize bufferSize = sizeof( UniformBufferObject );
-	m_uniformBuffers.resize( MAX_FRAMES_IN_FLIGHT );
+	m_uniformBuffers.reserve( MAX_FRAMES_IN_FLIGHT );
 
 
 	for( size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
 	{
-		m_uniformBuffers[i]	= new RenderBuffer( "Uniform Buffer", this, RenderBufferUsageBit::UNIFORM_BUFFER_BIT, RenderMemoryHint::MEMORY_HINT_DYNAMIC);
-		m_uniformBuffers[i]->Update(&m_ubo, sizeof(m_ubo), sizeof(m_ubo));
+		UniformBuffers ubos;
+		ubos.resize( UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX );
+		for( int j = 0; j < ubos.size(); j++ ){
+			ubos[j]	= CreateUniformBufferWithUsage( (UNIFORM_BUFFER_USAGE)j );
+		}
+		m_uniformBuffers.push_back( ubos );
 	}
 	CreateDescriptorSetLayout();
 	CreateDescriptorPool();
@@ -1283,11 +1298,34 @@ void RenderContext_vulkan::CreateUniformBuffers()
 	CreateDescriptorSets();
 }
 
+RenderBuffer* RenderContext_vulkan::CreateUniformBufferWithUsage( UNIFORM_BUFFER_USAGE usage )
+{
+	RenderBuffer* buffer = nullptr;
+	if( usage == UBO_USAGE_CAMERA )
+	{
+		buffer = new RenderBuffer( "Camera Uniform Buffer", this, RenderBufferUsageBit::UNIFORM_BUFFER_BIT, RenderMemoryHint::MEMORY_HINT_DYNAMIC );
+		camera_data_t defaultData{};
+		buffer->Update( &defaultData, sizeof( camera_data_t ), sizeof( camera_data_t ) );
+	}
+	else if( usage == UBO_USAGE_MODEL )
+	{
+		buffer = new RenderBuffer( "Model Uniform Buffer", this, RenderBufferUsageBit::UNIFORM_BUFFER_BIT, RenderMemoryHint::MEMORY_HINT_DYNAMIC );
+		Mat44 defaultData{};
+		buffer->Update( &defaultData, sizeof( Mat44 ), sizeof( Mat44 ) );
+	}
+	else
+	{
+		ERROR_AND_DIE( "Invalid uniform buffer usage!" );
+	}
+
+	return buffer;	
+}
+
 void RenderContext_vulkan::CreateDescriptorPool()
 {
 	VkDescriptorPoolSize poolSize = {};
 	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT );
+	poolSize.descriptorCount = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT * UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX );
 
 	VkDescriptorPoolCreateInfo poolInfo = {};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1319,22 +1357,29 @@ void RenderContext_vulkan::CreateDescriptorSets()
 
 	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
 	{
-		VkDescriptorBufferInfo bufferInfo = {};
-		VkBuffer uboHandle = (VkBuffer)m_uniformBuffers[i]->m_handle;
-		bufferInfo.buffer = uboHandle;
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof( UniformBufferObject );
+		VkWriteDescriptorSet descriptorWrite[UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX];
 
-		VkWriteDescriptorSet descriptorWrite = {};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = m_descriptorSets[i];
-		descriptorWrite.dstBinding = 0;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
+		for(int j = 0; j < UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX; j++ )
+		{
+			VkDescriptorBufferInfo bufferInfo = {};
+			RenderBuffer* ubo = m_uniformBuffers[i][j];
+			bufferInfo.buffer = (VkBuffer)ubo->m_handle;
+			bufferInfo.offset = 0;
+			bufferInfo.range = ubo->m_bufferByteSize;
 
-		vkUpdateDescriptorSets( m_device, 1, &descriptorWrite, 0, nullptr );
+			descriptorWrite[j].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite[j].dstSet = m_descriptorSets[i];
+			descriptorWrite[j].dstBinding = j;
+			descriptorWrite[j].dstArrayElement = 0;
+			descriptorWrite[j].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			descriptorWrite[j].descriptorCount = 1;
+			descriptorWrite[j].pBufferInfo = &bufferInfo; // Optional
+			descriptorWrite[j].pImageInfo = nullptr; // Optional
+			descriptorWrite[j].pTexelBufferView = nullptr; // Optional
+			descriptorWrite[j].pNext = nullptr;
+
+		}
+		vkUpdateDescriptorSets( m_device, UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX, descriptorWrite, 0, nullptr );
 	}
 
 }
@@ -1476,7 +1521,7 @@ void RenderContext_vulkan::ShutDownSwapChain()
 
 void RenderContext_vulkan::UpdateUniformBuffer( uint32_t currentImage )
 {
-	m_uniformBuffers[currentImage]->Update(&m_ubo, sizeof(m_ubo), sizeof(m_ubo) );
+	//m_uniformBuffers[currentImage]->Update(&m_ubo, sizeof(m_ubo), sizeof(m_ubo) );
 }
 
 

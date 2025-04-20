@@ -47,6 +47,9 @@ void App::Startup()
 	StartupStage1();
 	StartupStage2();
 	StartupStage3();
+
+	// vulkan setup dev debug
+	g_gameCamera->SetPosition( Vec3( 0, 0, -1 ) );
 }
 
 void App::StartupStage1()
@@ -183,13 +186,17 @@ void App::Update( float deltaSeconds )
 	g_theGame->RunFrame( deltaSeconds );
 	g_theConsole->Update( deltaSeconds );
 	CheckGameQuit();
+	
+	Vec3 cameraPos = g_gameCamera->GetPosition();
+	cameraPos += Vec3( 0, 0.01, 0 ) * deltaSeconds;
+	g_gameCamera->SetPosition( cameraPos );
 }
 
 const void App::Render() const
 {
 	// test vulkan render functions
 	// draw frame
-	RenderContext_vulkan* vk = (RenderContext_vulkan*)g_theRenderer;
+	g_theRenderer->BeginCamera( g_gameCamera );
 	//vk->UpdateUniformBuffer();
 
 	return; // working on rendering part. 
