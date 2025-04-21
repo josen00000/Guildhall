@@ -97,6 +97,9 @@ public:
 	virtual void SetFrontFaceWindOrder( RasterWindOrder order ) = 0;
 	//virtual void SetModelMatrix( const Mat44& model ) = 0;
 
+	// texture
+	virtual Texture* CreateDepthStencilBuffer( int width, int height ) = 0;
+	virtual Texture* CreateTextureFromFile( const char* imageFilePath ) = 0;
 
 	// Draw
 	virtual void Draw( int numVertexes, int vertexOffset = 0 ) = 0;

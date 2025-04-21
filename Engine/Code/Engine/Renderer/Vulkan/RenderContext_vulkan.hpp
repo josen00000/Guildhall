@@ -2,7 +2,7 @@
 
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Vulkan/VulkanCommon.hpp"
-
+#include <map>
 //-----------------------------------------------------------------------------------------------
 // TODO:	
 //		1.	vkallocatememory should not be called for every buffer
@@ -15,10 +15,16 @@
 //			into a single VkBuffer and use offsets in commands like vkCmdBindVertexBuffers. The advantage is that your data is more cache friendly in that case, because it's closer together.
 //			It is even possible to reuse the same chunk of memory for multiple resources if they are not used during the same render operations, 
 //			provided that their data is refreshed, of course. This is known as aliasing and some Vulkan functions have explicit flags to specify that you want to do this.
+//      3.  All of the helper functions that submit commands so far have been set up to execute synchronously by waiting for the queue to become idle.
+//			For practical applications it is recommended to combine these operations in a single command buffer and execute them asynchronously for higher throughput,
+//			especially the transitions and copy in the createTextureImage function. Try to experiment with this by creating a setupCommandBuffer 
+//			that the helper functions record commands into, and add a flushSetupCommands to execute the commands that have been recorded so far. 
+//			It's best to do this after the texture mapping works to check if the texture resources are still set up correctly.
 
 class VertexBuffer;
 class IndexBuffer;
 class RenderBuffer;
+class Texture;
 
 typedef std::vector<RenderBuffer*> UniformBuffers;
 
@@ -74,6 +80,10 @@ public:
 	virtual void SetRasterFillMode( RasterFillMode mode )  ;
 	virtual void SetFrontFaceWindOrder( RasterWindOrder order )  ;
 
+	// texture
+	virtual Texture* CreateDepthStencilBuffer( int width, int height ) override;
+	VkImageView CreateTextureImageView(VkImage image, VkFormat format);
+	virtual Texture* CreateTextureFromFile( const char* imageFilePath ) override;
 
 	// Draw
 	virtual void Draw( int numVertexes, int vertexOffset = 0 )  ;
@@ -105,7 +115,6 @@ private:
 	void CreateIndexBuffer();
 	void CreateUniformBuffers();
 	RenderBuffer* CreateUniformBufferWithUsage( UNIFORM_BUFFER_USAGE usage );
-	void CreateTextureImage();
 
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
@@ -116,7 +125,8 @@ private:
 	void RecreateSwapChain();
 	void ShutDownSwapChain();
 	void UpdateUniformBuffer( uint32_t currentImage );
-
+	void TransitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout );
+	void CopyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height );
 private:
 	uint32_t m_currentFrame = 0;
 	Window* m_window = nullptr;
@@ -153,4 +163,5 @@ private:
 	VertexBuffer* m_immediateVBO = nullptr;
 	IndexBuffer* m_devIBO = nullptr;
 	std::vector<UniformBuffers> m_uniformBuffers;
+	std::map<Texture*, VkDeviceMemory> m_textures;
 };

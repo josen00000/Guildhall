@@ -312,7 +312,7 @@ Texture* Camera::GetOrCreateDepthStencilTarget( RenderContext_d3d11* ctx )
 	}
 	Texture* colorTarget = GetColorTarget();
 
-	m_depthStencilTarget = Texture::CreateDepthStencilBuffer( ctx, colorTarget->GetSize().x, colorTarget->GetSize().y );
+	m_depthStencilTarget = Texture::CreateDepthStencilBuffer( (RenderContext*)ctx, colorTarget->GetSize().x, colorTarget->GetSize().y );
 	return m_depthStencilTarget;
 }
 

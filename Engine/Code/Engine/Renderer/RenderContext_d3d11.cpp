@@ -403,7 +403,7 @@ Texture* RenderContext_d3d11::CreateRenderTargetWithSizeAndData( IntVec2 texSize
 
 void RenderContext_d3d11::CopyTexture( Texture* dst, Texture* src )
 {
-	m_context->CopyResource( dst->GetHandle(), src->GetHandle() ); // format and size has to match
+	m_context->CopyResource( dst->GetD3D11Handle(), src->GetD3D11Handle() ); // format and size has to match
 }
 
 void RenderContext_d3d11::StartEffect( Texture* dst, Texture* src, Shader* shader, RenderBuffer* ubo )
@@ -910,6 +910,59 @@ void RenderContext_d3d11::SetFrontFaceWindOrder( RasterWindOrder order )
 	DX_SAFE_RELEASE( m_rasterState );
 	m_rasterState = state;
 	BindRasterState();
+}
+
+Texture* RenderContext_d3d11::CreateDepthStencilBuffer( int width, int height )
+{
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width = width;
+	desc.Height = height;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_D32_FLOAT;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_DEFAULT; // mip-chains, GPU/DEFAUTE
+	desc.BindFlags = D3D11_BIND_DEPTH_STENCIL; //| D3D11_BIND_SHADER_RESOURCE do it later only be r 32; // what does it means?
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+
+	ID3D11Texture2D* texHandle = nullptr;
+	m_device->CreateTexture2D( &desc, NULL, &texHandle );
+	Texture* depthBuffer = new Texture( this, texHandle );
+	AddTexture( depthBuffer );
+	return depthBuffer;
+}
+
+void RenderContext_d3d11::CreateRenderTargetView( Texture* texture )
+{
+	ID3D11RenderTargetView* rtv = nullptr;
+	m_device->CreateRenderTargetView( texture->m_handle.m_d3d11Handle, nullptr, &rtv );
+	if( rtv != nullptr ){
+		texture->m_renderTargetView = new TextureView();
+		texture->m_renderTargetView->SetRTVHandle( rtv );
+	}
+}
+
+void RenderContext_d3d11::CreateShaderResourceView( Texture* texture )
+{
+	ID3D11ShaderResourceView* srv = nullptr;
+	m_device->CreateShaderResourceView( texture->m_handle.m_d3d11Handle, nullptr, &srv );
+	if( srv != nullptr ) {
+		texture->m_shaderResourcwView = new TextureView();
+		texture->m_shaderResourcwView->m_handle.d3d11ViewHandle.m_srv = srv;
+	}
+}
+
+void RenderContext_d3d11::CreateDepthStencilView( Texture* texture )
+{
+	ID3D11DepthStencilView* dsv = nullptr;
+	m_device->CreateDepthStencilView( texture->m_handle.m_d3d11Handle, nullptr, &dsv );
+
+	if( dsv != nullptr ){
+		 texture->m_depthStencilView = new TextureView();
+		 texture->m_depthStencilView->m_handle.d3d11ViewHandle.m_dsv = dsv;
+	}
 }
 
 void RenderContext_d3d11::Draw( int numVertexes, int vertexOffset /*= 0 */ )
@@ -1558,7 +1611,7 @@ Texture* RenderContext_d3d11::CreateTextureFromFile( const char* imageFilePath )
 	// DirectX Creation
 	m_device->CreateTexture2D( &desc, &initialData, &texHandle );
 
-	Texture* temTexture = new Texture( imageFilePath, this, texHandle );
+	Texture* temTexture = new Texture( this, texHandle, imageFilePath );
 	stbi_image_free( imageData );
 	return temTexture;
 }

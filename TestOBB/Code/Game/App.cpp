@@ -22,7 +22,7 @@
 #include "ThirdParty/imgui/imgui_impl_dx11.h"
 #include "ThirdParty/imgui/imgui_impl_win32.h"
 
-//#define VULKAN_DEV
+#define VULKAN_DEV
 
 
 // Game

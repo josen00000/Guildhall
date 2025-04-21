@@ -1,98 +1,78 @@
 #include"Texture.hpp"
 #include "Engine/Math/IntVec2.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
-#include "Engine/Renderer/RenderContext_d3d11.hpp"
 #include "Engine/Renderer/TextureView.hpp"
+#include "Engine/Renderer/Vulkan/VulkanCommon.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
+#include "Engine/Renderer/Vulkan/RenderContext_vulkan.hpp"
 
-
-Texture::Texture( RenderContext_d3d11* ctx, ID3D11Texture2D* handle )
+Texture::Texture( RenderContext* ctx, void* handle, const char* filePath)
 	:m_owner(ctx)
-	,m_handle(handle)
 {
-	D3D11_TEXTURE2D_DESC desc;
-	handle->GetDesc(&desc);
-	m_texelSizeCoords = IntVec2( desc.Width, desc.Height ); 
-}
+	if( ctx->GetRenderContextType() == RENDER_CONTEXT_TYPE_D3D11 )
+	{
+		m_handle.m_d3d11Handle = (ID3D11Texture2D*)handle;
+		D3D11_TEXTURE2D_DESC desc;
+		m_handle.m_d3d11Handle->GetDesc(&desc);
+		m_texelSizeCoords = IntVec2( desc.Width, desc.Height ); 
+	}
+	else if( ctx->GetRenderContextType() == RENDER_CONTEXT_TYPE_VULKAN )
+	{
+		m_handle.m_vulkanHandle = (VkImage)handle;
+		ERROR_AND_DIE("not implemented yet");
+	}
 
-Texture::Texture( const char* filePath, RenderContext_d3d11* ctx, ID3D11Texture2D* handle )
-{
-	m_owner = ctx;
-	m_handle = handle;
 	m_imageFilePath = filePath;
-
-	D3D11_TEXTURE2D_DESC desc;
-	m_handle->GetDesc( & desc );
-	m_texelSizeCoords = IntVec2( desc.Width, desc.Height );
 }
+
 
 Texture::~Texture()
 {
 	SELF_SAFE_RELEASE(m_renderTargetView);
 	SELF_SAFE_RELEASE(m_shaderResourcwView);
 	SELF_SAFE_RELEASE(m_depthStencilView);
-// 	delete m_renderTargetView;
-// 	delete m_shaderResourcwView;
-// 	delete m_depthStencilView;
 
 	m_renderTargetView		= nullptr;
 	m_shaderResourcwView	= nullptr;
 	m_depthStencilView		= nullptr;
+
+	switch( m_owner->GetRenderContextType() )
+	{
+		case RENDER_CONTEXT_TYPE_D3D11:
+			DX_SAFE_RELEASE(m_handle.m_d3d11Handle);
+			break;
+		case RENDER_CONTEXT_TYPE_VULKAN:
+			ERROR_AND_DIE("not implemented yet");
+			break;
+		default:
+			ERROR_AND_DIE("not implemented yet");
+			break;
+	}
+
+	// TODO: Need to implement Vulkan cleanup
+
 	m_owner = nullptr;
-	DX_SAFE_RELEASE(m_handle);
 
 }
 
-Texture* Texture::CreateDepthStencilBuffer( RenderContext_d3d11* ctx, int width, int height )
+Texture* Texture::CreateDepthStencilBuffer( RenderContext* ctx, int width, int height )
 {
-	// Create depth texture desc
-	D3D11_TEXTURE2D_DESC desc;
-	desc.Width				= width;
-	desc.Height				= height;
-	desc.MipLevels			= 1;
-	desc.ArraySize			= 1;
-	desc.Format				= DXGI_FORMAT_D32_FLOAT;
-	desc.SampleDesc.Count	= 1;
-	desc.SampleDesc.Quality = 0;
-	desc.Usage				= D3D11_USAGE_DEFAULT; // mip-chains, GPU/DEFAUTE
-	desc.BindFlags			= D3D11_BIND_DEPTH_STENCIL; //| D3D11_BIND_SHADER_RESOURCE do it later only be r 32; // what does it means?
-	desc.CPUAccessFlags		= 0;
-	desc.MiscFlags			= 0;
-	
-	ID3D11Texture2D* texHandle = nullptr;
-	ctx->m_device->CreateTexture2D( &desc, NULL, &texHandle );
-	Texture* depthBuffer = new Texture( ctx, texHandle );
-	ctx->AddTexture( depthBuffer );
-	return depthBuffer;
+	return ctx->CreateDepthStencilBuffer(width, height);
 }
 
 TextureView* Texture::GetOrCreateRenderTargetView()
 {
-	if( m_renderTargetView ){
-		return m_renderTargetView;
-	}
-
-	ID3D11Device* dev = m_owner->m_device;
-	ID3D11RenderTargetView* rtv = nullptr;
-	dev->CreateRenderTargetView( m_handle, nullptr, &rtv );
-	if( rtv != nullptr ){
-		m_renderTargetView = new TextureView();
-		m_renderTargetView->SetRTVHandle( rtv );
-	}
-
+	if( m_renderTargetView ){ return m_renderTargetView; }
+	RenderContext_d3d11* d3d11Ctx = (RenderContext_d3d11*)m_owner;
+	d3d11Ctx->CreateRenderTargetView( this );
 	return m_renderTargetView;
 }
 
 TextureView* Texture::GetOrCreateShaderResourceView()
 {
-	if( m_shaderResourcwView != nullptr ){ return m_shaderResourcwView; }
-
-	ID3D11Device* dev = m_owner->m_device;
-	ID3D11ShaderResourceView* srv = nullptr;
-	dev->CreateShaderResourceView( m_handle, nullptr, &srv );
-	if( srv!= nullptr ) {
-		m_shaderResourcwView = new TextureView();
-		m_shaderResourcwView->m_srv = srv;
-	}
+	if( m_shaderResourcwView ){ return m_shaderResourcwView; }
+	RenderContext_d3d11* d3d11Ctx = (RenderContext_d3d11*)m_owner;
+	d3d11Ctx->CreateShaderResourceView( this );
 	return m_shaderResourcwView;
 }
 
@@ -103,16 +83,18 @@ TextureView* Texture::GetDepthStencilView()
 
 TextureView* Texture::GetOrCreateDepthStencilView()
 {
-	if( m_depthStencilView != nullptr ){ return m_depthStencilView; }
-
-	ID3D11Device* dev = m_owner->m_device;
-	ID3D11DepthStencilView* dsv = nullptr;
-	dev->CreateDepthStencilView( m_handle, nullptr, &dsv );
-
-	if( dsv != nullptr ){
-		m_depthStencilView = new TextureView();
-		m_depthStencilView->m_dsv = dsv;
-	}
+	if( m_depthStencilView ){ return m_depthStencilView; }
+	RenderContext_d3d11* d3d11Ctx = (RenderContext_d3d11*)m_owner;
+	d3d11Ctx->CreateDepthStencilView( this );
 	return m_depthStencilView;
+}
+
+TextureView* Texture::GetOrCreateImageView()
+{
+	if( m_imageView ){ return m_imageView; }
+	RenderContext_vulkan* vulkanCtx = (RenderContext_vulkan*)m_owner;
+	vulkanCtx->CreateTextureImageView( m_handle.m_vulkanHandle, VK_FORMAT_R8G8B8A8_SRGB );
+	return m_imageView;
+
 }
 

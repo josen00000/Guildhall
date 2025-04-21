@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef RENDER_DEBUG
 	#define RENDER_DEBUG
 #endif 

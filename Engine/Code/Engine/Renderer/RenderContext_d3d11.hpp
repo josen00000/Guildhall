@@ -11,7 +11,6 @@
 #include "Engine/Renderer/D3D11Common.hpp"
 #include "Engine/Math/ConvexHull2.hpp"
 
-
 class BitmapFont;
 class Camera;
 class Clock;
@@ -247,6 +246,11 @@ public:
 	void virtual SetRasterFillMode( RasterFillMode mode ) override;
 	void virtual SetFrontFaceWindOrder( RasterWindOrder order ) override;
 
+	// texture
+	virtual Texture* CreateDepthStencilBuffer( int width, int height ) override;
+	void CreateRenderTargetView( Texture* texture );
+	void CreateShaderResourceView( Texture* texture );
+	void CreateDepthStencilView( Texture* texture );
 
 	// Draw
 	void virtual Draw( int numVertexes, int vertexOffset = 0 ) override;
@@ -320,13 +324,13 @@ private:
 	void BeginCameraRTVAndViewport( Camera* camera );
 
 
-	BitmapFont*		CheckBitmapFontExist( const char* fontName ) const;
-	BitmapFont*		CreateBitmapFontFromFile(const char* fontName, const char* fontFilePath);
-	Texture*		CreateTextureFromFile(const char* imageFilePath);
-	void			CreateCubeMapTexturesFromImages( const Image* src );
-	Texture*		CheckTextureExist(const char* imageFilePath) const;
-	void			CleanTextures();
-	void			CleanShaders();
+	BitmapFont*			CheckBitmapFontExist( const char* fontName ) const;
+	BitmapFont*			CreateBitmapFontFromFile(const char* fontName, const char* fontFilePath);
+	virtual Texture*	CreateTextureFromFile(const char* imageFilePath) override;
+	void				CreateCubeMapTexturesFromImages( const Image* src );
+	Texture*			CheckTextureExist(const char* imageFilePath) const;
+	void				CleanTextures();
+	void				CleanShaders();
 
 	void	CreateDefaultRasterStateDesc();
 

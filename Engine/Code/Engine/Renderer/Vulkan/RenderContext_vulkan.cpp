@@ -1,6 +1,9 @@
 #include "RenderContext_vulkan.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
 #include "Engine/Renderer/IndexBuffer.hpp"
+#include "Engine/Renderer/Texture.hpp"
+#include "Engine/Renderer/TextureView.hpp"
+#include "Engine/stb_image.h"
 #include <iostream>
 #include <optional>
 #include <set>
@@ -342,10 +345,46 @@ static void CreateBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDev
 	vkBindBufferMemory( device, buffer, bufferMemory, 0 );
 }
 
-static void CopyBuffer( VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size )
+static void CreateImage(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory )
 {
-	//TODO: Need to implement another command pool for short-lived buffer.
-	// use VK_CMMAND_POOL_TRANSIENT_BIT for short-lived command buffer
+	VkImageCreateInfo imageInfo = {};
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.extent.width = width;
+	imageInfo.extent.height = height;
+	imageInfo.extent.depth = 1;
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.format = format;
+	imageInfo.tiling = tiling;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageInfo.usage = usage;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+
+	if( vkCreateImage( device, &imageInfo, nullptr, &image ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create image!" );
+	}
+
+	VkMemoryRequirements memRequirements;
+	vkGetImageMemoryRequirements( device, image, &memRequirements );
+
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = FindMemoryType( memRequirements.memoryTypeBits, properties, physicalDevice );
+
+	if( vkAllocateMemory( device, &allocInfo, nullptr, &imageMemory ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to allocate image memory!" );
+	}
+
+	vkBindImageMemory( device, image, imageMemory, 0 );
+}
+
+static VkCommandBuffer BeginSingleTimeCommands( VkDevice device, VkCommandPool commandPool )
+{
 	VkCommandBufferAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.commandPool = commandPool;
@@ -353,13 +392,36 @@ static void CopyBuffer( VkDevice device, VkCommandPool commandPool, VkQueue grap
 	allocInfo.commandBufferCount = 1;
 
 	VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+	vkAllocateCommandBuffers( device, &allocInfo, &commandBuffer );
 
 	VkCommandBufferBeginInfo beginInfo = {};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-	vkBeginCommandBuffer(commandBuffer, &beginInfo );
+	vkBeginCommandBuffer( commandBuffer, &beginInfo );
+
+	return commandBuffer;
+}
+
+static void EndSingleTimeCommands( VkCommandBuffer commandBuffer, VkQueue graphicQueue, VkDevice device, VkCommandPool commandPool )
+{
+	vkEndCommandBuffer( commandBuffer );
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit( graphicQueue, 1, &submitInfo, VK_NULL_HANDLE );
+	vkQueueWaitIdle( graphicQueue );
+
+	vkFreeCommandBuffers( device, commandPool, 1, &commandBuffer );
+}
+
+static void CopyBuffer( VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size )
+{
+	//TODO: Need to implement another command pool for short-lived buffer.
+	// use VK_CMMAND_POOL_TRANSIENT_BIT for short-lived command buffer
+	VkCommandBuffer commandBuffer = BeginSingleTimeCommands( device, commandPool );
 
 	VkBufferCopy copyRegion = {};
 	copyRegion.srcOffset = 0; // Optional
@@ -367,20 +429,9 @@ static void CopyBuffer( VkDevice device, VkCommandPool commandPool, VkQueue grap
 	copyRegion.size = size;
 	vkCmdCopyBuffer( commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion );
 
-	vkEndCommandBuffer( commandBuffer );
-
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
-
-	// TODO: use fence to  schedule multiple transfer simultaneously and wait for all complete.
-	vkQueueSubmit( graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE );
-	vkQueueWaitIdle( graphicsQueue );
-
-	vkFreeCommandBuffers( device, commandPool, 1, &commandBuffer );
-
+	EndSingleTimeCommands( commandBuffer, graphicsQueue, device, commandPool );
 }
+
 // End of helper functions
 #pragma endregion
 
@@ -426,6 +477,14 @@ void RenderContext_vulkan::ShutDown()
 		for( int j = 0; j < m_uniformBuffers[i].size(); j++ ){
 			m_uniformBuffers[i][j]->Cleanup();
 		}
+	}
+
+	for( auto pair : m_textures ){
+		Texture* texture = pair.first;
+		vkDestroyImageView( m_device, texture->m_imageView->m_handle.vulkanViewHandle, nullptr );
+		vkFreeMemory( m_device, pair.second, nullptr );
+		vkDestroyImage( m_device, texture->m_handle.m_vulkanHandle, nullptr );
+		delete pair.first;
 	}
 
 	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
@@ -629,6 +688,62 @@ void RenderContext_vulkan::SetRasterFillMode( RasterFillMode mode )
 
 void RenderContext_vulkan::SetFrontFaceWindOrder( RasterWindOrder order )
 {
+}
+
+Texture* RenderContext_vulkan::CreateDepthStencilBuffer( int width, int height )
+{
+	return nullptr;
+}
+
+Texture* RenderContext_vulkan::CreateTextureFromFile( const char* imageFilePath )
+{
+	int imageTexelSizeX = 0; // This will be filled in for us to indicate image width
+	int imageTexelSizeY = 0; // This will be filled in for us to indicate image height
+	int numComponents = 0; // This will be filled in for us to indicate how many color components the image had (e.g. 3=RGB=24bit, 4=RGBA=32bit)
+	int numComponentsRequested = 4; // don't care; we support 3 (24-bit RGB) or 4 (32-bit RGBA)
+
+	// Load (and decompress) the image RGB(A) bytes from a file on disk into a memory buffer (array of bytes)
+	stbi_set_flip_vertically_on_load( 1 ); // We prefer uvTexCoords has origin (0,0) at BOTTOM LEFT need for opengl
+	unsigned char* imageData = stbi_load( imageFilePath, &imageTexelSizeX, &imageTexelSizeY, &numComponents, numComponentsRequested );
+
+	//int length = sizeof(*imageData)/sizeof(unsigned int);
+
+	// Check if the load was successful
+	GUARANTEE_OR_DIE( imageData, Stringf( "Failed to load image \"%s\"", imageFilePath ) );
+	GUARANTEE_OR_DIE( imageTexelSizeX > 0 && imageTexelSizeY > 0, Stringf( "ERROR loading image \"%s\" (Bpp=%i, size=%i,%i)", imageFilePath, numComponents, imageTexelSizeX, imageTexelSizeY ) );
+
+	VkDeviceSize imageSize = imageTexelSizeX * imageTexelSizeY * numComponents;
+
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+
+	CreateBuffer( m_device, m_physicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory );
+
+	void* data;
+	vkMapMemory( m_device, stagingBufferMemory, 0, imageSize, 0, &data );
+	memcpy( data, imageData, (size_t)imageSize );
+	vkUnmapMemory( m_device, stagingBufferMemory );
+	stbi_image_free( imageData );
+
+	VkImage textureImage;
+	VkDeviceMemory textureImageMemory;
+
+	CreateImage( m_device, m_physicalDevice, imageTexelSizeX, imageTexelSizeY, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+				 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory
+	);
+
+	TransitionImageLayout( textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL );
+	CopyBufferToImage( stagingBuffer, textureImage, (uint32_t)imageTexelSizeX, (uint32_t)imageTexelSizeY );
+	TransitionImageLayout( textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL );
+
+	vkDestroyBuffer(m_device, stagingBuffer, nullptr );
+	vkFreeMemory( m_device, stagingBufferMemory, nullptr );
+
+	Texture* texture = new Texture(this, textureImage, "test texture");
+	m_textures[texture] = textureImageMemory;
+	texture->m_imageView = new TextureView();
+	VkImageView textureImageView = CreateTextureImageView( textureImage, VK_FORMAT_R8G8B8A8_SRGB );
+	texture->m_imageView->SetVulkanHandle( textureImageView );
 }
 
 void RenderContext_vulkan::Draw( int numVertexes, int vertexOffset )
@@ -908,25 +1023,7 @@ void RenderContext_vulkan::CreateImageViews()
 	m_swapChainImageViews.resize( m_swapChainImages.size() );
 	for(int i = 0; i < m_swapChainImages.size(); i++ )
 	{
-		VkImageViewCreateInfo createInfo = {};
-		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		createInfo.image = m_swapChainImages[i];
-		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		createInfo.format = m_swapChainImageFormat;
-		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		createInfo.subresourceRange.baseMipLevel = 0;
-		createInfo.subresourceRange.levelCount = 1;
-		createInfo.subresourceRange.baseArrayLayer = 0;
-		createInfo.subresourceRange.layerCount = 1;
-
-		if( vkCreateImageView( m_device, &createInfo, nullptr, &m_swapChainImageViews[i] ) != VK_SUCCESS )
-		{
-			ERROR_AND_DIE( "Failed to create image views!" );
-		}
+		m_swapChainImageViews[i] = CreateTextureImageView( m_swapChainImages[i], m_swapChainImageFormat );
 	}
 }
 
@@ -1321,9 +1418,28 @@ RenderBuffer* RenderContext_vulkan::CreateUniformBufferWithUsage( UNIFORM_BUFFER
 	return buffer;	
 }
 
-void RenderContext_vulkan::CreateTextureImage()
+VkImageView RenderContext_vulkan::CreateTextureImageView( VkImage image, VkFormat format )
 {
+	VkImageViewCreateInfo viewInfo = {};
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = image;
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = format;
+	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+	viewInfo.subresourceRange.levelCount = 1;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.layerCount = 1;
+
+	VkImageView textureImageView;
+	if( vkCreateImageView( m_device, &viewInfo, nullptr, &textureImageView ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create texture image view!" );
+	}
+
+	return textureImageView;
 }
+
 
 void RenderContext_vulkan::CreateDescriptorPool()
 {
@@ -1526,6 +1642,75 @@ void RenderContext_vulkan::ShutDownSwapChain()
 void RenderContext_vulkan::UpdateUniformBuffer( uint32_t currentImage )
 {
 	//m_uniformBuffers[currentImage]->Update(&m_ubo, sizeof(m_ubo), sizeof(m_ubo) );
+}
+
+void RenderContext_vulkan::TransitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout )
+{
+	VkCommandBuffer commandBuffer = BeginSingleTimeCommands( m_device, m_commandPool );
+
+	VkImageMemoryBarrier barrier = {};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = oldLayout;
+	barrier.newLayout = newLayout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = 1;
+	barrier.srcAccessMask = 0;	// TODO
+	barrier.dstAccessMask = 0;	// TODO
+
+	VkPipelineStageFlags srcStage;
+	VkPipelineStageFlags dstStage;
+
+	if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL )
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if( oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL )
+	{
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else
+	{
+		ERROR_AND_DIE( "Unsupported layout transition!" );
+	}
+
+	vkCmdPipelineBarrier( commandBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier );
+	EndSingleTimeCommands( commandBuffer, m_graphicsQueue, m_device, m_commandPool );
+}
+
+void RenderContext_vulkan::CopyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height )
+{
+	VkCommandBuffer commandBuffer = BeginSingleTimeCommands( m_device, m_commandPool );
+	VkBufferImageCopy region = {};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0; // TODO
+	region.bufferImageHeight = 0;
+
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+
+	region.imageOffset = { 0, 0, 0 };
+	region.imageExtent.width = width;
+	region.imageExtent.height = height;
+	region.imageExtent.depth = 1;
+
+	vkCmdCopyBufferToImage( commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region );
+	EndSingleTimeCommands( commandBuffer, m_graphicsQueue, m_device, m_commandPool );
 }
 
 
