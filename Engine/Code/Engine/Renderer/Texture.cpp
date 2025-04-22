@@ -19,7 +19,6 @@ Texture::Texture( RenderContext* ctx, void* handle, const char* filePath)
 	else if( ctx->GetRenderContextType() == RENDER_CONTEXT_TYPE_VULKAN )
 	{
 		m_handle.m_vulkanHandle = (VkImage)handle;
-		ERROR_AND_DIE("not implemented yet");
 	}
 
 	m_imageFilePath = filePath;

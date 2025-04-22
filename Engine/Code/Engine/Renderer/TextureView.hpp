@@ -30,7 +30,7 @@ public:
 	ID3D11RenderTargetView*		GetRTVHandle() const { return m_handle.d3d11ViewHandle.m_rtv; }
 	ID3D11ShaderResourceView*	GetSRVHandle() const { return m_handle.d3d11ViewHandle.m_srv; }
 	ID3D11DepthStencilView*		GetDSVHandle() const { return m_handle.d3d11ViewHandle.m_dsv; }
-
+	VkImageView 				GetVulkanHandle() const { return m_handle.vulkanViewHandle; }
 
 	// Mutator
 	void SetRTVHandle( ID3D11RenderTargetView* rtv );

@@ -84,7 +84,7 @@ public:
 	virtual Texture* CreateDepthStencilBuffer( int width, int height ) override;
 	VkImageView CreateTextureImageView(VkImage image, VkFormat format);
 	virtual Texture* CreateTextureFromFile( const char* imageFilePath ) override;
-
+	virtual void CreateTextureSampler( Sampler* sampler ) override;
 	// Draw
 	virtual void Draw( int numVertexes, int vertexOffset = 0 )  ;
 	virtual void DrawMesh( GPUMesh* mesh )  ;
@@ -124,6 +124,7 @@ private:
 	void CreateSyncObjects();
 	void RecreateSwapChain();
 	void ShutDownSwapChain();
+	void ShutDownTextures();
 	void UpdateUniformBuffer( uint32_t currentImage );
 	void TransitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout );
 	void CopyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height );
@@ -164,4 +165,6 @@ private:
 	IndexBuffer* m_devIBO = nullptr;
 	std::vector<UniformBuffers> m_uniformBuffers;
 	std::map<Texture*, VkDeviceMemory> m_textures;
+	Sampler* m_defaultSampler = nullptr;
+	TextureView* m_defaultTextureView = nullptr;
 };

@@ -248,6 +248,7 @@ public:
 
 	// texture
 	virtual Texture* CreateDepthStencilBuffer( int width, int height ) override;
+	virtual void CreateTextureSampler( Sampler* sampler ) override;
 	void CreateRenderTargetView( Texture* texture );
 	void CreateShaderResourceView( Texture* texture );
 	void CreateDepthStencilView( Texture* texture );

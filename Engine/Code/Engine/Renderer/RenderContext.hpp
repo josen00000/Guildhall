@@ -10,6 +10,7 @@ class Clock;
 class GPUMesh;
 class SwapChain;
 class Camera;
+class Sampler;
 
 enum RenderContextType
 {
@@ -100,7 +101,7 @@ public:
 	// texture
 	virtual Texture* CreateDepthStencilBuffer( int width, int height ) = 0;
 	virtual Texture* CreateTextureFromFile( const char* imageFilePath ) = 0;
-
+	virtual void CreateTextureSampler( Sampler* sampler ) = 0;
 	// Draw
 	virtual void Draw( int numVertexes, int vertexOffset = 0 ) = 0;
 	virtual void DrawMesh( GPUMesh* mesh ) = 0;

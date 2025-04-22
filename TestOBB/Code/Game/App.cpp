@@ -195,9 +195,9 @@ void App::Update( float deltaSeconds )
 	g_theConsole->Update( deltaSeconds );
 	CheckGameQuit();
 	
-	Vec3 cameraPos = g_gameCamera->GetPosition();
-	cameraPos += Vec3( 0.01, -0.01, 0 ) * deltaSeconds;
-	g_gameCamera->SetPosition( cameraPos );
+	//Vec3 cameraPos = g_gameCamera->GetPosition();
+	//cameraPos += Vec3( 0.01, -0.01, 0 ) * deltaSeconds;
+	//g_gameCamera->SetPosition( cameraPos );
 }
 
 const void App::Render() const

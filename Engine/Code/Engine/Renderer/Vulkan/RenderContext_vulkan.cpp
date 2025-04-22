@@ -3,6 +3,7 @@
 #include "Engine/Renderer/IndexBuffer.hpp"
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
+#include "Engine/Renderer/Sampler.hpp"
 #include "Engine/stb_image.h"
 #include <iostream>
 #include <optional>
@@ -43,10 +44,10 @@ struct QueueFamilyIndices{
 
 // debug draw data
 const std::vector<Vertex_PCU> debugDrawData = {
-	Vertex_PCU( Vec3( -0.5f, -0.5f, 0.f ), Rgba8::GREEN, Vec2( 0.f, 0.f ) ),
+	Vertex_PCU( Vec3( -0.5f, -0.5f, 0.f ), Rgba8::GREEN, Vec2( 0.f, 1.f ) ),
 	Vertex_PCU( Vec3( 0.5f, -0.5f, 0.f ), Rgba8::BLUE , Vec2( 1.f, 1.f ) ),
-	Vertex_PCU( Vec3( 0.5f, 0.5f, 0.f ), Rgba8::RED, Vec2( -1.f, -1.f ) ),
-	Vertex_PCU( Vec3( -0.5f, 0.5f, 0.f ), Rgba8::BLACK, Vec2( -1.f, -1.f ) )
+	Vertex_PCU( Vec3( 0.5f, 0.5f, 0.f ), Rgba8::RED, Vec2( 1.f, 0.f ) ),
+	Vertex_PCU( Vec3( -0.5f, 0.5f, 0.f ), Rgba8::BLACK, Vec2( 0.f, 0.f ) )
 };
 
 const std::vector<uint> debugDrawIndexes = {
@@ -180,6 +181,7 @@ static bool IsDeviceSuitable( const VkPhysicalDevice& device, VkSurfaceKHR surfa
 	vkGetPhysicalDeviceFeatures( device, &deviceFeatures );
 
 	bool passDeviceCheck = ( deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ) && deviceFeatures.geometryShader;
+	bool passSamplerCheck = deviceFeatures.samplerAnisotropy;
 	bool passExtensionsCheck = CheckDeviceExtensionSupport(device); 
 	bool passSwapChainSupportCheck = false;
 	if( passExtensionsCheck ){
@@ -188,7 +190,7 @@ static bool IsDeviceSuitable( const VkPhysicalDevice& device, VkSurfaceKHR surfa
 	}
 	QueueFamilyIndices indices = FindQueueFamilies( device, surface );
 
-	return passDeviceCheck && passExtensionsCheck && indices.IsComplete() && passSwapChainSupportCheck;
+	return passDeviceCheck && passExtensionsCheck && indices.IsComplete() && passSwapChainSupportCheck && passSamplerCheck;
 }
 
 static VkSurfaceFormatKHR ChooseSwapSurfaceFormat( const std::vector<VkSurfaceFormatKHR>& availableFormats )
@@ -248,10 +250,10 @@ static VkVertexInputBindingDescription GetBindingDescription()
 	return bindingDescription;
 }
 
-static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions()
+static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions()
 {
 	// TODO: Move to static function of Vertex_PCU
-	std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+	std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
 	// position
 	attributeDescriptions[0].binding = 0;
 	attributeDescriptions[0].location = 0;
@@ -263,6 +265,12 @@ static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions
 	attributeDescriptions[1].location = 1;
 	attributeDescriptions[1].format = VK_FORMAT_R8G8B8A8_UINT;
 	attributeDescriptions[1].offset = offsetof( Vertex_PCU, m_color );
+
+	// uv
+	attributeDescriptions[2].binding = 0;
+	attributeDescriptions[2].location = 2;
+	attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+	attributeDescriptions[2].offset = offsetof( Vertex_PCU, m_uvTexCoords );
 
 	return attributeDescriptions;
 }
@@ -443,16 +451,24 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateSurface();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
+
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
-	CreateUniformBuffers();
+	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPool();
+
+	CreateTextureFromFile("Data/Images/kelly.png");
+	m_defaultSampler = new Sampler(this, SamplerType::SAMPLER_BILINEAR);
+	CreateUniformBuffers();
+	CreateDescriptorPool();
+	CreateDescriptorSets();
 	CreateCommandBuffers();
 	createVertexBuffer();
 	CreateIndexBuffer();
+
 	CreateSyncObjects();
 }
 
@@ -478,14 +494,9 @@ void RenderContext_vulkan::ShutDown()
 			m_uniformBuffers[i][j]->Cleanup();
 		}
 	}
+	ShutDownTextures();
 
-	for( auto pair : m_textures ){
-		Texture* texture = pair.first;
-		vkDestroyImageView( m_device, texture->m_imageView->m_handle.vulkanViewHandle, nullptr );
-		vkFreeMemory( m_device, pair.second, nullptr );
-		vkDestroyImage( m_device, texture->m_handle.m_vulkanHandle, nullptr );
-		delete pair.first;
-	}
+	
 
 	vkDestroyCommandPool( m_device, m_commandPool, nullptr ); // also free the command buffer
 	vkDestroyPipeline( m_device, m_graphicsPipeline, nullptr );
@@ -742,8 +753,38 @@ Texture* RenderContext_vulkan::CreateTextureFromFile( const char* imageFilePath 
 	Texture* texture = new Texture(this, textureImage, "test texture");
 	m_textures[texture] = textureImageMemory;
 	texture->m_imageView = new TextureView();
+	m_defaultTextureView = texture->m_imageView;
 	VkImageView textureImageView = CreateTextureImageView( textureImage, VK_FORMAT_R8G8B8A8_SRGB );
 	texture->m_imageView->SetVulkanHandle( textureImageView );
+}
+
+void RenderContext_vulkan::CreateTextureSampler( Sampler* sampler )
+{
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties( m_physicalDevice, &properties );
+
+	VkSamplerCreateInfo samplerInfo = {};
+	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	samplerInfo.magFilter = VK_FILTER_LINEAR;
+	samplerInfo.minFilter = VK_FILTER_LINEAR;
+	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.anisotropyEnable = VK_TRUE;
+	samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	samplerInfo.unnormalizedCoordinates = VK_FALSE;
+	samplerInfo.compareEnable = VK_FALSE;
+	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	samplerInfo.mipLodBias = 0.0f;
+	samplerInfo.minLod = 0.0f;
+	samplerInfo.maxLod = 0.0f;
+
+	if( vkCreateSampler( m_device, &samplerInfo, nullptr, &sampler->m_handle.vulkanHandle ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to create texture sampler!" );
+	}
 }
 
 void RenderContext_vulkan::Draw( int numVertexes, int vertexOffset )
@@ -922,6 +963,7 @@ void RenderContext_vulkan::CreateLogicalDevice()
 	}
 
 	VkPhysicalDeviceFeatures deviceFeatures = {};
+	deviceFeatures.samplerAnisotropy = VK_TRUE;
 	VkDeviceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
@@ -1076,8 +1118,8 @@ void RenderContext_vulkan::CreateRenderPass()
 
 void RenderContext_vulkan::CreateDescriptorSetLayout()
 {
-	std::vector<VkDescriptorSetLayoutBinding> uboLayoutBindings;
-	uboLayoutBindings.reserve( UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX );
+	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+	layoutBindings.reserve( UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX + 1 );
 	for(int i = 0; i < UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX; i++ )
 	{
 		VkDescriptorSetLayoutBinding uboLayoutBinding = {};
@@ -1086,13 +1128,21 @@ void RenderContext_vulkan::CreateDescriptorSetLayout()
 		uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 		uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-		uboLayoutBindings.push_back( uboLayoutBinding );
+		layoutBindings.push_back( uboLayoutBinding );
 	}
+
+	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
+	samplerLayoutBinding.binding = UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX;
+	samplerLayoutBinding.descriptorCount = 1;
+	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	samplerLayoutBinding.pImmutableSamplers = nullptr; // Optional
+	layoutBindings.push_back( samplerLayoutBinding );
 
 	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 2;
-	layoutInfo.pBindings = uboLayoutBindings.data();
+	layoutInfo.bindingCount = layoutBindings.size();
+	layoutInfo.pBindings = layoutBindings.data();
 
 	if( vkCreateDescriptorSetLayout( m_device, &layoutInfo, nullptr, &m_descriptorSetLayout ) != VK_SUCCESS )
 	{
@@ -1389,10 +1439,7 @@ void RenderContext_vulkan::CreateUniformBuffers()
 		}
 		m_uniformBuffers.push_back( ubos );
 	}
-	CreateDescriptorSetLayout();
-	CreateDescriptorPool();
-	// bind uniform buffer here
-	CreateDescriptorSets();
+	
 }
 
 RenderBuffer* RenderContext_vulkan::CreateUniformBufferWithUsage( UNIFORM_BUFFER_USAGE usage )
@@ -1443,14 +1490,17 @@ VkImageView RenderContext_vulkan::CreateTextureImageView( VkImage image, VkForma
 
 void RenderContext_vulkan::CreateDescriptorPool()
 {
-	VkDescriptorPoolSize poolSize = {};
-	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSize.descriptorCount = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT * UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX );
+	std::vector<VkDescriptorPoolSize> poolSize;
+	poolSize.resize( 2 );
+	poolSize[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSize[0].descriptorCount = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT * UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX );
+	poolSize[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	poolSize[1].descriptorCount = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT );
 
 	VkDescriptorPoolCreateInfo poolInfo = {};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = 1;
-	poolInfo.pPoolSizes = &poolSize;
+	poolInfo.poolSizeCount = poolSize.size();
+	poolInfo.pPoolSizes = poolSize.data();
 	poolInfo.maxSets = static_cast<uint32_t>( MAX_FRAMES_IN_FLIGHT );
 
 	if( vkCreateDescriptorPool( m_device, &poolInfo, nullptr, &m_descriptorPool ) != VK_SUCCESS )
@@ -1477,7 +1527,7 @@ void RenderContext_vulkan::CreateDescriptorSets()
 
 	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++ )
 	{
-		VkWriteDescriptorSet descriptorWrite[UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX];
+		VkWriteDescriptorSet descriptorWrite[UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX + 1];
 
 		for(int j = 0; j < UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX; j++ )
 		{
@@ -1499,7 +1549,24 @@ void RenderContext_vulkan::CreateDescriptorSets()
 			descriptorWrite[j].pNext = nullptr;
 
 		}
-		vkUpdateDescriptorSets( m_device, UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX, descriptorWrite, 0, nullptr );
+		int samplerDescripterIndex = UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX;
+		VkDescriptorImageInfo imageInfo {};
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo.imageView = m_defaultTextureView->GetVulkanHandle();
+		imageInfo.sampler = m_defaultSampler->GetVulkanHandle();
+		descriptorWrite[samplerDescripterIndex].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite[samplerDescripterIndex].dstSet = m_descriptorSets[i];
+		descriptorWrite[samplerDescripterIndex].dstBinding = samplerDescripterIndex;
+		descriptorWrite[samplerDescripterIndex].dstArrayElement = 0;
+		descriptorWrite[samplerDescripterIndex].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrite[samplerDescripterIndex].descriptorCount = 1;
+		descriptorWrite[samplerDescripterIndex].pImageInfo = &imageInfo; // Optional
+		descriptorWrite[samplerDescripterIndex].pNext = nullptr;
+		descriptorWrite[samplerDescripterIndex].pBufferInfo = nullptr; // Optional
+		descriptorWrite[samplerDescripterIndex].pTexelBufferView = nullptr; // Optional
+
+
+		vkUpdateDescriptorSets( m_device, UNIFORM_BUFFER_USAGE::UBO_USAGE_MAX + 1, descriptorWrite, 0, nullptr );
 	}
 
 }
@@ -1637,6 +1704,21 @@ void RenderContext_vulkan::ShutDownSwapChain()
 	}
 
 	vkDestroySwapchainKHR( m_device, m_VkSwapChain, nullptr );
+}
+
+void RenderContext_vulkan::ShutDownTextures()
+{
+	for( auto pair : m_textures ){
+		Texture* texture = pair.first;
+		vkDestroyImageView( m_device, texture->m_imageView->m_handle.vulkanViewHandle, nullptr );
+		vkFreeMemory( m_device, pair.second, nullptr );
+		vkDestroyImage( m_device, texture->m_handle.m_vulkanHandle, nullptr );
+		delete pair.first;
+	}
+
+	vkDestroySampler( m_device, m_defaultSampler->m_handle.vulkanHandle, nullptr );
+	delete m_defaultSampler;
+	m_defaultSampler = nullptr;
 }
 
 void RenderContext_vulkan::UpdateUniformBuffer( uint32_t currentImage )

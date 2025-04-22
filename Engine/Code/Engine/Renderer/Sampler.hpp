@@ -1,20 +1,34 @@
 #pragma once
 
-class RenderContext_d3d11;
+#include "Engine/Renderer/Vulkan/VulkanCommon.hpp"
+
+class RenderContext;
 struct ID3D11SamplerState;
+class RenderContext_d3d11;
+class RenderContext_vulkan;
 
 enum SamplerType {
 	SAMPLER_POINT,
 	SAMPLER_BILINEAR,
 };
 
+union SamplerHandle{
+	ID3D11SamplerState* d3d11Handle;
+	VkSampler vulkanHandle;
+};
 class Sampler {
+	friend class RenderContext_d3d11;
+	friend class RenderContext_vulkan;
+
 public:
-	Sampler( RenderContext_d3d11* ctx, SamplerType type );
+	Sampler( RenderContext* ctx, SamplerType type );
 	~Sampler();
 
-	inline ID3D11SamplerState* GetHandle() const { return m_handle; } // inline cost memory, speed more fast
-public:
-	RenderContext_d3d11* m_owner;
-	ID3D11SamplerState* m_handle;
+	ID3D11SamplerState* GetD3D11Handle() const { return m_handle.d3d11Handle; }
+	VkSampler GetVulkanHandle() const { return m_handle.vulkanHandle; }
+
+private:
+	RenderContext* m_owner;
+	SamplerHandle m_handle;
+	SamplerType m_type;
 };

@@ -594,7 +594,7 @@ void RenderContext_d3d11::BindSampler( const Sampler* sampler )
 	if( tempSampler == nullptr ) {
 		tempSampler = m_defaultSampler;
 	}
-	ID3D11SamplerState* samplerHandle = tempSampler->GetHandle();
+	ID3D11SamplerState* samplerHandle = tempSampler->GetD3D11Handle();
 	m_context->PSSetSamplers( 0, 1, &samplerHandle );
 }
 
@@ -932,6 +932,34 @@ Texture* RenderContext_d3d11::CreateDepthStencilBuffer( int width, int height )
 	Texture* depthBuffer = new Texture( this, texHandle );
 	AddTexture( depthBuffer );
 	return depthBuffer;
+}
+
+void RenderContext_d3d11::CreateTextureSampler( Sampler* sampler )
+{
+	D3D11_SAMPLER_DESC desc;
+
+	if( sampler->m_type == SAMPLER_POINT ) {
+		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	}
+	else if(sampler->m_type == SAMPLER_BILINEAR ) {
+		desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+	}
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+
+	desc.MipLODBias = 0.0f;
+	desc.MaxAnisotropy = 0;;
+	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	desc.BorderColor[0] = 0.0f;
+	desc.BorderColor[1] = 0.0f;
+	desc.BorderColor[2] = 0.0f;
+	desc.BorderColor[3] = 0.0f;
+	desc.MinLOD = 0.0f;
+	desc.MaxLOD = 0.0f;
+
+
+	m_device->CreateSamplerState( &desc, &sampler->m_handle.d3d11Handle );
 }
 
 void RenderContext_d3d11::CreateRenderTargetView( Texture* texture )
