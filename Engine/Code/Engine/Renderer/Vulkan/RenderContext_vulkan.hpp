@@ -82,7 +82,7 @@ public:
 
 	// texture
 	virtual Texture* CreateDepthStencilBuffer( int width, int height ) override;
-	VkImageView CreateTextureImageView(VkImage image, VkFormat format);
+	VkImageView CreateTextureImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags );
 	virtual Texture* CreateTextureFromFile( const char* imageFilePath ) override;
 	virtual void CreateTextureSampler( Sampler* sampler ) override;
 	// Draw
@@ -128,6 +128,8 @@ private:
 	void UpdateUniformBuffer( uint32_t currentImage );
 	void TransitionImageLayout( VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout );
 	void CopyBufferToImage( VkBuffer buffer, VkImage image, uint32_t width, uint32_t height );
+	void CreateDepthResources();
+
 private:
 	uint32_t m_currentFrame = 0;
 	Window* m_window = nullptr;
@@ -167,4 +169,9 @@ private:
 	std::map<Texture*, VkDeviceMemory> m_textures;
 	Sampler* m_defaultSampler = nullptr;
 	TextureView* m_defaultTextureView = nullptr;
+
+	//depth
+	VkImage m_depthImage;
+	VkDeviceMemory m_depthImageMemory;
+	VkImageView m_depthImageView;
 };

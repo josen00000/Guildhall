@@ -92,7 +92,7 @@ TextureView* Texture::GetOrCreateImageView()
 {
 	if( m_imageView ){ return m_imageView; }
 	RenderContext_vulkan* vulkanCtx = (RenderContext_vulkan*)m_owner;
-	vulkanCtx->CreateTextureImageView( m_handle.m_vulkanHandle, VK_FORMAT_R8G8B8A8_SRGB );
+	vulkanCtx->CreateTextureImageView( m_handle.m_vulkanHandle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT );
 	return m_imageView;
 
 }
