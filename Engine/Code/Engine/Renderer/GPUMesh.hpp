@@ -3,8 +3,9 @@
 #include "Engine/Core/Transform.hpp"
 #include "Engine\Renderer\IndexBuffer.hpp"
 #include "Engine\Renderer\RenderCommon.hpp"
-#include "Engine\Renderer\RenderContext_d3d11.hpp"
 #include "Engine\Renderer\VertexBuffer.hpp"
+#include "Engine/Core/Vertex_PCUTBN.hpp"
+#include "Engine/Core/Vertex_PCU.hpp"
 
 enum Vertex_Type {
 	VERTEX_TYPE_PCU,
@@ -16,7 +17,7 @@ class GPUMesh {
 public:
 	GPUMesh(){}
 	~GPUMesh();
-	GPUMesh( RenderContext_d3d11* owner, Vertex_Type type=VERTEX_TYPE_PCU );
+	GPUMesh( RenderContext* owner, Vertex_Type type=VERTEX_TYPE_PCU );
 
 public:
 	void UpdateVerticeBuffer();

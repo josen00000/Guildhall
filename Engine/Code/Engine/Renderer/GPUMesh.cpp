@@ -3,6 +3,7 @@
 #include "Engine/Renderer/IndexBuffer.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 
 
 GPUMesh::~GPUMesh()
@@ -12,7 +13,7 @@ GPUMesh::~GPUMesh()
 }
 
 
-GPUMesh::GPUMesh( RenderContext_d3d11* owner, Vertex_Type type/*=VERTEX_TYPE_PCU */ )
+GPUMesh::GPUMesh( RenderContext* owner, Vertex_Type type/*=VERTEX_TYPE_PCU */ )
 	:m_owner(owner)
 	,m_type(type)
 {

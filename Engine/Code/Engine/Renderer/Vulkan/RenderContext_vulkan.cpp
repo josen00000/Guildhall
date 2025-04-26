@@ -4,6 +4,7 @@
 #include "Engine/Renderer/Texture.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Renderer/Sampler.hpp"
+#include "Engine/Renderer/GPUMesh.hpp"
 #include "Engine/stb_image.h"
 #include <iostream>
 #include <optional>
@@ -498,7 +499,7 @@ void RenderContext_vulkan::StartUp( Window* window )
 	CreateFrameBuffers();
 	CreateCommandPool();
 
-	CreateTextureFromFile("Data/Images/kelly.png");
+	CreateTextureFromFile("Data/Model/viking_room.png");
 	m_defaultSampler = new Sampler(this, SamplerType::SAMPLER_BILINEAR);
 	CreateUniformBuffers();
 	CreateDescriptorPool();
@@ -552,13 +553,10 @@ void RenderContext_vulkan::ShutDown()
 void RenderContext_vulkan::BeginFrame()
 {
 	vkWaitForFences( m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
-}
-
-void RenderContext_vulkan::EndFrame()
-{
-	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR( m_device, m_VkSwapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
-	if(result == VK_ERROR_OUT_OF_DATE_KHR ){
+	
+	
+	VkResult result = vkAcquireNextImageKHR( m_device, m_VkSwapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_imageIndex );
+	if( result == VK_ERROR_OUT_OF_DATE_KHR ){
 		RecreateSwapChain();
 		return;
 	}
@@ -567,10 +565,31 @@ void RenderContext_vulkan::EndFrame()
 		ERROR_AND_DIE( "Failed to acquire swap chain image!" );
 	}
 
-	UpdateUniformBuffer(m_currentFrame);
+	UpdateUniformBuffer( m_currentFrame );
 	vkResetFences( m_device, 1, &m_inFlightFences[m_currentFrame] );
-	vkResetCommandBuffer(m_commandBuffers[m_currentFrame], 0);
-	RecordCommandBuffer( m_commandBuffers[m_currentFrame], imageIndex );
+	vkResetCommandBuffer( m_commandBuffers[m_currentFrame], 0 );
+
+	VkCommandBufferBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = 0; // Optional
+	beginInfo.pInheritanceInfo = nullptr; // Optional
+
+	if( vkBeginCommandBuffer( m_commandBuffers[m_currentFrame], &beginInfo ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to begin recording command buffer!" );
+	}
+
+}
+
+void RenderContext_vulkan::EndFrame()
+{
+
+	
+
+	if( vkEndCommandBuffer( m_commandBuffers[m_currentFrame] ) != VK_SUCCESS )
+	{
+		ERROR_AND_DIE( "Failed to record command buffer!" );
+	}
 
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -597,7 +616,7 @@ void RenderContext_vulkan::EndFrame()
 	VkSwapchainKHR swapChains[] = { m_VkSwapChain };
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapChains;
-	presentInfo.pImageIndices = &imageIndex;
+	presentInfo.pImageIndices = &m_imageIndex;
 	presentInfo.pResults = nullptr; // Optional
 	
 	vkQueuePresentKHR( m_presentQueue, &presentInfo );
@@ -615,11 +634,43 @@ void RenderContext_vulkan::BeginCamera( Camera* camera, Convention convention )
 	cameraData.projection = Mat44::IDENTITY;
 	//cameraData.view = Mat44::IDENTITY;
 	m_uniformBuffers[m_currentFrame][UNIFORM_BUFFER_USAGE::UBO_USAGE_CAMERA]->Update(&cameraData, sizeof(camera_data_t), sizeof(camera_data_t));
+
+	VkRenderPassBeginInfo renderPassInfo = {};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = m_renderPass;
+	renderPassInfo.framebuffer = m_swapChainFramebuffers[m_imageIndex];
+	renderPassInfo.renderArea.offset = { 0, 0 };
+	renderPassInfo.renderArea.extent = m_swapChainExtent;
+	std::array<VkClearValue, 2> clearValues = {};
+	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f }; // clear color
+	clearValues[1].depthStencil = { 1.0f, 0 }; // clear depth
+	renderPassInfo.clearValueCount = (uint32_t)clearValues.size();
+	renderPassInfo.pClearValues = clearValues.data();
+	vkCmdBeginRenderPass( m_commandBuffers[m_currentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
+
+	vkCmdBindPipeline( m_commandBuffers[m_currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline );
+
+	// viewport and scissor
+	VkViewport viewport = {};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)m_swapChainExtent.width;
+	viewport.height = (float)m_swapChainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport( m_commandBuffers[m_currentFrame], 0, 1, &viewport );
+
+	VkRect2D scissor = {};
+	scissor.offset = { 0, 0 };
+	scissor.extent = m_swapChainExtent;
+	vkCmdSetScissor( m_commandBuffers[m_currentFrame], 0, 1, &scissor );
 	
 }
 
 void RenderContext_vulkan::EndCamera()
 {
+	vkCmdEndRenderPass( m_commandBuffers[m_currentFrame] );
+	
 }
 
 void RenderContext_vulkan::ClearState()
@@ -761,7 +812,7 @@ Texture* RenderContext_vulkan::CreateTextureFromFile( const char* imageFilePath 
 	GUARANTEE_OR_DIE( imageData, Stringf( "Failed to load image \"%s\"", imageFilePath ) );
 	GUARANTEE_OR_DIE( imageTexelSizeX > 0 && imageTexelSizeY > 0, Stringf( "ERROR loading image \"%s\" (Bpp=%i, size=%i,%i)", imageFilePath, numComponents, imageTexelSizeX, imageTexelSizeY ) );
 
-	VkDeviceSize imageSize = imageTexelSizeX * imageTexelSizeY * numComponents;
+	VkDeviceSize imageSize = imageTexelSizeX * imageTexelSizeY * numComponentsRequested;
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
@@ -831,6 +882,18 @@ void RenderContext_vulkan::Draw( int numVertexes, int vertexOffset )
 
 void RenderContext_vulkan::DrawMesh( GPUMesh* mesh )
 {
+	mesh->UpdateVerticeBuffer();
+	BindVertexBuffer(mesh->GetOrCreateVertexBuffer() );
+
+	bool hasIndices = mesh->GetIndexCount() > 0;
+	if( hasIndices ){
+		mesh->UpdateIndiceBuffer();
+		BindIndexBuffer( mesh->GetOrCreateIndexBuffer() );
+		DrawIndexed( mesh->GetIndexCount() );
+	}
+	else{
+		Draw( mesh->GetVertexCount() );
+	}
 }
 
 void RenderContext_vulkan::DrawIndexed( int indexCount, int indexOffset, int vertexOffset )
@@ -1668,59 +1731,17 @@ void RenderContext_vulkan::CreateCommandBuffers()
 	}
 }
 
-void RenderContext_vulkan::RecordCommandBuffer( VkCommandBuffer commandBuffer, uint32_t imageIndex )
+void RenderContext_vulkan::RecordCommandBuffer( )
 {
-	VkCommandBufferBeginInfo beginInfo = {};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = 0; // Optional
-	beginInfo.pInheritanceInfo = nullptr; // Optional
 
-	if( vkBeginCommandBuffer( commandBuffer, &beginInfo) != VK_SUCCESS )
-	{
-		ERROR_AND_DIE( "Failed to begin recording command buffer!" );
-	}
-
-	VkRenderPassBeginInfo renderPassInfo = {};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = m_renderPass;
-	renderPassInfo.framebuffer = m_swapChainFramebuffers[imageIndex];
-	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = m_swapChainExtent;
-	std::array<VkClearValue, 2> clearValues = {};
-	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f }; // clear color
-	clearValues[1].depthStencil = { 1.0f, 0 }; // clear depth
-	renderPassInfo.clearValueCount = (uint32_t)clearValues.size();
-	renderPassInfo.pClearValues = clearValues.data();
-	vkCmdBeginRenderPass( commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-	vkCmdBindPipeline( commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline );
-
-	// viewport and scissor
-	VkViewport viewport = {};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = (float)m_swapChainExtent.width;
-	viewport.height = (float)m_swapChainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport( commandBuffer, 0, 1, &viewport );
-
-	VkRect2D scissor = {};
-	scissor.offset = { 0, 0 };
-	scissor.extent = m_swapChainExtent;
-	vkCmdSetScissor( commandBuffer, 0, 1, &scissor );
+	
 	BindVertexBuffer(m_immediateVBO);
 	BindIndexBuffer( m_devIBO );
 	
 
-	vkCmdBindDescriptorSets( commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[m_currentFrame], 0, nullptr );
+	vkCmdBindDescriptorSets( m_commandBuffers[m_currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[m_currentFrame], 0, nullptr );
 	// vkCmdDraw( commandBuffer, static_cast<uint32_t>(debugDrawData.size() ), 1, 0, 0); // draw a triangle
-	vkCmdDrawIndexed( commandBuffer, static_cast<uint32_t>(debugDrawIndexes.size()), 1, 0, 0, 0); // draw a triangle
-	vkCmdEndRenderPass( commandBuffer );
-	if( vkEndCommandBuffer( commandBuffer ) != VK_SUCCESS )
-	{
-		ERROR_AND_DIE( "Failed to record command buffer!" );
-	}
+	vkCmdDrawIndexed( m_commandBuffers[m_currentFrame], static_cast<uint32_t>(debugDrawIndexes.size()), 1, 0, 0, 0); // draw a triangle
 
 }
 

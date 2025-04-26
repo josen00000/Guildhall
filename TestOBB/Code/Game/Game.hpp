@@ -10,6 +10,7 @@
 #include "Engine/Core/EventSystem.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
+#include "Engine/Core/Transform.hpp"
 
 class RenderContext;
 class InputSystem;
@@ -18,7 +19,8 @@ class Entity;
 class World;
 class BitmapFont;
 class DevConsole;
-
+class GPUMesh;
+class Texture;
 
 class Game {
 public:
@@ -103,6 +105,11 @@ public:
 	Vec2 m_alignPos = Vec2(0,1);
 	//std::vector<Strings> m_stringsVector;
 	float m_alignMoveSpeed = 0.5;
+
+	// mesh
+	GPUMesh* m_mesh = nullptr;
+	Transform m_meshTransform;
+	Texture* m_meshTexture = nullptr;
 	
 };
 

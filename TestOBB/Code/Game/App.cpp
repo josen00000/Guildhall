@@ -21,6 +21,8 @@
 #include "ThirdParty/imgui/imgui.h"
 #include "ThirdParty/imgui/imgui_impl_dx11.h"
 #include "ThirdParty/imgui/imgui_impl_win32.h"
+#include "Engine/Renderer/Vulkan/RenderContext_vulkan.hpp"
+
 
 #define VULKAN_DEV
 
@@ -206,6 +208,10 @@ const void App::Render() const
 	// test vulkan render functions
 	// draw frame
 	g_theRenderer->BeginCamera( g_gameCamera );
+	//g_theGame->Render();
+	RenderContext_vulkan* vk = (RenderContext_vulkan*)g_theRenderer;
+	vk->RecordCommandBuffer();
+	g_theRenderer->EndCamera();
 	//vk->UpdateUniformBuffer();
 
 	return; // working on rendering part. 
@@ -214,9 +220,6 @@ const void App::Render() const
 	g_theGame->RenderUI();
 	g_theRenderer->EndCamera();
 
-	g_theRenderer->BeginCamera( g_gameCamera );
-	g_theGame->Render();
-	g_theRenderer->EndCamera();
 	
 	g_theConsole->Render( *g_theRenderer );
 	// debug render

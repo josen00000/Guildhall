@@ -95,6 +95,7 @@ public:
 	virtual void DrawLine( const Vec2& startPoint, const Vec2& endPoint, const float thick, const Rgba8& lineColor )  ;
 	virtual void DrawAABB2D( const AABB2& bounds, const Rgba8& tint, const Vec2& uvMin = Vec2::ZERO, const Vec2& mvMax = Vec2::ONE )  ;
 	virtual void DrawCircle( Vec3 center, float radius, float thick, const Rgba8& circleColor )  ;
+	void RecordCommandBuffer();
 
 private:
 	bool CheckValidationLayersSupport( const std::vector<const char*>& validationLayers );
@@ -120,7 +121,6 @@ private:
 	void CreateDescriptorSets();
 	void CreateDescriptorSet(VertexBuffer* ubo);
 	void CreateCommandBuffers();
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer,  uint32_t imageIndex );
 	void CreateSyncObjects();
 	void RecreateSwapChain();
 	void ShutDownSwapChain();
@@ -174,4 +174,5 @@ private:
 	VkImage m_depthImage;
 	VkDeviceMemory m_depthImageMemory;
 	VkImageView m_depthImageView;
+	uint32_t m_imageIndex;
 };

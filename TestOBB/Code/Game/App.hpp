@@ -3,7 +3,6 @@
 #include "Engine/Math/vec2.hpp"
 #include "Game/GameCommon.hpp"
 
-
 class Game;
 
 

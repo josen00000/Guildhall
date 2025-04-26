@@ -14,6 +14,8 @@
 #include "Engine/Renderer/SpriteSheet.hpp"
 #include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Core/DevConsole.hpp"
+#include "Engine/Renderer/GPUMesh.hpp"
+#include "Engine/renderer/ObjectReader.hpp"
 
 extern App* g_theApp;
 extern InputSystem* g_theInputSystem;
@@ -38,6 +40,13 @@ void Game::Startup()
 	CreateRandomOBB();
 	CreateOtherShapes();
 	CreateRandomCapsule();
+
+	// vulkan mesh test
+	ObjectReader* testObjReader = new ObjectReader("Data/Model/viking_room.obj");
+	m_mesh = new GPUMesh( g_theRenderer, VERTEX_TYPE_PCU );
+	testObjReader->GenerateGPUMesh( *m_mesh );
+	m_meshTransform.SetPosition( Vec3( 0.f, 0.f, -1.f ) );
+	//m_meshTexture = g_theRenderer->CreateTextureFromFile( "Data/Model/viking_room.png" );
 }
 
 void Game::Shutdown()
@@ -51,11 +60,14 @@ void Game::RunFrame(float deltaTime)
 
 void Game::Render() const
 {
+
+	g_theRenderer->SetModelMatrix( m_meshTransform.ToMatrix() );
+	g_theRenderer->DrawMesh( m_mesh );
 	RenderOBBs();
-	RenderCapsules();
-	RenderOtherShapes();
-	RenderMouse( *g_gameCamera );
-	RenderNearestPoints();
+	//RenderCapsules();
+	//RenderOtherShapes();
+	//RenderMouse( *g_gameCamera );
+	//RenderNearestPoints();
 }
 
 
