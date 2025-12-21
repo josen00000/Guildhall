@@ -14,7 +14,7 @@
 #include "Engine/Renderer/DebugRenderObject.hpp"
 #include "Engine/Renderer/GPUMesh.hpp"
 #include "Engine/Renderer/MeshUtils.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderUtils.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 
 extern DevConsole* g_theConsole;
@@ -155,7 +155,7 @@ void CreateGPUMeshes()
 
 void CreateBitmapFont()
 {
-	g_defaultDebugFont = g_ctx->CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
+	g_defaultDebugFont = CreateOrGetBitmapFontFromFile( "testing", "Data/Fonts/SquirrelFixedFont" );
 }
 
 void DebugRenderAlwaysObjects()
@@ -255,7 +255,7 @@ void DebugRenderSystemStartup( RenderContext* ctx, Camera* camera )
 {
 	CreateGPUMeshes();
 	g_ctx = ctx;
-	g_clock = new Clock( g_ctx->m_clock );
+	g_clock = new Clock( g_ctx->GetClock() );
 	CreateBitmapFont();
 	g_screenMax = Vec2( 160.f, 90.f );
 	g_aspectRatio = 1.f;
@@ -362,7 +362,7 @@ void DebugRenderScreenTo( Texture* output )
 	if( !g_ableDebug ){ return; }
 
 	// !!! not create every frame. create a new at start up.
-	Camera* screenCamera = new Camera( g_ctx, 0.f, -100.f, g_screenMin, g_screenMax, g_aspectRatio );
+	Camera* screenCamera = new Camera( 0.f, -100.f, g_screenMin, g_screenMax, g_aspectRatio );
 	screenCamera->SetColorTarget( output );
 	screenCamera->SetDepthStencilTarget( nullptr ); // don't need depth stencil target set target to nullptr
 	screenCamera->SetClearMode( CLEAR_NONE );

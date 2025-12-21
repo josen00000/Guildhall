@@ -4,7 +4,7 @@
 #include "Engine/Physics/Collider2D.hpp"
 #include "Engine/Physics/DiscCollider2D.hpp"
 #include "Engine/Physics/PolygonCollider2D.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 
 Rigidbody2D::Rigidbody2D( Physics2D* owner, Vec2 worldPos, Collider2D* col /*= nullptr */ )
 	:m_system( owner )
@@ -221,12 +221,12 @@ void Rigidbody2D::SetLayer( uint layerIndex )
 	m_layer = layerIndex;
 }
 
-void Rigidbody2D::DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor )
+void Rigidbody2D::DebugRenderCollider2D( RenderContext_d3d11* ctx, const Rgba8& borderColor, const Rgba8& filledColor )
 {
 	m_collider->DebugRender( ctx, borderColor, filledColor );
 }
 
-void Rigidbody2D::DebugRender( RenderContext* ctx )
+void Rigidbody2D::DebugRender( RenderContext_d3d11* ctx )
 {
 	Rgba8 renderColor;
 	if( m_isEnable ) {

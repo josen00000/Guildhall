@@ -3,7 +3,7 @@
 #include "Engine/Renderer/D3D11Common.hpp"
 #include "Engine/Renderer/RenderCommon.hpp"
 
-class RenderContext;
+class RenderContext_d3d11;
 class VertexBuffer;
 struct ID3D10Bolb;
 struct ID3D11InputLayout;
@@ -21,7 +21,7 @@ class ShaderStage {
 
 public:
 	~ShaderStage();
-	bool Compile( RenderContext* ctx,
+	bool Compile( RenderContext_d3d11* ctx,
 		std::string const& fileName, // for debug
 		void const* source, //shader code
 		size_t const sourceByteLen,
@@ -45,13 +45,13 @@ public:
 
 class Shader {
 public:
-	Shader( RenderContext* owner );
+	Shader( RenderContext_d3d11* owner );
 	~Shader();
 	bool CreateFromFile( std::string const& fileName );
 	ID3D11InputLayout* GetOrCreateInputLayout( VertexBuffer* vbo );
 	DXGI_FORMAT TransformToD3DDataFormat( BufferFormatType type );
 public:
-	RenderContext*	m_owner	= nullptr;
+	RenderContext_d3d11*	m_owner	= nullptr;
 	ShaderStage m_vertexStage;
 	ShaderStage m_fragmentStage;
 	ID3D11InputLayout* m_d3dInputLayout = nullptr;

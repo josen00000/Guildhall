@@ -10,6 +10,11 @@
 
 class RenderBuffer;
 
+struct camera_data_t {
+	Mat44 projection;
+	Mat44 view;
+};
+
 
 enum eCameraClearBitFlag : uint {
 	// what is this
@@ -33,16 +38,15 @@ typedef uint CameraClearFlags;
 class Camera{
 	friend class RenderContext;
 public:
-	Camera(){}
 	~Camera();
 
 	//Camera( const Camera& camera ) = delete;
-	explicit Camera( RenderContext* ctx, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
-	explicit Camera( RenderContext* ctx, float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1 );
-	explicit Camera( RenderContext* ctx, float fov/*60.f*/, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE, Convention convention = X_RIGHT_Y_UP_Z_BACKWARD );
-	static Camera* CreateOrthographicCamera( RenderContext* ctx, const Vec2& bottomLeft, const Vec2& topRight );
-	static Camera* CreatePerspectiveCamera( RenderContext* ctx, float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
-	static Camera* CreatePerspectiveCamera( RenderContext* ctx, const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
+	explicit Camera( const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE, float aspectRatio=1 );
+	explicit Camera( float nZ, float fZ, const Vec2& bottomLeft=Vec2::ZERO, const Vec2& topRight=Vec2::ONE,  float aspectRatio=1 );
+	explicit Camera( float fov/*60.f*/, float nearZ=-0.1, float farZ=-100, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE, Convention convention = X_RIGHT_Y_UP_Z_BACKWARD );
+	static Camera* CreateOrthographicCamera(  const Vec2& bottomLeft, const Vec2& topRight );
+	static Camera* CreatePerspectiveCamera( float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
+	static Camera* CreatePerspectiveCamera( const char* debugMsg, float fov, float nearZ, float farZ, Vec3 pos=Vec3::ZERO, Vec3 rotPRY=Vec3::ZERO, Vec3 scale=Vec3::ONE );
 	void Translate( const Vec3& translation );
 
 public:
@@ -64,7 +68,6 @@ public:
 	Vec3	GetLeftDirt( Convention convension ) const;
 	Vec3	GetUpDirt( Convention convension ) const;
 
-	RenderContext* GetRenderContext() const;
 
 	AABB2	GetWorldBox() const; // temp for thesis usage
 	AABB2	GetCameraAsBox() const;
@@ -87,8 +90,9 @@ public:
 	int				GetColorTargetCount() const;
 	Texture*		GetColorTarget( uint slot=0 ) const;
 	Texture*		GetDepthStencilTarget() const { return m_depthStencilTarget; }
-	Texture*		GetOrCreateDepthStencilTarget( RenderContext* ctx );
+	Texture*		GetOrCreateDepthStencilTarget( RenderContext_d3d11* ctx );
 	RenderBuffer*	GetOrCreateCameraBuffer( RenderContext* ctx, Convention convention );
+	camera_data_t  GetCameraData( Convention convention );
 
 		// Mutator
 	void SetOrthoView( const Vec2& bottomLeft, const Vec2& topRight, float aspectRatio );
@@ -96,14 +100,9 @@ public:
 	void SetPosition( const Vec3& position );
 	void SetPosition2D( const Vec2& pos );
 	void SetCenterPosition2D( Vec2 pos );
-	
-	void SetRenderContext( RenderContext* ctx );
-
 	void SetProjectionOrthographic( float height, float nearZ = -1.0f, float farZ = 1.0f, float aspectRatio = 1.f );
 	//void SetOrthographicSize( Vec2 size, float nearZ = -1.f, float farZ = 1.f );
-
 	void SetUseDepth( bool useDepth );
-
 	void SetClearMode( uint clearFlags, Rgba8 color=Rgba8::DARK_GRAY, float depth = 0.0f , unsigned int stencil = 0 );
 	void EnableClearColor( Rgba8 color );
 	void EnableClearDepth( float depth );
@@ -150,5 +149,4 @@ private:
 	RenderBuffer* m_cameraUBO = nullptr; // render data( vertices )
 	Mat44 m_projection;
 	Mat44 m_view;
-	RenderContext* m_rctx;
 };

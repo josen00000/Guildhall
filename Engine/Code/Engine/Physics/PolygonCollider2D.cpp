@@ -1,5 +1,5 @@
 #include "PolygonCollider2D.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 #include "Engine/Physics/DiscCollider2D.hpp"
 #include "Engine/Physics/RigidBody2D.hpp"
 #include "Engine/Math/Disc2.hpp"
@@ -115,7 +115,7 @@ float PolygonCollider2D::CalculateMoment( float mass ) const
 	return ( mass * up ) / ( 6 * down );
 }
 
-void PolygonCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
+void PolygonCollider2D::DebugRender( RenderContext_d3d11* ctx, const Rgba8& borderColor, const Rgba8& fillColor )
 {
 // 	Vec2 startPos = m_worldPolygon.GetEdge( 0 ).GetStartPos() + m_worldPos;
 // 	std::vector<Vertex_PCU> tempVertices;
@@ -141,7 +141,7 @@ void PolygonCollider2D::DebugRender( RenderContext* ctx, const Rgba8& borderColo
 	//testRenderLocal( ctx );
 }
 
-void PolygonCollider2D::testRenderLocal( RenderContext* ctx )
+void PolygonCollider2D::testRenderLocal( RenderContext_d3d11* ctx )
 {
 // 	Vec2 startPos = m_localPolygon.GetEdge( 0 ).GetStartPos() + m_worldPos;
 // 	std::vector<Vertex_PCU> tempVertices;

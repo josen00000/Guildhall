@@ -2,7 +2,7 @@
 #include "Engine/Core/EngineCommon.hpp"
 #include "Engine/Core/Time/Timer.hpp"
 #include "Engine/Core/Time/Clock.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 #include "Engine/Renderer/GPUMesh.hpp"
 
 DebugRenderObject::~DebugRenderObject()
@@ -99,7 +99,7 @@ bool DebugRenderObject::CheckIfOld()
 void DebugRenderObject::RenderObject( RenderContext* ctx )
 {
 	if( m_useWire ) {
-		ctx->SetFillMode( RASTER_FILL_WIREFRAME );
+		ctx->SetRasterFillMode( RASTER_FILL_WIREFRAME );
 	}
 	ctx->SetModelMatrix( Mat44() );
 
@@ -156,7 +156,7 @@ void DebugRenderObject::RenderObject( RenderContext* ctx )
 		break;
 	}
 
-	ctx->SetFillMode( RASTER_FILL_SOLID );
+	ctx->SetRasterFillMode( RASTER_FILL_SOLID );
 }
 
 Rgba8 DebugRenderObject::GetTintColor( float time )

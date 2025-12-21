@@ -8,7 +8,7 @@
 #include "Engine/Input/InputSystem.hpp"
 #include "Engine/Renderer/BitmapFont.hpp"
 #include "Engine/Renderer/Camera.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
+#include "Engine/Renderer/RenderContext_d3d11.hpp"
 
 extern EventSystem*		g_theEventSystem;
 extern InputSystem*		g_theInputSystem;

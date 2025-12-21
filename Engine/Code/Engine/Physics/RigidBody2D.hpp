@@ -6,7 +6,7 @@
 class Collider2D;
 class GameObject;
 class Physics2D;
-class RenderContext;
+class RenderContext_d3d11;
 
 struct Rgba8;
 
@@ -90,8 +90,8 @@ public:
 	void AddForce( Vec2 force );
 
 	// help
-	void DebugRenderCollider2D( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
-	void DebugRender( RenderContext* ctx );
+	void DebugRenderCollider2D( RenderContext_d3d11* ctx, const Rgba8& borderColor, const Rgba8& filledColor );
+	void DebugRender( RenderContext_d3d11* ctx );
 	NamedProperties m_userProperties;
 
 private:
