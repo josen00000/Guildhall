@@ -3,20 +3,20 @@
 
 TextureView::~TextureView()
 {
-	DX_SAFE_RELEASE(m_handle.d3d11ViewHandle.m_handle);
+	DX_SAFE_RELEASE(m_handle);
 }
 
 void TextureView::SetRTVHandle( ID3D11RenderTargetView* rtv )
 {
-	m_handle.d3d11ViewHandle.m_rtv = rtv;
+	m_rtv = rtv;
 }
 
 void TextureView::SetSRVHandle( ID3D11ShaderResourceView* srv )
 {
-	m_handle.d3d11ViewHandle.m_srv = srv;
+	m_srv = srv;
 }
 
 void TextureView::SetDSVHandle( ID3D11DepthStencilView* dsv )
 {
-	m_handle.d3d11ViewHandle.m_dsv = dsv;
+	m_dsv = dsv;
 }

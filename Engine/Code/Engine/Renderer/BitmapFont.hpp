@@ -1,12 +1,12 @@
 ﻿#pragma once
 #include <string>
-#include "Engine/Renderer/RenderContext_d3d11.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/SpriteSheet.hpp"
 
 struct Rgba8;
 
 class BitmapFont {
-	friend class RenderContext_d3d11;
+	friend class RenderContext;
 
 private:
 	BitmapFont( const char* fontName, Texture* fontTexture );

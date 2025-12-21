@@ -3,9 +3,8 @@
 #include "Engine/Core/Transform.hpp"
 #include "Engine\Renderer\IndexBuffer.hpp"
 #include "Engine\Renderer\RenderCommon.hpp"
+#include "Engine\Renderer\RenderContext.hpp"
 #include "Engine\Renderer\VertexBuffer.hpp"
-#include "Engine/Core/Vertex_PCUTBN.hpp"
-#include "Engine/Core/Vertex_PCU.hpp"
 
 enum Vertex_Type {
 	VERTEX_TYPE_PCU,

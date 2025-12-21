@@ -1,6 +1,6 @@
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Renderer/RenderCommon.hpp"
-#include "Engine/Renderer/Vulkan/RenderContext_vulkan.hpp"
+
 
 buffer_attribute_t Vertex_PCU::s_layout [4] = {
 	buffer_attribute_t( "POSITION",	BUFFER_FORMAT_VEC3,				offsetof( Vertex_PCU, m_pos ) ),
@@ -16,38 +16,6 @@ Vertex_PCU::Vertex_PCU( const Vec3& position, const Rgba8& tint, const Vec2& uvT
 	,m_uvTexCoords(uvTexCoords)
 {
 
-}
-
-VkVertexInputBindingDescription Vertex_PCU::GetBindingDescription()
-{
-	VkVertexInputBindingDescription bindingDescription{};
-	bindingDescription.binding = 0;
-	bindingDescription.stride = sizeof( Vertex_PCU );
-	//bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE; // Move to the next data entry after each instance
-	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	return bindingDescription;
-}
-
-std::array<VkVertexInputAttributeDescription, 3> Vertex_PCU::GetAttributeDescriptions()
-{
-	std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-
-	attributeDescriptions[0].binding = 0;
-	attributeDescriptions[0].location = 0;
-	attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[0].offset = offsetof( Vertex_PCU, m_pos );
-
-	attributeDescriptions[1].binding = 0;
-	attributeDescriptions[1].location = 1;
-	attributeDescriptions[1].format = VK_FORMAT_R8G8B8A8_UNORM;
-	attributeDescriptions[1].offset = offsetof( Vertex_PCU, m_color );
-
-	attributeDescriptions[2].binding = 0;
-	attributeDescriptions[2].location = 2;
-	attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-	attributeDescriptions[2].offset = offsetof( Vertex_PCU, m_uvTexCoords );
-
-	return attributeDescriptions;
 }
 
 Vertex_PCU::Vertex_PCU( const Vertex_PCU& copyFrom )

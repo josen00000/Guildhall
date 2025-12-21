@@ -2057,7 +2057,7 @@ void CameraSystem::UpdateAtLeastTwoMergedPoly()
 	// handle last one
 	CameraController* mergedController = nullptr;
 	for( int i = 0; i < m_controllers.size(); i++ ) {
-		//if( m_controllers[] )
+		if( m_controllers[] )
 	}
 }
 

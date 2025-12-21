@@ -3,7 +3,6 @@
 #include "Engine/Renderer/IndexBuffer.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
-#include "Engine/Renderer/RenderContext.hpp"
 
 
 GPUMesh::~GPUMesh()

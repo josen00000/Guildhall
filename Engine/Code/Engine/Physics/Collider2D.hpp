@@ -5,7 +5,7 @@
 #include "Engine/Core/Delegate.hpp"
 
 class Physics2D;
-class RenderContext_d3d11;
+class RenderContext;
 class Rigidbody2D;
 
 struct Collision2D;
@@ -81,7 +81,7 @@ public:
 	virtual float CalculateMoment( float mass ) const = 0;
 
 	// debug helpers
-	virtual void DebugRender( RenderContext_d3d11* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) = 0;
+	virtual void DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) = 0;
 
 public:
 	Collider2DType	m_type;

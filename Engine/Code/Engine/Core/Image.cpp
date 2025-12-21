@@ -4,7 +4,7 @@
 #include "Engine/Core/ErrorWarningAssert.hpp"
 #include "Engine/Core/StringUtils.hpp"
 #include "Engine/Renderer/Texture.hpp"
-#include "Engine/Renderer/RenderContext_d3d11.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 
 
 Image::Image( const char* imageFilePath )

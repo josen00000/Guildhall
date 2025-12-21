@@ -27,8 +27,8 @@ public:
 
 	virtual float CalculateMoment( float mass ) const override;
 	// debug helpers
-	virtual void DebugRender( RenderContext_d3d11* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) override;
-	void testRenderLocal( RenderContext_d3d11* ctx );
+	virtual void DebugRender( RenderContext* ctx, const Rgba8& borderColor, const Rgba8& fillColor ) override;
+	void testRenderLocal( RenderContext* ctx );
 
 public:
 	ConvexPoly2 m_localPolygon;

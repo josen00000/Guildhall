@@ -1,7 +1,7 @@
 #include "ShaderState.hpp"
 
 
-ShaderState::ShaderState( RenderContext_d3d11* ctx, std::string statePath )
+ShaderState::ShaderState( RenderContext* ctx, std::string statePath )
 	:m_owner(ctx)
 	,m_statePath(statePath)
 {
@@ -24,16 +24,16 @@ void ShaderState::SetCullMode( RasterCullMode mode )
 	m_cullMode = mode;
 }
 
-void ShaderState::SetRasterFillMode( RasterFillMode mode )
+void ShaderState::SetFillMode( RasterFillMode mode )
 {
 	m_fillMode = mode;
 }
 
 void ShaderState::PrepareForDraw()
 {
-	m_owner->SetRasterCullMode( m_cullMode );
+	m_owner->SetCullMode( m_cullMode );
 	m_owner->EnableDepth( m_depthFunc, m_ableWriteDepth );
-	m_owner->SetRasterFillMode( m_fillMode );
+	m_owner->SetFillMode( m_fillMode );
 	m_owner->BindShader( m_shaderPath );
 }
 

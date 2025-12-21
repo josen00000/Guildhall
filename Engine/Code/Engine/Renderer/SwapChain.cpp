@@ -1,10 +1,10 @@
 #include "SwapChain.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
-#include "Engine/Renderer/RenderContext_d3d11.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Texture.hpp"
 
 
-SwapChain::SwapChain( RenderContext_d3d11* owner, IDXGISwapChain* handle )
+SwapChain::SwapChain( RenderContext* owner, IDXGISwapChain* handle )
 	:m_owner(owner)
 	,m_handle(handle)
 {

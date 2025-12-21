@@ -6,7 +6,7 @@
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Renderer/D3D11Common.hpp"
 #include "Engine/Renderer/RenderCommon.hpp"
-#include "Engine/Renderer/RenderContext_d3d11.hpp"
+#include "Engine/Renderer/RenderContext.hpp"
 #include "Engine/Renderer/Shader.hpp"
 #include "Engine/Renderer/VertexBuffer.hpp"
 
@@ -61,7 +61,7 @@ ShaderStage::~ShaderStage()
 	DX_SAFE_RELEASE(m_handle);
 }
 
-bool ShaderStage::Compile( RenderContext_d3d11* ctx, std::string const& fileName, /* for debug */ void const* source, /*shader code */ size_t const sourceByteLen, ShaderType stage )
+bool ShaderStage::Compile( RenderContext* ctx, std::string const& fileName, /* for debug */ void const* source, /*shader code */ size_t const sourceByteLen, ShaderType stage )
 {
 	// HLSL - High level shading language
 	// Compile : HLSL -> Bytecode
@@ -148,7 +148,7 @@ size_t ShaderStage::GetByteCodeLength() const
 	return m_byteCode->GetBufferSize();
 }
 
-Shader::Shader( RenderContext_d3d11* owner )
+Shader::Shader( RenderContext* owner )
 	:m_owner(owner)
 {
 }

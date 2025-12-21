@@ -10,7 +10,6 @@
 #include "Engine/Core/EventSystem.hpp"
 #include "Engine/Core/Vertex_PCU.hpp"
 #include "Engine/Math/RandomNumberGenerator.hpp"
-#include "Engine/Core/Transform.hpp"
 
 class RenderContext;
 class InputSystem;
@@ -19,14 +18,13 @@ class Entity;
 class World;
 class BitmapFont;
 class DevConsole;
-class GPUMesh;
-class Texture;
+
 
 class Game {
 public:
 	Game(){}
 	~Game(){}
-	Game(Camera* gameCamera, Camera* UICamera);
+	Game(Camera* inCamera);
 
 	//basic
 	void Startup();
@@ -34,16 +32,22 @@ public:
 	void RunFrame(float deltaTime);
 	void Render() const;
 	void RenderUI() const;
-	void EndFrame();
+	void PrintSomething( const std::string stringToPrint );
 
 private:
 	void Update( float deltaTime);
+	void TestSprite();
+	void TestImage();
+	void TestDrawMouse( const Camera& camera);
 	void TestSetFromText();
 	void TestMouse();
 	void TestOBBOverlap();
 	void RenderMouse( const Camera& camera) const;
+	void TestSplitString();
+	void InitialAlignText();
+	void UpdateAlignText(float deltaTime);
 	void LoadGameAsset();
-	void CheckIfExit();
+	
 	//Create shapes
 	void CreateRandomOBB();
 	void CreateRandomCapsule();
@@ -64,13 +68,13 @@ private:
 
 public:
 	bool m_debugCamera = false;
-	bool m_isAppQuit = false;
+	bool isAppQuit = false;
 	//should using global.
 	
 	//mouse testing
 	Vec2 m_mousePos;
-	Camera* m_gameCamera = nullptr;
-	Camera* m_UICamera = nullptr;
+	Camera* m_camera = nullptr;
+	
 	//OBB testing
 	std::vector<OBB2> m_OBBs;
 	std::vector<Vertex_PCU> m_OBBVertices;
@@ -105,12 +109,12 @@ public:
 	Vec2 m_alignPos = Vec2(0,1);
 	//std::vector<Strings> m_stringsVector;
 	float m_alignMoveSpeed = 0.5;
-
-	// mesh
-	GPUMesh* m_mesh = nullptr;
-	Transform m_meshTransform;
-	Texture* m_meshTexture = nullptr;
 	
+	BitmapFont* m_testFont = nullptr;
+	DevConsole* m_testConsole = nullptr;
+
+
+
 };
 
 

@@ -3,15 +3,13 @@
 
 class RenderContext;
 struct ID3D11Buffer;
-class RenderContext_d3d11;
-class RenderContext_vulkan;
 
 // what we use it for
 // naming. bit shows only one
 enum RenderBufferUsageBit : uint {
 	VERTEX_BUFFER_BIT		= BIT_FLAG(0),
 	INDEX_BUFFER_BIT		= BIT_FLAG(1),
-	UNIFORM_BUFFER_BIT		= BIT_FLAG(2),
+	UNIFORM_BUFFER_BIT		= BIT_FLAG(2)
 };
 typedef uint RenderBufferUsage;
 
@@ -23,39 +21,26 @@ enum RenderMemoryHint : uint {
 };
 
 class RenderBuffer {
-	friend class RenderContext_d3d11;
-	friend class RenderContext_vulkan;
-
 public:
 	RenderBuffer( char const* debugName, RenderContext* owner, RenderBufferUsage usage, RenderMemoryHint memHint );
 	~RenderBuffer();
 
-	void Update( void const* data, size_t dataByteSize, size_t elementByteSize );
+	bool Update( void const* data, size_t dataByteSize, size_t elementByteSize );
 	bool IsCompatible( size_t dataByteSize, size_t elementByteSize );
 	void Cleanup();
-	int GetMemoryUsage();
-
 private:
-	int GetVulkanMemoryUsage();
-	int GetDXMemoryUsage();
-	unsigned int GetDXUsage();
-	int GetVulkanUsage();
+	bool Create( size_t dataByteSize, size_t elementByteSize );
 
 public:
+		RenderContext* m_owner	= nullptr;
+		ID3D11Buffer* m_handle	= nullptr;
 
-	RenderBufferUsage m_usage;
-	RenderMemoryHint m_memHint;
+		RenderBufferUsage m_usage;
+		RenderMemoryHint m_memHint;
 
-	size_t m_bufferByteSize;
-	size_t m_elementByteSize;
-	std::string m_debugName;
-
-private:
-	RenderContext* m_owner	= nullptr;
-	void* m_handle	= nullptr; // buffer handle for specific render context
-	void* m_mappedMemory = nullptr; // mapped memory for specific render context. Only used for Vulkan for now.
-	void* m_mappedMemoryData = nullptr; // mapped data for specific render context. Only used for Vulkan for now.
-
+		 size_t m_bufferByteSize;
+		 size_t m_elementByteSize;
+		 std::string m_debugName;
 };
 
 
